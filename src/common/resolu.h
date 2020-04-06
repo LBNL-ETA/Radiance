@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.14 2019/07/19 17:37:56 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.15 2020/04/06 04:00:08 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -50,7 +50,7 @@ extern char  resolu_buf[RESOLU_BUFLEN];
 
 			/* reading/writing of standard ordering */
 #define  fprtresolu(sl,ns,fp)	fprintf(fp,PIXSTDFMT,ns,sl)
-#define  fscnresolu(sl,ns,fp)	(fscanf(fp,PIXSTDFMT,ns,sl)==2)
+#define  fscnresolu(sl,ns,fp)	(fgetresolu(sl,ns,fp)==PIXSTANDARD)
 
 			/* defined in resolu.c */
 extern void	fputresolu(int ord, int sl, int ns, FILE *fp);
