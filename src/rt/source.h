@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.20 2018/11/08 00:54:07 greg Exp $ */
+/* RCSid $Id: source.h,v 2.21 2020/04/06 21:09:07 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -147,6 +147,7 @@ extern int  nsources;			/* the number of sources */
 
 					/* defined in source.c */
 extern void	marksources(void);
+extern void	distantsources(void);
 extern void	freesources(void);
 extern int	srcray(RAY *sr, RAY *r, SRCINDEX *si);
 extern void	srcvalue(RAY *r);

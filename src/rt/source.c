@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.71 2020/03/12 17:19:18 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.72 2020/04/06 21:09:07 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -74,8 +74,8 @@ marksources(void)			/* find and mark source objects */
 				m->otype == MAT_SPOT ? 7 : 3))
 			objerror(m, USER, "bad # arguments");
 
-		if (m->oargs.farg[0] <= FTINY && m->oargs.farg[1] <= FTINY &&
-				m->oargs.farg[2] <= FTINY)
+		if (m->oargs.farg[0] <= FTINY && (m->oargs.farg[1] <= FTINY) &
+				(m->oargs.farg[2] <= FTINY))
 			continue;			/* don't bother */
 		if (m->otype == MAT_GLOW &&
 				o->otype != OBJ_SOURCE &&
@@ -100,6 +100,9 @@ marksources(void)			/* find and mark source objects */
 				foundsource += (ambounce > 0);
 			}
 		} else if (m->otype == MAT_SPOT) {
+			if (source[ns].sflags & SDISTANT)
+				objerror(o, WARNING,
+					"distant source is a spotlight");
 			source[ns].sflags |= SSPOT;
 			if ((source[ns].sl.s = makespot(m)) == NULL)
 				goto memerr;
@@ -128,11 +131,57 @@ marksources(void)			/* find and mark source objects */
 	maxcntr = nsources + MAXSPART;	/* start with this many */
 	srccnt = (CONTRIB *)malloc(maxcntr*sizeof(CONTRIB));
 	cntord = (CNTPTR *)malloc(maxcntr*sizeof(CNTPTR));
-	if ((srccnt == NULL) | (cntord == NULL))
-		goto memerr;
-	return;
+	if ((srccnt != NULL) & (cntord != NULL))
+		return;
 memerr:
 	error(SYSTEM, "out of memory in marksources");
+}
+
+
+void
+distantsources(void)			/* only mark distant sources */
+{
+	int  i;
+	OBJREC  *o, *m;
+	int  ns;
+					/* initialize dispatch table */
+	initstypes();
+					/* sources needed for sourcehit() */
+	for (i = 0; i < nsceneobjs; i++) {
+	
+		o = objptr(i);
+
+		if ((o->otype != OBJ_SOURCE) | (o->omod == OVOID))
+			continue;
+					/* find material */
+		m = findmaterial(objptr(o->omod));
+		if (m == NULL)
+			continue;
+		if (!islight(m->otype))
+			continue;	/* not source modifier */
+	
+		if (m->oargs.nfargs != (m->otype == MAT_GLOW ? 4 :
+				m->otype == MAT_SPOT ? 7 : 3))
+			objerror(m, USER, "bad # arguments");
+
+		if (m->oargs.farg[0] <= FTINY && (m->oargs.farg[1] <= FTINY) &
+				(m->oargs.farg[2] <= FTINY))
+			continue;			/* don't bother */
+		if (sfun[o->otype].of == NULL ||
+				sfun[o->otype].of->setsrc == NULL)
+			objerror(o, USER, "illegal material");
+
+		if ((ns = newsource()) < 0)
+			error(SYSTEM, "out of memory in distantsources");
+
+		setsource(&source[ns], o);
+
+		if (m->otype == MAT_GLOW) {
+			source[ns].sflags |= SPROX|SSKIP;
+			source[ns].sl.prox = m->oargs.farg[3];
+		} else if (m->otype == MAT_SPOT)
+			objerror(o, WARNING, "distant source is a spotlight");
+	}
 }
 
 

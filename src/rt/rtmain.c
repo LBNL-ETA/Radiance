@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.32 2020/04/06 04:10:44 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.33 2020/04/06 21:09:07 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -45,7 +45,7 @@ char  *outvals = "v";			/* output specification */
 int  hresolu = 0;			/* horizontal (scan) size */
 int  vresolu = 0;			/* vertical resolution */
 
-int  castonly = 0;			/* only doing ray-casting? */
+extern int  castonly;			/* only doing ray-casting? */
 
 int  imm_irrad = 0;			/* compute immediate irradiance? */
 int  lim_dist = 0;			/* limit distance? */
@@ -339,7 +339,8 @@ main(int  argc, char  *argv[])
 		marksources();		/* find and mark sources */
 
 		setambient();		/* initialize ambient calculation */
-	}
+	} else
+		distantsources();	/* else mark only distant sources */
 #ifdef  PERSIST
 	if (persist) {
 		fflush(stdout);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.93 2020/04/06 04:10:44 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.94 2020/04/06 21:09:07 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -45,7 +45,7 @@ extern int  traincl;			/* include == 1, exclude == 0 */
 extern int  hresolu;			/* horizontal resolution */
 extern int  vresolu;			/* vertical resolution */
 
-extern int  castonly;			/* only doing ray-casting? */
+int  castonly = 0;			/* only doing ray-casting? */
 
 #ifndef  MAXTSET
 #define	 MAXTSET	8191		/* maximum number in trace set */
@@ -145,9 +145,7 @@ rtrace(				/* trace rays from file */
 	if (inform != 'a')
 		SET_FILE_BINARY(inpfp);
 					/* set up output */
-	if (imm_irrad)
-		castonly = 0;
-	else if (castonly || every_out[0] != NULL)
+	if (castonly || every_out[0] != NULL)
 		nproc = 1;		/* don't bother multiprocessing */
 	if ((nextflush > 0) & (nproc > nextflush)) {
 		error(WARNING, "reducing number of processes to match flush interval");
@@ -238,7 +236,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	if (!*vs)
 		error(USER, "empty output specification");
 
-	castonly = 1;
+	castonly = 1;			/* sets castonly as side-effect */
 	do
 		switch (*vs) {
 		case 'T':				/* trace sources */
@@ -288,6 +286,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 		case 'V':				/* contribution */
 			*table++ = oputV;
 			ncomp += 3;
+			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
 					"-otV accuracy depends on -aa 0 -as 0");
@@ -355,6 +354,8 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	if (*every_out != NULL)
 		ncomp = 0;
 							/* compatibility */
+	if ((do_irrad | imm_irrad) && castonly)
+		error(USER, "-I+ and -i+ options require some value output");
 	for (table = ray_out; *table != NULL; table++) {
 		if ((*table == oputV) | (*table == oputW))
 			error(WARNING, "-oVW options require trace mode");
