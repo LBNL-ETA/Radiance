@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.30 2019/04/19 16:28:57 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.31 2020/04/06 21:49:16 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -147,7 +147,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.30 2019/04/19 16:28:57 greg Ex
 #include  "selcall.h"
 
 #ifndef RAYQLEN
-#define RAYQLEN		12		/* # rays to send at once */
+#define RAYQLEN		96		/* # rays to send at once */
 #endif
 
 #ifndef MAX_RPROCS
