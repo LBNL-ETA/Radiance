@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.12 2020/03/06 19:05:19 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.13 2020/04/07 18:20:52 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -9,7 +9,7 @@ static const char RCSid[] = "$Id: dircode.c,v 2.12 2020/03/06 19:05:19 greg Exp 
 
 #include "rtmath.h"
 
-#define	DCSCALE		11584.7		/* (1<<13)*sqrt(2) - .5 */
+#define	DCSCALE		11584.5		/* ((1<<13)-.5)*sqrt(2) */
 #define FXNEG		01
 #define FYNEG		02
 #define FZNEG		04
