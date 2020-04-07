@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.126 2019/02/26 23:31:11 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.127 2020/04/07 00:49:09 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -834,8 +834,12 @@ renderopts(			/* set rendering options */
 		op = addarg(addarg(op, "-ap"), pmapf);
 		if (atoi(bw) > 0) op = addarg(op, bw);
 	}
-	if (vdef(RENDER))
+	if (vdef(RENDER)) {
 		op = addarg(op, vval(RENDER));
+		bw = strstr(vval(RENDER), "-aa ");
+		if (bw != NULL && atof(bw+4) <= FTINY)
+			overture = 0;
+	}
 	if (rvdevice != NULL) {
 		if (vdef(RVU)) {
 			if (vval(RVU)[0] != '-') {
