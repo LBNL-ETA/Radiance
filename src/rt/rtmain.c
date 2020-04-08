@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.33 2020/04/06 21:09:07 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.34 2020/04/08 00:57:39 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -251,14 +251,8 @@ main(int  argc, char  *argv[])
 			goto badopt;
 		}
 	}
-	if (nproc > 1) {
-		if (persist)
-			error(USER, "multiprocessing incompatible with persist file");
-		if (!vresolu && hresolu > 0 && hresolu < nproc)
-			error(WARNING, "number of cores should not exceed horizontal resolution");
-		if (trace != NULL)
-			error(WARNING, "multiprocessing does not work properly with trace mode");
-	}
+	if (nproc > 1 && persist)
+		error(USER, "multiprocessing incompatible with persist file");
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
