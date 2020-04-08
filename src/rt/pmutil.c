@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.4 2020/01/23 18:27:02 rschregle Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.5 2020/04/08 15:14:21 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.4 2020/01/23 18:27:02 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.4 2020/01/23 18:27:02 rschregle Exp $
+   $Id: pmutil.c,v 2.5 2020/04/08 15:14:21 rschregle Exp $
 */
 
 #include "pmap.h"
@@ -203,8 +203,11 @@ void photonPreCompDensity (PhotonMap *pmap, RAY *r, COLOR irrad)
    if (r -> ro && islight(objptr(r -> ro -> omod) -> otype)) 
       return;
       
-   find1Photon(preCompPmap, r, &p);
-   getPhotonFlux(&p, irrad);
+   if (find1Photon(preCompPmap, r, &p))
+      /* p contains a found photon, so get its irradiance, otherwise it
+       * remains zero under the assumption all photons are too distant
+       * to contribute significantly */ 
+      getPhotonFlux(&p, irrad);
 }
 
 

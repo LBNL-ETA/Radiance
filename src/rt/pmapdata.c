@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.21 2019/05/10 17:43:22 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.22 2020/04/08 15:14:21 rschregle Exp $";
 #endif
 
 /* 
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.21 2019/05/10 17:43:22 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.21 2019/05/10 17:43:22 rschregle Exp $
+   $Id: pmapdata.c,v 2.22 2020/04/08 15:14:21 rschregle Exp $
 */
 
 
@@ -517,7 +517,11 @@ void findPhotons (PhotonMap* pmap, const RAY* ray)
          
       /* Search position is ray -> rorg for volume photons, since we have no 
          intersection point. Normals are ignored -- these are incident 
-         directions). */   
+         directions). */
+      /* NOTE: status returned by XXX_FindPhotons() is currently ignored; 
+         if no photons are found, an empty queue is returned under the
+         assumption all photons are too distant to contribute significant
+         flux. */
       if (isVolumePmap(pmap)) {
 #ifdef PMAP_OOC
          OOC_FindPhotons(pmap, ray -> rorg, NULL);
@@ -607,15 +611,40 @@ void findPhotons (PhotonMap* pmap, const RAY* ray)
 
 
 
-void find1Photon (PhotonMap *pmap, const RAY* ray, Photon *photon)
+Photon *find1Photon (PhotonMap *pmap, const RAY* ray, Photon *photon)
 {
-   pmap -> maxDist2 = thescene.cusize;  /* ? */
-   
-#ifdef PMAP_OOC
-   OOC_Find1Photon(pmap, ray -> rop, ray -> ron, photon);
+   /* Init (squared) search radius to avg photon dist to centre of gravity */
+   float maxDist2_0 = pmap -> CoGdist;   
+   int found = 0;   
+#ifdef PMAP_LOOKUP_REDO
+   #define REDO 1
 #else
-   kdT_Find1Photon(pmap, ray -> rop, ray -> ron, photon);
-#endif                  
+   #define REDO 0
+#endif
+   
+   do {
+      pmap -> maxDist2 = maxDist2_0;
+#ifdef PMAP_OOC
+      found = OOC_Find1Photon(pmap, ray -> rop, ray -> ron, photon);
+#else
+      found = kdT_Find1Photon(pmap, ray -> rop, ray -> ron, photon);
+#endif
+      if (found < 0) {
+         /* Expand search radius to retry */
+         maxDist2_0 *= 2;      
+#ifdef PMAP_LOOKUP_WARN
+         sprintf(errmsg, "failed 1-NN photon lookup"
+#ifdef PMAP_LOOKUP_REDO
+            ", retrying with search radius %.2f", maxDist2_0
+#endif
+         );
+         error(WARNING, errmsg);
+#endif
+      }
+   } while (REDO && found < 0);
+
+   /* Return photon buffer containing valid photon, else NULL */
+   return found < 0 ? NULL : photon;
 }
 
 

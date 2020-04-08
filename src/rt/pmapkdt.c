@@ -8,7 +8,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapkdt.c,v 1.5 2018/11/08 00:54:07 greg Exp $
+   $Id: pmapkdt.c,v 1.6 2020/04/08 15:14:21 rschregle Exp $
 */
 
 
@@ -419,8 +419,8 @@ static void kdT_FindNearest (PhotonMap *pmap, const float pos [3],
 
 
 
-void kdT_FindPhotons (struct PhotonMap *pmap, const FVECT pos, 
-                      const FVECT norm)
+int kdT_FindPhotons (struct PhotonMap *pmap, const FVECT pos, 
+                     const FVECT norm)
 {
    float p [3], n [3];
    
@@ -429,6 +429,9 @@ void kdT_FindPhotons (struct PhotonMap *pmap, const FVECT pos,
    if (norm)
       VCOPY(n, norm);
    kdT_FindNearest(pmap, p, norm ? n : NULL, 1);
+   
+   /* Return success or failure (empty queue => none found) */
+   return pmap -> squeue.tail ? 0 : -1;
 }
 
 
@@ -478,18 +481,25 @@ static void kdT_Find1Nearest (PhotonMap *pmap, const float pos [3],
 
 
 
-void kdT_Find1Photon (struct PhotonMap *pmap, const FVECT pos, 
-                      const FVECT norm, Photon *photon)
+int kdT_Find1Photon (struct PhotonMap *pmap, const FVECT pos, 
+                     const FVECT norm, Photon *photon)
 {
    float    p [3], n [3];
-   Photon   *pnn;
+   Photon   *pnn = NULL;
    
    /* Photon pos & normal stored at lower precision */
    VCOPY(p, pos);
    if (norm)
       VCOPY(n, norm);   
-   kdT_Find1Nearest(pmap, p, norm ? n : NULL, &pnn, 1);
-   memcpy(photon, pnn, sizeof(Photon));
+   kdT_Find1Nearest(pmap, p, norm ? n : NULL, &pnn, 1);   
+   if (!pnn)
+      /* No photon found => failed */
+      return -1;
+   else {
+      /* Copy found photon => successs */
+      memcpy(photon, pnn, sizeof(Photon));
+      return 0;
+   }
 }
 
 

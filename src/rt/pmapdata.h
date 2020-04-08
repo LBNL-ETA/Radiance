@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.13 2018/12/07 20:02:40 rschregle Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.14 2020/04/08 15:14:21 rschregle Exp $ */
 
 /* 
    =========================================================================
@@ -20,7 +20,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: pmapdata.h,v 2.13 2018/12/07 20:02:40 rschregle Exp $
+   $Id: pmapdata.h,v 2.14 2020/04/08 15:14:21 rschregle Exp $
 */
 
 
@@ -317,9 +317,10 @@
       are placed search queue starting with the furthest photon at pmap ->
       squeue.node, and pmap -> squeue.tail being the number actually found. */
 
-   void find1Photon (PhotonMap *pmap, const RAY *ray, Photon *photon);
-   /* Finds single closest photon to ray -> rop with similar normal. 
-      Returns NULL if none found. */
+   Photon *find1Photon (PhotonMap *pmap, const RAY *ray, Photon *photon);
+   /* Find single closest photon to ray -> rop with similar normal. 
+      Return NULL if none found, else the supplied Photon* buffer, 
+      indicating that it contains a valid photon. */
 
    void getPhoton (PhotonMap *pmap, PhotonIdx idx, Photon *photon);
    /* Retrieve photon referenced by idx from pmap -> store */

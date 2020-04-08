@@ -7,7 +7,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapooc.c,v 1.5 2018/11/08 00:54:07 greg Exp $
+   $Id: pmapooc.c,v 1.6 2020/04/08 15:14:21 rschregle Exp $
 */
 
 
@@ -245,7 +245,7 @@ int OOC_FilterPhoton (void *p, void *fd)
 
 
 
-void OOC_FindPhotons (struct PhotonMap *pmap, const FVECT pos, const FVECT norm)
+int OOC_FindPhotons (struct PhotonMap *pmap, const FVECT pos, const FVECT norm)
 {
    OOC_SearchFilter  filt;
    OOC_FilterData    filtData;
@@ -271,16 +271,19 @@ void OOC_FindPhotons (struct PhotonMap *pmap, const FVECT pos, const FVECT norm)
 
    if (pmap -> maxDist2 < 0)
       error(INTERNAL, "failed k-NN photon lookup in OOC_FindPhotons");
+   
+   /* Return success or failure (empty queue => none found) */
+   return pmap -> squeue.tail ? 0 : -1; 
 }
 
 
 
-void OOC_Find1Photon (struct PhotonMap* pmap, const FVECT pos, 
-                      const FVECT norm, Photon *photon)
+int OOC_Find1Photon (struct PhotonMap* pmap, const FVECT pos, 
+                     const FVECT norm, Photon *photon)
 {
    OOC_SearchFilter     filt;
    OOC_FilterData       filtData;
-   float                n [3];
+   float                n [3], maxDist2;
    
    /* Lazily init OOC cache */
    if (!pmap -> store.cache)
@@ -294,13 +297,22 @@ void OOC_Find1Photon (struct PhotonMap* pmap, const FVECT pos,
    filt.data = &filtData;
    filt.func = OOC_FilterPhoton;
    
-   pmap -> maxDist2 = OOC_Find1Nearest(&pmap -> store, 
-                                       OOC_ROOT(&pmap -> store), 0, 
-                                       pmap -> store.org, pmap -> store.size,
-                                       pos, &filt, photon, pmap -> maxDist2);
-
-   if (pmap -> maxDist2 < 0)
-      error(INTERNAL, "failed 1-NN photon lookup in OOC_Find1Photon");
+   maxDist2 = OOC_Find1Nearest(&pmap -> store, 
+                               OOC_ROOT(&pmap -> store), 0, 
+                               pmap -> store.org, pmap -> store.size,
+                               pos, &filt, photon, pmap -> maxDist2);
+                               
+   if (maxDist2 < 0)
+      error(INTERNAL, "failed 1-NN photon lookup in OOC_Find1Photon");      
+      
+   if (maxDist2 >= pmap -> maxDist2)
+      /* No photon found => failed */
+      return -1;
+   else {
+      /* Set photon distance => success */
+      pmap -> maxDist2 = maxDist2;
+      return 0;
+   }
 }
 
 
