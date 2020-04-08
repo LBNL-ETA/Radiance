@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.16 2020/04/08 00:58:32 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.17 2020/04/08 02:39:30 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -28,10 +28,11 @@ my @rtraceA = split(' ', 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 ' .
 				'-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03');
 my @vwraysA = ('vwrays', '-ff', '-pj', '.67');
 my @vwrightA = ('vwright', '-vtv');
-my @rpictA = ('rpict');
+my @rpictA = ('rpict', '-ps', '1');
 my $outpatt = '^-o[vrxlLRXnNsmM]+';
 my $refDepth = "";
 my $irrad = 0;
+my $persist = 0;
 my $outlyr;
 my $outdir;
 my $outpic;
@@ -75,6 +76,7 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 	# Check rtrace options
 	if (defined $rtraceC{$ARGV[0]}) {
+		$persist ||= ("$ARGV[0]" =~ /^-PP?$/);
 		push @rtraceA, $ARGV[0];
 		push @rpictA, shift(@ARGV);
 		for (my $i = $rtraceC{$rpictA[-1]}; $i-- > 0; ) {
@@ -124,7 +126,7 @@ if (defined $outpic) {		# redirect output?
 }
 #####################################################################
 ##### May as well run rpict?
-if ($nprocs == 1 && !defined($outdir)) {
+if ($nprocs == 1 && $persist == 0 && !defined($outdir)) {
 	push(@rpictA, $ARGV[0]) if ($#ARGV == 0);
 	exec @rpictA ;
 }
