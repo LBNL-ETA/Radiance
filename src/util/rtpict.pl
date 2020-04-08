@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.17 2020/04/08 02:39:30 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.18 2020/04/08 16:20:00 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -14,7 +14,8 @@ my %rtraceC = ('-dt',1, '-dc',1, '-dj',1, '-ds',1, '-dr',1, '-dp',1,
 		'-ss',1, '-st',1, '-e',1, '-am',1, '-P',1, '-PP',1,
 		'-ab',1, '-af',1, '-ai',1, '-aI',1, '-ae',1, '-aE',1,
 		'-av',3, '-aw',1, '-aa',1, '-ar',1, '-ad',1, '-as',1,
-		'-me',3, '-ma',3, '-mg',1, '-ms',1, '-lr',1, '-lw',1);
+		'-me',3, '-ma',3, '-mg',1, '-ms',1, '-lr',1, '-lw',1,
+		'-ap',2, '-am',1, '-ac',1, '-aC',1);
 # boolean rtrace options
 my @boolO = ('-w', '-bv', '-dv', '-i', '-u');
 # view options and the associated number of arguments
