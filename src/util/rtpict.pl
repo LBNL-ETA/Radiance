@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.15 2020/03/15 16:54:19 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.16 2020/04/08 00:58:32 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -11,7 +11,7 @@ use strict;
 my $nprocs = 1;
 # rtrace options and the associated number of arguments
 my %rtraceC = ('-dt',1, '-dc',1, '-dj',1, '-ds',1, '-dr',1, '-dp',1,
-		'-ss',1, '-st',1, '-e',1, '-am',1,
+		'-ss',1, '-st',1, '-e',1, '-am',1, '-P',1, '-PP',1,
 		'-ab',1, '-af',1, '-ai',1, '-aI',1, '-ae',1, '-aE',1,
 		'-av',3, '-aw',1, '-aa',1, '-ar',1, '-ad',1, '-as',1,
 		'-me',3, '-ma',3, '-mg',1, '-ms',1, '-lr',1, '-lw',1);
