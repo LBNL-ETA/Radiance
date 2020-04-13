@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.35 2020/01/07 18:26:55 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.36 2020/04/13 17:12:19 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -272,18 +272,20 @@ float		*rh_palt;		/* sky patch altitudes (radians) */
 float		*rh_pazi;		/* sky patch azimuths (radians) */
 float		*rh_dom;		/* sky patch solid angle (sr) */
 
-#define		vector(v,alt,azi)	(	(v)[1] = tcos(alt), \
-						(v)[0] = (v)[1]*tsin(azi), \
-						(v)[1] *= tcos(azi), \
-						(v)[2] = tsin(alt) )
+#define		vector(v,alt,azi)	(	(v)[1] = cos(alt), \
+						(v)[0] = (v)[1]*sin(azi), \
+						(v)[1] *= cos(azi), \
+						(v)[2] = sin(alt) )
 
 #define		rh_vector(v,i)		vector(v,rh_palt[i],rh_pazi[i])
 
 #define		rh_cos(i)		tsin(rh_palt[i])
 
+#define		solar_minute(jd,hr)	((24*60)*((jd)-1)+(int)((hr)*60.+.5))
+
 extern int	rh_init(void);
 extern float *	resize_dmatrix(float *mtx_data, int nsteps, int npatch);
-extern void	OutputSun(int id, FILE *fp);
+extern void	OutputSun(int id, int goodsun, FILE *fp, FILE *mfp);
 extern void	AddDirect(float *parr);
 
 
@@ -309,8 +311,10 @@ main(int argc, char *argv[])
 	int	doheader = 1;		/* output header? */
 	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
+	int	leap_day = 0;		/* add leap day? */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
 	FILE	*sunsfp = NULL;		/* output file for individual suns */
+	FILE	*modsfp = NULL;		/* modifier output file */
 	float	*mtx_data = NULL;	/* our matrix data */
 	int	avgSky = 0;		/* compute average sky r.t. matrix? */
 	int	ntsteps = 0;		/* number of time steps */
@@ -371,6 +375,19 @@ main(int argc, char *argv[])
 			skycolor[1] = atof(argv[++i]);
 			skycolor[2] = atof(argv[++i]);
 			break;
+		case 'D':			/* output suns to file */
+			if (strcmp(argv[++i], "-")) {
+				sunsfp = fopen(argv[i], "w");
+				if (sunsfp == NULL) {
+					fprintf(stderr,
+					"%s: cannot open '%s' for output\n",
+							progname, argv[i]);
+					exit(1);
+				}
+				break;		/* still may output matrix */
+			}
+			sunsfp = stdout;	/* sending to stdout, so... */
+			/* fall through */
 		case 'n':			/* no matrix output */
 			avgSky = -1;
 			rhsubdiv = 1;
@@ -379,9 +396,8 @@ main(int argc, char *argv[])
 			skycolor[0] = skycolor[1] = skycolor[2] = 0;
 			grefl[0] = grefl[1] = grefl[2] = 0;
 			break;
-		case 'D':			/* output suns to file */
-			sunsfp = fopen(argv[++i], "w");
-			if (!sunsfp) {
+		case 'M':			/* send sun modifiers to file */
+			if ((modsfp = fopen(argv[++i], "w")) == NULL) {
 				fprintf(stderr, "%s: cannot open '%s' for output\n",
 						progname, argv[i]);
 				exit(1);
@@ -418,6 +434,9 @@ main(int argc, char *argv[])
 				progname, argv[i]);
 		exit(1);
 	}
+	if ((modsfp != NULL) & (sunsfp == NULL))
+		fprintf(stderr, "%s: warning -M output will be empty without -D\n",
+				progname);
 	if (verbose) {
 		if (i == argc-1)
 			fprintf(stderr, "%s: reading weather tape '%s'\n",
@@ -488,17 +507,26 @@ main(int argc, char *argv[])
 			mtx_data = resize_dmatrix(mtx_data, tstorage, nskypatch);
 		}
 		ntsteps++;		/* keep count of time steps */
-		if (dif <= 1e-4) {
-			if (!avgSky | !mtx_offset)
-				memset(mtx_data+mtx_offset, 0, sizeof(float)*3*nskypatch);
-			continue;
-		}
 					/* compute solar position */
-		julian_date = jdate(mo, da);
+		if ((mo == 2) & (da == 29)) {
+			julian_date = 60;
+			leap_day = 1;
+		} else
+			julian_date = jdate(mo, da) + leap_day;
 		sda = sdec(julian_date);
 		sta = stadj(julian_date);
 		altitude = salt(sda, hr+sta);
 		azimuth = sazi(sda, hr+sta) + PI - DegToRad(rotation);
+
+		if (dir+dif <= 1e-4) {	/* effectively nighttime? */
+			if (!avgSky | !mtx_offset)
+				memset(mtx_data+mtx_offset, 0,
+						sizeof(float)*3*nskypatch);
+			if (sunsfp)	/* output black sun */
+				OutputSun(solar_minute(julian_date,hr), 0,
+							sunsfp, modsfp);
+			continue;
+		}
 					/* convert measured values */
 		if (dir_is_horiz && altitude > 0.)
 			dir /= sin(altitude);
@@ -512,8 +540,9 @@ main(int argc, char *argv[])
 					/* compute sky patch values */
 		ComputeSky(mtx_data+mtx_offset);
 
-		if (sunsfp)		/* output sun if indicated */
-			OutputSun(ntsteps, sunsfp);
+		if (sunsfp)		/* output sun if requested */
+			OutputSun(solar_minute(julian_date,hr), 1,
+						sunsfp, modsfp);
 
 		if (avgSky < 0)		/* no matrix? */
 			continue;
@@ -526,6 +555,7 @@ main(int argc, char *argv[])
 		if (verbose && mo != last_monthly)
 			fprintf(stderr, "%s: stepping through month %d...\n",
 						progname, last_monthly=mo);
+					/* note whether leap-day was given */
 	}
 	if (!ntsteps) {
 		fprintf(stderr, "%s: no valid time steps on input\n", progname);
@@ -778,22 +808,26 @@ AddDirect(float *parr)
 
 /* Output a sun to indicated file if appropriate for this time step */
 void
-OutputSun(int id, FILE *fp)
+OutputSun(int id, int goodsun, FILE *fp, FILE *mfp)
 {
 	double	srad;
 	FVECT	sv;
 
-	if ((altitude <= 0) | (dir_illum <= 1e-4))
+	srad = DegToRad(SUN_ANG_DEG/2.);
+
+	if (altitude < -srad)		/* well below horizon? */
 		return;
 
-	srad = DegToRad(SUN_ANG_DEG/2.);
-	srad = dir_illum/(WHTEFFICACY * PI*srad*srad);
+	srad = goodsun ? dir_illum/(WHTEFFICACY * PI*srad*srad) : 0;
 	vector(sv, altitude, azimuth);
 	fprintf(fp, "\nvoid light solar%d\n0\n0\n", id);
 	fprintf(fp, "3 %.3e %.3e %.3e\n", srad*suncolor[0],
 			srad*suncolor[1], srad*suncolor[2]);
 	fprintf(fp, "\nsolar%d source sun%d\n0\n0\n", id, id);
 	fprintf(fp, "4 %.6f %.6f %.6f %.4f\n", sv[0], sv[1], sv[2], SUN_ANG_DEG);
+	
+	if (mfp != NULL)		/* saving modifier IDs? */
+		fprintf(mfp, "solar%d\n", id);
 }
 
 /* Initialize Reinhart sky patch positions (GW) */

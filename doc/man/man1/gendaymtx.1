@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.11 2020/01/07 01:42:30 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.12 2020/04/13 17:12:19 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -14,6 +14,8 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 .B "\-d|\-s|\-n"
 ][
 .B "\-D sunfile"
+][
+.B "\-M sunmods"
 ][
 .B "\-r deg"
 ][
@@ -101,7 +103,25 @@ The
 .I \-D
 option may be used to specify an output file to contain a list of
 solar positions and intensities corresponding to time steps in the
-weather tape where the sun is visible above the horizion.
+weather tape where the sun has any portion above the horizion.
+Sun radiance values may be zero if the direct amount is zero on the input.
+Sun modifiers and names will be indexed by the minute, numbered from
+midnight, January 1st.
+If a hyphen ('-') is given as the argument to
+.I \-D,
+then the sun descriptions  will be directed to the standard output.
+This implies the
+.I \-n
+option just described.
+If the
+.I \-M
+option is given as well, it will be used to record the modifier
+names used in the
+.I \-D
+output, for convenient input to
+.I rcontrib(1)
+and
+.I rfluxmtx(1).
 .PP
 By default,
 .I gendaymtx
@@ -159,4 +179,4 @@ based on Jean-Jacques Delaunay's original gendaylit(1) implementation.
 Greg Ward wrote the final parameter parsing and weather tape conversion.
 .SH "SEE ALSO"
 dctimestep(1), genBSDF(1), gendaylit(1), gensky(1), genskyvec(1),
-rcollate(1), rcontrib(1), xform(1)
+rcollate(1), rcontrib(1), rfluxmtx(1), xform(1)

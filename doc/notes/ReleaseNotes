@@ -2340,7 +2340,9 @@ Made it so number of segments in genworm, genrev, and gensurf can be
 given as expressions of previously defined variables, etc.
 
 Added -D and -n option to gendaymtx to output sun description and skip
-matrix output on request.
+matrix output on request.  A -M option was also added to output solar
+modifiers for rcontrib.  Support also added for leap days in WEA input.
+Enhancements sponsored by Ladybug Tools.
 
 Updated eplus_uvf to work with IDF version 9.x, checking version number.
 
