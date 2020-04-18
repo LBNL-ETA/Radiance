@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.3 2020/04/02 22:14:01 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.4 2020/04/18 17:10:33 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -151,12 +151,6 @@ int		changeGroup(Scene *sc, const char *gname,
 /* Change material for the indicated faces */
 int		changeMaterial(Scene *sc, const char *mname,
 					int flreq, int flexc);
-
-/* Grab texture coord's/normals from another object via ray tracing */
-#define GET_TEXTURE		01
-#define GET_NORMALS		02
-int		traceSurface(Scene *sc, int flreq, int flexc,
-				const char *oct, int what);
 
 /* Free a scene */
 void		freeScene(Scene *sc);
