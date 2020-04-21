@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.84 2020/03/30 18:31:20 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.85 2020/04/21 02:42:35 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -74,7 +74,7 @@ install:	all
 all:	librtrad.a libmgf.a libwfobj.a libreetz.a $(SPECIAL)
 
 clean:
-	rm -f *.o librtrad.a libmgf.a
+	rm -f *.o *.a
 
 ogl:	$(OGLOBJ)
 	rm -f librgl.a
