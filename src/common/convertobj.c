@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.2 2020/04/23 03:19:48 greg Exp $";
+static const char RCSid[] = "$Id: convertobj.c,v 2.3 2020/04/23 22:35:27 greg Exp $";
 #endif
 /*
  *  convertobj.c
@@ -47,7 +47,7 @@ toRadiance(Scene *sc, FILE *fp, int flreq, int flexc)
 						/* write faces */
 	n = foreachFace(sc, radface, flreq, flexc, (void *)fp);
 	if (fflush(fp) < 0) {
-		error(SYSTEM, "Error flushing Radiance scene data");
+		error(SYSTEM, "Error writing Radiance scene data");
 		return(-1);
 	}
 	return(n);
@@ -68,24 +68,28 @@ writeRadiance(Scene *sc, const char *fspec, int flreq, int flexc)
 		if ((fp = popen(fspec+1, "w")) == NULL) {
 			sprintf(errmsg, "%s: cannot execute", fspec);
 			error(SYSTEM, errmsg);
-			return(0);
+			return(-1);
 		}
 	} else
 #endif
 	if ((fp = fopen(fspec, "w")) == NULL) {
 		sprintf(errmsg, "%s: cannot open for writing", fspec);
 		error(SYSTEM, errmsg);
-		return(0);
+		return(-1);
 	}
 						/* start off header */
 	fprintf(fp, "# Radiance scene file converted from .OBJ by %s\n#\n",
 						progname);
 	n = toRadiance(sc, fp, flreq, flexc);   /* write file */
 #if POPEN_SUPPORT
-	if (fspec[0] == '!')
-		pclose(fp);
-	else
+	if (fspec[0] == '!') {
+		if (pclose(fp)) {
+			sprintf(errmsg, "%s: error writing to command\n", fspec);
+			error(SYSTEM, errmsg);
+			return(-1);
+		}
+	} else
 #endif
-	fclose(fp);				/* close file */
+	fclose(fp);				/* close it (already flushed) */
 	return(n);
 }

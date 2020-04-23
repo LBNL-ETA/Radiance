@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writewfobj.c,v 2.2 2020/04/23 03:19:48 greg Exp $";
+static const char RCSid[] = "$Id: writewfobj.c,v 2.3 2020/04/23 22:35:27 greg Exp $";
 #endif
 /*
  *  writewfobj.c
@@ -220,23 +220,27 @@ writeOBJ(Scene *sc, const char *fspec)
 		if ((fp = popen(fspec+1, "w")) == NULL) {
 			sprintf(errmsg, "%s: cannot execute", fspec);
 			error(SYSTEM, errmsg);
-			return(0);
+			return(-1);
 		}
 	} else
 #endif
 	if ((fp = fopen(fspec, "w")) == NULL) {
 		sprintf(errmsg, "%s: cannot open for writing", fspec);
 		error(SYSTEM, errmsg);
-		return(0);
+		return(-1);
 	}
 						/* start off header */
 	fprintf(fp, "# Wavefront .OBJ file created by %s\n#\n", progname);
 	n = toOBJ(sc, fp);			/* write scene */
 #if POPEN_SUPPORT
-	if (fspec[0] == '!')
-		pclose(fp);
-	else
+	if (fspec[0] == '!') {
+		if (pclose(fp)) {
+			sprintf(errmsg, "%s: error writing to command\n", fspec);
+			error(SYSTEM, errmsg);
+			return(-1);
+		}
+	} else
 #endif
-	fclose(fp);				/* close it */
+	fclose(fp);				/* close it (already flushed) */
 	return(n);
 }
