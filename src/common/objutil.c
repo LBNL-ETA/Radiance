@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.3 2020/04/02 22:14:01 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.4 2020/05/01 18:55:34 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -597,6 +597,64 @@ newScene(void)
 	sc->matname[sc->nmats++] = savqstr("DEFAULT_MATERIAL");
 
 	return(sc);
+}
+
+/* Add a vertex to our scene */
+int
+addVertex(Scene *sc, double x, double y, double z)
+{
+	sc->vert = chunk_alloc(Vertex, sc->vert, sc->nverts);
+	sc->vert[sc->nverts].p[0] = x;
+	sc->vert[sc->nverts].p[1] = y;
+	sc->vert[sc->nverts].p[2] = z;
+	sc->vert[sc->nverts].vflist = NULL;
+	return(sc->nverts++);
+}
+
+/* Add a texture coordinate to our scene */
+int
+addTexture(Scene *sc, double u, double v)
+{
+	sc->tex = chunk_alloc(TexCoord, sc->tex, sc->ntex);
+	sc->tex[sc->ntex].u = u;
+	sc->tex[sc->ntex].v = v;
+	return(sc->ntex++);
+}
+
+/* Add a surface normal to our scene */
+int
+addNormal(Scene *sc, double xn, double yn, double zn)
+{
+	FVECT   nrm;
+
+	nrm[0] = xn; nrm[1] = yn; nrm[2] = zn;
+	if (normalize(nrm) == .0)
+		return(-1);
+	sc->norm = chunk_alloc(Normal, sc->norm, sc->nnorms);
+	VCOPY(sc->norm[sc->nnorms], nrm);
+	return(sc->nnorms++);
+}
+
+/* Set current (last) group */
+void
+setGroup(Scene *sc, const char *nm)
+{
+	sc->lastgrp = findName(nm, (const char **)sc->grpname, sc->ngrps);
+	if (sc->lastgrp >= 0)
+		return;
+	sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
+	sc->grpname[sc->lastgrp=sc->ngrps++] = savqstr((char *)nm);
+}
+
+/* Set current (last) material */
+void
+setMaterial(Scene *sc, const char *nm)
+{
+	sc->lastmat = findName(nm, (const char **)sc->matname, sc->nmats);
+	if (sc->lastmat >= 0)
+		return;
+	sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
+	sc->matname[sc->lastmat=sc->nmats++] = savqstr((char *)nm);
 }
 
 /* Duplicate a scene */
