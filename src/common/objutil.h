@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.6 2020/05/02 00:12:45 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.7 2020/05/02 00:21:13 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -155,22 +155,22 @@ int		changeGroup(Scene *sc, const char *gname,
 int		changeMaterial(Scene *sc, const char *mname,
 					int flreq, int flexc);
 
-/* Add a vertex to our scene */
+/* Add a vertex to our scene, returning index */
 int		addVertex(Scene *sc, double x, double y, double z);
 
-/* Add a texture coordinate to our scene */
+/* Add a texture coordinate to our scene, returning index */
 int		addTexture(Scene *sc, double u, double v);
 
-/* Add a surface normal to our scene */
+/* Add a surface normal to our scene, returning index */
 int		addNormal(Scene *sc, double xn, double yn, double zn);
 
-/* Set current (last) group */
+/* Set current group (sc->lastgrp) to given ID */
 void		setGroup(Scene *sc, const char *nm);
 
-/* Set current (last) material */
+/* Set current material (sc->lastmat) to given ID */
 void		setMaterial(Scene *sc, const char *nm);
 
-/* Add a new face to our scene (using current group and material */
+/* Add a new face to our scene, using current group and material */
 Face *		addFace(Scene *sc, VNDX vid[], int nv);
 
 /* Free a scene */
