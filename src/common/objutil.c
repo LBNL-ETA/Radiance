@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.4 2020/05/01 18:55:34 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.5 2020/05/02 00:12:45 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -599,7 +599,7 @@ newScene(void)
 	return(sc);
 }
 
-/* Add a vertex to our scene */
+/* Add a vertex to a scene */
 int
 addVertex(Scene *sc, double x, double y, double z)
 {
@@ -611,7 +611,7 @@ addVertex(Scene *sc, double x, double y, double z)
 	return(sc->nverts++);
 }
 
-/* Add a texture coordinate to our scene */
+/* Add a texture coordinate to a scene */
 int
 addTexture(Scene *sc, double u, double v)
 {
@@ -621,7 +621,7 @@ addTexture(Scene *sc, double u, double v)
 	return(sc->ntex++);
 }
 
-/* Add a surface normal to our scene */
+/* Add a surface normal to a scene */
 int
 addNormal(Scene *sc, double xn, double yn, double zn)
 {
@@ -655,6 +655,44 @@ setMaterial(Scene *sc, const char *nm)
 		return;
 	sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
 	sc->matname[sc->lastmat=sc->nmats++] = savqstr((char *)nm);
+}
+
+/* Add new face to a scene */
+Face *
+addFace(Scene *sc, VNDX vid[], int nv)
+{
+	Face    *f;
+	int     i;
+	
+	if (nv < 3)
+		return(NULL);
+	f = (Face *)emalloc(sizeof(Face)+sizeof(VertEnt)*(nv-3));
+	f->flags = 0;
+	f->nv = nv;
+	f->grp = sc->lastgrp;
+	f->mat = sc->lastmat;
+	for (i = 0; i < nv; i++) {		/* add each vertex */
+		int     j;
+		f->v[i].vid = vid[i][0];
+		f->v[i].tid = vid[i][1];
+		f->v[i].nid = vid[i][2];
+		f->v[i].fnext = NULL;
+		for (j = i; j-- > 0; )
+			if (f->v[j].vid == vid[i][0])
+				break;
+		if (j < 0) {			/* first occurrence? */
+			f->v[i].fnext = sc->vert[vid[i][0]].vflist;
+			sc->vert[vid[i][0]].vflist = f;
+		} else if (nv == 3)		/* degenerate triangle? */
+			f->flags |= FACE_DEGENERATE;
+	}
+	f->next = sc->flist;			/* push onto face list */
+	sc->flist = f;
+	sc->nfaces++;
+						/* check face area */
+	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY)
+		f->flags |= FACE_DEGENERATE;
+	return(f);
 }
 
 /* Duplicate a scene */

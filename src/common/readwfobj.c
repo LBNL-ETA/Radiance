@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.3 2020/05/01 18:55:34 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.4 2020/05/02 00:12:45 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -15,8 +15,6 @@ static const char RCSid[] = "$Id: readwfobj.c,v 2.3 2020/05/01 18:55:34 greg Exp
 #include "paths.h"
 #include <ctype.h>
 #include "objutil.h"
-
-typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
 #define MAXARG		512	/* maximum # arguments in a statement */
 
@@ -143,47 +141,27 @@ group_name(int ac, char **av)
 	return(nambuf);
 }
 
-/* Add a new face to scene */
+/* add a new face to scene */
 static int
 add_face(Scene *sc, const VNDX ondx, int ac, char *av[])
 {
-	Face    *f;
+	VNDX	vdef[4];
+	VNDX	*varr = vdef;
+	Face    *f = NULL;
 	int     i;
 	
-	if (ac < 3)
+	if (ac < 3)				/* legal polygon? */
 		return(0);
-	f = (Face *)emalloc(sizeof(Face)+sizeof(VertEnt)*(ac-3));
-	f->flags = 0;
-	f->nv = ac;
-	f->grp = sc->lastgrp;
-	f->mat = sc->lastmat;
-	for (i = 0; i < ac; i++) {		/* add each vertex */
-		VNDX    vin;
-		int     j;
-		if (!cvtndx(vin, sc, ondx, av[i])) {
-			efree((char *)f);
-			return(0);
-		}
-		f->v[i].vid = vin[0];
-		f->v[i].tid = vin[1];
-		f->v[i].nid = vin[2];
-		f->v[i].fnext = NULL;
-		for (j = i; j-- > 0; )
-			if (f->v[j].vid == vin[0])
-				break;
-		if (j < 0) {			/* first occurrence? */
-			f->v[i].fnext = sc->vert[vin[0]].vflist;
-			sc->vert[vin[0]].vflist = f;
-		} else if (ac == 3)		/* degenerate triangle? */
-			f->flags |= FACE_DEGENERATE;
-	}
-	f->next = sc->flist;			/* push onto face list */
-	sc->flist = f;
-	sc->nfaces++;
-						/* check face area */
-	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY)
-		f->flags |= FACE_DEGENERATE;
-	return(1);
+	if (ac > 4)				/* need to allocate array? */
+		varr = (VNDX *)emalloc(ac*sizeof(VNDX));
+	for (i = ac; i--; )			/* index each vertex */
+		if (!cvtndx(varr[i], sc, ondx, av[i]))
+			break;
+	if (i < 0)				/* create face if indices OK */
+		f = addFace(sc, varr, ac);
+	if (varr != vdef)
+		efree((char *)varr);
+	return(f != NULL);
 }
 
 /* Load a .OBJ file */

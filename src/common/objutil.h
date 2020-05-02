@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.5 2020/05/01 18:55:34 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.6 2020/05/02 00:12:45 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -23,6 +23,9 @@
 
 struct Face;				/* forward declaration */
 
+typedef int		VNDX[3];	/* vertex indices (point,map,normal) */
+
+/* Structure to hold vertex indices and link back to face list */
 typedef struct {
 	int		vid;		/* vertex id */
 	int		tid;		/* texture id */
@@ -166,6 +169,9 @@ void		setGroup(Scene *sc, const char *nm);
 
 /* Set current (last) material */
 void		setMaterial(Scene *sc, const char *nm);
+
+/* Add a new face to our scene (using current group and material */
+Face *		addFace(Scene *sc, VNDX vid[], int nv);
 
 /* Free a scene */
 void		freeScene(Scene *sc);
