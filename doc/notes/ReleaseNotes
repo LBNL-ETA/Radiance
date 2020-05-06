@@ -2361,3 +2361,6 @@ deadlock on controlling process.
 
 Eliminated unnecessary start-up procedures for rtrace when only ray-casting
 is needed (i.e., no tracing or value output).
+
+Improved isotropic sampling method in bsdf2ttree using "zipper" approach
+applied in genBSDF.
