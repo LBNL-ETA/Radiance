@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.85 2020/05/05 22:35:58 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.86 2020/05/06 00:36:28 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -326,7 +326,7 @@ sub do_ttree_dir {
 				qq{-e "r4=rand(-1.5839226*recno-59.82712)" } .
 				qq{-e "odds(n):if(.5*n-floor(.5*n)-.25,-1,1)"} .
 				qq{-e "Dx=1-(\$1+r1)/$ns2" } .
-				qq{-e "Dy=odds(\$1)/$ns*r2" } .
+				qq{-e "Dy=min(1/$ns,sqrt(1-Dx*Dx))*odds(\$1)*r2" } .
 				qq{-e "Dz=sqrt(1-Dx*Dx-Dy*Dy)" } .
 				qq{-e "xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
 				qq{-e "yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
@@ -342,7 +342,7 @@ sub do_ttree_dir {
 				qq{-e 'r4=rand(-1.5839226*recno-59.82712)' } .
 				qq{-e 'odds(n):if(.5*n-floor(.5*n)-.25,-1,1)' } .
 				qq{-e 'Dx=1-(\$1+r1)/$ns2' } .
-				qq{-e 'Dy=odds(\$1)/$ns*r2' } .
+				qq{-e 'Dy=min(1/$ns,sqrt(1-Dx*Dx))*odds(\$1)*r2' } .
 				qq{-e 'Dz=sqrt(1-Dx*Dx-Dy*Dy)' } .
 				qq{-e 'xp=(\$3+r3)*(($dim[1]-$dim[0])/$nx)+$dim[0]' } .
 				qq{-e 'yp=(\$2+r4)*(($dim[3]-$dim[2])/$ny)+$dim[2]' } .
