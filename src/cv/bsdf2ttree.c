@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.44 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.45 2020/05/06 01:30:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -191,10 +191,12 @@ eval_isotropic(char *funame)
 		assignD = (fundefined(funame) < 6);
 						/* run through directions */
 	for (ix = 0; ix < sqres/2; ix++) {
-		RBFNODE	*rbf = NULL;
+		const int	zipsgn = (ix & 1)*2 - 1;
+		RBFNODE		*rbf = NULL;
 		iovec[0] = 2.*sqfact*(ix+.5) - 1.;
-		iovec[1] = .0;
-		iovec[2] = input_orient * sqrt(1. - iovec[0]*iovec[0]);
+		iovec[1] = zipsgn*sqfact*.5;
+		iovec[2] = input_orient * sqrt(1. - iovec[0]*iovec[0]
+						- iovec[1]*iovec[1]);
 		if (funame == NULL)
 			rbf = advect_rbf(iovec, lobe_lim);
 		for (ox = 0; ox < sqres; ox++) {
@@ -252,17 +254,22 @@ eval_isotropic(char *funame)
 #if (NSSAMP > 0)
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
 				int	ssi;
-				double	ssa[3], ssvec[6], sum = 0;
+				double	ssa[4], ssvec[6], sum = 0;
 						/* super-sample voxel */
 				for (ssi = NSSAMP; ssi--; ) {
-				    SDmultiSamp(ssa, 3, (ssi+frandom()) *
+				    SDmultiSamp(ssa, 4, (ssi+frandom()) *
 							(1./NSSAMP));
 				    ssvec[0] = 2.*sqfact*(ix+ssa[0]) - 1.;
-				    ssvec[1] = .0;
-				    ssvec[2] = input_orient *
-						sqrt(1. - ssvec[0]*ssvec[0]);
-				    SDsquare2disk(ssvec+3, (ox+ssa[1])*sqfact,
-						(oy+ssa[2])*sqfact);
+				    ssvec[1] = zipsgn*sqfact*ssa[1];
+				    ssvec[2] = 1. - ssvec[0]*ssvec[0]
+							- ssvec[1]*ssvec[1];
+				    if (ssvec[2] < .0) {
+					ssvec[1] = 0;
+					ssvec[2] = 1. - ssvec[0]*ssvec[0];
+				    }
+				    ssvec[2] = input_orient * sqrt(ssvec[2]);
+				    SDsquare2disk(ssvec+3, (ox+ssa[2])*sqfact,
+						(oy+ssa[3])*sqfact);
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
@@ -642,7 +649,8 @@ main(int argc, char *argv[])
 						return(1);
 					}
 					fcompile(fpath);
-					single_plane_incident = 0;
+					if (single_plane_incident < 0)
+						single_plane_incident = 0;
 				}
 			} else
 				dofwd = (argv[i][0] == '+');
