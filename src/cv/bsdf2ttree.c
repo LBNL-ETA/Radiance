@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.47 2020/05/07 02:36:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.48 2020/05/07 16:54:10 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -25,7 +25,7 @@ static double		pctcull = 90.;
 				/* sampling order */
 static int		samp_order = 6;
 				/* super-sampling threshold */
-const double		ssamp_thresh = 0.30;
+static double		ssamp_thresh = 0.35;
 				/* number of super-samples */
 #ifndef NSSAMP
 #define	NSSAMP		256
@@ -793,6 +793,7 @@ main(int argc, char *argv[])
 			goto userr;
 		}
 		++eclock;
+		ssamp_thresh *= 0.5;		/* lower sampling threshold */
 		add_wbsdf("-a", 1);
 		add_wbsdf(tfmt[single_plane_incident], 1);
 		if (dofwd) {
