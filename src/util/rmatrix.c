@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.43 2020/03/26 18:05:44 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.44 2020/05/07 18:45:16 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -163,7 +163,7 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 {
 	int	i;
 
-	if ((char *)&rmx_lval(rm,0,0,0) - (char *)&rmx_lval(rm,1,0,0) !=
+	if ((char *)&rmx_lval(rm,1,0,0) - (char *)&rmx_lval(rm,0,0,0) !=
 					sizeof(double)*rm->ncols*rm->ncomp) {
 		fputs("Code error in rmx_load_double()\n", stderr);
 		exit(1);
