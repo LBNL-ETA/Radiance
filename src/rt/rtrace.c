@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.94 2020/04/06 21:09:07 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.95 2020/05/07 17:13:08 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -69,7 +69,6 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 		oputw, oputW, oputm, oputM, oputtilde;
 
 extern void tranotify(OBJECT obj);
-static void setoutput(char *vs);
 static int is_fifo(FILE *fp);
 static void bogusray(void);
 static void raycast(RAY *r);
