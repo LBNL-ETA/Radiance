@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.48 2020/05/07 16:54:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.49 2020/05/08 22:34:21 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -192,7 +192,7 @@ eval_isotropic(char *funame)
 	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
 #if (NSSAMP > 0)
-	rtrip = (char *)calloc(sqres, 1);	/* track sample triggerings */
+	rtrip = (char *)malloc(sqres);		/* track sample triggerings */
 	ryval = (float *)calloc(sqres, sizeof(float));
 #endif
 						/* run through directions */
@@ -222,6 +222,13 @@ eval_isotropic(char *funame)
 			}
 			sdv_next.cieY = funvalue(funame, 6, iovec);
 		    }
+		    /*
+		     * Super-sample when we detect a difference from before
+		     * or after in this row, or the previous row in this column.
+		     * Also super-sample if the previous neighbors performed
+		     * super-sampling, regardless of any differences.
+		     */
+		    memset(rtrip, 0, sqres);
 		    for (oy = 0; oy < sqres; oy++) {
 			int	trip;
 			bsdf = sdv_next.cieY;	/* keeping one step ahead... */
@@ -458,7 +465,7 @@ eval_anisotropic(char *funame)
 	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
 #if (NSSAMP > 0)
-	rtrip = (char *)calloc(sqres, 1);	/* track sample triggerings */
+	rtrip = (char *)malloc(sqres);		/* track sample triggerings */
 	ryval = (float *)calloc(sqres, sizeof(float));
 #endif
 						/* run through directions */
@@ -487,6 +494,13 @@ eval_anisotropic(char *funame)
 			}
 			sdv_next.cieY = funvalue(funame, 6, iovec);
 		    }
+		    /*
+		     * Super-sample when we detect a difference from before
+		     * or after in this row, or the previous row in this column.
+		     * Also super-sample if the previous neighbors performed
+		     * super-sampling, regardless of any differences.
+		     */
+		    memset(rtrip, 0, sqres);
 		    for (oy = 0; oy < sqres; oy++) {
 			int	trip;
 			bsdf = sdv_next.cieY;	/* keeping one step ahead... */
