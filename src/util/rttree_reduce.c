@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.18 2019/03/02 17:05:45 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.19 2020/05/11 20:26:12 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -19,8 +19,8 @@ int	log2g = 4;		/* log2 of grid resolution */
 int	infmt = 'a';		/* input format ('a','f','d') */
 double	pctcull = 95.;		/* target culling percentile */
 
-#define dval3(ix,ox,oy)		datarr[((((ix)<<log2g)+(ox))<<log2g)+(oy)]
-#define dval4(ix,iy,ox,oy)	datarr[((((((ix)<<log2g)+(iy))<<log2g)+(ox))<<log2g)+(oy)]
+#define dval3(ix,ox,oy)		datarr[((size_t)(((ix)<<log2g)+(ox))<<log2g)+(oy)]
+#define dval4(ix,iy,ox,oy)	datarr[((((size_t)(((ix)<<log2g)+(iy))<<log2g)+(ox))<<log2g)+(oy)]
 
 /* Tensor tree node */
 typedef struct ttree_s {
