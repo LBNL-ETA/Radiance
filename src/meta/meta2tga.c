@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.8 2019/11/18 22:12:32 greg Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.9 2020/05/13 00:30:13 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
@@ -44,8 +44,7 @@ static int putthead(struct hdStruct  *hp, char  *ip, FILE  *fp);
 
 
 char *
-findtack(s)			/* find place to tack on suffix */
-register char *s;
+findtack(char *s)		/* find place to tack on suffix */
 {
 	while (*s && *s != '.')
 		s++;
@@ -58,7 +57,6 @@ main(
 	int  argc,
 	char  **argv
 )
-
 {
  FILE  *fp;
  char  comargs[200], command[300];
@@ -138,8 +136,7 @@ main(
     }
 
  return(0);
- }
-
+}
 
 
 void
@@ -153,15 +150,11 @@ thispage(void)		/* rewind current file */
 void
 initfile(void)		/* initialize this file */
 {
-    static int  filenum = 0;
-    /*
-    static unsigned char  cmap[24] = {255,255,255, 255,152,0, 0,188,0, 0,0,255,
-			179,179,0, 255,0,255, 0,200,200, 0,0,0};
-     */
-    static unsigned char  cmap[24] = {0,0,0, 0,0,255, 0,188,0, 255,152,0,
+    static const unsigned char  cmap[24] = {0,0,0, 0,0,255, 0,188,0, 255,152,0,
 			0,200,200, 255,0,255, 179,179,0, 255,255,255};
+    static int  filenum = 0;
     struct hdStruct  thead;
-    register int  i;
+    int  i;
 
     if (outtack != NULL) {
 	sprintf(outtack, "%d.tga", ++filenum);
@@ -188,10 +181,8 @@ initfile(void)		/* initialize this file */
 }
 
 
-
 void
 nextpage(void)		/* advance to next page */
-
 {
 
     if (lineno == 0)
@@ -209,16 +200,14 @@ nextpage(void)		/* advance to next page */
 }
 
 
-
 #define MINRUN	4
 
-extern void
+void
 printblock(void)		/* output scanline block to file */
-
 {
     int  i, c2;
-    register unsigned char  *scanline;
-    register int  j, beg, cnt = 0;
+    unsigned char  *scanline;
+    int  j, beg, cnt = 0;
 
     if (lineno == 0)
 	initfile();
@@ -252,8 +241,8 @@ printblock(void)		/* output scanline block to file */
 
 void
 putint2(			/* put a 2-byte positive integer */
-	register int  i,
-	register FILE	*fp
+	int  i,
+	FILE	*fp
 )
 {
 	putc(i&0xff, fp);
@@ -265,7 +254,7 @@ int
 putthead(		/* write header to output */
 	struct hdStruct  *hp,
 	char  *ip,
-	register FILE  *fp
+	FILE  *fp
 )
 {
 	if (ip != NULL)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: meta2bmp.c,v 1.4 2019/11/18 22:12:32 greg Exp $";
+static const char RCSid[] = "$Id: meta2bmp.c,v 1.5 2020/05/13 00:27:03 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to BMP 8-bit color-mapped format
@@ -44,8 +44,7 @@ static short  condonly = FALSE,
 
 
 char *
-findtack(s)			/* find place to tack on suffix */
-register char *s;
+findtack(char *s)		/* find place to tack on suffix */
 {
 	while (*s && *s != '.')
 		s++;
@@ -58,7 +57,6 @@ main(
 	int  argc,
 	char  **argv
 )
-
 {
  FILE  *fp;
  char  comargs[200], command[300];
@@ -137,8 +135,7 @@ main(
     }
 
  return(0);
- }
-
+}
 
 
 void
@@ -152,20 +149,16 @@ thispage(void)		/* rewind current file */
 void
 initfile(void)		/* initialize this file */
 {
-    /*
-    static unsigned char  cmap[24] = {255,255,255, 255,152,0, 0,188,0, 0,0,255,
-			179,179,0, 255,0,255, 0,200,200, 0,0,0};
-     */
     static const unsigned char  cmap[8][3] = {{0,0,0}, {0,0,255}, {0,188,0},
 		{255,152,0}, {0,200,200}, {255,0,255}, {179,179,0}, {255,255,255}};
     static int  filenum = 0;
     BMPHeader  *hp;
-    register int  i;
+    int  i;
 
     hp = BMPmappedHeader(dxsiz, dysiz, 0, 256);
-    hp->compr = BI_RLE8;
     if (hp == NULL)
 	error(USER, "Illegal image parameter(s)");
+    hp->compr = BI_RLE8;
     for (i = 0; i < 8; i++) {
 	hp->palette[i].r = cmap[i][2];
 	hp->palette[i].g = cmap[i][1];
@@ -183,10 +176,8 @@ initfile(void)		/* initialize this file */
 }
 
 
-
 void
 nextpage(void)		/* advance to next page */
-
 {
 
     if (lineno == 0)
@@ -204,15 +195,13 @@ nextpage(void)		/* advance to next page */
 }
 
 
-
 #define MINRUN	4
 
-extern void
+void
 printblock(void)		/* output scanline block to file */
-
 {
     int  i;
-    register unsigned char  *scanline;
+    unsigned char  *scanline;
 
     if (lineno == 0)
 	initfile();
