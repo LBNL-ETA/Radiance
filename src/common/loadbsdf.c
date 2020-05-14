@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.11 2016/03/22 03:56:17 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.12 2020/05/14 19:20:13 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -85,5 +85,10 @@ sd->tb->maxHemi*100.);
 }
 #endif
 	SDretainSet = SDretainAll;		/* keep data in core */
+#ifdef  SMLMEM
+	SDmaxCache = 5L*1024*1024;
+#else
+	SDmaxCache = 250L*1024*1024;
+#endif
 	return(sd);
 }

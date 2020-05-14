@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.26 2018/01/05 21:00:24 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.27 2020/05/14 19:20:13 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -145,6 +145,7 @@ extern struct SDCache_s {
 #define SDretainAll	2		/* also keep cumulative cache data */
 
 extern int		SDretainSet;	/* =SDretainNone by default */
+extern unsigned long	SDmaxCache;	/* =0 (unlimited) by default */
 
 /*****************************************************************
  * The following routines are less commonly used by applications.

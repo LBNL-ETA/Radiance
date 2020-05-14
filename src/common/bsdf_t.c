@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.47 2018/05/10 22:55:35 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.48 2020/05/14 19:20:13 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -744,11 +744,12 @@ make_cdist(const SDTre *sdt, const double *invec, int rev)
 const SDCDst *
 SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 {
+	unsigned long	cacheLeft = SDmaxCache;
 	const SDTre	*sdt;
 	double		inCoord[2];
 	int		i;
 	int		mode;
-	SDTreCDst	*cd, *cdlast;
+	SDTreCDst	*cd, *cdlast, *cdlimit;
 					/* check arguments */
 	if ((inVec == NULL) | (sdc == NULL) ||
 			(sdt = (SDTre *)sdc->dist) == NULL)
@@ -788,10 +789,20 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 					/* quantize to avoid f.p. errors */
 	for (i = sdt->stc[tt_Y]->ndim - 2; i--; )
 		inCoord[i] = floor(inCoord[i]/quantum)*quantum + .5*quantum;
-	cdlast = NULL;			/* check for direction in cache list */
+	cdlast = cdlimit = NULL;	/* check for direction in cache list */
 	/* PLACE MUTEX LOCK HERE FOR THREAD-SAFE */
 	for (cd = (SDTreCDst *)sdc->cdList; cd != NULL;
 					cdlast = cd, cd = cd->next) {
+		if (cacheLeft) {	/* check cache size limit */
+			long	csiz = sizeof(SDTreCDst) +
+					sizeof(cd->carr[0])*cd->calen;
+			if (cacheLeft > csiz)
+				cacheLeft -= csiz;
+			else {
+				cdlimit = cdlast;
+				cacheLeft = 0;
+			}
+		}
 		if (cd->sidef != mode)
 			continue;
 		for (i = sdt->stc[tt_Y]->ndim - 2; i--; )
@@ -801,8 +812,14 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 		if (i < 0)
 			break;		/* means we have a match */
 	}
-	if (cd == NULL)			/* need to create new entry? */
+	if (cd == NULL) {		/* need to create new entry? */
+		if (cdlimit != NULL)	/* exceeded cache size limit? */
+			while ((cd = cdlimit->next) != NULL) {
+				cdlimit->next = cd->next;
+				free(cd);
+			}
 		cdlast = cd = make_cdist(sdt, inCoord, mode != sdt->sidef);
+	}
 	if (cdlast != NULL) {		/* move entry to head of cache list */
 		cdlast->next = cd->next;
 		cd->next = (SDTreCDst *)sdc->cdList;

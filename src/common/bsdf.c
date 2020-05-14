@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.57 2019/03/08 03:42:12 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.58 2020/05/14 19:20:13 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -47,8 +47,11 @@ const SDCDst		SDemptyCD;
 /* Cache of loaded BSDFs */
 struct SDCache_s	*SDcacheList = NULL;
 
-/* Retain BSDFs in cache list */
+/* Retain BSDFs in cache list? */
 int			SDretainSet = SDretainNone;
+
+/* Maximum cache size for any given BSDF? */
+unsigned long		SDmaxCache = 0;		/* 0 == unlimited */
 
 /* Report any error to the indicated stream */
 SDError
