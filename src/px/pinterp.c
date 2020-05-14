@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.49 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.50 2020/05/14 20:51:02 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -28,7 +28,7 @@ static const char	RCSid[] = "$Id: pinterp.c,v 2.49 2020/02/28 05:18:49 greg Exp 
 #define averaging	(ourweigh != NULL)
 #define blurring	(ourbpict != NULL)
 #define usematrix	(hasmatrix & !averaging)
-#define zisnorm		((!usematrix) | (ourview.type != VT_PER))
+#define zisnorm		(!usematrix | (ourview.type != VT_PER))
 
 #define MAXWT		1000.		/* maximum pixel weight (averaging) */
 
@@ -497,14 +497,19 @@ addpicture(		/* add picture to output */
 	zin = (float *)malloc(scanlen(&tresolu)*sizeof(float));
 	if (zin == NULL)
 		syserror(progname);
-	if ((zfd = open_float_depth(zspec, (long)tresolu.xr*tresolu.yr)) < 0) {
-		double	zvalue;
+	if (isflt(zspec)) {		/* depth is a constant? */
+		double	zvalue = atof(zspec);
 		int	x;
-		if (!isflt(zspec) || (zvalue = atof(zspec)) <= 0.0)
-			syserror(zspec);
+		if (zvalue <= 0.0) {
+			fprintf(stderr, "%s: illegal Z-value %s\n",
+					progname, zspec);
+			exit(1);
+		}
 		for (x = scanlen(&tresolu); x-- > 0; )
 			zin[x] = zvalue;
-	}
+		zfd = -1;
+	} else if ((zfd = open_float_depth(zspec, (long)tresolu.xr*tresolu.yr)) < 0)
+		exit(1);
 					/* compute transferrable perimeter */
 	xlim = (struct bound *)malloc(numscans(&tresolu)*sizeof(struct bound));
 	if (xlim == NULL)
@@ -748,20 +753,21 @@ movepixel(				/* reposition image point */
 		}
 		pos[0] += .5 - ourview.hoff;
 		pos[1] += .5 - ourview.voff;
+		if ((pos[0] < 0) | (pos[0] >= 1-FTINY) |
+				(pos[1] < 0) | (pos[1] >= 1-FTINY))
+			return(0);
 		pos[2] -= ourview.vfore;
 	} else {
 		if (viewray(pt, tdir, &theirview, pos[0], pos[1]) < -FTINY)
 			return(0);
-		if ((!normdist) & (theirview.type == VT_PER))	/* adjust */
+		if (!normdist & (theirview.type == VT_PER))	/* adjust */
 			pos[2] /= DOT(theirview.vdir, tdir);
 		pt[0] += tdir[0]*pos[2];
 		pt[1] += tdir[1]*pos[2];
 		pt[2] += tdir[2]*pos[2];
-		if (viewloc(pos, &ourview, pt) <= 0)
+		if (viewloc(pos, &ourview, pt) != VL_GOOD)
 			return(0);
 	}
-	if ((pos[0] < 0) | (pos[0] >= 1-FTINY) | (pos[1] < 0) | (pos[1] >= 1-FTINY))
-		return(0);
 	if (!averaging)
 		return(1);
 						/* compute pixel weight */
