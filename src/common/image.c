@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.50 2019/05/04 00:36:58 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.51 2020/05/14 20:49:57 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -272,12 +272,12 @@ FVECT  p
 		d = DOT(disp,v->hvec);
 		d2 = DOT(disp,v->vdir);
 		ip[0] = 180.0/PI * atan2(d,d2) / v->horiz + 0.5 - v->hoff;
-		d = d*d + d2*d2;
-		if (d <= FTINY*FTINY)
+		d2 = d*d + d2*d2;
+		if (d2 <= FTINY*FTINY)
 			return(VL_BAD);	/* at pole */
-		if ((v->vaft > FTINY) & (d >= v->vaft*v->vaft))
+		if ((v->vaft > FTINY) & (d2 >= v->vaft*v->vaft))
 			rflags |= VL_BEYOND;
-		d = 1.0/sqrt(d);
+		d = 1.0/sqrt(d2);
 		ip[1] = DOT(disp,v->vvec)*d/v->vn2 + 0.5 - v->voff;
 		ip[2] = VLEN(disp);
 		ip[2] *= (1.0 - v->vfore*d);
