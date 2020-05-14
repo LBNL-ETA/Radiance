@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.25 2020/03/12 17:19:18 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.26 2020/05/14 20:58:03 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -330,7 +330,7 @@ setmotion(		/* compute motion vector for this pixel */
 		multp3(ovp, wpos, obj_move[moi].bxfm);
 		wpos = ovp;
 	}
-	if (viewloc(ovp, &vwprev, wpos) <= 0)
+	if (viewloc(ovp, &vwprev, wpos) != VL_GOOD)
 		return;
 	xp = (int)(ovp[0]*hres);
 	yp = (int)(ovp[1]*vres);

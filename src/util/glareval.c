@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.17 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.18 2020/05/14 20:58:03 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -177,7 +177,7 @@ pict_val(			/* find picture value for view direction */
 	pp[0] = pictview.vp[0] + vd[0];
 	pp[1] = pictview.vp[1] + vd[1];
 	pp[2] = pictview.vp[2] + vd[2];
-	if (viewloc(ip, &pictview, pp) != 1)
+	if (viewloc(ip, &pictview, pp) != VL_GOOD)
 		return(-1.0);
 	colr_color(res, getpictscan((int)(ip[1]*pysiz))[(int)(ip[0]*pxsiz)]);
 	return(luminance(res)/exposure);

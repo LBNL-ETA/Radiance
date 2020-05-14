@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xglaresrc.c,v 2.11 2018/04/02 16:45:41 greg Exp $";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.12 2020/05/14 20:58:03 greg Exp $";
 #endif
 /*
  *  Circle sources in a displayed image.
@@ -241,7 +241,7 @@ circle(		/* indicate a solid angle on image */
 		cur[0] += ourview.vp[0];
 		cur[1] += ourview.vp[1];
 		cur[2] += ourview.vp[2];
-		if (viewloc(pp, &ourview, cur) <= 0)
+		if (viewloc(pp, &ourview, cur) != VL_GOOD)
 			goto fail;
 		loc2pix(ip, &pres, pp[0], pp[1]);
 		pt[i].x = ip[0];
@@ -269,7 +269,7 @@ value(			/* print value on image */
 	pos[0] = ourview.vp[0] + dir[0];
 	pos[1] = ourview.vp[1] + dir[1];
 	pos[2] = ourview.vp[2] + dir[2];
-	if (viewloc(pp, &ourview, pos) <= 0)
+	if (viewloc(pp, &ourview, pos) != VL_GOOD)
 		return;
 	loc2pix(ip, &pres, pp[0], pp[1]);
 	sprintf(buf, "%.0f", v);

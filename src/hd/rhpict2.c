@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.17 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.18 2020/05/14 20:58:03 greg Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -99,7 +99,7 @@ pixBeam(			/* render a particular beam */
 			VSUM(wp, myview.vp, rdir, FHUGE);
 			prox = 1.;
 		}
-		if (viewloc(ip, &myview, wp) != 1)
+		if (viewloc(ip, &myview, wp) != VL_GOOD)
 			continue;		/* frustum clipping */
 		if (myview.vaft > FTINY && ip[2] > myview.vaft - myview.vfore)
 			continue;		/* not exact for VT_PER */
