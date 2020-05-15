@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.50 2020/05/11 20:26:58 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.51 2020/05/15 03:02:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -617,11 +617,11 @@ eval_anisotropic(char *funame)
 			if (val_last != NULL)
 				val_last[oy] = bsdf;
 		    }
+		}
 		if (rbf != NULL)
 			free(rbf);
 		prog_show((ix*sqres+iy+1.)/(sqres*sqres));
 	    }
-	}
 	prog_done();
 	if (val_last != NULL) {
 		free(val_last);
