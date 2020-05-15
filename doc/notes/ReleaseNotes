@@ -2364,3 +2364,7 @@ is needed (i.e., no tracing or value output).
 
 Improved isotropic sampling method in bsdf2ttree using "zipper" approach
 applied in genBSDF.
+
+Added limit to memory used by high-resolution tensor tree BSDFs for
+cumulative cache during MC sampling (rendering).  Limit set to 250MBytes
+per BSDF for standard architectures.
