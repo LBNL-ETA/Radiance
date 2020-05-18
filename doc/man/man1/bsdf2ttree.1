@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.7 2018/05/04 23:56:49 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.8 2020/05/18 20:08:57 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -12,6 +12,10 @@ bsdf2ttree - generate XML tensor tree description of a BSDF
 .B "\-g Nlog2"
 ][
 .B "\-t pctcull"
+][
+.B "\-n nss"
+][
+.B "\-s thresh"
 ][
 .B "\-l maxlobes"
 ]
@@ -31,6 +35,10 @@ or
 .B "\-g Nlog2"
 ][
 .B "\-t pctcull"
+][
+.B "\-n nss"
+][
+.B "\-s thresh"
 ][
 .B "{+|-}forward"
 ][
@@ -76,6 +84,15 @@ The initial sampling is pared down by the percentage specified with the
 option, which defaults to 90.
 Setting this parameter to -1 turns culling off entirely, which may be
 useful for comparisons.
+.PP
+The
+.I \-n
+option controls the number of super-samples to send in patches whose
+difference to its neighbors exceeds some threshold.
+The default number of super-samples is 256.
+The difference threshold for super-sampling is controlled by the
+.I \-s
+option, and defaults to 0.35.
 .PP
 The first invocation form takes a intermediate scattering representation
 as produced by

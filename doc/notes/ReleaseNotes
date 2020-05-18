@@ -2368,3 +2368,6 @@ applied in genBSDF.
 Added limit to memory used by high-resolution tensor tree BSDFs for
 cumulative cache during MC sampling (rendering).  Limit set to 250MBytes
 per BSDF for standard architectures.
+
+Added -n and -s options to bsdf2ttree to provide some user control
+over super-sampling.

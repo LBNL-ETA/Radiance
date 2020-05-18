@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.51 2020/05/15 03:02:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.52 2020/05/18 20:08:57 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -27,9 +27,7 @@ static int		samp_order = 6;
 				/* super-sampling threshold */
 static double		ssamp_thresh = 0.35;
 				/* number of super-samples */
-#ifndef NSSAMP
-#define	NSSAMP		256
-#endif
+static int		nssamp = 256;
 				/* limit on number of RBF lobes */
 static int		lobe_lim = 15000;
 				/* progress bar length */
@@ -192,13 +190,11 @@ eval_isotropic(char *funame)
 	}
 	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
-#if (NSSAMP > 0)
 	val_last = (float *)calloc(sqres, sizeof(float));
 	if (funame == NULL)
 		sdv_next = (SDValue *)malloc(sizeof(SDValue)*sqres);
 	else
 		val_next = (float *)malloc(sizeof(float)*sqres);
-#endif
 						/* run through directions */
 	for (ix = 0; ix < sqres/2; ix++) {
 		const int	zipsgn = (ix & 1)*2 - 1;
@@ -242,7 +238,6 @@ eval_isotropic(char *funame)
 			    bsdf = sdv.cieY;
 			    if (ox < sqres-1)
 				eval_rbfcol(&sdv_next[oy], rbf, iovec+3);
-#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, sdv_next[oy].cieY) > ssamp_thresh ||
 				(ox && abs_diff(bsdf, val_last[oy]) > ssamp_thresh) ||
 				(oy && abs_diff(bsdf, val_last[oy-1]) > ssamp_thresh) ||
@@ -251,9 +246,9 @@ eval_isotropic(char *funame)
 				int	ssi;
 				double	ssa[2], sum = 0, usum = 0, vsum = 0;
 						/* super-sample voxel */
-				for (ssi = NSSAMP; ssi--; ) {
-				    SDmultiSamp(ssa, 2, (ssi+frandom()) *
-							(1./NSSAMP));
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 2, (ssi+frandom()) /
+							(double)nssamp);
 				    SDsquare2disk(iovec+3, (ox+ssa[0])*sqfact,
 							(oy+ssa[1])*sqfact);
 				    iovec[5] = output_orient *
@@ -267,13 +262,12 @@ eval_isotropic(char *funame)
 					vsum += 9.*sdv.spec.cy * sdv.cieY;
 				    }
 				}
-				bsdf = sum * (1./NSSAMP);
+				bsdf = sum / (double)nssamp;
 				if (rbf_colorimetry == RBCtristimulus) {
 				    uv[0] = usum / (sum+FTINY);
 				    uv[1] = vsum / (sum+FTINY);
 				}
 			    } else
-#endif
 			    if (rbf_colorimetry == RBCtristimulus) {
 				uv[0] = uv[1] = 1. /
 				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
@@ -291,7 +285,6 @@ eval_isotropic(char *funame)
 				}
 				val_next[oy] = funvalue(funame, 6, iovec);
 			    }
-#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, val_next[oy]) > ssamp_thresh ||
 				(ox && abs_diff(bsdf, val_last[oy]) > ssamp_thresh) ||
 				(oy && abs_diff(bsdf, val_last[oy-1]) > ssamp_thresh) ||
@@ -300,9 +293,9 @@ eval_isotropic(char *funame)
 				int	ssi;
 				double	ssa[4], ssvec[6], sum = 0;
 						/* super-sample voxel */
-				for (ssi = NSSAMP; ssi--; ) {
-				    SDmultiSamp(ssa, 4, (ssi+frandom()) *
-							(1./NSSAMP));
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 4, (ssi+frandom()) /
+							(double)nssamp);
 				    ssvec[0] = 2.*sqfact*(ix+ssa[0]) - 1.;
 				    ssvec[1] = zipsgn*sqfact*ssa[1];
 				    ssvec[2] = 1. - ssvec[0]*ssvec[0]
@@ -325,9 +318,8 @@ eval_isotropic(char *funame)
 				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf = sum * (1./NSSAMP);
+				bsdf = sum / (double)nssamp;
 			    }
-#endif
 			}
 			if (pctcull >= 0)
 				putbinary(&bsdf, sizeof(bsdf), 1, ofp);
@@ -468,13 +460,11 @@ eval_anisotropic(char *funame)
 	}
 	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
-#if (NSSAMP > 0)
 	val_last = (float *)calloc(sqres, sizeof(float));
 	if (funame == NULL)
 		sdv_next = (SDValue *)malloc(sizeof(SDValue)*sqres);
 	else
 		val_next = (float *)malloc(sizeof(float)*sqres);
-#endif
 						/* run through directions */
 	for (ix = 0; ix < sqres; ix++)
 	    for (iy = 0; iy < sqres; iy++) {
@@ -517,7 +507,6 @@ eval_anisotropic(char *funame)
 			    bsdf = sdv.cieY;
 			    if (ox < sqres-1)
 				eval_rbfcol(&sdv_next[oy], rbf, iovec+3);
-#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, sdv_next[oy].cieY) > ssamp_thresh ||
 				(ox && abs_diff(bsdf, val_last[oy]) > ssamp_thresh) ||
 				(oy && abs_diff(bsdf, val_last[oy-1]) > ssamp_thresh) ||
@@ -526,9 +515,9 @@ eval_anisotropic(char *funame)
 				int	ssi;
 				double	ssa[2], sum = 0, usum = 0, vsum = 0;
 						/* super-sample voxel */
-				for (ssi = NSSAMP; ssi--; ) {
-				    SDmultiSamp(ssa, 2, (ssi+frandom()) *
-							(1./NSSAMP));
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 2, (ssi+frandom()) /
+							(double)nssamp);
 				    SDsquare2disk(iovec+3, (ox+ssa[0])*sqfact,
 							(oy+ssa[1])*sqfact);
 				    iovec[5] = output_orient *
@@ -542,13 +531,12 @@ eval_anisotropic(char *funame)
 					vsum += 9.*sdv.spec.cy * sdv.cieY;
 				    }
 				}
-				bsdf = sum * (1./NSSAMP);
+				bsdf = sum / (double)nssamp;
 				if (rbf_colorimetry == RBCtristimulus) {
 				    uv[0] = usum / (sum+FTINY);
 				    uv[1] = vsum / (sum+FTINY);
 				}
 			    } else
-#endif
 			    if (rbf_colorimetry == RBCtristimulus) {
 				uv[0] = uv[1] = 1. /
 				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
@@ -566,7 +554,6 @@ eval_anisotropic(char *funame)
 				}
 				val_next[oy] = funvalue(funame, 6, iovec);
 			    }
-#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, val_next[oy]) > ssamp_thresh ||
 				(ox && abs_diff(bsdf, val_last[oy]) > ssamp_thresh) ||
 				(oy && abs_diff(bsdf, val_last[oy-1]) > ssamp_thresh) ||
@@ -575,9 +562,9 @@ eval_anisotropic(char *funame)
 				int	ssi;
 				double	ssa[4], ssvec[6], sum = 0;
 						/* super-sample voxel */
-				for (ssi = NSSAMP; ssi--; ) {
-				    SDmultiSamp(ssa, 4, (ssi+frandom()) *
-							(1./NSSAMP));
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 4, (ssi+frandom()) /
+							(double)nssamp);
 				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])*sqfact,
 						1.-(iy+ssa[1])*sqfact);
 				    ssvec[2] = input_orient *
@@ -596,9 +583,8 @@ eval_anisotropic(char *funame)
 				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf = sum * (1./NSSAMP);
+				bsdf = sum / (double)nssamp;
 			    }
-#endif
 			}
 			if (pctcull >= 0)
 				putbinary(&bsdf, sizeof(bsdf), 1, ofp);
@@ -763,6 +749,16 @@ main(int argc, char *argv[])
 		case 'b':
 			dobwd = (argv[i][0] == '+');
 			break;
+		case 'n':
+			nssamp = atoi(argv[++i]);
+			if (nssamp <= 0)
+				goto userr;
+			break;
+		case 's':
+			ssamp_thresh = atof(argv[++i]);
+			if (ssamp_thresh <= FTINY)
+				goto userr;
+			break;
 		case 't':
 			switch (argv[i][2]) {
 			case '3':
@@ -813,7 +809,6 @@ main(int argc, char *argv[])
 			goto userr;
 		}
 		++eclock;
-		ssamp_thresh *= 0.5;		/* lower sampling threshold */
 		add_wbsdf("-a", 1);
 		add_wbsdf(tfmt[single_plane_incident], 1);
 		if (dofwd) {
@@ -876,10 +871,10 @@ main(int argc, char *argv[])
 	return(wrap_up());
 userr:
 	fprintf(stderr,
-	"Usage: %s [{+|-}a][-g Nlog2][-t pctcull][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
+	"Usage: %s [{+|-}a][-g Nlog2][-t pctcull][-n nss][-s thresh][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
 				progname);
 	fprintf(stderr,
-	"   or: %s -t{3|4} [{+|-}a][-g Nlog2][-t pctcull][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",
+	"   or: %s -t{3|4} [{+|-}a][-g Nlog2][-t pctcull][-n nss][-s thresh][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",
 				progname);
 	return(1);
 }
