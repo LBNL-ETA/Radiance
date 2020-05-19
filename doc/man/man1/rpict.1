@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.25 2019/06/09 17:48:13 rschregle Exp $"
+.\" RCSid "$Id: rpict.1,v 1.26 2020/05/19 16:00:58 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -211,10 +211,10 @@ Set the pixel sample jitter to
 Distributed ray-tracing performs anti-aliasing by randomly sampling
 over pixels.
 A value of one will randomly distribute samples over full
-pixels.
+pixels, and is not really recommended due to the tendency of
+samples to (nearly) coincide.
 A value of zero samples pixel centers only.
-A value between zero and one is usually best
-for low-resolution images.
+A value around 0.5-0.8 is typical.
 .TP
 .BI -pm \ frac
 Set the pixel motion blur to
@@ -464,8 +464,10 @@ Normally, indirect illuminance values are kept in memory and
 lost when the program finishes or dies.
 By using a file, different invocations can share illuminance
 values, saving time in the computation.
-Also, by creating an ambient file during a low resolution rendering,
-better results can be obtained in a second high resolution pass.
+Also, by creating an ambient file during a low-resolution rendering,
+better results can be obtained in a second high-resolution pass.
+(It is a good idea to keep all of the calculation parameters the same,
+changing only the dimensions of the output picture.)\0
 The ambient file is in a machine-independent binary format
 which may be examined with
 .I lookamb(1).
