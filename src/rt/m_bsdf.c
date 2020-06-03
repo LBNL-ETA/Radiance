@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.57 2019/06/10 13:56:52 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.58 2020/06/03 02:08:32 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -96,6 +96,22 @@ typedef struct {
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
 
+typedef struct {
+	double	vy;		/* brightness (for sorting) */
+	FVECT	tdir;		/* through sample direction (normalized) */
+	COLOR	vcol;		/* BTDF color */
+}  PEAKSAMP;		/* BTDF peak sample */
+
+/* Comparison function to put near-peak values in descending order */
+static int
+cmp_psamp(const void *p1, const void *p2)
+{
+	double	diff = (*(const PEAKSAMP *)p1).vy - (*(const PEAKSAMP *)p2).vy;
+	if (diff > 0) return(-1);
+	if (diff < 0) return(1);
+	return(0);
+}
+
 /* Compute "through" component color for MAT_ABSDF */
 static void
 compute_through(BSDFDAT *ndp)
@@ -116,12 +132,15 @@ compute_through(BSDFDAT *ndp)
 					{0, -1.6},
 					{1.6, 0},
 				};
-	const double	peak_over = 1.3 + .4*frandom();	/* jitter threshold */
+	const double	peak_over = 1.5;
+	PEAKSAMP	psamp[NDIR2CHECK];
 	SDSpectralDF	*dfp;
 	FVECT		pdir;
 	double		tomega, srchrad;
-	COLOR		vpeak, vsum;
-	int		i;
+	double		tomsum;
+	COLOR		vpeak;
+	double		vypeak, vysum;
+	int		i, ns, ntot;
 	SDError		ec;
 
 	if (ndp->pr->rod > 0)
@@ -133,43 +152,55 @@ compute_through(BSDFDAT *ndp)
 		return;				/* no specular transmission */
 	if (bright(ndp->pr->pcol) <= FTINY)
 		return;				/* pattern is black, here */
-	srchrad = sqrt(dfp->minProjSA);		/* else search for peak */
-	setcolor(vpeak, 0, 0, 0);
-	setcolor(vsum, 0, 0, 0);
-	pdir[2] = 0.0;
+	srchrad = sqrt(dfp->minProjSA);		/* else evaluate peak */
+	vysum = 0;
 	for (i = 0; i < NDIR2CHECK; i++) {
-		FVECT	tdir;
 		SDValue	sv;
-		COLOR	vcol;
-		tdir[0] = -ndp->vray[0] + dir2check[i][0]*srchrad;
-		tdir[1] = -ndp->vray[1] + dir2check[i][1]*srchrad;
-		tdir[2] = -ndp->vray[2];
-		normalize(tdir);
-		ec = SDevalBSDF(&sv, tdir, ndp->vray, ndp->sd);
+		psamp[i].tdir[0] = -ndp->vray[0] + dir2check[i][0]*srchrad;
+		psamp[i].tdir[1] = -ndp->vray[1] + dir2check[i][1]*srchrad;
+		psamp[i].tdir[2] = -ndp->vray[2];
+		normalize(psamp[i].tdir);
+		ec = SDevalBSDF(&sv, psamp[i].tdir, ndp->vray, ndp->sd);
 		if (ec)
 			goto baderror;
-		cvt_sdcolor(vcol, &sv);
-		addcolor(vsum, vcol);
-		if (sv.cieY > bright(vpeak)) {
-			copycolor(vpeak, vcol);
-			VCOPY(pdir, tdir);
-		}
+		cvt_sdcolor(psamp[i].vcol, &sv);
+		vysum += psamp[i].vy = sv.cieY;
 	}
-	if (pdir[2] == 0.0)
-		return;				/* zero neighborhood */
-	ec = SDsizeBSDF(&tomega, pdir, ndp->vray, SDqueryMin, ndp->sd);
-	if (ec)
-		goto baderror;
-	if (tomega > 1.5*dfp->minProjSA)
-		return;				/* not really a peak? */
-	if ((bright(vpeak) - ndp->sd->tLamb.cieY*(1./PI))*tomega <= .001)
+	if (vysum <= FTINY)			/* zero neighborhood? */
+		return;
+	qsort(psamp, NDIR2CHECK, sizeof(PEAKSAMP), cmp_psamp);
+	setcolor(vpeak, 0, 0, 0);
+	vypeak = tomsum = 0;			/* combine top unique values */
+	ns = 0; ntot = NDIR2CHECK;
+	for (i = 0; i < NDIR2CHECK; i++) {
+		if (i) {
+			if (psamp[i].vy == psamp[i-1].vy) {
+				vysum -= psamp[i].vy;
+				--ntot;
+				continue;	/* assume duplicate sample */
+			}
+			if (vypeak > 8.*psamp[i].vy*ns)
+				continue;	/* peak cut-off */
+		}
+		ec = SDsizeBSDF(&tomega, psamp[i].tdir, ndp->vray,
+						SDqueryMin, ndp->sd);
+		if (ec)
+			goto baderror;
+		if (tomega > 1.5*dfp->minProjSA) {
+			if (!i) return;		/* not really a peak? */
+			continue;
+		}
+		scalecolor(psamp[i].vcol, tomega);
+		addcolor(vpeak, psamp[i].vcol);
+		tomsum += tomega;
+		vypeak += psamp[i].vy;
+		++ns;
+	}
+	if (vypeak*(ntot-ns) < peak_over*(vysum-vypeak)*ns)
+		return;				/* peak not peaky enough */
+	if ((vypeak/ns - ndp->sd->tLamb.cieY*(1./PI))*tomsum <= .001)
 		return;				/* < 0.1% transmission */
-	for (i = 3; i--; )			/* remove peak from average */
-		colval(vsum,i) -= colval(vpeak,i);
-	if (peak_over*bright(vsum) >= (NDIR2CHECK-1)*bright(vpeak))
-		return;				/* not peaky enough */
-	copycolor(ndp->cthru, vpeak);		/* else use it */
-	scalecolor(ndp->cthru, tomega);
+	copycolor(ndp->cthru, vpeak);		/* already scaled by omega */
 	multcolor(ndp->cthru, ndp->pr->pcol);	/* modify by pattern */
 	return;
 baderror:
