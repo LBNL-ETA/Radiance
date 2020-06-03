@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.58 2020/06/03 02:08:32 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.59 2020/06/03 02:27:32 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -316,12 +316,13 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		if (tomega2 < .12*tomega)
 			continue;	/* not safe to include */
 		cvt_sdcolor(csmp, &sv);
-
-		if (sf < 2.5*tsr) {	/* weight by Y for small sources */
+#if 0
+		if (sf < 2.5*tsr) {	/* weight by BSDF for small sources */
 			scalecolor(csmp, sv.cieY);
 			wtot += sv.cieY;
 		} else
-			wtot += 1.;
+#endif
+		wtot += 1.;
 		addcolor(cval, csmp);
 	}
 	if (wtot <= FTINY)		/* no valid specular samples? */
