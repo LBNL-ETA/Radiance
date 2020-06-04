@@ -2314,8 +2314,7 @@ column vector.  Also added ability to apply trailing unary operators
 Added new depth, normal, and ID file types to radcompare.
 
 Added BigEndian= header line for automatic byte-swapping in rmtxop
-and radcompare.  Doesn't work quite as automatically as it should
-for pvalue -r, currently.
+and radcompare.
 
 Added new "turbo" palette to falsecolor (thanks to Taoning).
 
@@ -2329,7 +2328,7 @@ Added support for loading RGBE images into matrices in dctimestep.
 Added -y option to gensky and gendaylit to support more accurate Michalsky
 solar position calculation.
 
-Changed rsplit so specifying a space as the separator parses words
+Changed rsplit, so specifying a space as the separator parses words
 between whitespace.
 
 Added ability of vwrays, pinterp, and pmblur2 to read encoded depth files.
@@ -2351,7 +2350,7 @@ Fix to glarendx issues with dgi calculation.
 Made it so rmtxop and dctimestep undo any exposure applied to Radiance
 pictures they may load.
 
-Added objutil utility to manipulate Wavefront .OBJ files.
+Added robjutil utility to manipulate Wavefront .OBJ files.
 
 Fixed a crash related to rtrace -om or -oM with mesh instances containing
 materials.
@@ -2371,3 +2370,9 @@ per BSDF for standard architectures.
 
 Added -n and -s options to bsdf2ttree to provide some user control
 over super-sampling.
+
+Improved surface normal codec used by ambient file to store orthonormal
+directions exactly.
+
+Improved peak extraction method, which was undervaluing transmission
+in many cases.
