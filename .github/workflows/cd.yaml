@@ -1,19 +1,122 @@
-name: Build and Deploy
+name: Update Radiance Branch from CVS and Build + Deploy
 
 on:
   push:
-    branches:
-      - master
+    branches: [ cvsimport ]
+  schedule:
+    - cron: "0 0,6,12,18 * * *"
 
 jobs:
-  build:
-    name: "Build and release the Radiance mirror"
-    runs-on: windows-latest
+  cvsimport:
+    name: "Update Radiance from CVS"
+    runs-on: ubuntu-20.04
+    outputs:
+      HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
 
     steps:
+      - name: Clone this repo to machine
+        run: |
+          git clone https://github.com/${{ github.repository }}
+          cd Radiance
+          git branch -a
+          git checkout cvsimport
+          ls
+          
+      - name: Install old CVSPS
+        run: |
+          git clone https://github.com/MingboPeng/cvsps cvsps_old
+          cd cvsps_old
+          make
+          sudo make install
+        if: "github.ref == 'refs/heads/master'"
+      
+      - name: Install cvsimport
+        run: |
+          sudo apt-get install git-cvs
+
+      - name: Run CVS Import
+        run: |
+          cd Radiance
+          bash cvsimport.sh
+
+      - name: Set up build trigger
+        id: ifBuildTrigger
+        run: |
+          cd Radiance
+          git checkout master
+
+          unset HAS_NEW_COMMITS
+          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+          echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+
+      - name: trigger test
+        run: |
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
+      - name: trigger test2
+        run: |
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'
+      - name: trigger test3
+        run: |
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS != 'true'
+      - name: trigger test4
+        run: |
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+        if: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS != 'true'}} 
+      - name: trigger test5
+        run: |
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+        if: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'}} 
+
+      - name: Push updates to master branch
+        uses: ad-m/github-push-action@master
+        with:
+          directory: Radiance
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: master
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
+  
+  build_Windows:
+    needs: cvsimport
+    name: "Build and release the Radiance mirror"
+    runs-on: windows-latest
+    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
+
+    steps:
+      - name: test build trigger
+        run: |
+          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
+          if [[ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]]; then
+            echo "It's yes!"
+          fi
+        shell: bash
+        if: needs.cvsimport.outputs.HAS_NEW_COMMITS
+      
+      - name: test build trigger2
+        run: |
+          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
+          if [ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]; then
+            echo "It's yes!"
+          fi
+        shell: bash
+        if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
+      - name: test build trigger3
+        run: |
+          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
+          if [ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]; then
+            echo "It's yes!"
+          fi
+        shell: bash
+        if: needs.cvsimport.outputs.HAS_NEW_COMMITS != 'true'
+        
+
       - uses: actions/checkout@v2
         with:
           ref: master
+        if: "github.ref != 'refs/heads/master'"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
@@ -42,12 +145,15 @@ jobs:
       - name: Zip Build Artifact
         run: |
           tree
-          Compress-Archive -U D:\a\Radiance\Radiance\build\* -DestinationPath Radiance
+          Compress-Archive -U D:\a\Radiance\Radiance\build\bin\* -DestinationPath Radiance
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
           name: Radiance
           path: Radiance.zip
+
+
+
 
 
