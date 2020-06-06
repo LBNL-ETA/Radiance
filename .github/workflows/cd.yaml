@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: master
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
@@ -19,6 +21,11 @@ jobs:
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: list files
+        run: |
+          ls -R
+        shell: bash
       
       - name: Build
         uses: lukka/run-cmake@v2
@@ -34,7 +41,7 @@ jobs:
       - name: Zip Build Artifact
         run: |
           tree
-          Compress-Archive -U D:\a\Radiance\Radiance\build\bin\Release\* -DestinationPath Radiance
+          Compress-Archive -U D:\a\Radiance\Radiance\build\* -DestinationPath Radiance
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
