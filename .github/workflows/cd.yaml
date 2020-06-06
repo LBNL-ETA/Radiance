@@ -1,0 +1,45 @@
+name: CD
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: "Build and release the Radiance mirror"
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          arch: 'win64_msvc2017_64'
+
+      - name: Install CMake 
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Build
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: VS16Win64
+          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
+          cmakeBuildType: Release
+          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
+          buildDirectory: ${{ github.workspace }}/build
+          buildWithCMake: true
+      
+      - name: Zip Build Artifact
+        run: |
+          tree
+          Compress-Archive -U D:\a\Radiance\Radiance\build\bin\Release\* -DestinationPath Radiance
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance
+          path: Radiance.zip
+
+

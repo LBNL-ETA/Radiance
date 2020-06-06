@@ -1,0 +1,29 @@
+name: CD
+
+on:
+  push:
+    branches: [ updater ]
+
+jobs:
+  build:
+    name: "Update Radiance from CVS"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install old CVSPS
+        run: |
+          git clone https://github.com/MingboPeng/cvsps cvsps_old
+          cd cvsps_old
+          make
+          sudo make install
+
+
+      - name: Run CVS Import
+        run: |
+          git cvsimport -o master -v -d :pserver:anonymous@radiance-online.org:/home/cvsd/radiance -A ./.github/workflows/authors.txt ray
+
+
+
+
