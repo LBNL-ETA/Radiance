@@ -2,7 +2,7 @@ name: Update Radiance Branch from CVS
 
 on:
   push:
-    branches: [ updater ]
+    branches: [ cvsimport ]
   schedule:
     - cron: "0 0,6,12,18 * * *"
 
@@ -17,7 +17,7 @@ jobs:
           git clone https://github.com/${{ github.repository }}
           cd Radiance
           git branch -a
-          git checkout updater
+          git checkout cvsimport
           ls
           
       - name: Install old CVSPS
