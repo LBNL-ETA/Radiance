@@ -50,27 +50,6 @@ jobs:
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
-      - name: trigger test
-        run: |
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
-      - name: trigger test2
-        run: |
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'
-      - name: trigger test3
-        run: |
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS != 'true'
-      - name: trigger test4
-        run: |
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-        if: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS != 'true'}} 
-      - name: trigger test5
-        run: |
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-        if: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'}} 
-
       - name: Push updates to master branch
         uses: ad-m/github-push-action@master
         with:
@@ -86,33 +65,6 @@ jobs:
     if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
-      - name: test build trigger
-        run: |
-          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
-          if [[ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]]; then
-            echo "It's yes!"
-          fi
-        shell: bash
-        if: needs.cvsimport.outputs.HAS_NEW_COMMITS
-      
-      - name: test build trigger2
-        run: |
-          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
-          if [ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]; then
-            echo "It's yes!"
-          fi
-        shell: bash
-        if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
-      - name: test build trigger3
-        run: |
-          echo ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}}
-          if [ ${{needs.cvsimport.outputs.HAS_NEW_COMMITS}} ]; then
-            echo "It's yes!"
-          fi
-        shell: bash
-        if: needs.cvsimport.outputs.HAS_NEW_COMMITS != 'true'
-        
-
       - uses: actions/checkout@v2
         with:
           ref: master
