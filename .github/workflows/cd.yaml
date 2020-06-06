@@ -1,8 +1,8 @@
-name: CD
+name: Build and Deploy
 
 on:
   push:
-    branches: [ master ]
+    branches: [ radiance ]
 
 jobs:
   build:

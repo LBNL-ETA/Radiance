@@ -1,28 +1,49 @@
-name: CD
+name: Update Radiance Branch from CVS
 
 on:
   push:
-    branches: [ updater ]
+    branches: [ master ]
+  schedule:
+    - cron: "0 0,6,12,18 * * *"
 
 jobs:
   build:
     name: "Update Radiance from CVS"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
-
+      - name: Clone this repo to machine
+        run: |
+          git clone -b radiance https://github.com/${{ github.repository }}
+          cd Radiance
+          git branch -a
+          git checkout master
+          ls
+          
       - name: Install old CVSPS
         run: |
           git clone https://github.com/MingboPeng/cvsps cvsps_old
           cd cvsps_old
           make
           sudo make install
-
+      
+      - name: Install cvsimport
+        run: |
+          sudo apt-get install git-cvs
 
       - name: Run CVS Import
         run: |
-          git cvsimport -o master -v -d :pserver:anonymous@radiance-online.org:/home/cvsd/radiance -A ./.github/workflows/authors.txt ray
+          cd Radiance
+          bash cvsimport.sh
+          git checkout radiance
+      
+      - name: Push updates to radiance branch
+        uses: ad-m/github-push-action@master
+        with:
+          directory: Radiance
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: radiance
+
 
 
 
