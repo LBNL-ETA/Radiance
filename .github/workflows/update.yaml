@@ -37,12 +37,12 @@ jobs:
           bash cvsimport.sh
           git checkout master
       
-      - name: Push updates to radiance branch
+      - name: Push updates to master branch
         uses: ad-m/github-push-action@master
         with:
           directory: Radiance
           github_token: ${{ secrets.GH_TOKEN }}
-          branch: radiance
+          branch: master
 
 
 
