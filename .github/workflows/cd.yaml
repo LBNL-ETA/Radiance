@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ radiance ]
+    branches: [ master ]
 
 jobs:
   build:

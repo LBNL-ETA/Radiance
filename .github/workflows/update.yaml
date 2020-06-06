@@ -2,7 +2,7 @@ name: Update Radiance Branch from CVS
 
 on:
   push:
-    branches: [ master ]
+    branches: [ updater ]
   schedule:
     - cron: "0 0,6,12,18 * * *"
 
@@ -14,10 +14,10 @@ jobs:
     steps:
       - name: Clone this repo to machine
         run: |
-          git clone -b radiance https://github.com/${{ github.repository }}
+          git clone https://github.com/${{ github.repository }}
           cd Radiance
           git branch -a
-          git checkout master
+          git checkout updater
           ls
           
       - name: Install old CVSPS
@@ -35,7 +35,7 @@ jobs:
         run: |
           cd Radiance
           bash cvsimport.sh
-          git checkout radiance
+          git checkout master
       
       - name: Push updates to radiance branch
         uses: ad-m/github-push-action@master
