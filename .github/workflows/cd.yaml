@@ -21,14 +21,6 @@ jobs:
           git branch -a
           git checkout cvsimport
           ls
-          
-      - name: Install old CVSPS
-        run: |
-          git clone https://github.com/MingboPeng/cvsps cvsps_old
-          cd cvsps_old
-          make
-          sudo make install
-        if: "github.ref == 'refs/heads/master'"
       
       - name: Install cvsimport
         run: |
@@ -63,7 +55,6 @@ jobs:
     name: "Build for Windows"
     runs-on: windows-latest
     if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -77,7 +68,7 @@ jobs:
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
       
-      - name: Build
+      - name: Compile
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS16Win64
@@ -88,16 +79,30 @@ jobs:
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
 
+      - name: set up QT path
+        run: |
+          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
+          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+
+      - name: Build installer
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: VS16Win64
+          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
+          cmakeBuildType: Release
+          buildWithCMakeArgs: "--config Release --target PACKAGE"
+          buildDirectory: ${{ github.workspace }}/build
+          buildWithCMake: true
+          
       - name: list files
         run: |
           ls -R
         shell: bash
-
+      
       - name: Zip Build Artifact
-        uses: papeloto/action-zip@v1
-        with:
-          files: ./build/bin ./build/lib
-          dest: Radiance.zip
+        run: |
+          Compress-Archive -U -Path build\radiance-*.exe -DestinationPath Radiance
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
@@ -110,8 +115,7 @@ jobs:
     needs: cvsimport
     name: "Build for OSX"
     runs-on: macos-latest
-    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
-
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -122,34 +126,51 @@ jobs:
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
-
       
-      - name: Build
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          buildWithCMakeArgs: "--config Release"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+      - name: Install PackageMaker
+        run: |
+          mkdir PackageMaker
+          cd PackageMaker
+          git clone -b cvsimport https://github.com/${{ github.repository }}
+          cd Radiance
+          ls
+          unzip -q -o PackageMaker.app.zip -d /Applications/
+        shell: bash
+      
+      - name: Install XQuartz
+        run: |
+          wget https://dl.bintray.com/xquartz/downloads/XQuartz-2.7.11.dmg
+          sudo hdiutil attach XQuartz-2.7.11.dmg
+          sudo installer -package /Volumes/XQuartz-2.7.11/XQuartz.pkg -target / 
 
+      - name: Compile
+        env:
+          CMAKE_OSX_ARCHITECTURES: x86_64
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake ..
+          make -j8
 
+      - name: Build installer
+        run: |
+          export PATH=$PATH:/Users/runner/runners/2.263.0/work/Radiance/Qt/5.12.8/clang_64/bin
+          export PATH=$PATH:/Users/runner/runners/2.263.0/work/Radiance/Qt/5.12.8/clang_64/lib
+          sudo bash PackageMaker/Radiance/macInstall.sh
+          
+        
       - name: list files
         run: |
           ls -R
         shell: bash
 
-      - name: Zip Build Artifact
-        run: |
-          zip -r Radiance.zip ./build/bin ./build/lib
-        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
           name: Radiance_OSX
-          path: Radiance.zip
+          path: ./build/Radiance.zip
 
 
  
@@ -157,6 +178,7 @@ jobs:
     needs: cvsimport
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -174,15 +196,25 @@ jobs:
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
 
-      - name: Build
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          buildWithCMakeArgs: "--config Release"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+      - name: Compile
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make -j8
+
+      - name: list files
+        run: |
+          cd ../Qt/5.12.8/gcc_64
+          ls -R
+        shell: bash
+
+      - name: Build installer
+        run: |
+          export PATH=$PATH:/home/runner/work/Radiance/Qt/5.12.8/gcc_64/bin
+          export PATH=$PATH:/home/runner/work/Radiance/Qt/5.12.8/gcc_64/lib
+          cd build
+          make package -j8
 
       - name: list files
         run: |
@@ -191,7 +223,7 @@ jobs:
 
       - name: Zip Build Artifact
         run: |
-          zip -r Radiance.zip ./build/bin ./build/lib
+          zip -r Radiance.zip ./build/radiance-*-Linux.tar.gz
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
