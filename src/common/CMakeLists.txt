@@ -101,6 +101,9 @@ set(rtrad_SOURCES
 
 if(UNIX)
   list(APPEND rtrad_SOURCES unix_process.c)
+  if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    list(APPEND rtrad_SOURCES strlcpy.c)
+  endif()
 else()
   list(APPEND rtrad_SOURCES win_process.c win_popen.c win_usleep.c strlcpy.c)
 endif()
