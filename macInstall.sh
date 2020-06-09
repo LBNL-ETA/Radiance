@@ -7,6 +7,6 @@ cd _CPack_Packages/Darwin/PackageMaker/
 pkgbuild --identifier radiance.pkg --root "radiance-5.2.e4d2f765dc-Darwin/usr/local/radiance" --install-location "/usr/local/radiance" radiance-5.2.e4d2f765dc-Darwin.pkg
 
 zip -r Radiance.zip *.pkg 
-cp -r Radiance.zip ../../../Radiance.zip
+cp -r Radiance.zip ../../../Radiance_OSX.zip
 du -h -d=0 *
 set -e
