@@ -289,7 +289,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} 
-          release_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} 
+          release_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} "($(date +'%Y-%m-%d'))"
           body: |
             ${{ steps.Changelog.outputs.changelog }}
           draft: false
