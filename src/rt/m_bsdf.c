@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.59 2020/06/03 02:27:32 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.60 2020/06/10 16:00:32 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -116,21 +116,18 @@ cmp_psamp(const void *p1, const void *p2)
 static void
 compute_through(BSDFDAT *ndp)
 {
-#define NDIR2CHECK	13
+#define NDIR2CHECK	29
 	static const float	dir2check[NDIR2CHECK][2] = {
-					{0, 0},
-					{-0.8, 0},
-					{0, 0.8},
-					{0, -0.8},
-					{0.8, 0},
-					{-0.8, 0.8},
-					{-0.8, -0.8},
-					{0.8, 0.8},
-					{0.8, -0.8},
-					{-1.6, 0},
-					{0, 1.6},
-					{0, -1.6},
-					{1.6, 0},
+					{0, 0}, {-0.6, 0}, {0, 0.6},
+					{0, -0.6}, {0.6, 0}, {-0.6, 0.6},
+					{-0.6, -0.6}, {0.6, 0.6}, {0.6, -0.6},
+					{-1.2, 0}, {0, 1.2}, {0, -1.2},
+					{1.2, 0}, {-1.2, 1.2}, {-1.2, -1.2},
+					{1.2, 1.2}, {1.2, -1.2}, {-1.8, 0},
+					{0, 1.8}, {0, -1.8}, {1.8, 0},
+					{-1.8, 1.8}, {-1.8, -1.8}, {1.8, 1.8},
+					{1.8, -1.8}, {-2.4, 0}, {0, 2.4},
+					{0, -2.4}, {2.4, 0},
 				};
 	const double	peak_over = 1.5;
 	PEAKSAMP	psamp[NDIR2CHECK];
