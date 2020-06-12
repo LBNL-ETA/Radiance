@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.20 2019/11/07 23:20:29 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.21 2020/06/12 22:45:20 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -133,7 +133,7 @@ main(
 			fprintf(stderr, "%s: no view in picture\n", argv[i]);
 			exit(1);
 		}
-		if (i+1 < argc) {
+		if (!getdim & (i+1 < argc)) {
 			zfd = open_float_depth(argv[i+1], (long)rs.xr*rs.yr);
 			if (zfd < 0)
 				exit(1);
@@ -147,7 +147,7 @@ main(
 		normaspect(viewaspect(&vw), &pa, &rs.xr, &rs.yr);
 	if (getdim) {
 		printf("-x %d -y %d -ld%c\n", rs.xr, rs.yr,
-				vw.vaft > FTINY ? '+' : '-');
+				(i+1 == argc) & (vw.vaft > FTINY) ? '+' : '-');
 		exit(0);
 	}
 	if (fromstdin)
@@ -269,8 +269,8 @@ putrays(void)
 				rdir[0] = rdir[1] = rdir[2] = 0.;
 			else if (zfd >= 0)
 				for (i = 0; i < 3; i++) {
-					rorg[i] += rdir[i]*zbuf[si];
-					rdir[i] = -rdir[i];
+					rdir[i] = -rdir[i]*zbuf[si];
+					rorg[i] -= rdir[i];
 				}
 			else if (d > FTINY) {
 				rdir[0] *= d; rdir[1] *= d; rdir[2] *= d;
