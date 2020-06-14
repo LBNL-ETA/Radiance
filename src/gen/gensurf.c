@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.26 2019/12/07 02:21:42 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.27 2020/06/14 03:54:23 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -510,11 +510,11 @@ compnorms(		/* compute row of averaged normals */
 					/* compute row 1 normals */
 	while (siz-- >= 0) {
 		if (!r1[0].valid)
-			continue;
+			goto skip;
 		if (!r0[0].valid) {
 			if (!r2[0].valid) {
 				r1[0].n[0] = r1[0].n[1] = r1[0].n[2] = 0.0;
-				continue;
+				goto skip;
 			}
 			fvsum(v1, r2[0].p, r1[0].p, -1.0);
 		} else if (!r2[0].valid)
@@ -524,7 +524,7 @@ compnorms(		/* compute row of averaged normals */
 		if (!r1[-1].valid) {
 			if (!r1[1].valid) {
 				r1[0].n[0] = r1[0].n[1] = r1[0].n[2] = 0.0;
-				continue;
+				goto skip;
 			}
 			fvsum(v2, r1[1].p, r1[0].p, -1.0);
 		} else if (!r1[1].valid)
@@ -533,6 +533,7 @@ compnorms(		/* compute row of averaged normals */
 			fvsum(v2, r1[1].p, r1[-1].p, -1.0);
 		fcross(r1[0].n, v1, v2);
 		normalize(r1[0].n);
+	skip:
 		r0++; r1++; r2++;
 	}
 }
