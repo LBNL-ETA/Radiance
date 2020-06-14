@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.6 2020/06/14 03:04:25 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.7 2020/06/14 17:44:27 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -760,10 +760,14 @@ dupScene(const Scene *osc)
 	return(sc);
 }
 
+#define MAXAC	100
+
 /* Transform entire scene */
 int
 xfScene(Scene *sc, int xac, char *xav[])
 {
+	char	comm[24+MAXAC*8];
+	char	*cp;
 	XF	myxf;
 	FVECT	vec;
 	int	i;
@@ -786,11 +790,18 @@ xfScene(Scene *sc, int xac, char *xav[])
 		vec[0] /= myxf.sca; vec[1] /= myxf.sca; vec[2] /= myxf.sca;
 		VCOPY(sc->norm[i], vec);
 	}
+					/* add comment */
+	cp = strcpy(comm, "Transformed by:");
+	for (i = 0; i < xac; i++) {
+		while (*cp) cp++;
+		*cp++ = ' ';
+		strcpy(cp, xav[i]);
+	}
+	addComment(sc, comm);
 	return(xac);			/* all done */
 }
 
 /* Ditto, using transform string rather than pre-parsed words */
-#define MAXAC	100
 int
 xfmScene(Scene *sc, const char *xfm)
 {
