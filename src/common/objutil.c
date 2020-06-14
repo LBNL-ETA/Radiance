@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.5 2020/05/02 00:12:45 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.6 2020/06/14 03:04:25 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: objutil.c,v 2.5 2020/05/02 00:12:45 greg Exp $
 int
 findName(const char *nm, const char **nmlist, int n)
 {
-	register int    i;
+	int    i;
 	
 	for (i = n; i-- > 0; )
 		if (!strcmp(nmlist[i], nm))
@@ -322,7 +322,7 @@ replace_vertex(Scene *sc, int prev, int repl, double eps)
 			goto linkerr;
 		/* XXX doesn't allow for multiple references to prev in face */
 		f->v[j].vid = repl;     /* replace vertex itself */
-		if (faceArea(sc, f, NULL) <= FTINY)
+		if (faceArea(sc, f, NULL) <= FTINY*FTINY)
 			f->flags |= FACE_DEGENERATE;
 		if (f->v[j].tid >= 0)   /* replace texture if appropriate */
 			for (i = 0; repl_tex[i] >= 0; i++) {
@@ -690,7 +690,7 @@ addFace(Scene *sc, VNDX vid[], int nv)
 	sc->flist = f;
 	sc->nfaces++;
 						/* check face area */
-	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY)
+	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY*FTINY)
 		f->flags |= FACE_DEGENERATE;
 	return(f);
 }
