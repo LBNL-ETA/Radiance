@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.13 2016/09/16 15:09:21 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.14 2020/06/14 02:10:44 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -57,7 +57,7 @@ getface(				/* get arguments for a face */
 	f->va = o->oargs.farg;
 	f->nv = o->oargs.nfargs / 3;
 						/* check for last==first */
-	if (dist2(VERTEX(f,0),VERTEX(f,f->nv-1)) <= FTINY*FTINY)
+	if (f->nv > 3 && dist2(VERTEX(f,0),VERTEX(f,f->nv-1)) <= FTINY*FTINY)
 		f->nv--;
 						/* compute area and normal */
 	f->norm[0] = f->norm[1] = f->norm[2] = 0.0;
