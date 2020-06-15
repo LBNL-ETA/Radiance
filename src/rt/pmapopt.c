@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapopt.c,v 2.9 2020/01/23 18:24:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapopt.c,v 2.10 2020/06/15 22:18:57 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapopt.c,v 2.9 2020/01/23 18:24:47 rschregle 
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.9 2020/01/23 18:24:47 rschregle Exp $
+   $Id: pmapopt.c,v 2.10 2020/06/15 22:18:57 rschregle Exp $
 */
 
 
@@ -79,7 +79,7 @@ int getPmapRenderOpt (int ac, char *av [])
                
             case 'm': /* Fixed max photon search radius */
                if (check(3, "f") || (maxDistFix = atof(av [1])) <= 0)
-                  error(USER, "invalid max photon search radius coefficient");
+                  error(USER, "invalid max photon search radius");
 
                return 1;
 
