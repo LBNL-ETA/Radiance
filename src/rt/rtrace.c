@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.95 2020/05/07 17:13:08 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.96 2020/06/15 15:44:04 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -164,6 +164,7 @@ rtrace(				/* trace rays from file */
 	if (nproc > 1) {		/* start multiprocessing */
 		ray_popen(nproc);
 		ray_fifo_out = printvals;
+		ray_pnbatch = 1;	/* optimize for throughput */
 	}
 	if (hresolu > 0) {
 		if (vresolu > 0)

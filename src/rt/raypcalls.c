@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.32 2020/04/30 19:30:48 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.33 2020/06/15 15:44:03 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -162,6 +162,7 @@ extern char	*shm_boundary;		/* boundary of shared memory */
 
 int		ray_pnprocs = 0;	/* number of child processes */
 int		ray_pnidle = 0;		/* number of idle children */
+int		ray_pnbatch = 0;	/* throughput over responsiveness? */
 
 static struct child_proc {
 	RT_PID	pid;				/* child process id */
@@ -212,7 +213,11 @@ ray_pflush(void)			/* send queued rays to idle children */
 	for (i = ray_pnprocs; nc && i--; ) {
 		if (r_proc[i].npending > 0)
 			continue;	/* child looks busy */
-		n = (r_send_next - sfirst)/nc--;
+		n = r_send_next - sfirst;
+		if (ray_pnbatch)
+			nc--;		/* maximize bundling for batch calc */
+		else
+			n /= nc--;	/* distribute work for interactivity */
 		if (!n)
 			continue;
 					/* smuggle set size in crtype */
