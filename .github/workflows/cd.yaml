@@ -65,6 +65,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           arch: 'win64_msvc2017_64'
+          version: '5.12.9'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -82,8 +83,8 @@ jobs:
 
       - name: set up QT path
         run: |
-          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
-          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+          setx path "%path%;%Qt5_DIR%\bin"
+          setx path “%path%;%Qt5_DIR%\lib”
 
       - name: Build installer
         uses: lukka/run-cmake@v2
@@ -125,6 +126,8 @@ jobs:
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.12.9'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -157,8 +160,8 @@ jobs:
 
       - name: Build installer
         run: |
-          export PATH=$PATH:/Users/runner/runners/2.263.0/work/Radiance/Qt/5.12.8/clang_64/bin
-          export PATH=$PATH:/Users/runner/runners/2.263.0/work/Radiance/Qt/5.12.8/clang_64/lib
+          export PATH=$PATH:$Qt5_DIR/bin
+          export PATH=$PATH:$Qt5_DIR/lib
           sudo bash PackageMaker/Radiance/macInstall.sh
           
         
@@ -180,7 +183,6 @@ jobs:
     needs: cvsimport
     name: "Build for Linux"
     runs-on: ubuntu-latest
-    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
     outputs:
       RELEASE_NAME: ${{ steps.get_release_name.outputs.RELEASE_NAME }}
 
@@ -191,6 +193,8 @@ jobs:
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.12.9'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -202,6 +206,7 @@ jobs:
 
       - name: Compile
         run: |
+          export PATH=$PATH:$Qt5_DIR/bin
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -209,14 +214,14 @@ jobs:
 
       - name: list files
         run: |
-          cd ../Qt/5.12.8/gcc_64
+          cd $Qt5_DIR
           ls -R
         shell: bash
 
       - name: Build installer
         run: |
-          export PATH=$PATH:/home/runner/work/Radiance/Qt/5.12.8/gcc_64/bin
-          export PATH=$PATH:/home/runner/work/Radiance/Qt/5.12.8/gcc_64/lib
+          export PATH=$PATH:$Qt5_DIR/bin
+          export PATH=$PATH:$Qt5_DIR/lib
           cd build
           make package -j8
 
@@ -238,8 +243,6 @@ jobs:
       - name: Zip Build Artifact
         run: |
           zip -r Radiance_Linux.zip ./build/radiance-*-Linux.tar.gz
-
-
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
