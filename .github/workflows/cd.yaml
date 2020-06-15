@@ -7,8 +7,8 @@ on:
     - cron: "0 0,6,12,18 * * *"
 
 jobs:
-  cvsimport:
-    name: "Run CVSImport"
+  cvs_import:
+    name: "Run CVS Import"
     runs-on: ubuntu-20.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
@@ -52,10 +52,11 @@ jobs:
       
   
   build_Windows:
-    needs: cvsimport
+    needs: cvs_import
     name: "Build for Windows"
     runs-on: windows-latest
-    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -65,7 +66,6 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           arch: 'win64_msvc2017_64'
-          version: '5.12.9'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -83,9 +83,8 @@ jobs:
 
       - name: set up QT path
         run: |
-          setx path "%path%;%Qt5_DIR%\bin"
-          setx path “%path%;%Qt5_DIR%\lib”
-
+          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
+          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
       - name: Build installer
         uses: lukka/run-cmake@v2
         with:
@@ -105,7 +104,6 @@ jobs:
       - name: Zip Build Artifact
         run: |
           Compress-Archive -U -Path build\radiance-*.exe -DestinationPath Radiance_Windows
-
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
@@ -114,10 +112,9 @@ jobs:
 
 
   build_OSX:
-    needs: cvsimport
+    needs: cvs_import
     name: "Build for OSX"
     runs-on: macos-latest
-    if: needs.cvsimport.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -127,7 +124,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.12.9'
+          version: '5.12.8'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -163,6 +160,13 @@ jobs:
           export PATH=$PATH:$Qt5_DIR/bin
           export PATH=$PATH:$Qt5_DIR/lib
           sudo bash PackageMaker/Radiance/macInstall.sh
+
+          cd build/_CPack_Packages/Darwin/PackageMaker/
+          sudo cp -r ./radiance*/usr/local/radiance .
+          ls
+          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
+          sudo cp -r radiance_Darwin.pkg ../../../Radiance_OSX.pkg
+          du -h -d=0 *
           
         
       - name: list files
@@ -170,21 +174,21 @@ jobs:
           ls -R
         shell: bash
 
-
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
           name: Radiance_OSX
-          path: ./build/Radiance_OSX.zip
+          path: ./build/Radiance_OSX.pkg
 
 
  
   build_Linux:
-    needs: cvsimport
+    needs: cvs_import
     name: "Build for Linux"
     runs-on: ubuntu-latest
     outputs:
       RELEASE_NAME: ${{ steps.get_release_name.outputs.RELEASE_NAME }}
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -194,7 +198,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          version: '5.12.9'
+          version: '5.12.8'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
