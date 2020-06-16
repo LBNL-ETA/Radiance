@@ -29,7 +29,6 @@ jobs:
       - name: Run CVS Import
         run: |
           cd Radiance
-          bash cvsimport.sh
 
       - name: Set up build trigger
         id: ifBuildTrigger
@@ -55,7 +54,6 @@ jobs:
     needs: cvs_import
     name: "Build for Windows"
     runs-on: windows-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
@@ -115,6 +113,7 @@ jobs:
     needs: cvs_import
     name: "Build for OSX"
     runs-on: macos-latest
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -181,7 +180,6 @@ jobs:
           path: ./build/Radiance_OSX.pkg
 
 
- 
   build_Linux:
     needs: cvs_import
     name: "Build for Linux"
