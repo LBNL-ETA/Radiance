@@ -260,22 +260,28 @@ jobs:
 
 
   release_installers:
-    needs: [build_Windows,build_OSX, build_Linux]
+    needs: [build_Windows, build_OSX, build_Linux]
     name: deploy installers
     runs-on: ubuntu-latest
     steps:
       - name: get release name
         id: get_release_name
         run: |
-          echo ${{needs.build_Linux.outputs.RELEASE_NAME}} 
-          echo $(date +'%Y-%m-%d')
-
+          NEW_RELEASE_NAME=${{needs.build_Linux.outputs.RELEASE_NAME}}' ('$(date +'%Y-%m-%d')')'
+          echo ${NEW_RELEASE_NAME}
+          echo ::set-output name=RELEASE_TAG::${{needs.build_Linux.outputs.RELEASE_NAME}}
+          echo ::set-output name=RELEASE_NAME::${NEW_RELEASE_NAME}
+         
+      - name: check release name
+        run: |
+          echo "${{steps.get_release_name.outputs.RELEASE_TAG}}"
+          echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
 
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
-          ref: refs/heads/master
-          
+          ref: master
+      
       - name: Download Windows installers
         uses: actions/download-artifact@v2
         with:
@@ -290,7 +296,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Radiance_Windows
-      
+
       - name: Display structure of downloaded files
         run: ls -R
 
@@ -299,13 +305,10 @@ jobs:
         uses: actions/create-release@v1.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          default_branch: master
         with:
-          tag_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} 
-          release_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} $(date +'%Y-%m-%d')
-          target_commitish: master
-          body: |
-            ${{ steps.Changelog.outputs.changelog }}
+          tag_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}
+          release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
+          commitish: master
           draft: false
           prerelease: false
       
@@ -317,7 +320,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: Radiance_Linux.zip
-          asset_name: ${{needs.build_Linux.outputs.RELEASE_NAME}}_Linux.zip
+          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_Linux.zip
           asset_content_type: application/zip
       
       - name: Release Asset Radiance_OSX
@@ -327,7 +330,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: Radiance_OSX.zip
-          asset_name: ${{needs.build_Linux.outputs.RELEASE_NAME}}_OSX.zip
+          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
           asset_content_type: application/zip
 
       - name: Release Asset Radiance_Windows
@@ -337,5 +340,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: Radiance_Windows.zip
-          asset_name: ${{needs.build_Linux.outputs.RELEASE_NAME}}_Windows.zip
+          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_Windows.zip
           asset_content_type: application/zip
+
