@@ -1,0 +1,8 @@
+apian=Peter Apian-Bennewitz <apian@pab-opto.de> 
+greg=Gregory J. Ward <gregoryjward@gmail.com> 
+gregl=Gregory J. Ward <gregoryjward@gmail.com> 
+gwlarson=Gregory J. Ward <gregoryjward@gmail.com> 
+rschregle=Roland Schregle <roland.schregle@gmail.com> 
+schorsch=Georg Mischler <schorsch@schorsch.com> 
+rpg777=Rob Guglielmetti <rob.guglielmetti@gmail.com> 
+axelstudios=Alex Swindler <Alex.Swindler@nrel.gov> 
