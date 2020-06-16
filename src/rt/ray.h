@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.43 2020/06/15 15:44:03 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.44 2020/06/16 17:58:11 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -137,7 +137,6 @@ extern int	ambincl;	/* include == 1, exclude == 0 */
 
 extern int	ray_pnprocs;	/* number of child processes */
 extern int	ray_pnidle;	/* number of idle processes */
-extern int	ray_pnbatch;	/* throughput over responsiveness? */
 
 #ifndef AMBLLEN
 #define AMBLLEN		512	/* max. ambient list length */
