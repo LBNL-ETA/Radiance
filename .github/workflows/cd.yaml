@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Clone this repo to machine
         run: |
-          git clone https://github.com/${{ github.repository }}
+          git clone -b master https://github.com/${{ github.repository }}
           cd Radiance
           git branch -a
           git checkout cvsimport
