@@ -169,7 +169,10 @@ jobs:
           sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
           sudo cp -r radiance_Darwin.pkg ../../../Radiance_OSX.pkg
           du -h -d=0 *
-          
+
+      - name: Zip Build Artifact
+        run: |
+          zip -r Radiance_OSX.zip ./build/Radiance_OSX.pkg
         
       - name: list files
         run: |
@@ -180,7 +183,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: Radiance_OSX
-          path: ./build/Radiance_OSX.pkg
+          path: ./build/Radiance_OSX.zip
 
 
   build_Linux:
