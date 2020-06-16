@@ -183,7 +183,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: Radiance_OSX
-          path: ./build/Radiance_OSX.zip
+          path: Radiance_OSX.zip
 
 
   build_Linux:
@@ -268,6 +268,7 @@ jobs:
         id: get_release_name
         run: |
           echo ${{needs.build_Linux.outputs.RELEASE_NAME}} 
+          echo $(date +'%Y-%m-%d')
 
 
       - name: "Checkout Master Branch"
@@ -295,12 +296,14 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          default_branch: master
         with:
           tag_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} 
-          release_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} "($(date +'%Y-%m-%d'))"
+          release_name: ${{needs.build_Linux.outputs.RELEASE_NAME}} $(date +'%Y-%m-%d')
+          target_commitish: master
           body: |
             ${{ steps.Changelog.outputs.changelog }}
           draft: false
