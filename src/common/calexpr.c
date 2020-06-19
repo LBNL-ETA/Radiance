@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.39 2019/12/28 18:05:13 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.40 2020/06/19 22:33:45 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -674,6 +674,11 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 			ep2 = newnode();
 			ep2->type = NUM;
 			ep2->v.num = 1;
+		} else if (ep3->type == NUM && ep3->v.num == 1) {
+			efree((char *)ep3);	/* (E4 ^ 1) */
+			ep1->sibling = NULL;
+			efree((char *)ep2);
+			ep2 = ep1;
 		}
 	}
 	return(ep2);
