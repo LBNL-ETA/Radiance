@@ -310,7 +310,7 @@ jobs:
           release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
           commitish: master
           draft: false
-          prerelease: false
+          prerelease: true
       
       - name: Release Asset Radiance_Linux
         id: upload-release-asset 
