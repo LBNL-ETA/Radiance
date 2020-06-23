@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.7 2020/06/14 17:44:27 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.8 2020/06/23 19:29:40 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -545,6 +545,19 @@ addComment(Scene *sc, const char *comment)
 {
 	sc->descr = chunk_alloc(char *, sc->descr, sc->ndescr);
 	sc->descr[sc->ndescr++] = savqstr((char *)comment);
+}
+
+/* Find index for comment containing the given string (starting from n) */
+int
+findComment(Scene *sc, const char *match, int n)
+{
+	if (n >= sc->ndescr)
+		return(-1);
+	n *= (n > 0);
+	while (n < sc->ndescr)
+		if (strcasestr(sc->descr[n], match) != NULL)
+			return(n);
+	return(-1);
 }
 
 /* Clear comments */

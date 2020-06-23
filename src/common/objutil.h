@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.7 2020/05/02 00:21:13 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.8 2020/06/23 19:29:40 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -97,6 +97,9 @@ int		xfmScene(Scene *sc, const char *xfm);
 
 /* Add a descriptive comment */
 void		addComment(Scene *sc, const char *comment);
+
+/* Find index for comment containing the given string (starting from n) */
+int		findComment(Scene *sc, const char *match, int n);
 
 /* Clear comments */
 void		clearComments(Scene *sc);
