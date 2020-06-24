@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.8 2020/06/23 19:29:40 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.9 2020/06/24 01:16:09 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -555,7 +555,7 @@ findComment(Scene *sc, const char *match, int n)
 		return(-1);
 	n *= (n > 0);
 	while (n < sc->ndescr)
-		if (strcasestr(sc->descr[n], match) != NULL)
+		if (strstr(sc->descr[n], match) != NULL)
 			return(n);
 	return(-1);
 }
