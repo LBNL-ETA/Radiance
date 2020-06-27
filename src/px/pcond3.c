@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.17 2017/11/30 18:43:05 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.18 2020/06/27 03:37:24 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: pcond3.c,v 3.17 2017/11/30 18:43:05 greg Exp $
 #include <string.h>
 
 #include "pcond.h"
+#include "random.h"
 
 
 #define CVRATIO		0.025		/* fraction of samples allowed > env. */
@@ -19,10 +20,11 @@ double	modhist[HISTRES];		/* modified histogram */
 double	mhistot;			/* modified histogram total */
 double	cumf[HISTRES+1];		/* cumulative distribution function */
 
-static double centprob(int	x, int	y);
+static double centprob(int x, int y);
 static void mkcumf(void);
-static double cf(double	b);
-static double BLw(double	Lw);
+static double cf(double b);
+static double BLw(double Lw);
+static float *getlumsamp(int n);
 #if ADJ_VEIL
 static void mkcrfimage(void);
 #endif
@@ -177,10 +179,54 @@ centprob(			/* center-weighting probability function */
 }
 
 
+static float *
+getlumsamp(int n)		/* get set of random point sample luminances */
+{
+	float	*ls = (float *)malloc(n*sizeof(float));
+	COLR	*cscan = (COLR *)malloc(scanlen(&inpres)*sizeof(COLR));
+	long	startpos = ftell(infp);
+	long	npleft = (long)inpres.xr*inpres.yr;
+	int	x;
+	
+	if ((ls == NULL) | (cscan == NULL))
+		syserror("malloc");
+	x = 0;				/* read/convert samples */
+	while (n > 0) {
+		COLOR	col;
+		int	sv = 0;
+		double	rval, cumprob = 0;
+
+		if (x <= 0 && freadcolrs(cscan, x=scanlen(&inpres), infp) < 0) {
+			fprintf(stderr, "%s: %s: scanline read error\n",
+					progname, infn);
+			exit(1);
+		}
+		rval = frandom();	/* random distance to next sample */
+		while ((cumprob += (1.-cumprob)*n/(npleft-sv)) < rval)
+			sv++;
+		if (x < ++sv) {		/* out of pixels in this scanline */
+			npleft -= x;
+			x = 0;
+			continue;
+		}
+		x -= sv;
+		colr_color(col, cscan[x]);
+		ls[--n] = plum(col);
+		npleft -= sv;
+	}
+	free(cscan);			/* clean up and reset file pointer */
+	if (fseek(infp, startpos, SEEK_SET) < 0)
+		syserror("fseek");
+	return(ls);
+}
+
+
 void
 comphist(void)			/* create foveal sampling histogram */
 {
 	double	l, b, w, lwmin, lwmax;
+	float	*lumsamp;
+	int	nlumsamp;
 	int	x, y;
 					/* check for precalculated histogram */
 	if (what2do&DO_PREHIST)
@@ -193,6 +239,16 @@ comphist(void)			/* create foveal sampling histogram */
 			if (l < lwmin) lwmin = l;
 			if (l > lwmax) lwmax = l;
 		}
+					/* sample luminance pixels */
+	nlumsamp = fvxr*fvyr*16;
+	if (nlumsamp > inpres.xr*inpres.yr)
+		nlumsamp = inpres.xr*inpres.yr;
+	lumsamp = getlumsamp(nlumsamp);
+	for (x = nlumsamp; x--; ) {
+		l = lumsamp[x];
+		if (l < lwmin) lwmin = l;
+		if (l > lwmax) lwmax = l;
+	}
 	lwmax *= 1.01;
 	if (lwmax > LMAX)
 		lwmax = LMAX;
@@ -207,10 +263,9 @@ comphist(void)			/* create foveal sampling histogram */
 					/* (re)compute histogram */
 	bwavg = 0.;
 	histot = 0.;
-	for (x = 0; x < HISTRES; x++)
-		bwhist[x] = 0.;
+	memset(bwhist, 0, sizeof(bwhist));
 					/* global average */
-	if (!(what2do&DO_FIXHIST) || fixfrac < 1.-FTINY)
+	if (!(what2do&DO_FIXHIST) || fixfrac < 1.-FTINY) {
 		for (y = 0; y < fvyr; y++)
 			for (x = 0; x < fvxr; x++) {
 				l = plum(fovscan(y)[x]);
@@ -222,6 +277,18 @@ comphist(void)			/* create foveal sampling histogram */
 				bwhist[bwhi(b)] += w;
 				histot += w;
 			}
+					/* weight for point luminances */
+		w = 1. * histot / nlumsamp;
+		for (x = nlumsamp; x--; ) {
+			l = lumsamp[x];
+			if (l < lwmin+FTINY) continue;
+			if (l >= lwmax-FTINY) continue;
+			b = Bl(l);
+			bwavg += w*b;
+			bwhist[bwhi(b)] += w;
+			histot += w;
+		}
+	}
 					/* average fixation points */
 	if (what2do&DO_FIXHIST && nfixations > 0) {
 		if (histot > FTINY)
@@ -243,6 +310,7 @@ comphist(void)			/* create foveal sampling histogram */
 		bwhist[1] *= 0.5;
 		bwhist[0] += bwhist[1];
 	}
+	free(lumsamp);
 }
 
 
