@@ -174,7 +174,7 @@ jobs:
           cd build/_CPack_Packages/Darwin/PackageMaker/
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
-          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg -c 'set :Dict:BundleIsRelocatable false'
+          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
           sudo cp -r radiance_Darwin.pkg ../../../../Radiance_OSX.pkg
           du -h -d=0 *
 
