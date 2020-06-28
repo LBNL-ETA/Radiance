@@ -175,12 +175,12 @@ jobs:
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
           sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg -c 'set :Dict:BundleIsRelocatable false'
-          sudo cp -r radiance_Darwin.pkg ../../../Radiance_OSX.pkg
+          sudo cp -r radiance_Darwin.pkg ../../../../Radiance_OSX.pkg
           du -h -d=0 *
 
       - name: Zip Build Artifact
         run: |
-          zip -r Radiance_OSX.zip ./build/Radiance_OSX.pkg
+          zip -r Radiance_OSX.zip Radiance_OSX.pkg
         
       - name: list files
         run: |
@@ -238,18 +238,17 @@ jobs:
           export PATH=$PATH:$Qt5_DIR/lib
           cd build
           make package -j8
+          cd ./_CPack_Packages/Linux/TGZ/
+          mv radiance-5.2.05e1f21aae-Linux radiance-Linux
+          tar --create --gzip --file radiance-Linux.tar.gz radiance-Linux
+          zip -r Radiance_Linux.zip radiance-Linux.tar.gz
 
       - name: list files
         run: |
+          cp ./build/_CPack_Packages/Linux/TGZ/Radiance_Linux.zip Radiance_Linux.zip
           ls -R
         shell: bash
       
-
-      - name: Zip Build Artifact
-        run: |
-          cp ./build/radiance-*-Linux.tar.gz radiance-Linux.tar.gz 
-          zip -r Radiance_Linux.zip radiance-Linux.tar.gz
-
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
