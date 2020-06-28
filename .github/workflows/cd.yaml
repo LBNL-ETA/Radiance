@@ -1,4 +1,4 @@
-name: Update Radiance Branch from CVS and Build + Deploy
+name: Import from CVS and Build + Deploy
 
 on:
   push:
@@ -99,12 +99,13 @@ jobs:
           
       - name: list files
         run: |
+          cp ./build/radiance-*.exe radiance.exe
           ls -R
         shell: bash
       
       - name: Zip Build Artifact
         run: |
-          Compress-Archive -U -Path build\radiance-*.exe -DestinationPath Radiance_Windows
+          Compress-Archive -U -Path radiance.exe -DestinationPath Radiance_Windows
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
@@ -190,8 +191,6 @@ jobs:
     needs: cvs_import
     name: "Build for Linux"
     runs-on: ubuntu-latest
-    outputs:
-      RELEASE_NAME: ${{ steps.get_release_name.outputs.RELEASE_NAME }}
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -238,19 +237,11 @@ jobs:
           ls -R
         shell: bash
       
-      - name: get release name
-        id: get_release_name
-        run: |
-          cd build
-          name=( radiance*.tar.gz )
-          [[ -e $name ]] || { echo "Matched no files" >&2; exit 1; }
-          release_name="$(basename -s -Linux.tar.gz $name)"
-          echo "Release name: $release_name"
-          echo ::set-output name=RELEASE_NAME::${release_name}
 
       - name: Zip Build Artifact
         run: |
-          zip -r Radiance_Linux.zip ./build/radiance-*-Linux.tar.gz
+          cp ./build/radiance-*-Linux.tar.gz radiance-Linux.tar.gz 
+          zip -r Radiance_Linux.zip radiance-Linux.tar.gz
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
@@ -264,24 +255,20 @@ jobs:
     name: deploy installers
     runs-on: ubuntu-latest
     steps:
-      - name: get release name
-        id: get_release_name
-        run: |
-          NEW_RELEASE_NAME=${{needs.build_Linux.outputs.RELEASE_NAME}}' ('$(date +'%Y-%m-%d')')'
-          echo ${NEW_RELEASE_NAME}
-          echo ::set-output name=RELEASE_TAG::${{needs.build_Linux.outputs.RELEASE_NAME}}
-          echo ::set-output name=RELEASE_NAME::${NEW_RELEASE_NAME}
-         
-      - name: check release name
-        run: |
-          echo "${{steps.get_release_name.outputs.RELEASE_TAG}}"
-          echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
-
-      - name: "Checkout Master Branch"
+      - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: master
-      
+          fetch-depth: '0'
+
+      - name: Prep semantic release
+        run: |
+          git checkout cvsimport
+          cp .releaserc.json ../.releaserc.json
+          git rev-parse --abbrev-ref HEAD
+          git checkout master
+          git rev-parse --abbrev-ref HEAD
+          cp ../.releaserc.json .releaserc.json
+
       - name: Download Windows installers
         uses: actions/download-artifact@v2
         with:
@@ -300,46 +287,13 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.1
+      - name: Semantic release
+        run: |
+          echo "GITHUB_REF ======================"
+          echo $GITHUB_REF
+          GITHUB_REF='refs/heads/master'
+          echo $GITHUB_REF
+          npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          tag_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}
-          release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
-          commitish: master
-          draft: false
-          prerelease: true
-      
-      - name: Release Asset Radiance_Linux
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: Radiance_Linux.zip
-          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_Linux.zip
-          asset_content_type: application/zip
-      
-      - name: Release Asset Radiance_OSX
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: Radiance_OSX.zip
-          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
-          asset_content_type: application/zip
-
-      - name: Release Asset Radiance_Windows
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: Radiance_Windows.zip
-          asset_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}_Windows.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
