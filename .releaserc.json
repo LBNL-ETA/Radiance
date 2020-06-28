@@ -1,0 +1,34 @@
+{
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        [
+            "@semantic-release/github",
+            {
+                "assets": [
+                    {
+                  
+                        "path": "Radiance_Linux.zip",
+                        "name": "Radiance_${nextRelease.version}_Linux.zip",
+                        "label": "Radiance_${nextRelease.version}_Linux.zip"
+
+                    },
+                    {
+                  
+                        "path": "Radiance_OSX.zip",
+                        "name": "Radiance_${nextRelease.version}_OSX.zip",
+                        "label": "Radiance_${nextRelease.version}_OSX.zip"
+
+                    },
+                    {
+                  
+                        "path": "Radiance_Windows.zip",
+                        "name": "Radiance_${nextRelease.version}_Windows.zip",
+                        "label": "Radiance_${nextRelease.version}_Windows.zip"
+
+                    }
+                ]
+            }
+        ]
+    ]
+}
