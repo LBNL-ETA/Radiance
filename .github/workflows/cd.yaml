@@ -61,7 +61,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: master
+          fetch-depth: '0'
+
+      - name: Prep semantic release
+        run: |
+          git checkout cvsimport
+          cp CMakeLists.txt ../CMakeLists.txt
+          git checkout master
+          cp ../CMakeLists.txt CMakeLists.txt
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
@@ -167,7 +174,7 @@ jobs:
           cd build/_CPack_Packages/Darwin/PackageMaker/
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
-          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
+          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg -c 'set :Dict:BundleIsRelocatable false'
           sudo cp -r radiance_Darwin.pkg ../../../Radiance_OSX.pkg
           du -h -d=0 *
 
