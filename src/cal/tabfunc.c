@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.8 2019/12/28 18:05:13 greg Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.9 2020/06/29 21:25:36 greg Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -157,15 +157,15 @@ absc_exp(void)			/* produce expression for abscissa */
 		putlist(abscissa, tabsize, 20);
 		puts(");");
 		if (increasing) {
+			printf("fx2`%s(x,i):if(x-X`%s(i),\n", locID, locID);
 			printf("fx`%s(x):if(x-%g,if(%g-x,fx2`%s(x,%d),%d),1);\n",
 					locID, abscissa[0], abscissa[tabsize-1],
 					locID, tabsize, tabsize);
-			printf("fx2`%s(x,i):if(x-X`%s(i),\n", locID, locID);
 		} else {
+			printf("fx2`%s(x,i):if(X`%s(i)-x,\n", locID, locID);
 			printf("fx`%s(x):if(%g-x,if(x-%g,fx2`%s(x,%d),%d),1);\n",
 					locID, abscissa[0], abscissa[tabsize-1],
 					locID, tabsize, tabsize);
-			printf("fx2`%s(x,i):if(X`%s(i)-x,\n", locID, locID);
 		}
 		printf("\ti+(x-X`%s(i))/(X`%s(i+1)-X`%s(i)),\n",
 				locID, locID, locID);
