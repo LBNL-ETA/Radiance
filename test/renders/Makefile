@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.20 2019/02/13 17:24:06 greg Exp $
+# RCSid $Id: Makefile,v 1.21 2020/06/29 23:41:32 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -67,7 +67,7 @@ rtmirror_fish.hdr:	mirror.oct
 ### Special test for rfluxmtx (and rcontrib) ###
 
 test-rfluxmtx:	ref/rfmirror.mtx rfmirror.mtx
-	radcompare -max .4 -rms .05 ref/rfmirror.mtx rfmirror.mtx
+	radcompare -max .4 -rms .05 -rel 1e-4 ref/rfmirror.mtx rfmirror.mtx
 
 rfmirror.mtx:	mirror.rad dummysky.rad basic.mat diorama_walls.rad \
 closed_end.rad front_cap.rad glass_pane.rad antimatter_portal.rad
