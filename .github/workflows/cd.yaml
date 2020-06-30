@@ -239,7 +239,7 @@ jobs:
           cd build
           make package -j8
           cd ./_CPack_Packages/Linux/TGZ/
-          mv radiance-5.2.05e1f21aae-Linux radiance-Linux
+          mv radiance-*-Linux radiance-Linux
           tar --create --gzip --file radiance-Linux.tar.gz radiance-Linux
           zip -r Radiance_Linux.zip radiance-Linux.tar.gz
 
