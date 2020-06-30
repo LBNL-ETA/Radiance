@@ -2376,3 +2376,5 @@ directions exactly.
 
 Improved peak extraction method, which was undervaluing transmission
 in many cases.
+
+New version of evalglare from Jan Wienold.
