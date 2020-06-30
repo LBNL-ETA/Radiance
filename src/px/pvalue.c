@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.39 2020/03/30 19:02:26 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.40 2020/06/30 22:30:29 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -386,7 +386,8 @@ unkopt:
 					puts("BigEndian=0");
 				else
 					puts("BigEndian=1");
-			} else if ((format != 'a') & (format != 'i'))
+			} else if ((format != 'a') & (format != 'i') &
+						(format != 'b'))
 				fputendian(stdout);
 			fputformat(fmtid, stdout);
 			putchar('\n');
