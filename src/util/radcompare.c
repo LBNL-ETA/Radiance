@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.22 2019/08/24 02:22:02 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.23 2020/06/30 01:17:54 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -696,7 +696,7 @@ set_refdepth(DEPTHCODEC *dcp, LUTAB *htp)
 	static char	depthvar[] = DEPTHSTR;
 	const char	*drval;
 
-	depthvar[LDEPTHSTR] = '\0';
+	depthvar[LDEPTHSTR-1] = '\0';
 	drval = (const char *)lu_find(htp, depthvar)->data;
 	if (!drval)
 		return(0);
