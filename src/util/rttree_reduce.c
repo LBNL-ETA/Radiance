@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.19 2020/05/11 20:26:12 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.20 2020/06/30 17:18:22 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -402,10 +402,10 @@ main(int argc, char *argv[])
 	if (recipavg)
 		do_reciprocity();
 	if (doheader) {
-		for (i = 0; i < argc; i++) {
-			fputs(argv[i], stdout);
-			fputc(i < argc-1 ? ' ' : '\n', stdout);
-		}
+		newheader("RADIANCE", stdout);
+		printargs(argc, argv, stdout);
+		fputnow(stdout);
+		fputformat("ascii", stdout);
 		fputc('\n', stdout);
 	}
 	gtree.kid = NULL;		/* create our tree */
