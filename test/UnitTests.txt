@@ -10,7 +10,6 @@ vwrays
 rtrace
 mkillum
 mkpmap
-pfilt
 vwrays
 rpiece
 obj2mesh
@@ -84,22 +83,23 @@ bsdf2rad
 ---------------------
 Tools tested in "px":
 =====================
-++++++++
-Missing:
-++++++++
-falsecolor
-psign
+pfilt
+pflip
 ra_tiff
 normtiff
 pvalue
 pcompos
 protate
+++++++++
+Missing:
+++++++++
+falsecolor
+psign
 ra_bmp
 ra_t8
 ra_t16
 pcomb
 pinterp
-pflip
 ra_ppm
 ra_rgbe
 ra_ps
