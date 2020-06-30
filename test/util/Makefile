@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.4 2020/06/30 03:34:15 greg Exp $
+# RCSid $Id: Makefile,v 1.5 2020/06/30 17:51:34 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
@@ -8,7 +8,7 @@ test-genskyvec test-vwrays test-glarendx \
 test-rcode_norm test-rcode_depth test-rcode_ident
 
 clean:
-	rm -f test.mtx vwrays.txt
+	rm -f test.mtx ttree.txt vwrays.txt
 
 test-vwright:	test.vf
 	vwright -vf test.vf 3.5 > vwright.txt
@@ -24,9 +24,7 @@ test-getinfo:	test.mtx
 	rm -f getinfo.txt
 	
 test-rmtxop:	test.mtx
-	rmtxop -ff -c .3 .9 .2 test.mtx -c .7 .2 .3 -t test.mtx > rmtxop.mtx
-	radcompare ref/rmtxop.mtx rmtxop.mtx
-	rm -f rmtxop.mtx
+	rmtxop -ff -c .3 .9 .2 test.mtx -c .7 .2 .3 -t test.mtx | radcompare ref/rmtxop.mtx - 
 
 test-rcollate:	test.mtx
 	radcompare ref/test.mtx test.mtx
@@ -53,8 +51,21 @@ test-glarendx:	glaresrc.txt
 	glarendx -t vert_ill glaresrc.txt | radcompare ref/vert_ill.txt -
 	glarendx -t vert_ind glaresrc.txt | radcompare ref/vert_ind.txt -
 
+test-rttree_reduce: ttree.txt
+	radcompare ref/ttree.txt ttree.txt
+
+test-wrapBSDF:	ttree.txt
+	wrapBSDF -a t3 -u centimeter -f 'm=Test Guys;n=Bogus;t=2.54;h=20;w=45;' \
+-rb ttree.txt > testBSDF.xml
+	radcompare ref/testBSDF.xml testBSDF.xml
+	rm -f testBSDF.xml
+
 test.mtx:	../renders/ref/rfmirror.mtx
 	rcollate -t ../renders/ref/rfmirror.mtx > test.mtx
+
+ttree.txt:
+	cnt 256 | rcalc -e '$$1=floor(sin(PI/256*recno)*40)' \
+| rttree_reduce -h -g 3 -r 3 -t 95 > ttree.txt
 
 vwrays.txt:
 	vwrays -vts -vp 100 50 -75 -vo 10 -va 1000 -vh 160 -vv 130 \

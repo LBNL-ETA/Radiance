@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WindowElement xmlns="http://windows.lbl.gov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://windows.lbl.gov/BSDF-v1.4.xsd">
+<WindowElementType>System</WindowElementType>
+<FileType>BSDF</FileType>
+<Optical>
+<Layer>
+	<Material>
+		<Name>Bogus</Name>
+		<Manufacturer>Test Guys</Manufacturer>
+		<DeviceType>Other</DeviceType>
+		<Thickness unit="centimeter">2.54</Thickness>
+		<Height unit="centimeter">20</Height>
+		<Width unit="centimeter">45</Width>
+	</Material>
+	<Geometry></Geometry>
+	<DataDefinition>
+		<IncidentDataStructure>TensorTree3</IncidentDataStructure>
+	</DataDefinition>
+	<WavelengthData>
+		<LayerNumber>System</LayerNumber>
+		<Wavelength unit="Integral">Visible</Wavelength>
+		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
+		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
+		<WavelengthDataBlock>
+			<WavelengthDataDirection>Reflection Back</WavelengthDataDirection>
+			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
+			<ScatteringDataType>BTDF</ScatteringDataType>
+			<ScatteringData>
+{
+    {
+        { 0.000e+00 0.000e+00 4.0000000 4.0000000 2.800e+01 2.800e+01 3.100e+01 3.100e+01 }
+        { 3.225000e+01 }
+        { 2.200000e+01 }
+        { 2.875000e+01 }
+        { 1.0000000 1.0000000 5.0000000 5.0000000 2.900e+01 2.900e+01 3.100e+01 3.200e+01 }
+        { 3.200000e+01 }
+        { 2.287500e+01 }
+        { 2.800000e+01 }
+    }
+    { 0.000000e+00 }
+    {
+        { 2.737500e+01 }
+        { 2.375000e+01 }
+        { 3.150000e+01 }
+        { 1.775000e+01 }
+        { 2.787500e+01 }
+        { 2.312500e+01 }
+        { 3.175000e+01 }
+        { 1.700000e+01 }
+    }
+    { 0.000000e+00 }
+    { 2.507812e+01 }
+    { 0.000000e+00 }
+    {
+        { 2.825000e+01 }
+        { 2.237500e+01 }
+        { 3.225000e+01 }
+        { 3.100e+01 3.100e+01 2.900e+01 2.800e+01 5.0000000 4.0000000 1.0000000 0.000e+00 }
+        { 2.912500e+01 }
+        { 2.175000e+01 }
+        { 3.262500e+01 }
+        { 3.100e+01 3.000e+01 2.800e+01 2.800e+01 4.0000000 3.0000000 0.000e+00 0.000e+00 }
+    }
+    { 0.000000e+00 }
+}
+			</ScatteringData>
+		</WavelengthDataBlock>
+	</WavelengthData>
+</Layer>
+</Optical>
+</WindowElement>
