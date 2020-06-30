@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.21 2020/06/29 23:41:32 greg Exp $
+# RCSid $Id: Makefile,v 1.22 2020/06/30 18:51:30 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -21,7 +21,7 @@ test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
 test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
 test-trans-def test-trans-fish test-patterns-def test-patterns-plan \
-test-rtrace
+test-rtrace test-obj2mesh
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
@@ -47,10 +47,13 @@ test-rad:	inst.rif
 	rad -n -s -e inst.rif > inst_rad.txt
 	radcompare ref/inst_rad.txt inst_rad.txt
 
-### Special test of oconv ###
+### Special tests of oconv and obj2mesh ###
 
 test-oconv:	inst.oct
 	radcompare ref/inst.oct inst.oct
+
+test-obj2mesh:	cab.obj
+	obj2mesh -w cab.obj | radcompare ref/cab.rtm -
 
 ### Special test of rtrace ###
 

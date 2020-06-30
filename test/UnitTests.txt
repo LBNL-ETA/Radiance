@@ -13,9 +13,6 @@ mkpmap
 pfilt
 vwrays
 rpiece
-++++++++
-Missing:
-++++++++
 obj2mesh
 ----------------------
 Tools tested in "cal":
