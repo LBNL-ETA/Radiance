@@ -1,11 +1,11 @@
-# RCSid $Id: Makefile,v 1.5 2020/06/30 17:51:34 greg Exp $
+# RCSid $Id: Makefile,v 1.6 2020/06/30 18:00:19 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
 
 all:	test-vwright test-getinfo test-rcollate test-rmtxop test-dctimestep \
-test-genskyvec test-vwrays test-glarendx \
-test-rcode_norm test-rcode_depth test-rcode_ident
+test-genskyvec test-vwrays test-glarendx test-rcode_norm test-rcode_depth \
+test-rcode_ident test-wrapBSDF test-rttree_reduce
 
 clean:
 	rm -f test.mtx ttree.txt vwrays.txt
