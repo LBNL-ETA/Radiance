@@ -1,18 +1,22 @@
-# RCSid $Id: Makefile,v 1.2 2019/01/26 00:55:50 greg Exp $
+# RCSid $Id: Makefile,v 1.3 2020/06/30 01:23:03 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
 
 all:	test-vwright test-getinfo test-rcollate test-rmtxop test-dctimestep \
-test-genskyvec
+test-genskyvec test-vwrays test-glarendx \
+test-rcode_norm test-rcode_depth test-rcode_ident
 
 clean:
-	rm -f test.mtx
+	rm -f test.mtx vwrays.txt
 
 test-vwright:	test.vf
 	vwright -vf test.vf 3.5 > vwright.txt
 	radcompare ref/vwright.txt vwright.txt
 	rm -f vwright.txt
+
+test-vwrays:	vwrays.txt
+	radcompare ref/vwrays.txt vwrays.txt
 
 test-getinfo:	test.mtx
 	getinfo -a Guppies "Fredo the Frog" < test.mtx | getinfo > getinfo.txt
@@ -27,8 +31,32 @@ test-rmtxop:	test.mtx
 test-rcollate:	test.mtx
 	radcompare ref/test.mtx test.mtx
 
+test-rcode_ident:	idents.txt
+	rcode_ident -8 -x 20 -y 10 idents.txt | radcompare ref/idents.idx -
+
+test-rcode_norm:	vwrays.txt
+	rcode_norm -hi -x 40 -y 15 vwrays.txt | radcompare ref/norms.nrm -
+
+test-rcode_depth:	depths.txt
+	rcode_depth -x 20 -y 10 -d 150/inch depths.txt | radcompare -h ref/depths.dpt -
+
+test-glarendx:	glaresrc.txt
+	glarendx -t guth_vcp glaresrc.txt | radcompare ref/guth_vcp.txt -
+	glarendx -t cie_cgi glaresrc.txt | radcompare ref/cie_cgi.txt -
+	glarendx -t ugr glaresrc.txt | radcompare ref/ugr.txt -
+	glarendx -t brs_gi glaresrc.txt | radcompare ref/brs_gi.txt -
+	glarendx -t dgi glaresrc.txt | radcompare ref/dgi.txt -
+	glarendx -t guth_dgr glaresrc.txt | radcompare ref/guth_dgr.txt -
+	glarendx -t vert_dir glaresrc.txt | radcompare ref/vert_dir.txt -
+	glarendx -t vert_ill glaresrc.txt | radcompare ref/vert_ill.txt -
+	glarendx -t vert_ind glaresrc.txt | radcompare ref/vert_ind.txt -
+
 test.mtx:	../renders/ref/rfmirror.mtx
 	rcollate -t ../renders/ref/rfmirror.mtx > test.mtx
+
+vwrays.txt:
+	vwrays -vts -vp 100 50 -75 -vo 10 -va 1000 -vh 160 -vv 130 \
+-x 20 -y 20 -vu 0 -1 0 -vd .358 -.8851 1.152 > vwrays.txt
 
 test-genskyvec:	test-dctimestep
 
