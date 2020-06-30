@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.23 2020/06/30 01:17:54 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.24 2020/06/30 22:53:05 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -317,6 +317,7 @@ equiv_string(char *s1, char *s2)
 static int
 setheadvar(char *val, void *p)
 {
+	char	newval[128];
 	LUTAB	*htp = (LUTAB *)p;
 	LUENT	*tep;
 	char	*key;
@@ -359,8 +360,13 @@ setheadvar(char *val, void *p)
 		return(-1);	/* memory allocation error */
 	if (!tep->key)
 		tep->key = strcpy(malloc(kln+1), key);
-	if (tep->data)
+	if (tep->data) {	/* check for special cases */
+		if (!strcmp(key, "EXPOSURE")) {
+			sprintf(newval, "%f", atof(tep->data)*atof(val));
+			vln = strlen(val = newval);
+		}
 		free(tep->data);
+	}
 	tep->data = strcpy(malloc(vln+1), val);
 	return(1);
 }
