@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pictool.c,v 2.7 2020/05/14 20:58:03 greg Exp $";
+static const char RCSid[] = "$Id: pictool.c,v 2.8 2020/06/30 15:57:30 greg Exp $";
 #endif
 #include "pictool.h"
 #include "g3sphere.h"
@@ -277,6 +277,49 @@ int		pict_read_fp(pict* p,FILE* fp)
 	return 1;
 }
 
+int             pict_read_fp_noupdate(pict* p,FILE* fp)                                                                 
+  {                                                                                                                       
+          struct hinfo    hi;                                                                                             
+          int x,y,yy;                                                                                                     
+                                                                                                                          
+                                                                                                                          
+          hi.hv = &(p->view);                                                                                             
+          hi.ok = 0;                                                                                                      
+          hi.exposure = 1;                                                                                                
+          getheader(fp, gethinfo, &hi);                                                                                   
+  /*fprintf(stderr,"expscale %f\n",hi.exposure); */                                                                       
+                                                                                                                          
+          if (!(pict_update_view(p)) || !(hi.ok))                                                                         
+                  p->valid_view = 0;                                                                                      
+  /*      printf("dir %f %f %f\n",p->view.vdir[0],p->view.vdir[1],p->view.vdir[2]); */                                    
+          if (fgetsresolu(&(p->resol),fp) < 0) {                                                                          
+                  fprintf(stderr,"No resolution given\n");                                                                
+                  return 0;                                                                                               
+          }                                                                                                               
+          if (!(p->resol.rt & YMAJOR)) {                                                                                  
+                  x = p->resol.xr;                                                                                        
+                  p->resol.xr = p->resol.yr;                                                                              
+                  p->resol.yr = x;                                                                                        
+                  p->resol.rt |= YMAJOR;                                                                                  
+          }                                                                                                               
+          if (!pict_resize(p,p->resol.xr,p->resol.yr))                                                                    
+                  return 0;                                                                                               
+          for(yy=0;yy<p->resol.yr;yy++) {                                                                                 
+                  y = (p->resol.rt & YDECR) ? p->resol.yr - 1 - yy : yy;                                                  
+                  if (freadscan((p->pic + y*p->resol.xr),p->resol.xr,fp) < 0) {                                           
+                          fprintf(stderr,"error reading line %d\n",y);                                                    
+                          return 0;                                                                                       
+                  }                                                                                                       
+                  for(x=0;x<p->resol.xr;x++) {                                                                            
+              scalecolor(pict_get_color(p,x,y),1.0/hi.exposure);                                                          
+                  }                                                                                                       
+          }                                                                                                               
+          return 1;                                                                                                       
+  }                                                                                                                       
+                                  
+
+
+
 #ifdef PICT_GLARE
 void pict_update_evalglare_caches(pict* p)
 {
@@ -313,6 +356,22 @@ int		pict_read(pict* p,char* fn)
 	fclose(fp);
 	return 1;
 }
+
+int             pict_read_noupdate(pict* p,char* fn)                                                                    
+  {                                                                                                                       
+          FILE* fp;                                                                                                       
+                                                                                                                          
+          if (!(fp = fopen(fn,"rb"))) {                                                                                   
+		fprintf(stderr,"Can't open %s\n",fn);
+		return 0;
+          }                                                                                                               
+          if (!(pict_read_fp_noupdate(p,fp)))                                                                             
+                  return 0;                                                                                               
+          fclose(fp);                                                                                                     
+          return 1;                                                                                                       
+  }                                                                                                                       
+
+
 
 static	void	ch_pct(char* line)
 {

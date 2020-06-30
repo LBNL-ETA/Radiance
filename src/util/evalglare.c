@@ -1,10 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.10 2018/11/27 18:08:24 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.11 2020/06/30 15:57:30 greg Exp $";
 #endif
-/* EVALGLARE V2.08
+/* EVALGLARE V2.10
  * Evalglare Software License, Version 2.0
  *
- * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
+ * Copyright (c) 1995 - 2020 Fraunhofer ISE, EPFL.
  * All rights reserved.
  *
  *
@@ -345,11 +345,21 @@ bugfix: in VCPs error fuction equation, value of 6.347 replaced by 6.374
 bugfix: checkroutine for same image size for the masking corrected 
   */
 
+/* evalglare.c, v2.09 2019/01/18 
+calculate "illuminance-contribution of zones" 
+-switch to turn off low-light correction: 4
+  */
 
-   
+ /* evalglare.c, v2.10 2019/07/30, 2020/06/25
+-add multiimage-mode for annual glare evaluation -Q
+-extra output for multiimage mode
+2020/06/22 - added Ev contribution from each glare source as output to the multiimage mode
+-switch for correction modes (-C), value of 0 switches off all corrections
+  */
+  
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "2.08 release 27.11.2018 by EPFL, J.Wienold"
+#define VERSION "2.10 release 25.06.2020 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -760,7 +770,7 @@ void add_secondary_gs(pict * p, int x, int y, float r, int act_gs, int uniform_g
 void split_pixel_from_gs(pict * p, int x, int y, int new_gsn, int uniform_gs, double u_r, double u_g , double u_b)
 {
 	int old_gsn, icol;
-	double old_av_posx, old_av_posy, old_av_lum, old_omega, act_omega,
+	double old_av_posx, old_av_posy, old_av_lum, old_omega, act_omega, delta_E,
 		new_omega, act_lum;
 
 
@@ -772,6 +782,9 @@ void split_pixel_from_gs(pict * p, int x, int y, int new_gsn, int uniform_gs, do
 	old_av_posx = pict_get_av_posx(p, old_gsn);
 	old_av_posy = pict_get_av_posy(p, old_gsn);
 	old_omega = pict_get_av_omega(p, old_gsn);
+	
+	
+	
 
 	new_omega = old_omega - act_omega;
 	pict_get_av_omega(p, old_gsn) = new_omega;
@@ -788,6 +801,9 @@ void split_pixel_from_gs(pict * p, int x, int y, int new_gsn, int uniform_gs, do
 	/* add pixel to new  gs */
 
 	add_pixel_to_gs(p, x, y, new_gsn);
+
+
+
 
 /* color pixel of new gs */
 
@@ -1437,18 +1453,19 @@ float get_pgsv(double E_v, double E_mask,double omega_mask,double lum_mask_av,do
 
 int main(int argc, char **argv)
 {
-	#define CLINEMAX 4095 /* memory allocated for command line string */
+	#define CLINEMAX 999999999 /* memory allocated for command line string */
 	pict *p = pict_create();
         pict *pm = pict_create();
-	int     skip_second_scan,calcfast,age_corr,cut_view,cut_view_type,calc_vill, output, detail_out2, x1,y1, fill, yfillmax, yfillmin,
-		ext_vill, set_lum_max, set_lum_max2, img_corr,x_disk,y_disk,task_color, i_splitstart,zones,act_gsn,splitgs,
-		i_split, posindex_2, task_lum, checkfile, rval, i, i_max, x, y,x2,y2,x_zone,y_zone, i_z1, i_z2, thres_activate,
+        pict *pcoeff = pict_create();
+	int     lowlight,skip_second_scan,calcfast,age_corr,cut_view,cut_view_type,calc_vill, output, detail_out2, x1,y1, fill, yfillmax, yfillmin,
+		ext_vill, set_lum_max, set_lum_max2, img_corr,x_disk,y_disk,task_color, i_splitstart,zones,act_gsn,splitgs,j,multi_image_mode,
+		i_split, posindex_2, task_lum, checkfile, rval, i, i_max, x, y,x2,y2,x_zone,y_zone, i_z1, i_z2, thres_activate,num_images,xmap,ymap,
 		igs, actual_igs, lastpixelwas_gs, icol, xt, yt, change,checkpixels, before_igs, sgs, splithigh,uniform_gs,x_max, y_max,y_mid,
-		detail_out, posindex_picture, non_cos_lb, rx, ry, rmx,rmy,apply_disability,band_calc,band_color,masking,i_mask,no_glaresources,force;
+		detail_out, posindex_picture, non_cos_lb, rx, ry,lastpixelwas_peak, rmx,rmy,apply_disability,band_calc,band_color,masking,i_mask,no_glaresources,force;
 	double  LUM_replace,lum_total_max,age_corr_factor,age,dgp_ext,dgp,low_light_corr,omega_cos_contr, setvalue, lum_ideal, E_v_contr, sigma,om,delta_E,
 		E_vl_ext, lum_max, new_lum_max, r_center, ugp, ugr_exp, dgi_mod,lum_a, E_v_mask,angle_disk,dist,n_corner_px,zero_corner_px,
 		search_pix, a1, a2, a3, a4, a5, c3, c1, c2, r_split, max_angle,r_actual,lum_actual,dir_ill,
-		omegat, sang, E_v, E_v2, E_v_dir, avlum, act_lum, ang, angle_z1, angle_z2,per_95_band,per_75_band,pos,
+		omegat, sang,Ez1,Ez2, E_v, E_v2, E_v_dir, avlum, act_lum, ang, angle_z1, angle_z2,per_95_band,per_75_band,pos,
 		l_max, lum_backg, lum_backg_cos, omega_sources, lum_sources,per_75_mask,per_95_mask,per_75_z1,per_95_z1,per_75_z2,per_95_z2,
 		lum, lum_source,teta,Lveil_cie,Lveil_cie_sum,disability_thresh,u_r,u_g,u_b,band_angle,band_avlum,
 		lum_mask[1],lum_mask_av,lum_mask_std[1],lum_mask_median[1],omega_mask,bbox[2],
@@ -1458,10 +1475,13 @@ int main(int argc, char **argv)
 		lum_pos[1],lum_nopos_median[1],lum_pos_median[1],lum_pos2_median[1],lum_pos_mean,lum_pos2_mean;
 	float lum_task, lum_thres, dgi,  vcp, cgi, ugr, limit, dgr,pgsv ,pgsv_sat,pgsv_con,
 		abs_max, Lveil;
-	char maskfile[500],file_out[500], file_out2[500], version[500];
+	char maskfile[500],file_out[500], file_out2[500], version[500],correction_type[500];
 	char *cline;
+	char** temp_image_name;
+	int *x_temp_img, *y_temp_img;
 	VIEW userview = STDVIEW;
 	int gotuserview = 0;
+	
 	struct muc_rvar* s_mask;
 	s_mask = muc_rvar_create();
         muc_rvar_set_dim(s_mask, 1);
@@ -1496,7 +1516,11 @@ int main(int argc, char **argv)
 	muc_rvar_clear(s_posweight2);
 
 	/*set required user view parameters to invalid values*/
-        dir_ill=0.0;
+	lowlight=1;
+	multi_image_mode=0;
+	lastpixelwas_peak=0;	
+	num_images=0;        
+	dir_ill=0.0;
         delta_E=0.0;
         no_glaresources=0;
         n_corner_px=0;
@@ -1521,6 +1545,8 @@ int main(int argc, char **argv)
 	pgsv_con = 0.0 ;
 	pgsv_sat = 0.0 ;
 	E_v_mask = 0.0;
+	Ez1 = 0.0;
+	Ez2 = 0.0;
 	lum_z1_av = 0.0;
 	omega_z1 = 0.0;
 	lum_z2_av = 0.0;
@@ -1605,7 +1631,7 @@ int main(int argc, char **argv)
 	thres_activate=0;
 /* command line for output picture*/
 
-	cline = (char *) malloc(CLINEMAX+1);
+	cline = (char *) malloc(CLINEMAX+100);
 	cline[0] = '\0';
 	for (i = 0; i < argc; i++) {
 /*       fprintf(stderr, "%d %d \n",i,strlen(argv[i]));*/
@@ -1653,6 +1679,7 @@ int main(int argc, char **argv)
 			break;
 		case 'b':
 			lum_thres = atof(argv[++i]);
+			lum_source =lum_thres;
 			thres_activate = 1;
 			break;
 		case 'c':
@@ -1825,6 +1852,24 @@ int main(int argc, char **argv)
 			/*case 'v':
 			printf("evalglare  %s \n",version);
 			exit(1); */
+		case 'C':
+			strcpy(correction_type,argv[++i]);
+			
+			if (!strcmp(correction_type,"l-")  ){ 
+		/*	printf("low light off!\n"); */
+											lowlight = 0; }
+			if (!strcmp(correction_type,"l+")  ){ 
+		/*	printf("low light on!\n"); */
+											lowlight = 1; }
+			if (!strcmp(correction_type,"0")  ){ 
+		/*	printf("all corrections off!\n"); */
+											lowlight = 0; }
+			
+ 			break;
+
+			/*case 'v':
+			printf("evalglare  %s \n",version);
+			exit(1); */
 
 		case '1':
 			output = 1;
@@ -1833,7 +1878,33 @@ int main(int argc, char **argv)
 			output = 2;
 			dir_ill = atof(argv[++i]);
 			break;
-
+		case '3':
+			output = 3;
+			break;
+		case '4':
+			lowlight = 0;
+			break;
+		case 'Q':
+			multi_image_mode=1;
+			output= 3;		       	
+			calcfast=1;
+			num_images =atoi(argv[++i]);
+		       	temp_image_name = malloc(sizeof(char*)*num_images);
+			
+			x_temp_img=(int *) malloc(sizeof(int) * num_images);
+			y_temp_img=(int *) malloc(sizeof(int) * num_images);
+			
+			
+	/* iterate through all images and allocate 256 characters to each: */
+                        for (j = 0; j < num_images; j++) {
+			        temp_image_name[j] = malloc(256*sizeof(char));
+			        strcpy(temp_image_name[j], argv[++i]);
+			        x_temp_img[j] = atoi(argv[++i]);
+			        y_temp_img[j] = atoi(argv[++i]);
+		       	}
+		
+		
+			break;
 		case 'v':
 			if (argv[i][2] == '\0') {
                              printf("%s \n",RELEASENAME);				
@@ -1972,7 +2043,8 @@ if (masking ==1 && zones >0) {
 
 		}
 	}
-
+	
+ 
 /* Check task position  */
 
 	if (task_lum == 1) {
@@ -1995,6 +2067,8 @@ if (masking ==1 && zones >0) {
 	igs = 0;
 	pict_get_z1_gsn(p,igs) = 0;
 	pict_get_z2_gsn(p,igs) = 0;
+
+if (multi_image_mode<1) {
 
 
 /* cut out GUTH field of view and exit without glare evaluation */
@@ -2285,7 +2359,8 @@ if (cut_view==1) {
 
 /* first glare source scan: find primary glare sources */
 	for (x = 0; x < pict_get_xsize(p); x++) { 
-/*                lastpixelwas_gs=0; */
+                lastpixelwas_gs=0; 
+/*		lastpixelwas_peak=0; */
 		for (y = 0; y < pict_get_ysize(p); y++) {
 			if (pict_get_hangle(p, x, y, p->view.vdir, p->view.vup, &ang)) {
 				if (pict_is_validpixel(p, x, y)) {
@@ -2295,11 +2370,11 @@ if (cut_view==1) {
 						                             lum_total_max=act_lum;
 						                               }
 /* speed improvement first scan: when last pixel was glare source, then use this glare source number instead of searching. 
-   has been deactivated with v1.25
+   has been deactivated with v1.25, reactivated with v2.10 */
                        
-						if (lastpixelwas_gs==0 || search_pix <= 1.0 ) { */
+						if (lastpixelwas_gs==0 || search_pix <= 1.0 ) { 
 						actual_igs = find_near_pgs(p, x, y, max_angle, 0, igs, 1);
-/*  }*/
+  }
 						if (actual_igs == 0) {
 							igs = igs + 1;
 							pict_new_gli(p);
@@ -2315,11 +2390,11 @@ if (cut_view==1) {
 						pict_get_gsn(p, x, y) = actual_igs;
 						pict_get_pgs(p, x, y) = 1;
 						add_pixel_to_gs(p, x, y, actual_igs);
-/*                                                lastpixelwas_gs=actual_igs; */
+                                                lastpixelwas_gs=actual_igs; 
 
 					} else {
 						pict_get_pgs(p, x, y) = 0;
- /*                                               lastpixelwas_gs=0;*/
+                                                lastpixelwas_gs=0;
 					}
 				}
 			}
@@ -2414,6 +2489,7 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 
 /* extract extremes from glare sources to extra glare source */
 	if (splithigh == 1 && lum_total_max>limit) {
+/*	       fprintf(stderr,	" split of glare source!\n"); */
 
 		r_split = max_angle / 2.0;
 		for (i = 0; i <= i_max; i++) {
@@ -2694,6 +2770,8 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 	                                          muc_rvar_add_sample(s_z1, lum_z1);
 						  omega_z1 += pict_get_omega(p, x, y);
 						  lum_z1_av += pict_get_omega(p, x, y)* lum_actual;
+						  Ez1 += DOT(p->view.vdir, pict_get_cached_dir(p, x, y))* pict_get_omega(p, x, y)* lum_actual;
+
 						  setglcolor(p,x,y,1,1 , 0.66, 0.01 ,0.33);
 /*check if separation gsn already exist */
 
@@ -2710,6 +2788,12 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 						    splitgs=(int)(pict_get_z1_gsn(p,act_gsn)); 
 					/*	    printf("splitgs%i \n",splitgs);       */               
 						    split_pixel_from_gs(p, x, y, splitgs, uniform_gs, u_r, u_g , u_b);
+					/* move direct illuminance contribution into  zone -value	    */
+						delta_E=DOT(p->view.vdir, pict_get_cached_dir(p, x, y))* pict_get_omega(p, x, y)* luminance(pict_get_color(p, x, y));
+						pict_get_Eglare(p,act_gsn ) = pict_get_Eglare(p,act_gsn ) - delta_E;
+						pict_get_Eglare(p,igs ) = pict_get_Eglare(p,igs ) + delta_E;
+	    
+						    
 						}	                         
 						  }
 /*zone2 */
@@ -2721,6 +2805,7 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 	                                          muc_rvar_add_sample(s_z2, lum_z2);
 						  omega_z2 +=	pict_get_omega(p, x, y);
 						  lum_z2_av += pict_get_omega(p, x, y)* lum_actual;
+						  Ez2 += DOT(p->view.vdir, pict_get_cached_dir(p, x, y))* pict_get_omega(p, x, y)* lum_actual;
 						  setglcolor(p,x,y,1,1 , 0.65, 0.33 ,0.02);
 /*						  printf("zone 2 x y act_gsn pict_get_z1_gsn(p,act_gsn) pict_get_z2_gsn(p,act_gsn): %i %i %f 1:%f 2:%f \n",x,y,act_gsn,pict_get_z1_gsn(p,act_gsn),pict_get_z2_gsn(p,act_gsn));
 */						  if (act_gsn > 0){
@@ -2735,6 +2820,11 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 						splitgs=(int)(pict_get_z2_gsn(p,act_gsn));
 /*						printf("splitgs %i \n",splitgs);*/  	                        
 						    split_pixel_from_gs(p, x, y, splitgs, uniform_gs, u_r, u_g , u_b);
+					/* move direct illuminance contribution into  zone -value	    */
+						delta_E=DOT(p->view.vdir, pict_get_cached_dir(p, x, y))* pict_get_omega(p, x, y)* luminance(pict_get_color(p, x, y));
+						pict_get_Eglare(p,act_gsn ) = pict_get_Eglare(p,act_gsn ) - delta_E;
+						pict_get_Eglare(p,igs ) = pict_get_Eglare(p,igs ) + delta_E;
+
                                            }
 				}
 
@@ -2761,11 +2851,11 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
                 muc_rvar_get_bounding_box(s_z1,bbox_z1);
  	if (detail_out == 1) {
 
- 	        printf ("zoning:z1_omega,z1_av_lum,z1_median_lum,z1_std_lum,z1_perc_75,z1_perc_95,z1_lum_min,z1_lum_max: %f %f %f %f %f %f %f %f\n",omega_z1,lum_z1_av,lum_z1_median[0],sqrt(lum_z1_std[0]),per_75_z1,per_95_z1,bbox_z1[0],bbox_z1[1] );
+ 	        printf ("zoning:z1_omega,z1_av_lum,z1_median_lum,z1_std_lum,z1_perc_75,z1_perc_95,z1_lum_min,z1_lum_max,Ez1: %f %f %f %f %f %f %f %f %f\n",omega_z1,lum_z1_av,lum_z1_median[0],sqrt(lum_z1_std[0]),per_75_z1,per_95_z1,bbox_z1[0],bbox_z1[1],Ez1 );
 
                if (zones == 2 ) {
 
-   	        printf ("zoning:z2_omega,z2_av_lum,z2_median_lum,z2_std_lum,z2_perc_75,z2_perc_95,z2_lum_min,z2_lum_max:  %f %f %f %f %f %f %f %f\n",omega_z2,lum_z2_av,lum_z2_median[0],sqrt(lum_z2_std[0]),per_75_z2,per_95_z2,bbox_z2[0],bbox_z2[1] );
+   	        printf ("zoning:z2_omega,z2_av_lum,z2_median_lum,z2_std_lum,z2_perc_75,z2_perc_95,z2_lum_min,z2_lum_max,Ez1:  %f %f %f %f %f %f %f %f %f\n",omega_z2,lum_z2_av,lum_z2_median[0],sqrt(lum_z2_std[0]),per_75_z2,per_95_z2,bbox_z2[0],bbox_z2[1],Ez2 );
  } }            
 		
 	}
@@ -2778,9 +2868,9 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 			}
 		}
 		no_glaresources=i;
-
+/*printf("%i",no_glaresources );*/
 /* glare sources */
-	if (detail_out == 1) {
+	if (detail_out == 1 && output != 3) {
 
 		printf
 			("%i No pixels x-pos y-pos L_s Omega_s Posindx L_b L_t E_vert Edir Max_Lum Sigma xdir ydir zdir Eglare_cie Lveil_cie teta glare_zone\n",
@@ -2826,7 +2916,7 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 		}
 	}
 
-
+if ( output != 3) {
 
 /* calculation of indicees */
 
@@ -2840,10 +2930,11 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 	dgp =
 		get_dgp(p, E_v2, igs, a1, a2, a3, a4, a5, c1, c2, c3, posindex_2);
 /* low light correction */
+     if (lowlight ==1) {
        if (E_v < 1000) {
        low_light_corr=1.0*exp(0.024*E_v-4)/(1+exp(0.024*E_v-4));} else {low_light_corr=1.0 ;}
        dgp =low_light_corr*dgp;
-       
+       }
 /* age correction */
        
 	if (age_corr == 1) {
@@ -2956,7 +3047,273 @@ if (calcfast == 0) {
 		         printf("%f\n", dgp);
 		}
 	}
+}
 
+}else{
+/* only multiimagemode */
+
+
+                       for (j = 0; j < num_images; j++) {
+
+				
+/* loop over temporal images */
+
+pict_read(pcoeff,temp_image_name[j] );
+
+/*printf ("num_img:%i x-size:%i xpos:%i y-size: %i ypos %i bigimg-xsize %i %i ",num_images,pict_get_xsize(pcoeff),x_temp_img[j],pict_get_ysize(pcoeff),y_temp_img[j],pict_get_xsize(p),pict_get_ysize(p));
+*/
+
+/* copy luminance value into big image and remove glare sources*/
+	for (x = 0; x < pict_get_xsize(pcoeff); x++) { 
+		for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+			xmap=x_temp_img[j]+x-1;
+			ymap=y_temp_img[j]+y-1;
+			if (xmap <0) { xmap=0;}
+			if (ymap <0) { ymap=0;}
+			
+			pict_get_color(p, xmap, ymap)[RED] = pict_get_color(pcoeff, x, y)[RED];
+			pict_get_color(p, xmap, ymap)[GRN] = pict_get_color(pcoeff, x, y)[GRN];
+			pict_get_color(p, xmap, ymap)[BLU] = pict_get_color(pcoeff, x, y)[BLU];
+			pict_get_gsn(p, xmap, ymap) = 0;
+			pict_get_pgs(p, xmap, ymap) = 0;
+}}
+
+actual_igs =0;
+
+/* first glare source scan: find primary glare sources */
+	for (x = 0; x < pict_get_xsize(pcoeff); x++) { 
+                lastpixelwas_gs=0; 
+/*		lastpixelwas_peak=0; */
+		for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+			xmap=x_temp_img[j]+x;
+			ymap=y_temp_img[j]+y;
+			if (pict_get_hangle(p, xmap, ymap, p->view.vdir, p->view.vup, &ang)) {
+				if (pict_is_validpixel(p, xmap, ymap)) {
+					act_lum = luminance(pict_get_color(p, xmap, ymap));
+					if (act_lum > lum_source) {
+						if (act_lum >lum_total_max) {
+						                             lum_total_max=act_lum;
+						                               }
+                       
+						if (lastpixelwas_gs==0 || search_pix <= 1.0 ) { 
+						actual_igs = find_near_pgs(p, xmap, ymap, max_angle, 0, igs, 1);
+  }
+						if (actual_igs == 0) {
+							igs = igs + 1;
+							pict_new_gli(p);
+							pict_get_Eglare(p,igs) = 0.0;
+/*  not necessary here					pict_get_lum_min(p, igs) = HUGE_VAL;
+							pict_get_Eglare(p,igs) = 0.0;
+							pict_get_Dglare(p,igs) = 0.0;
+							pict_get_z1_gsn(p,igs) = 0;
+							pict_get_z2_gsn(p,igs) = 0; */
+							actual_igs = igs;
+							
+						}
+						pict_get_gsn(p, xmap, ymap) = actual_igs;
+						pict_get_pgs(p, xmap, ymap) = 1;
+						add_pixel_to_gs(p, xmap, ymap, actual_igs);
+                                                lastpixelwas_gs=actual_igs; 
+                                                
+                                                
+                                                
+					        delta_E=DOT(p->view.vdir, pict_get_cached_dir(p, xmap, ymap))* pict_get_omega(p, xmap, ymap)* luminance(pict_get_color(p, xmap, ymap));
+						pict_get_Eglare(p,actual_igs ) = pict_get_Eglare(p,actual_igs ) + delta_E;
+
+                                              
+                                                
+
+					} else {
+						pict_get_pgs(p, xmap, ymap) = 0;
+                                                lastpixelwas_gs=0;
+					}
+				}
+			}
+		} 
+             }
+
+
+/*			        here should be peak extraction  */
+i_max=igs;
+		r_split = max_angle / 2.0;
+		for (i = 0; i <= i_max; i++) {
+
+			if (pict_get_npix(p, i) > 0) {
+				l_max = pict_get_lum_max(p, i);
+				i_splitstart = igs + 1;
+				if (l_max >= limit) {
+					for (x = 0; x < pict_get_xsize(pcoeff); x++)
+						for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+						xmap=x_temp_img[j]+x;
+						ymap=y_temp_img[j]+y;
+						
+						
+							if (pict_get_hangle
+								(p, xmap, ymap, p->view.vdir, p->view.vup, &ang))
+							{
+								if (pict_is_validpixel(p, xmap, ymap)
+									&& luminance(pict_get_color(p, xmap, ymap))
+									>= limit
+									&& pict_get_gsn(p, xmap, ymap) == i) {
+									if (i_splitstart == (igs + 1)) {
+										igs = igs + 1;
+										pict_new_gli(p);
+							                        pict_get_z1_gsn(p,igs) = 0;
+							                        pict_get_z2_gsn(p,igs) = 0;
+
+										pict_get_Eglare(p,igs) = 0.0;
+										pict_get_Dglare(p,igs) = 0.0;
+										pict_get_lum_min(p, igs) =
+											99999999999999.999;
+										i_split = igs;
+									} else {
+										i_split =
+											find_split(p, xmap, ymap, r_split,
+													   i_splitstart, igs);
+									}
+									if (i_split == 0) {
+										igs = igs + 1;
+										pict_new_gli(p);
+							                        pict_get_z1_gsn(p,igs) = 0;
+							                        pict_get_z2_gsn(p,igs) = 0;
+
+										pict_get_Eglare(p,igs) = 0.0;
+										pict_get_Dglare(p,igs) = 0.0;
+										pict_get_lum_min(p, igs) =
+											99999999999999.999;
+										i_split = igs;
+									}
+									split_pixel_from_gs(p, xmap, ymap, i_split, uniform_gs, u_r, u_g , u_b);
+
+								}
+							}
+						}
+
+				}
+				change = 1;
+				while (change == 1) {
+					change = 0;
+					for (x = 0; x < pict_get_xsize(pcoeff); x++)
+						for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+						xmap=x_temp_img[j]+x;
+						ymap=y_temp_img[j]+y;
+							before_igs = pict_get_gsn(p, xmap, ymap);
+							if (before_igs >= i_splitstart) {
+								if (pict_get_hangle
+									(p, xmap, ymap, p->view.vdir, p->view.vup,
+									 &ang)) {
+									if (pict_is_validpixel(p, xmap, ymap)
+										&& before_igs > 0) {
+										actual_igs =
+											find_near_pgs(p, xmap, ymap,
+														  max_angle,
+														  before_igs, igs,
+														  i_splitstart);
+										if (!(actual_igs == before_igs)) {
+											change = 1;
+										}
+										if (before_igs > 0) {
+											actual_igs =
+												pict_get_gsn(p, xmap, ymap);
+ /*											icol =
+												setglcolor(p, x, y,
+														   actual_igs, uniform_gs, u_r, u_g , u_b);*/
+										}
+
+									}
+								}
+							}
+
+						}
+				}
+
+
+			}
+		}
+
+/*			        end peak extraction  */
+
+
+/* calculation of direct vertical illuminance for th multi-image-mode */
+
+
+	for (x = 0; x < pict_get_xsize(pcoeff); x++)
+		for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+			xmap=x_temp_img[j]+x;
+			ymap=y_temp_img[j]+y;
+			if (pict_get_hangle(p, xmap, ymap, p->view.vdir, p->view.vup, &ang)) {
+				if (pict_is_validpixel(p, xmap, ymap)) {
+					if (pict_get_gsn(p, xmap, ymap) > 0) {
+					        actual_igs = pict_get_gsn(p, xmap, ymap);
+					        delta_E=DOT(p->view.vdir, pict_get_cached_dir(p, xmap, ymap))* pict_get_omega(p, xmap, ymap)* luminance(pict_get_color(p, xmap, ymap));
+						pict_get_Eglare(p,actual_igs ) = pict_get_Eglare(p,actual_igs ) + delta_E;
+					}
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+			i = 0;
+			for (x = 0; x <= igs; x++) {
+				if (pict_get_npix(p, x) > 0) {
+					i = i + 1;
+					}}
+no_glaresources=i;		       	
+
+/*
+
+sprintf(file_out, "%s%i%s","ray2/img_",j,".hdr");
+pict_write(p, file_out);
+*/
+printf("%i ",no_glaresources); 
+			i = 0;
+			for (x = 0; x <= igs; x++) {
+				if (pict_get_npix(p, x) > 0) {
+					i = i + 1;
+					pict_get_sigma(p, pict_get_av_posx(p, x), pict_get_av_posy(p, x), p->view.vdir, p->view.vup, &sigma);
+								   
+					x2=pict_get_av_posx(p, x);
+					y2=pict_get_av_posy(p, x);
+					printf("%f %.10f %f %f %f %f %f ",	pict_get_av_lum(p, x), pict_get_av_omega(p, x), get_posindex(p, pict_get_av_posx(p, x),	pict_get_av_posy(p, x),
+								posindex_2),pict_get_cached_dir(p, x2,y2)[0],pict_get_cached_dir(p, x2,y2)[1],pict_get_cached_dir(p, x2,y2)[2],pict_get_Eglare(p,x) );
+				}
+pict_get_npix(p, x)=0;
+pict_get_av_lum(p, x)=0;
+pict_get_av_posy(p, x)=0;
+pict_get_av_posx(p, x)=0;
+pict_get_av_omega(p, x)=0;
+			} 
+printf("\n");
+
+
+/* empty big image and remove glare sources*/
+	for (x = 0; x < pict_get_xsize(pcoeff); x++) { 
+		for (y = 0; y < pict_get_ysize(pcoeff); y++) {
+			xmap=x_temp_img[j]+x;
+			ymap=y_temp_img[j]+y;
+			pict_get_color(p, xmap, ymap)[RED] = 0;
+			pict_get_color(p, xmap, ymap)[GRN] = 0;
+			pict_get_color(p, xmap, ymap)[BLU] = 0;
+			pict_get_gsn(p, xmap, ymap) = 0;
+			pict_get_pgs(p, xmap, ymap) = 0;
+}}
+igs=0;
+
+
+
+
+
+}
+
+}
+
+/* end multi-image-mode */
 
 /*printf("lowlight=%f\n", low_light_corr); */
 
