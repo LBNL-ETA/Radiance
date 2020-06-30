@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.3 2020/06/30 01:23:03 greg Exp $
+# RCSid $Id: Makefile,v 1.4 2020/06/30 03:34:15 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
@@ -33,12 +33,14 @@ test-rcollate:	test.mtx
 
 test-rcode_ident:	idents.txt
 	rcode_ident -8 -x 20 -y 10 idents.txt | radcompare ref/idents.idx -
+	rcode_ident -r -H ref/idents.idx | radcompare idents.txt -
 
 test-rcode_norm:	vwrays.txt
 	rcode_norm -hi -x 40 -y 15 vwrays.txt | radcompare ref/norms.nrm -
 
 test-rcode_depth:	depths.txt
 	rcode_depth -x 20 -y 10 -d 150/inch depths.txt | radcompare -h ref/depths.dpt -
+	rcode_depth -r -Ho ref/depths.dpt | radcompare -w depths.txt -
 
 test-glarendx:	glaresrc.txt
 	glarendx -t guth_vcp glaresrc.txt | radcompare ref/guth_vcp.txt -
