@@ -25,10 +25,9 @@ rcalc
 total
 histo
 rlam
-++++++++
-Missing:
-++++++++
+rsplit
 tabfunc
+ev
 ----------------------
 Tools tested in "gen":
 ======================
@@ -39,6 +38,7 @@ genrev
 genworm
 genprism
 gensurf
+genblinds
 replmarks
 ++++++++
 Missing:
@@ -53,17 +53,17 @@ getinfo
 rmtxop
 genskyvec
 dctimestep
+glarendx
+rttree_reduce
+wrapBSDF
 ++++++++
 Missing:
 ++++++++
 findglare
 genBSDF
-glarendx
 ranimate
 ranimove
 rsensor
-rttree_reduce
-wrapBSDF
 evalglare
 ---------------------
 Tools tested in "cv":
