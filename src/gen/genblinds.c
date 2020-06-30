@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.13 2015/08/01 23:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.14 2020/06/30 18:16:30 greg Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: genblinds.c,v 2.13 2015/08/01 23:27:04 greg Ex
 #include  <string.h>
 
 #define  PI		3.14159265358979323846
-#define  DELTA		10.  /*  MINIMAL SUSTAINED ANGLE IN DEGREES */
+#define  DELTA		3.  /*  MINIMAL SUSTAINED ANGLE IN DEGREES */
 
 double  baseflat[4][3], baseblind[4][3][180];
 double  A[3],X[3];
