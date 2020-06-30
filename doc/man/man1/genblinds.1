@@ -1,4 +1,4 @@
-.\" RCSid "$Id: genblinds.1,v 1.6 2009/04/24 05:20:22 greg Exp $"
+.\" RCSid "$Id: genblinds.1,v 1.7 2020/06/30 18:17:32 greg Exp $"
 .TH GENBLINDS 1 10/10/94 RADIANCE
 .SH NAME
 genblinds - generate a RADIANCE description of venetian blinds
@@ -41,14 +41,14 @@ with the
 option.
 If given as
 .I +r,
-The curvature is upward (which is the usual configuration).
+the curvature is upward, which is the usual configuration.
 If the option is given as
 .I -r,
 then the curvature is downward.
 The radius indicates how far from each slat its effective
 cylindrical center resides.
 Each slat will be broken into as many polygons as is necessary to
-keep the delta changes in angle less than 10 degrees.
+keep the delta changes in angle less than 3 degrees.
 (Note that this may result in a rather large number of polygons.)\0
 .SH EXAMPLE
 To produce a curved set of blinds with 25 slats at 15 degrees:
