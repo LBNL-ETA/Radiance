@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.2 2020/07/01 02:00:06 greg Exp $
+# RCSid $Id: Makefile,v 1.3 2020/07/01 18:04:19 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -9,11 +9,13 @@ IMG_CMP = radcompare -h -rms 0.03 -rel 0.007 -max 0.2
 
 all:	test-pfilt test-pvalue test-ra_tiff test-normtiff test-pcompos \
 test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 \
-test-ra_rgbe test-ra_ppm test-pextrem test-pcomb
+test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign \
+test-falsecolor
 
 clean:
 	rm -f test.hdr test24.hdr test24.tif test32L.tif pcomb.hdr \
-norm24.tif norm8.tif pcompos.hdr pcondh.hdr test_extrema.txt
+norm24.tif norm8.tif pcompos.hdr pcondh.hdr test_extrema.txt psign.hdr \
+pinterp.hdr false.hdr
 
 test-pcond:	test.hdr
 	pcond -h test.hdr pcondh.hdr
@@ -47,6 +49,21 @@ test-pcompos:	test.hdr test24.hdr
 		'!pflip -v test24.hdr' '!protate test.hdr' > pcompos.hdr
 	$(HDR_CMP) ref/pcompos.hdr pcompos.hdr
 	rm -f pcompos.hdr
+
+test-pinterp:	test.hdr
+	pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
+	$(HDR_CMP) ref/pinterp.hdr pinterp.hdr
+	rm -f pinterp.hdr
+
+test-psign:
+	psign -cb .9 .4 .01 -cf .1 .2 1 -dd -h 200 -a 1.5 -s -.1 Testing > psign.hdr
+	$(HDR_CMP) ref/psign.hdr psign.hdr
+	rm -f psign.hdr
+
+test-falsecolor:
+	falsecolor -s 2e5 -log 5 -i test.hdr > false.hdr
+	$(HDR_CMP) ref/false.hdr false.hdr
+	rm -f false.hdr
 
 test-ra_rgbe:	test.hdr
 	ra_rgbe -e -5 test.hdr | ra_rgbe -r -e +5 | $(HDR_CMP) -w test.hdr -

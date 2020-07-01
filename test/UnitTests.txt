@@ -98,11 +98,11 @@ pcond
 pcomb
 pextrem
 ra_ppm
+pinterp
+psign
+falsecolor
 ++++++++
 Missing:
 ++++++++
-falsecolor
-psign
 ra_t8
-pinterp
 ra_ps
