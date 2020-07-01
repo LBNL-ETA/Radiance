@@ -1,3 +1,4 @@
+# RCSid $Id: UnitTests.txt,v 1.11 2020/07/01 19:54:53 greg Exp $
 --------------------------
 Tools tested in "renders":
 ==========================
@@ -6,11 +7,10 @@ rad
 oconv
 rfluxmtx
 rcontrib
-vwrays
 rtrace
 mkillum
 mkpmap
-vwrays
+rpict
 rpiece
 obj2mesh
 ----------------------
@@ -44,6 +44,7 @@ gendaylit
 Tools tested in "util":
 =======================
 vwright
+vwrays
 rcollate
 getinfo
 rmtxop
