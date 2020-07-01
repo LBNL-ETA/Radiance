@@ -80,6 +80,7 @@ bsdf2klems
 pkgBSDF
 epq2wea
 bsdf2rad
+ra_ppm
 ---------------------
 Tools tested in "px":
 =====================
@@ -90,19 +91,18 @@ normtiff
 pvalue
 pcompos
 protate
+ra_bmp
+ra_t16
+ra_xyze
+ra_rgbe
+pcond
+pcomb
+pextrem
 ++++++++
 Missing:
 ++++++++
 falsecolor
 psign
-ra_bmp
 ra_t8
-ra_t16
-pcomb
 pinterp
-ra_ppm
-ra_rgbe
 ra_ps
-pextrem
-ra_xyze
-pcond
