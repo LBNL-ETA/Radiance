@@ -94,6 +94,7 @@ ra_bmp
 ra_t16
 ra_xyze
 ra_rgbe
+ra_ps
 pcond
 pcomb
 pextrem
@@ -105,4 +106,3 @@ falsecolor
 Missing:
 ++++++++
 ra_t8
-ra_ps

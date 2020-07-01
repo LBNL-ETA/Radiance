@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.3 2020/07/01 18:04:19 greg Exp $
+# RCSid $Id: Makefile,v 1.4 2020/07/01 18:18:03 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -10,12 +10,12 @@ IMG_CMP = radcompare -h -rms 0.03 -rel 0.007 -max 0.2
 all:	test-pfilt test-pvalue test-ra_tiff test-normtiff test-pcompos \
 test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 \
 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign \
-test-falsecolor
+test-falsecolor test-ra_ps
 
 clean:
 	rm -f test.hdr test24.hdr test24.tif test32L.tif pcomb.hdr \
 norm24.tif norm8.tif pcompos.hdr pcondh.hdr test_extrema.txt psign.hdr \
-pinterp.hdr false.hdr
+pinterp.hdr false.hdr ra_psC.ps
 
 test-pcond:	test.hdr
 	pcond -h test.hdr pcondh.hdr
@@ -90,6 +90,11 @@ test-ra_t16:	test24.hdr
 
 test-ra_ppm:	test24.hdr
 	ra_ppm test24.hdr | ra_ppm -r | $(IMG_CMP) test24.hdr -
+
+test-ra_ps:	test.hdr
+	ra_ps -b -C test.hdr > ra_psC.ps
+	radcompare ref/ra_psC.ps ra_psC.ps
+	rm -f ra_psC.ps
 
 test24.hdr:	test.hdr
 	pvalue -g 2.2 -db test.hdr | pvalue -r -g 2.2 -db > test24.hdr
