@@ -80,7 +80,6 @@ bsdf2klems
 pkgBSDF
 epq2wea
 bsdf2rad
-ra_ppm
 ---------------------
 Tools tested in "px":
 =====================
@@ -98,6 +97,7 @@ ra_rgbe
 pcond
 pcomb
 pextrem
+ra_ppm
 ++++++++
 Missing:
 ++++++++
