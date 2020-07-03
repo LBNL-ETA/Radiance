@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.72 2020/04/06 21:09:07 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.73 2020/07/03 00:42:20 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -434,18 +434,17 @@ direct(					/* add direct component */
 		cntord[sn].sndx = sn;
 		scp = srccnt + sn;
 		scp->sno = sr.rsrc;
-						/* compute coefficient */
-		(*f)(scp->coef, p, sr.rdir, si.dom);
-		cntord[sn].brt = intens(scp->coef);
-		if (cntord[sn].brt <= 0.0)
-			continue;
-#if SHADCACHE
-						/* check shadow cache */
+#if SHADCACHE					/* check shadow cache */
 		if (si.np == 1 && srcblocked(&sr)) {
 			cntord[sn].brt = 0.0;
 			continue;
 		}
 #endif
+						/* compute coefficient */
+		(*f)(scp->coef, p, sr.rdir, si.dom);
+		cntord[sn].brt = intens(scp->coef);
+		if (cntord[sn].brt <= 0.0)
+			continue;
 		VCOPY(scp->dir, sr.rdir);
 		copycolor(sr.rcoef, scp->coef);
 						/* compute potential */
