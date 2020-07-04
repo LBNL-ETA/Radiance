@@ -4,7 +4,7 @@ on:
   push:
     branches: [ cvsimport ]
   schedule:
-    - cron: "0 0,6,12,18 * * *"
+    - cron: "0 0 * * 0"
 
 jobs:
   cvs_import:
@@ -63,7 +63,7 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Prep semantic release
+      - name: override CMakeLists.txt to change default install dir on windows 
         run: |
           git checkout cvsimport
           cp CMakeLists.txt ../CMakeLists.txt
@@ -103,21 +103,29 @@ jobs:
           buildWithCMakeArgs: "--config Release --target PACKAGE"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
-          
+      
+      - name: Zip Compiled Artifact
+        run: |
+          mv build\_CPack_Packages\win64\NSIS\radiance-*-Windows\ radiance
+          Compress-Archive -U -Path radiance\* -DestinationPath Radiance_Windows
+
       - name: list files
         run: |
-          cp ./build/radiance-*.exe radiance.exe
+          mkdir WindowsBuild
+          cp ./build/radiance-*.exe ./WindowsBuild/Radiance_Windows.exe
+          cp ./Radiance_Windows.zip ./WindowsBuild/Radiance_Windows.zip
           ls -R
         shell: bash
-      
+
       - name: Zip Build Artifact
         run: |
-          Compress-Archive -U -Path radiance.exe -DestinationPath Radiance_Windows
+          Compress-Archive -U -Path WindowsBuild -DestinationPath Radiance_Windows_both
+
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Windows
-          path: Radiance_Windows.zip
+          name: Radiance_Windows_both
+          path: Radiance_Windows_both.zip
 
 
   build_OSX:
@@ -178,20 +186,25 @@ jobs:
           sudo cp -r radiance_Darwin.pkg ../../../../Radiance_OSX.pkg
           du -h -d=0 *
 
-      - name: Zip Build Artifact
-        run: |
-          zip -r Radiance_OSX.zip Radiance_OSX.pkg
         
-      - name: list files
+      - name: Zip Build Artifact and list files
         run: |
+          mkdir OSXBuild
+          sudo cp Radiance_OSX.pkg ./OSXBuild/Radiance_OSX.pkg
+
+          sudo mv ./build/_CPack_Packages/Darwin/PackageMaker/radiance-*-Darwin/usr/local/radiance ./radiance
+          sudo zip -r Radiance_OSX.zip ./radiance
+          sudo cp ./Radiance_OSX.zip ./OSXBuild/Radiance_OSX.zip
+
+          sudo zip -r Radiance_OSX_both.zip ./OSXBuild
           ls -R
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_OSX
-          path: Radiance_OSX.zip
+          name: Radiance_OSX_both
+          path: Radiance_OSX_both.zip
 
 
   build_Linux:
@@ -238,17 +251,14 @@ jobs:
           export PATH=$PATH:$Qt5_DIR/lib
           cd build
           make package -j8
-          cd ./_CPack_Packages/Linux/TGZ/
-          mv radiance-*-Linux radiance-Linux
-          tar --create --gzip --file radiance-Linux.tar.gz radiance-Linux
-          zip -r Radiance_Linux.zip radiance-Linux.tar.gz
 
-      - name: list files
+      - name: Zip Build Artifact
         run: |
-          cp ./build/_CPack_Packages/Linux/TGZ/Radiance_Linux.zip Radiance_Linux.zip
-          ls -R
-        shell: bash
-      
+          cd  ./build
+          zip -r Radiance_Linux.zip radiance-*-Linux.tar.gz
+          cp ./Radiance_Linux.zip ./../Radiance_Linux.zip
+          
+
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
@@ -261,45 +271,115 @@ jobs:
     name: deploy installers
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
-          fetch-depth: '0'
-
-      - name: Prep semantic release
-        run: |
-          git checkout cvsimport
-          cp .releaserc.json ../.releaserc.json
-          git rev-parse --abbrev-ref HEAD
-          git checkout master
-          git rev-parse --abbrev-ref HEAD
-          cp ../.releaserc.json .releaserc.json
-
-      - name: Download Windows installers
+          ref: master
+      
+      - name: Download Linux installers
         uses: actions/download-artifact@v2
         with:
           name: Radiance_Linux
+
+      - name: Download OSX installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_OSX_both
       
       - name: Download Windows installers
         uses: actions/download-artifact@v2
         with:
-          name: Radiance_OSX
-      
-      - name: Download Windows installers
-        uses: actions/download-artifact@v2
-        with:
-          name: Radiance_Windows
+          name: Radiance_Windows_both
+
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Linux.zip
+          unzip Radiance_Windows_both.zip
+          unzip Radiance_OSX_both.zip
 
       - name: Display structure of downloaded files
         run: ls -R
 
-      - name: Semantic release
+      - name: get release name
+        id: get_release_name
         run: |
-          echo "GITHUB_REF ======================"
-          echo $GITHUB_REF
-          GITHUB_REF='refs/heads/master'
-          echo $GITHUB_REF
-          npx semantic-release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          name=( radiance*.tar.gz )
+          [[ -e $name ]] || { echo "Matched no files" >&2; exit 1; }
+          file_name="$(basename -s -Linux.tar.gz $name)"
 
+          RELEASE_VERSION="${file_name:9:11}"
+          RELEASE_NAME='Radiance '"${RELEASE_VERSION}"' ('$(date +'%Y-%m-%d')')'
+          
+          echo "Release version: $RELEASE_VERSION"
+          echo "Release name: $RELEASE_NAME"
+
+          echo ::set-output name=RELEASE_VERSION::${RELEASE_VERSION}
+          echo ::set-output name=RELEASE_NAME::${RELEASE_NAME}
+         
+      - name: check release name
+        run: |
+          echo "${{steps.get_release_name.outputs.RELEASE_VERSION}}"
+          echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{steps.get_release_name.outputs.RELEASE_VERSION}}
+          release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
+          commitish: master
+          draft: false
+          prerelease: true
+      
+      - name: Release Asset Radiance_Windows exe
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: WindowsBuild/Radiance_Windows.exe
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Windows.exe
+          asset_content_type: application/exe
+      
+      - name: Release Asset Radiance_Windows zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: WindowsBuild/Radiance_Windows.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Windows.zip
+          asset_content_type: application/zip
+
+      - name: Release Asset Radiance_Linux
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: Radiance_Linux.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Linux.zip
+          asset_content_type: application/zip
+      
+      - name: Release Asset Radiance_OSX pkg
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: OSXBuild/Radiance_OSX.pkg
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_OSX.pkg
+          asset_content_type: application/pkg
+
+      - name: Release Asset Radiance_OSX zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: OSXBuild/Radiance_OSX.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_OSX.zip
+          asset_content_type: application/zip
