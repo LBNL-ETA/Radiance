@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.60 2020/06/10 16:00:32 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.61 2020/07/09 17:32:31 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -87,6 +87,7 @@ typedef struct {
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
 	COLOR	cthru;		/* "through" component for MAT_ABSDF */
+	COLOR	cthru_surr;	/* surround for "through" component */
 	SDData	*sd;		/* loaded BSDF data */
 	COLOR	rdiff;		/* diffuse reflection */
 	COLOR	runsamp;	/* BSDF hemispherical reflection */
@@ -134,10 +135,10 @@ compute_through(BSDFDAT *ndp)
 	SDSpectralDF	*dfp;
 	FVECT		pdir;
 	double		tomega, srchrad;
-	double		tomsum;
-	COLOR		vpeak;
-	double		vypeak, vysum;
-	int		i, ns, ntot;
+	double		tomsum, tomsurr;
+	COLOR		vpeak, vsurr;
+	double		vypeak;
+	int		i, ns;
 	SDError		ec;
 
 	if (ndp->pr->rod > 0)
@@ -150,7 +151,6 @@ compute_through(BSDFDAT *ndp)
 	if (bright(ndp->pr->pcol) <= FTINY)
 		return;				/* pattern is black, here */
 	srchrad = sqrt(dfp->minProjSA);		/* else evaluate peak */
-	vysum = 0;
 	for (i = 0; i < NDIR2CHECK; i++) {
 		SDValue	sv;
 		psamp[i].tdir[0] = -ndp->vray[0] + dir2check[i][0]*srchrad;
@@ -161,30 +161,30 @@ compute_through(BSDFDAT *ndp)
 		if (ec)
 			goto baderror;
 		cvt_sdcolor(psamp[i].vcol, &sv);
-		vysum += psamp[i].vy = sv.cieY;
+		psamp[i].vy = sv.cieY;
 	}
-	if (vysum <= FTINY)			/* zero neighborhood? */
-		return;
 	qsort(psamp, NDIR2CHECK, sizeof(PEAKSAMP), cmp_psamp);
+	if (psamp[0].vy <= FTINY)
+		return;				/* zero area */
 	setcolor(vpeak, 0, 0, 0);
-	vypeak = tomsum = 0;			/* combine top unique values */
-	ns = 0; ntot = NDIR2CHECK;
+	setcolor(vsurr, 0, 0, 0);
+	vypeak = tomsum = tomsurr = 0;		/* combine top unique values */
+	ns = 0;
 	for (i = 0; i < NDIR2CHECK; i++) {
-		if (i) {
-			if (psamp[i].vy == psamp[i-1].vy) {
-				vysum -= psamp[i].vy;
-				--ntot;
-				continue;	/* assume duplicate sample */
-			}
-			if (vypeak > 8.*psamp[i].vy*ns)
-				continue;	/* peak cut-off */
-		}
+		if (i && psamp[i].vy == psamp[i-1].vy)
+			continue;		/* assume duplicate sample */
+
 		ec = SDsizeBSDF(&tomega, psamp[i].tdir, ndp->vray,
 						SDqueryMin, ndp->sd);
 		if (ec)
 			goto baderror;
-		if (tomega > 1.5*dfp->minProjSA) {
-			if (!i) return;		/* not really a peak? */
+						/* not really a peak? */
+		if (tomega > 1.5*dfp->minProjSA ||
+					vypeak > 8.*psamp[i].vy*ns) {
+			if (!i) return;		/* abort */
+			scalecolor(psamp[i].vcol, tomega);
+			addcolor(vsurr, psamp[i].vcol);
+			tomsurr += tomega;
 			continue;
 		}
 		scalecolor(psamp[i].vcol, tomega);
@@ -193,12 +193,17 @@ compute_through(BSDFDAT *ndp)
 		vypeak += psamp[i].vy;
 		++ns;
 	}
-	if (vypeak*(ntot-ns) < peak_over*(vysum-vypeak)*ns)
+	if (vypeak*tomsurr < peak_over*bright(vsurr)*ns)
 		return;				/* peak not peaky enough */
 	if ((vypeak/ns - ndp->sd->tLamb.cieY*(1./PI))*tomsum <= .001)
 		return;				/* < 0.1% transmission */
 	copycolor(ndp->cthru, vpeak);		/* already scaled by omega */
 	multcolor(ndp->cthru, ndp->pr->pcol);	/* modify by pattern */
+	if (tomsurr > FTINY) {			/* surround contribution? */
+		scalecolor(vsurr, 1./tomsurr);	/* this one is avg. BTDF */
+		copycolor(ndp->cthru_surr, vsurr);
+		multcolor(ndp->cthru_surr, ndp->pr->pcol);
+	}
 	return;
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));
@@ -274,8 +279,12 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			((ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf) ;
 
 		if (dx*dx + dy*dy <= (2.5*4./PI)*(omega + dfp->minProjSA +
-						2.*sqrt(omega*dfp->minProjSA)))
-			return(0);
+						2.*sqrt(omega*dfp->minProjSA))) {
+			if (bright(ndp->cthru_surr) <= FTINY)
+				return(0);
+			copycolor(cval, ndp->cthru_surr);
+			return(1);	/* return non-zero surround BTDF */
+		}
 	}
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
@@ -727,6 +736,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		return(1);
 	}
 	setcolor(nd.cthru, 0, 0, 0);		/* consider through component */
+	setcolor(nd.cthru_surr, 0, 0, 0);
 	if (m->otype == MAT_ABSDF) {
 		compute_through(&nd);
 		if (r->crtype & SHADOW) {
