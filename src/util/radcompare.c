@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.24 2020/06/30 22:53:05 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.25 2020/07/09 17:29:04 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -475,7 +475,6 @@ identify_type(const char *name, FILE *fin, LUTAB *htp)
 	}
 	if (c)
 		return(TYP_BINARY);
-	SET_FILE_TEXT(fin);			/* originally set to binary */
 	return(TYP_TEXT);
 badeof:
 	if (report != REP_QUIET) {
@@ -560,6 +559,8 @@ compare_text()
 		fputs(progname, stdout);
 		fputs(": comparing inputs as ASCII text\n", stdout);
 	}
+	SET_FILE_TEXT(f1in);			/* originally set to binary */
+	SET_FILE_TEXT(f2in);
 	init_line(&l1buf); init_line(&l2buf);	/* compare a line at a time */
 	while (read_line(&l1buf, f1in)) {
 		lin1cnt++;
