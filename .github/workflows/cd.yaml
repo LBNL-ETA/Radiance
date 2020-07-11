@@ -332,22 +332,23 @@ jobs:
       - name: get release name
         id: get_release_name
         run: |
-          name=( radiance*.tar.gz )
-          [[ -e $name ]] || { echo "Matched no files" >&2; exit 1; }
-          file_name="$(basename -s -Linux.tar.gz $name)"
+          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
+          RAD_VERSION=$(cat src/rt/VERSION)
 
-          RELEASE_VERSION="${file_name:9:11}"
-          RELEASE_NAME='Radiance '"${RELEASE_VERSION}"' ('$(date +'%Y-%m-%d')')'
+          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT}"
+          RELEASE_NAME='Radiance '"${RAD_VERSION}"' ('$(date +'%Y-%m-%d')')'
           
-          echo "Release version: $RELEASE_VERSION"
+          echo "Found Radiance version: [$RAD_VERSION]"
+          echo "Release tag: $RELEASE_TAG"
           echo "Release name: $RELEASE_NAME"
 
-          echo ::set-output name=RELEASE_VERSION::${RELEASE_VERSION}
+          echo ::set-output name=LAST_COMMIT_ID::${LAST_COMMIT_ID}
+          echo ::set-output name=RELEASE_TAG::${RELEASE_TAG}
           echo ::set-output name=RELEASE_NAME::${RELEASE_NAME}
          
       - name: check release name
         run: |
-          echo "${{steps.get_release_name.outputs.RELEASE_VERSION}}"
+          echo "${{steps.get_release_name.outputs.RELEASE_TAG}}"
           echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
 
       - name: Create Release
@@ -356,7 +357,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: ${{steps.get_release_name.outputs.RELEASE_VERSION}}
+          tag_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}
           release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
           commitish: master
           draft: false
@@ -369,7 +370,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: WindowsBuild/Radiance_Windows.exe
-          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Windows.exe
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_Windows.exe
           asset_content_type: application/exe
       
       - name: Release Asset Radiance_Windows zip
@@ -379,7 +380,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: WindowsBuild/Radiance_Windows.zip
-          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Windows.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_Windows.zip
           asset_content_type: application/zip
 
       - name: Release Asset Radiance_Linux
@@ -390,7 +391,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: Radiance_Linux.zip
-          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_Linux.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_Linux.zip
           asset_content_type: application/zip
       
       - name: Release Asset Radiance_OSX pkg
@@ -400,7 +401,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: OSXBuild/Radiance_OSX.pkg
-          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_OSX.pkg
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.pkg
           asset_content_type: application/pkg
 
       - name: Release Asset Radiance_OSX zip
@@ -410,5 +411,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: OSXBuild/Radiance_OSX.zip
-          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_VERSION}}_OSX.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
           asset_content_type: application/zip
