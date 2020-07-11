@@ -304,6 +304,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: master
+          fetch-depth: 0
       
       - name: Download Linux installers
         uses: actions/download-artifact@v2
@@ -329,6 +330,24 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
 
+      - name: Get Git log
+        id: get_release_note
+        run: |
+          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
+          RAD_VERSION=$(cat src/rt/VERSION)
+          RAD_VERSION="${RAD_VERSION/RADIANCE /}"
+
+          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
+          LAST_TAG=$(git describe --tags --abbrev=0)
+
+          echo "The last tag: $LAST_TAG"
+          echo "The release tag: $RELEASE_TAG"
+
+          note_header="[<h3>$RELEASE_TAG</h3>](https://github.com/${{ github.repository }}/compare/$LAST_TAG...$RELEASE_TAG) ($(date +'%Y-%m-%d'))"
+          RELEASE_NOTE="$note_header<ul>$(git log $LAST_TAG..HEAD --pretty="<li> %s -%an (%h)</li>"  )</ul>"
+          echo $RELEASE_NOTE
+          echo ::set-output name=RELEASE_NOTE::${RELEASE_NOTE}
+
       - name: get release name
         id: get_release_name
         run: |
@@ -347,10 +366,11 @@ jobs:
           echo ::set-output name=RELEASE_TAG::${RELEASE_TAG}
           echo ::set-output name=RELEASE_NAME::${RELEASE_NAME}
          
-      - name: check release name
+      - name: check release name/note
         run: |
           echo "${{steps.get_release_name.outputs.RELEASE_TAG}}"
           echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
+          echo "${{steps.get_release_note.outputs.RELEASE_NOTE}}"
 
       - name: Create Release
         id: create_release
@@ -361,6 +381,7 @@ jobs:
           tag_name: ${{steps.get_release_name.outputs.RELEASE_TAG}}
           release_name: ${{steps.get_release_name.outputs.RELEASE_NAME}}
           commitish: master
+          body: ${{steps.get_release_note.outputs.RELEASE_NOTE}}
           draft: false
           prerelease: true
       
