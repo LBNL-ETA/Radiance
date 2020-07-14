@@ -1,0 +1,82 @@
+name: Run Unit tests
+
+on:
+  push:
+    branches: [ cvsimport ]
+
+
+jobs:
+  build_Linux:
+    name: "Test for Linux"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.12.8'
+
+      - name: Install CMake 
+        uses: ilammy/msvc-dev-cmd@v1
+      
+
+      - name: set dev packages
+        run: |
+          sudo apt install libglu1-mesa-dev freeglut3-dev
+
+      - name: override CMakeLists.txt and update version
+        run: |
+          git fetch
+          git checkout cvsimport
+          cp CMakeLists.txt ../CMakeLists.txt
+          cp checkVersion.py ../checkVersion.py
+          git checkout master
+          cp ../CMakeLists.txt CMakeLists.txt
+          cp ../checkVersion.py checkVersion.py
+          python checkVersion.py
+        shell: bash
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.12.8'
+
+      - name: Install CMake 
+        uses: ilammy/msvc-dev-cmd@v1
+      
+
+      - name: set dev packages
+        run: |
+          sudo apt install libglu1-mesa-dev freeglut3-dev
+
+      - name: Compile
+        run: |
+          export PATH=$PATH:$Qt5_DIR/bin
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make -j8
+
+      - name: setup env for testing
+        run: |
+          export RAYPATH=/home/runner/work/Radiance/Radiance/build
+          export PATH=$PATH:/home/runner/work/Radiance/Radiance/build/bin
+          rtrace -version
+   
+
+      - name: run tests
+        run: |
+          export RAYPATH=/home/runner/work/Radiance/Radiance/build
+          export PATH=$PATH:/home/runner/work/Radiance/Radiance/build/bin
+          rtrace -version
+          rcollate -t ./test/renders/ref/rfmirror.mtx > ./test/test.mtx
+          ls ./test/
+
+          cd ./test/renders/
+          make
+      
