@@ -62,16 +62,9 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j8
 
-      - name: setup env for testing
-        run: |
-          export RAYPATH=/home/runner/work/Radiance/Radiance/build
-          export PATH=$PATH:/home/runner/work/Radiance/Radiance/build/bin
-          rtrace -version
-   
-
       - name: run tests
         run: |
-          export RAYPATH=/home/runner/work/Radiance/Radiance/build
+          export RAYPATH=.:/home/runner/work/Radiance/Radiance/build/lib
           export PATH=$PATH:/home/runner/work/Radiance/Radiance/build/bin
           rtrace -version
           rcollate -t ./test/renders/ref/rfmirror.mtx > ./test/test.mtx
