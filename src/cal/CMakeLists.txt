@@ -34,6 +34,7 @@ install(TARGETS
   neaten
   rcalc
   rlam
+  rsplit
   tabfunc
   total
   RUNTIME DESTINATION "bin"
