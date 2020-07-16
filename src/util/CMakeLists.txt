@@ -129,6 +129,7 @@ if(UNIX)
 endif()
 
 install(TARGETS
+  dcglare
   dctimestep
   eplus_adduvf
   evalglare
@@ -139,6 +140,9 @@ install(TARGETS
   radcompare
   ranimate
   ranimove
+  rcode_depth
+  rcode_ident
+  rcode_norm
   rcollate
   rfluxmtx
   rmtxop
