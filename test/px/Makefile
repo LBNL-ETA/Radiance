@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.5 2020/07/17 03:07:13 greg Exp $
+# RCSid $Id: Makefile,v 1.6 2020/07/17 23:02:10 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -60,8 +60,8 @@ test-psign:
 	$(HDR_CMP) ref/psign.hdr psign.hdr
 	rm -f psign.hdr
 
-test-falsecolor:
-	falsecolor -s 2e5 -log 5 -i test.hdr > false.hdr
+test-falsecolor:	test.hdr
+	perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
 	$(HDR_CMP) ref/false.hdr false.hdr
 	rm -f false.hdr
 

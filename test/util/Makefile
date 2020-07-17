@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.6 2020/06/30 18:00:19 greg Exp $
+# RCSid $Id: Makefile,v 1.7 2020/07/17 23:02:10 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
@@ -75,7 +75,7 @@ test-genskyvec:	test-dctimestep
 
 test-dctimestep:	test.mtx
 	gensky 3 21 10:15PST +s -g .3 -g 2.5 -a 36 -o 124 \
-		| genskyvec -m 1 -c .92 1.03 1.2 \
+		| perl ../../src/util/genskyvec.pl -m 1 -c .92 1.03 1.2 \
 		| dctimestep '!rmtxop -ff -t test.mtx' > dctimestep.mtx
 	radcompare ref/dctimestep.mtx dctimestep.mtx
 	rm -f dctimestep.mtx
