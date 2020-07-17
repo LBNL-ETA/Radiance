@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.22 2020/06/30 18:51:30 greg Exp $
+# RCSid $Id: Makefile,v 1.23 2020/07/17 15:43:31 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -43,7 +43,7 @@ combined.rad:	combined_scene.rad
 
 ### Special test of rad ###
 
-test-rad:	inst.rif
+test-rad:	inst.oct
 	rad -n -s -e inst.rif > inst_rad.txt
 	radcompare ref/inst_rad.txt inst_rad.txt
 
