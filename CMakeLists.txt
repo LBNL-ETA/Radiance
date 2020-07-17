@@ -38,6 +38,7 @@ if(NOT WIN32)
 endif()
 
 if(WIN32)
+  set(CPACK_NSIS_INSTALL_ROOT "C:")
   set(CPACK_NSIS_MODIFY_PATH 1)
   set(qt_plugin_term "LIBRARY")
 
