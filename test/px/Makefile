@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.4 2020/07/01 18:18:03 greg Exp $
+# RCSid $Id: Makefile,v 1.5 2020/07/17 03:07:13 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -7,7 +7,7 @@ HDR_CMP = radcompare -rms 0.07 -rel 1e-6 -max 0.2
 
 IMG_CMP = radcompare -h -rms 0.03 -rel 0.007 -max 0.2
 
-all:	test-pfilt test-pvalue test-ra_tiff test-normtiff test-pcompos \
+all:	test-pfilt test-pvalue test-ra_tiff test-pcompos \
 test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 \
 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign \
 test-falsecolor test-ra_ps
