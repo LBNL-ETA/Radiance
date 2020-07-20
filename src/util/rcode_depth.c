@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.10 2020/02/12 01:13:01 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.11 2020/07/20 15:53:30 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -59,6 +59,8 @@ encode_depths(DEPTHCODEC *dcp)
 			return 0;
 		}
 	}
+	if (dcp->format == 'a')
+		SET_FILE_TEXT(dcp->finp);
 
 	do {
 		int	ok = 0;
@@ -256,7 +258,7 @@ pixel_points(DEPTHCODEC *dcp, int unbuf)
 	}
 	if (!check_decode_worldpos(dcp))
 		return 0;
-	
+
 	while (scanf("%d %d", &xy[0], &xy[1]) == 2) {
 		loc2pix(xy, &dcp->res,
 			(xy[0]+.5)/dcp->res.xr, (xy[1]+.5)/dcp->res.yr);
@@ -416,9 +418,8 @@ main(int argc, char *argv[])
 		fputs(": cannot open for writing\n", stderr);
 		return 1;
 	}
-	SET_FILE_BINARY(dc.finp);
-	if ((conversion != CV_FWD) | (dc.format != 'a'))
-		SET_FILE_BINARY(stdout);
+	SET_FILE_BINARY(dc.finp);	/* starting assumption */
+	SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked			/* avoid stupid semaphores */
 	flockfile(dc.finp);
 	flockfile(stdout);
@@ -426,6 +427,9 @@ main(int argc, char *argv[])
 					/* read/copy header */
 	if (!process_dc_header(&dc, a, argv))
 		return 1;
+		
+	if ((conversion != CV_FWD) & (dc.format == 'a'))
+		SET_FILE_TEXT(stdout);
 					/* process data */
 	switch (conversion) {
 	case CV_FWD:			/* distance -> depth code */

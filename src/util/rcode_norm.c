@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.7 2020/02/12 01:13:01 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.8 2020/07/20 15:53:30 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -52,6 +52,8 @@ encode_normals(NORMCODEC *ncp)
 			return 0;
 		}
 	}
+	if (ncp->format == 'a')
+		SET_FILE_TEXT(ncp->finp);
 
 	do {
 		int	ok = 0;
@@ -189,6 +191,7 @@ pixel_normals(NORMCODEC *ncp, int unbuf)
 		fputs(": can only handle standard pixel ordering\n", stderr);
 		return 0;
 	}
+
 	while (scanf("%d %d", &x, &y) == 2) {
 
 		y = ncp->res.yr-1 - y;
@@ -339,9 +342,8 @@ main(int argc, char *argv[])
 		fputs(": cannot open for writing\n", stderr);
 		return 1;
 	}
-	SET_FILE_BINARY(nc.finp);
-	if (reverse || nc.format != 'a')
-		SET_FILE_BINARY(stdout);
+	SET_FILE_BINARY(dc.finp);	/* starting assumption */
+	SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked			/* avoid stupid semaphores */
 	flockfile(nc.finp);
 	flockfile(stdout);
@@ -349,6 +351,9 @@ main(int argc, char *argv[])
 					/* read/copy header */
 	if (!process_nc_header(&nc, a, argv))
 		return 1;
+
+	if (reverse && nc.format == 'a')
+		SET_FILE_TEXT(stdout);
 					/* process data */
 	if (!reverse) {
 		if (!encode_normals(&nc))
