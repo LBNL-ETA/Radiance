@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.93 2019/05/04 00:32:47 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.94 2020/07/20 15:52:30 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -135,8 +135,7 @@ static int pixnumber(int  x, int  y, int  xres, int  yres);
 
 
 void
-quit(code)			/* quit program */
-int  code;
+quit(int code)			/* quit program */
 {
 	if (code)			/* report status */
 		report(0);
