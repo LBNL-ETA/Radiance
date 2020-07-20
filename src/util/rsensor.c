@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.18 2015/06/09 21:34:15 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.19 2020/07/20 15:54:29 greg Exp $";
 #endif
 
 /*
@@ -77,7 +77,9 @@ quit(ec)			/* make sure exit is called */
 int	ec;
 {
 	if (ray_pnprocs > 0)	/* close children if any */
-		ray_pclose(0);		
+		ray_pclose(0);
+	else if (ray_pnprocs < 0)
+		_exit(ec);	/* avoid flush in child */
 	exit(ec);
 }
 

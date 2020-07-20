@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.18 2016/04/18 22:39:13 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.19 2020/07/20 15:54:29 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -193,7 +193,9 @@ void
 quit(int ec)			/* make sure exit is called */
 {
 	if (ray_pnprocs > 0)	/* close children if any */
-		ray_pclose(0);		
+		ray_pclose(0);
+	else if (ray_pnprocs < 0)
+		_exit(ec);	/* avoid flush in child */
 	exit(ec);
 }
 

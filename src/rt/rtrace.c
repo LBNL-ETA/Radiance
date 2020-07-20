@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.98 2020/06/16 17:58:11 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.99 2020/07/20 15:54:29 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -92,8 +92,10 @@ quit(			/* quit program */
 {
 	if (ray_pnprocs > 0)	/* close children if any */
 		ray_pclose(0);		
+	else if (ray_pnprocs < 0)
+		_exit(code);	/* avoid flush() in child */
 #ifndef  NON_POSIX
-	else if (!ray_pnprocs) {
+	else {
 		headclean();	/* delete header file */
 		pfclean();	/* clean up persist files */
 	}

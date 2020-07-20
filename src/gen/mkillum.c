@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.42 2016/09/15 22:34:41 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.43 2020/07/20 15:54:29 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -177,7 +177,9 @@ quit(ec)			/* make sure exit is called */
 int	ec;
 {
 	if (ray_pnprocs > 0)	/* close children if any */
-		ray_pclose(0);		
+		ray_pclose(0);
+	else if (ray_pnprocs < 0)
+		_exit(ec);	/* avoid flush() in child */
 	exit(ec);
 }
 

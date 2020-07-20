@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.35 2019/04/07 16:39:39 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.36 2020/07/20 15:54:29 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -179,6 +179,8 @@ quit(			/* quit program */
 {
 	if (nchild > 0)		/* close children if any */
 		end_children(code != 0);
+	else if (nchild < 0)
+		_exit(code);	/* avoid flush() in child */
 	exit(code);
 }
 
