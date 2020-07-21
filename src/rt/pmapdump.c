@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.15 2019/08/14 18:02:11 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.16 2020/07/21 16:10:42 rschregle Exp $";
 #endif
 
 /* 
@@ -9,11 +9,17 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.15 2019/08/14 18:02:11 rschregl
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation (DFG) 
+       as part of the FARESYS project
    (c) Lucerne University of Applied Sciences and Arts,
        supported by the Swiss National Science Foundation (SNSF, #147053)
+   (c) Tokyo University of Science,
+       supported by the Japan Society for the Promotion of Science (JSPS)
+       under the Grants-in-Aid for Scientific Research Program (KAKENHI),
+       grant number JP19KK0115.
    ======================================================================
    
-   $Id: pmapdump.c,v 2.15 2019/08/14 18:02:11 rschregle Exp $
+   $Id: pmapdump.c,v 2.16 2020/07/21 16:10:42 rschregle Exp $
 */
 
 
@@ -270,8 +276,8 @@ int main (int argc, char** argv)
 #ifdef PMAP_OOC
       /* Open leaf file with filename derived from pmap, replace pmapFile
        * (which is currently the node file) */
-      strncpy(leafFname, argv [arg], 1024);
-      strncat(leafFname, PMAP_OOC_LEAFSUFFIX, 1024);
+      strncpy(leafFname, argv [arg], sizeof(leafFname) - 1);
+      strncat(leafFname, PMAP_OOC_LEAFSUFFIX, sizeof(leafFname) - 1);
       fclose(pmapFile);
       if (!(pmapFile = fopen(leafFname, "rb"))) {
          sprintf(errmsg, "cannot open leaf file %s", leafFname);
