@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.24 2019/04/04 00:21:14 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.25 2020/07/21 15:24:42 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -919,7 +919,7 @@ main(int argc, char *argv[])
 		}
 		break;
 	}
-doneOptions:					/* get XML input */
+						/* get XML input */
 	if (i >= argc) {
 		if (xml_input == NULL)
 			xml_input = def_template;
