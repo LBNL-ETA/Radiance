@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.15 2020/02/17 19:35:24 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.16 2020/07/24 16:58:16 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -22,6 +22,7 @@ static const char	RCSid[] = "$Id: glarendx.c,v 2.15 2020/02/17 19:35:24 greg Exp
 #include <string.h>
 
 #include "standard.h"
+#include "paths.h"
 #include "view.h"
 
 
@@ -91,20 +92,14 @@ main(
 )
 {
 	struct named_func	*funp;
-	char	*progtail;
 	int	i;
 					/* get program name */
-	progname = argv[0];
-	progtail = strrchr(progname, '/');	/* final component */
-	if (progtail == NULL)
-		progtail = progname;
-	else
-		progtail++;
+	progname = fixargv0(argv[0]);
 					/* get options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 't':
-			progtail = argv[++i];
+			progname = argv[++i];
 			break;
 		case 'h':
 			print_header = 0;
@@ -121,7 +116,7 @@ main(
 		}
 					/* find and run calculation */
 	for (funp = all_funcs; funp->name != NULL; funp++)
-		if (!strcmp(funp->name, progtail)) {
+		if (!strcmp(funp->name, progname)) {
 			init();
 			read_input();
 			if (print_header) {

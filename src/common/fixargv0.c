@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.8 2016/08/05 00:12:46 greg Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.9 2020/07/24 16:58:16 greg Exp $";
 #endif
 /*
  * Fix argv[0] for DOS environments
@@ -24,6 +24,7 @@ fixargv0(char *av0)		/* extract command name from full path */
 			end = cp;
 			continue;
 		case '\\':			/* remove directory */
+		case '/':
 			/* make sure the original pointer remains the same */
 			memmove(av0, cp+1, end-cp);
 			return(av0);
