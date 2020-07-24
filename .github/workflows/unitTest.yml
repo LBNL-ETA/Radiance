@@ -319,15 +319,7 @@ jobs:
           name: gen_rad
           path: gen_rad.zip
       
-      - name: run tests -gen
-        run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
-          rtrace -version
-
-          cd ./test/gen/
-          make clean
-          make -j8
+      
 
       - name: run tests -cal
         run: |
@@ -358,7 +350,16 @@ jobs:
           cd ./test/renders/
           make clean
           make -j8
-          
+      
+      - name: run tests -gen
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+
+          cd ./test/gen/
+          make clean
+          make -j8
 
   Test_OSX:
     needs: [build_OSX]
