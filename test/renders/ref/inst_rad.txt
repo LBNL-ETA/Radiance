@@ -11,6 +11,7 @@ PICTURE= inst
 QUALITY= Med
 render= @render.opt
 RESOLUTION= 1024
+rpict= -ps 1 -pj 0
 scene= diorama_walls.rad closed_end.rad front_cap.rad porsches.rad
 scene= spotlights.rad rect_fixture.rad glowbulb.rad
 VARIABILITY= Hi

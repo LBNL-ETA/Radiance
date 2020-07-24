@@ -1,4 +1,4 @@
-# RCSid $Id: inst.rif,v 1.4 2020/07/20 16:22:26 greg Exp $
+# RCSid $Id: inst.rif,v 1.5 2020/07/24 16:35:02 greg Exp $
 #
 # Test of instances
 #
@@ -26,7 +26,7 @@ PEN = True
 
 render = @render.opt
 
-rpict = -ps 1
+rpict = -ps 1 -pj 0
 
 view = def -vf inside.vf
 view = fish -vf fish.vf
