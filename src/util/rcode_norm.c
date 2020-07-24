@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.8 2020/07/20 15:53:30 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.9 2020/07/24 16:00:10 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -342,7 +342,7 @@ main(int argc, char *argv[])
 		fputs(": cannot open for writing\n", stderr);
 		return 1;
 	}
-	SET_FILE_BINARY(dc.finp);	/* starting assumption */
+	SET_FILE_BINARY(nc.finp);	/* starting assumption */
 	SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked			/* avoid stupid semaphores */
 	flockfile(nc.finp);
