@@ -319,8 +319,6 @@ jobs:
           name: gen_rad
           path: gen_rad.zip
       
-      
-
       - name: run tests -cal
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
@@ -331,7 +329,7 @@ jobs:
           make clean
           make -j8
 
-      - name: run tests -px
+      - name: test-px
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -339,7 +337,38 @@ jobs:
 
           cd ./test/px/
           make clean
-          make -j8
+          echo "====================pfilt==================="
+          echo "list files in renders folder"
+          ls ../renders/
+          pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr > pfilt_test.hdr
+          ls
+          # ra_xyze -r pfilt_test.hdr > test.hdr
+
+          echo "==================pinterp====================="
+          # pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
+
+          echo "==================pextrem====================="
+          # pextrem -o test.hdr > test_extrema.txt
+
+          echo "==================pcomb====================="
+          # pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
+
+          echo "==================pcond====================="
+          # pcond -h test.hdr pcondh.hdr
+
+          echo "==================falsecolor====================="
+          # perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
+
+      - name: Zip Build Artifact
+        run: |
+          Compress-Archive -U -Path ./test/px/* -DestinationPath px
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: px
+          path: px.zip
+      
 
       - name: run tests -renders
         run: |
@@ -360,6 +389,17 @@ jobs:
           cd ./test/gen/
           make clean
           make -j8
+
+      - name: run tests -px
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+
+          cd ./test/px/
+          make clean
+          make -j8
+
 
   Test_OSX:
     needs: [build_OSX]
