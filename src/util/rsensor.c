@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.19 2020/07/20 15:54:29 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.20 2020/07/24 17:09:33 greg Exp $";
 #endif
 
 /*
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: rsensor.c,v 2.19 2020/07/20 15:54:29 greg Exp 
  */
 
 #include "ray.h"
+#include "platform.h"
 #include "source.h"
 #include "view.h"
 #include "random.h"
