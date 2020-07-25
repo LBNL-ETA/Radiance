@@ -268,17 +268,6 @@ jobs:
         with:
           perl-version: '5.30'
       
-      - name: test rcode_norm
-        run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
-
-          cd ./test/util/
-          make clean
-          make test-rcode_norm
-
-     
-
 
       - name: run tests -util
         shell: pwsh
@@ -291,6 +280,7 @@ jobs:
           make -j8
       
       - name: test-gen
+        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -320,6 +310,7 @@ jobs:
           path: gen_rad.zip
       
       - name: run tests -cal
+        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -330,7 +321,10 @@ jobs:
           make -j8
 
       - name: test-px
+        shell: cmd
         run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
           rtrace -version
@@ -342,22 +336,22 @@ jobs:
           ls ../renders/
           pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr > pfilt_test.hdr
           ls
-          # ra_xyze -r pfilt_test.hdr > test.hdr
+          ra_xyze -r pfilt_test.hdr > test.hdr
 
           echo "==================pinterp====================="
-          # pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
+          pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
 
           echo "==================pextrem====================="
-          # pextrem -o test.hdr > test_extrema.txt
+          pextrem -o test.hdr > test_extrema.txt
 
           echo "==================pcomb====================="
-          # pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
+          pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
 
           echo "==================pcond====================="
-          # pcond -h test.hdr pcondh.hdr
+          pcond -h test.hdr pcondh.hdr
 
           echo "==================falsecolor====================="
-          # perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
+          perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
 
       - name: Zip Build Artifact
         run: |
@@ -371,6 +365,7 @@ jobs:
       
 
       - name: run tests -renders
+        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -381,6 +376,7 @@ jobs:
           make -j8
       
       - name: run tests -gen
+        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -391,6 +387,7 @@ jobs:
           make -j8
 
       - name: run tests -px
+        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
