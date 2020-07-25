@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.37 2020/07/25 19:18:01 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.38 2020/07/25 19:23:09 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -50,7 +50,7 @@ gendaymtx:	gendaymtx.o sun.o
 	$(CC) $(CFLAGS) -o gendaymtx gendaymtx.o sun.o -lrtrad $(MLIB)
 
 genblinds:	genblinds.o
-	$(CC) $(CFLAGS) -o genblinds genblinds.o $(MLIB)
+	$(CC) $(CFLAGS) -o genblinds genblinds.o -lrtrad $(MLIB)
 
 genprism:	genprism.o
 	$(CC) $(CFLAGS) -o genprism genprism.o -lrtrad $(MLIB)

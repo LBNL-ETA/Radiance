@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.14 2020/06/30 18:16:30 greg Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.15 2020/07/25 19:23:09 greg Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -15,12 +15,13 @@ static const char	RCSid[] = "$Id: genblinds.c,v 2.14 2020/06/30 18:16:30 greg Ex
  *		rcurv  -  curvature radius of slats (up:>0;down:<0;flat:=0)
  */
 
-#include  <stdio.h>
-#include <stdlib.h>
+#include  "rtio.h"
+#include  <stdlib.h>
 #include  <math.h>
-#include  <string.h>
 
+#ifndef PI
 #define  PI		3.14159265358979323846
+#endif
 #define  DELTA		3.  /*  MINIMAL SUSTAINED ANGLE IN DEGREES */
 
 double  baseflat[4][3], baseblind[4][3][180];
@@ -32,8 +33,6 @@ int  nslats,  nsurf;
 
 static void makeflat(double w, double d, double a);
 static void printslat(int n);
-static void printhead(register int  ac, register char  **av);
-
 
 void
 makeflat(
@@ -67,7 +66,7 @@ printslat(			/* print slat # n */
 	int  n
 )
 {
-	register int  i, k;
+	int  i, k;
 
 	for (k=0; k < nsurf; k++)  {
  		printf("\n%s polygon %s.%d.%d\n", material, name, n, k);
@@ -78,21 +77,6 @@ printslat(			/* print slat # n */
 				baseblind[i][1][k],
 				baseblind[i][2][k] + height*(n-.5)/nslats);
 	}		
-}
-
-
-void
-printhead(		/* print command header */
-	register int  ac,
-	register char  **av
-)
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
 }
 
 
@@ -201,8 +185,9 @@ main(
 	}
     }
 
-    printhead(argc, argv);
-
+    fputs("# ", stdout);
+    printargs(argc, argv, stdout);
+ 
 
     /* REPEAT THE BASIC CURVED OR FLAT SLAT TO GET THE OVERALL BLIND */
 
