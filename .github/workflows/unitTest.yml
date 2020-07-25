@@ -309,6 +309,17 @@ jobs:
           name: gen_rad
           path: gen_rad.zip
       
+      - name: run tests -gen
+        shell: pwsh
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+
+          cd ./test/gen/
+          make clean
+          make -j8
+
       - name: run tests -cal
         shell: pwsh
         run: |
@@ -334,24 +345,28 @@ jobs:
           echo "====================pfilt==================="
           echo "list files in renders folder"
           ls ../renders/
-          pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr > pfilt_test.hdr
-          ls
-          ra_xyze -r pfilt_test.hdr > test.hdr
+          pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr | ra_xyze -r > test.hdr
+          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/test.hdr test.hdr
 
           echo "==================pinterp====================="
           pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
+          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pinterp.hdr pinterp.hdr
 
           echo "==================pextrem====================="
           pextrem -o test.hdr > test_extrema.txt
+          radcompare ref/test_extrema.txt test_extrema.txt
 
           echo "==================pcomb====================="
           pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
+          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pcomb.hdr pcomb.hdr
 
           echo "==================pcond====================="
           pcond -h test.hdr pcondh.hdr
+          radcompare -h -rms 0.03 -rel 0.007 -max 0.2 ref/pcondh.hdr pcondh.hdr
 
           echo "==================falsecolor====================="
           perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
+          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/false.hdr false.hdr
 
       - name: Zip Build Artifact
         run: |
@@ -362,10 +377,8 @@ jobs:
         with:
           name: px
           path: px.zip
-      
 
       - name: run tests -renders
-        shell: pwsh
         run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
@@ -373,22 +386,13 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make -j8
+          make
       
-      - name: run tests -gen
-        shell: pwsh
-        run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
-          rtrace -version
-
-          cd ./test/gen/
-          make clean
-          make -j8
-
       - name: run tests -px
-        shell: pwsh
+        shell: bash
         run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
           rtrace -version
@@ -397,6 +401,10 @@ jobs:
           make clean
           make -j8
 
+
+      
+      
+      
 
   Test_OSX:
     needs: [build_OSX]
