@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.27 2019/11/07 23:15:07 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.28 2020/07/25 19:18:01 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -10,9 +10,8 @@ static const char	RCSid[] = "$Id: gensky.c,v 2.27 2019/11/07 23:15:07 greg Exp $
  *     3/26/86
  */
 
-#include  <stdio.h>
+#include  "rtio.h"
 #include  <stdlib.h>
-#include  <string.h>
 #include  <math.h>
 #include  <ctype.h>
 #include  "sun.h"
@@ -87,7 +86,6 @@ void printdefaults(void);
 void userror(char  *msg);
 double normsc(void);
 int cvthour(char  *hs);
-void printhead(int  ac, char  **av);
 
 
 int
@@ -184,7 +182,8 @@ main(
 	"%s: warning - %.1f hours btwn. standard meridian and longitude\n",
 			progname, (s_longitude-s_meridian)*12/PI);
 
-	printhead(argc, argv);
+	fputs("# ", stdout);
+	printargs(argc, argv, stdout);
 
 	computesky();
 	printsky();
@@ -419,19 +418,4 @@ cvthour(			/* convert hour string */
 		fprintf(stderr, " %s", tzone[i].zname);
 	putc('\n', stderr);
 	exit(1);
-}
-
-
-void
-printhead(		/* print command header */
-	int  ac,
-	char  **av
-)
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
 }

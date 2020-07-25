@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.12 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: genprism.c,v 2.13 2020/07/25 19:18:01 greg Exp $";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -9,9 +9,8 @@ static const char	RCSid[] = "$Id: genprism.c,v 2.12 2003/11/16 10:29:38 schorsch
  *		orientation.
  */
 
-#include  <stdio.h>
-#include  <string.h>
-#include <stdlib.h>
+#include  "rtio.h"
+#include  <stdlib.h>
 #include  <math.h>
 #include  <ctype.h>
 
@@ -40,8 +39,7 @@ static double  compute_rounding(void);
 
 
 static void
-readverts(fname)		/* read vertices from a file */
-char  *fname;
+readverts(char *fname)		/* read vertices from a file */
 {
 	FILE  *fp;
 
@@ -58,8 +56,7 @@ char  *fname;
 
 
 static void
-side(n0, n1)			/* print single side */
-register int  n0, n1;
+side(int n0, int n1)			/* print single side */
 {
 	printf("\n%s polygon %s.%d\n", pmtype, pname, n0+1);
 	printf("0\n0\n12\n");
@@ -75,8 +72,7 @@ register int  n0, n1;
 
 
 static void
-rside(n0, n1)			/* print side with rounded edge */
-register int  n0, n1;
+rside(int n0, int n1)			/* print side with rounded edge */
 {
 	double  s, c, t[3];
 
@@ -126,10 +122,10 @@ register int  n0, n1;
 
 
 static double
-compute_rounding()		/* compute vectors for rounding operations */
+compute_rounding(void)		/* compute vectors for rounding operations */
 {
-	register int  i;
-	register double	*v0, *v1;
+	int  i;
+	double	*v0, *v1;
 	double  l, asum;
 
 	v0 = vert[nverts-1];
@@ -170,9 +166,9 @@ compute_rounding()		/* compute vectors for rounding operations */
 
 
 static void
-printends()			/* print ends of prism */
+printends(void)			/* print ends of prism */
 {
-	register int  i;
+	int  i;
 						/* bottom face */
 	printf("\n%s polygon %s.b\n", pmtype, pname);
 	printf("0\n0\n%d\n", nverts*3);
@@ -189,9 +185,9 @@ printends()			/* print ends of prism */
 
 
 static void
-printrends()			/* print ends of prism with rounding */
+printrends(void)		/* print ends of prism with rounding */
 {
-	register int  i;
+	int  i;
 	double	c0[3], c1[3], cl[3];
 						/* bottom face */
 	printf("\n%s polygon %s.b\n", pmtype, pname);
@@ -269,10 +265,9 @@ printrends()			/* print ends of prism with rounding */
 
 
 static void
-printsides(round)		/* print prism sides */
-int  round;
+printsides(int round)		/* print prism sides */
 {
-	register int  i;
+	int  i;
 
 	for (i = 0; i < nverts-1; i++)
 		if (round)
@@ -288,24 +283,8 @@ int  round;
 }
 
 
-static void
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}
-
-
 int
-main(argc, argv)
-int  argc;
-char  **argv;
+main(int argc, char **argv)
 {
 	int  an;
 	
@@ -378,21 +357,23 @@ char  **argv;
 		}
 		crad *= lvdir;		/* simplifies formulas */
 		compute_rounding();
-		printhead(argc, argv);
+		fputs("# ", stdout);
+		printargs(argc, argv, stdout);
 		if (do_ends)
 			printrends();
 		printsides(1);
 	} else {
-		printhead(argc, argv);
+		fputs("# ", stdout);
+		printargs(argc, argv, stdout);
 		if (do_ends)
 			printends();
 		printsides(0);
 	}
-	exit(0);
+	return(0);
 userr:
 	fprintf(stderr, "Usage: %s material name ", argv[0]);
 	fprintf(stderr, "{ - | vfile | N v1 v2 .. vN } ");
 	fprintf(stderr, "[-l lvect][-r radius][-c][-e]\n");
-	exit(1);
+	return(1);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.8 2020/07/25 19:18:01 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -7,10 +7,8 @@ static const char	RCSid[] = "$Id: genbox.c,v 2.7 2003/11/16 10:29:38 schorsch Ex
  *     1/8/86
  */
 
-#include  <stdio.h>
-
-#include <stdlib.h>
-
+#include  "rtio.h"
+#include  <stdlib.h>
 #include  <math.h>
 
 
@@ -31,8 +29,7 @@ int  reverse = 0;	/* boolean true for reversed normals */
 
 
 static void
-vertex(v)
-register int  v;
+vertex(int v)
 {
 	register int  i;
 
@@ -48,8 +45,7 @@ register int  v;
 
 
 static void
-side(a, b, c, d)		/* generate a rectangular face */
-int  a, b, c, d;
+side(int a, int b, int c, int d)		/* generate a rectangular face */
 {
 	printf("\n%s polygon %s.%c%c%c%c\n", cmtype, cname,
 			let[a], let[b], let[c], let[d]);
@@ -69,8 +65,7 @@ int  a, b, c, d;
 
 
 static void
-corner(a, b, c)			/* generate a triangular face */
-int  a, b, c;
+corner(int a, int b, int c)			/* generate a triangular face */
 {
 	printf("\n%s polygon %s.%c%c%c\n", cmtype, cname,
 			let[a], let[b], let[c]);
@@ -88,8 +83,7 @@ int  a, b, c;
 
 
 static void
-cylinder(v0, v1)		/* generate a cylinder */
-int  v0, v1;
+cylinder(int v0, int v1)		/* generate a cylinder */
 {
 	printf("\n%s cylinder %s.%c%c\n", cmtype, cname, v0+'0', v1+'0');
 	printf("0\n0\n7\n");
@@ -100,8 +94,7 @@ int  v0, v1;
 
 
 static void
-sphere(v0)			/* generate a sphere */
-int  v0;
+sphere(int v0)			/* generate a sphere */
 {
 	printf("\n%s sphere %s.%c\n", cmtype, cname, v0+'0');
 	printf("0\n0\n4\n");
@@ -110,24 +103,8 @@ int  v0;
 }
 
 
-static void
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}
-
-
 int
-main(argc, argv)
-int  argc;
-char  **argv;
+main(int argc, char **argv)
 {
 	int  i;
 	
@@ -158,7 +135,8 @@ char  **argv;
 		}
 	}
 
-	printhead(argc, argv);
+	fputs("# ", stdout);
+	printargs(argc, argv, stdout);
 
 	if (bevel > 0.0) {
 					/* minor faces */
@@ -226,11 +204,11 @@ char  **argv;
 		side(5, 1, 3, 7);
 		side(6, 4, 5, 7);
 	}
-	exit(0);
+	return(0);
 userr:
 	fprintf(stderr, "Usage: %s ", argv[0]);
 	fprintf(stderr, "material name xsize ysize zsize ");
 	fprintf(stderr, "[-i] [-b bevel | -r rounde]\n");
-	exit(1);
+	return(1);
 }
 
