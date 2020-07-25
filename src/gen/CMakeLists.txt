@@ -4,12 +4,13 @@ add_executable(genbeads genbeads.c hermite3.c)
 target_link_libraries(genbeads ${LIB_M})
 
 add_executable(genbox genbox.c)
+target_link_libraries(genbox rtrad)
 
 add_executable(genmarble genmarble.c ../common/random.h)
 target_link_libraries(genmarble ${LIB_M})
 
 add_executable(gensky gensky.c sun.c)
-target_link_libraries(gensky ${LIB_M})
+target_link_libraries(gensky rtrad ${LIB_M})
 
 add_executable(gendaylit gendaylit.c sun.c)
 target_link_libraries(gendaylit rtrad ${LIB_M})
@@ -18,10 +19,10 @@ add_executable(gendaymtx gendaymtx.c sun.c)
 target_link_libraries(gendaymtx rtrad ${LIB_M})
 
 add_executable(genblinds genblinds.c)
-target_link_libraries(genblinds ${LIB_M})
+target_link_libraries(genblinds rtrad ${LIB_M})
 
 add_executable(genprism genprism.c)
-target_link_libraries(genprism ${LIB_M})
+target_link_libraries(genprism rtrad ${LIB_M})
 
 add_executable(xform xform.c)
 target_link_libraries(xform rtrad)
