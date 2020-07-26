@@ -244,6 +244,9 @@ jobs:
     needs: [build_Windows]
     name: Test Windows build
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
     steps:
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
@@ -300,6 +303,7 @@ jobs:
           genbox tmat tbox 1 2 3 -i -b .1 > genbox.rad
 
       - name: Zip Build Artifact
+        shell: pwsh
         run: |
           Compress-Archive -U -Path ./test/gen/* -DestinationPath gen_rad
 
@@ -331,44 +335,64 @@ jobs:
           make clean
           make -j8
 
-      - name: test-px
+      - name: test-px-cmd
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
           set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+          cd ./test/px/
+          powershell -Command make test.hdr --trace -j1 --debug
+          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor
+
+
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: test_CMD
+          path: test/px/test.hdr
+
+      
+      - name: test-px
+        shell: pwsh
+        run: |
           $Env:RAYPATH = ".;${{ github.workspace }}\lib"
           $Env:PATH += ";${{ github.workspace }}\bin"
+          $PSVersionTable
           rtrace -version
 
+
           cd ./test/px/
-          make clean
+          # make clean
+          echo "====================test-pfilt==================="
+          make test-pfilt --trace -j1 --debug
           echo "====================pfilt==================="
-          echo "list files in renders folder"
-          ls ../renders/
-          pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr | ra_xyze -r > test.hdr
-          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/test.hdr test.hdr
+          # pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr | ra_xyze -r > test.hdr
+          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/test.hdr test.hdr
 
           echo "==================pinterp====================="
-          pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
-          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pinterp.hdr pinterp.hdr
+          # pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
+          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pinterp.hdr pinterp.hdr
 
           echo "==================pextrem====================="
-          pextrem -o test.hdr > test_extrema.txt
-          radcompare ref/test_extrema.txt test_extrema.txt
+          # pextrem -o test.hdr > test_extrema.txt
+          # radcompare ref/test_extrema.txt test_extrema.txt
 
           echo "==================pcomb====================="
-          pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
-          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pcomb.hdr pcomb.hdr
+          # pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
+          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pcomb.hdr pcomb.hdr
 
           echo "==================pcond====================="
-          pcond -h test.hdr pcondh.hdr
-          radcompare -h -rms 0.03 -rel 0.007 -max 0.2 ref/pcondh.hdr pcondh.hdr
+          # pcond -h test.hdr pcondh.hdr
+          # radcompare -h -rms 0.03 -rel 0.007 -max 0.2 ref/pcondh.hdr pcondh.hdr
 
           echo "==================falsecolor====================="
-          perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
-          radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/false.hdr false.hdr
+          # perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
+          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/false.hdr false.hdr
 
       - name: Zip Build Artifact
+        shell: pwsh
         run: |
           Compress-Archive -U -Path ./test/px/* -DestinationPath px
 
@@ -378,32 +402,96 @@ jobs:
           name: px
           path: px.zip
 
-      - name: run tests -renders
+      - name: run tests -px
+        shell: cmd
         run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/px/
+          cmd.exe /c make clean
+          cmd.exe /c echo "==================test-pfilt====================="
+          cmd.exe /c make test-pfilt
+          cmd.exe /c echo "==================make====================="
+          cmd.exe /c make --trace -j1 --debug
+
+      - name: run tests -renders
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
           rtrace -version
 
           cd ./test/renders/
           make clean
           make
+  
+  Test_Windows2:
+    needs: [build_Windows]
+    name: Test Windows build 2
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
       
-      - name: run tests -px
-        shell: bash
+      - name: Download Windows installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Windows_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Windows_both.zip
+          unzip WindowsBuild/Radiance_Windows.zip 
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: install perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.30'
+      
+      - name: test-px
+        shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
           set PATH=%PATH%;${{ github.workspace }}\bin
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+          cd ./test/px/
+          ra_ps -b -C test.hdr > ra_psC.ps
+
+      - name: Zip Build Artifact
+        shell: pwsh
+        run: |
+          Compress-Archive -U -Path ./test/px/* -DestinationPath px
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: test_px2
+          path: px.zip
+
+      
+      - name: run tests -px
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
           rtrace -version
 
           cd ./test/px/
-          make clean
-          make -j8
-
+          cmd.exe /c make clean
+          cmd.exe /c echo "==================test-pfilt====================="
+          cmd.exe /c make test-pfilt
+          cmd.exe /c echo "==================make====================="
+          make --trace -j1 --debug
 
       
-      
+
       
 
   Test_OSX:
