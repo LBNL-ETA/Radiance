@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.6 2020/07/17 23:02:10 greg Exp $
+# RCSid $Id: Makefile,v 1.7 2020/07/26 20:15:33 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -100,5 +100,5 @@ test24.hdr:	test.hdr
 	pvalue -g 2.2 -db test.hdr | pvalue -r -g 2.2 -db > test24.hdr
 
 test.hdr:	../renders/sunset.hdr
-	pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr \
+	pfilt -x 544 -y 544 -r .6 ../renders/sunset.hdr \
 | ra_xyze -r > test.hdr
