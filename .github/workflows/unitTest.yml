@@ -25,15 +25,6 @@ jobs:
           python checkVersion.py
         shell: bash
 
-      - name: install GnuWin32
-        shell: bash
-        run: |
-          cd "C:/Program Files (x86)/"
-          mkdir GnuWin32
-          cd GnuWin32
-          git clone https://github.com/leok7v/gnuwin32.mirror.git
-          mv ./gnuwin32.mirror/* ./
-          ls
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
@@ -43,27 +34,28 @@ jobs:
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
       
-
       - name: Compile
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
+          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON'
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
-
+      
       - name: set up QT path
         run: |
           setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
           setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+
       - name: Build installer
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
           buildWithCMakeArgs: "--config Release --target PACKAGE"
