@@ -112,15 +112,6 @@ jobs:
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
       
-      - name: Install PackageMaker
-        run: |
-          mkdir PackageMaker
-          cd PackageMaker
-          git clone -b cvsimport https://github.com/${{ github.repository }}
-          cd Radiance
-          ls
-          unzip -q -o PackageMaker.app.zip -d /Applications/
-        shell: bash
       
       - name: Install XQuartz
         run: |
@@ -146,10 +137,8 @@ jobs:
           cd build
           sudo cpack -G ZIP .
           echo "=============================="
-          ls -R
-          # sudo bash PackageMaker/Radiance/macInstall.sh
 
-          cd build/_CPack_Packages/Darwin/PackageMaker/
+          cd ./_CPack_Packages/Darwin/ZIP/
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
           sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
@@ -162,7 +151,7 @@ jobs:
           mkdir OSXBuild
           sudo cp Radiance_OSX.pkg ./OSXBuild/Radiance_OSX.pkg
 
-          sudo mv ./build/_CPack_Packages/Darwin/PackageMaker/radiance-*-Darwin/usr/local/radiance ./radiance
+          sudo mv ./build/_CPack_Packages/Darwin/ZIP/radiance-*-Darwin/usr/local/radiance ./radiance
           sudo zip -r Radiance_OSX.zip ./radiance
           sudo cp ./Radiance_OSX.zip ./OSXBuild/Radiance_OSX.zip
 
