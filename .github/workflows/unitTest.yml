@@ -307,7 +307,7 @@ jobs:
           rtrace -version
 
           cd ./test/px/
-          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor
+          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor test-ra_ps
 
 
       - name: run tests -renders
