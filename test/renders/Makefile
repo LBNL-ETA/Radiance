@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.23 2020/07/17 15:43:31 greg Exp $
+# RCSid $Id: Makefile,v 1.24 2020/07/27 16:49:56 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -36,10 +36,10 @@ test-rpiece test-mkpmap:	test-mixtex-def
 ### Special test of xform ###
 
 test-xform:	combined.rad
-	radcompare -max 0.04 ref/combined.rad combined.rad
+	radcompare "-c#" -max 0.04 ref/combined.rad combined.rad
 
 combined.rad:	combined_scene.rad
-	xform -f combined_scene.rad | grep -v '^[ 	]*#' > combined.rad
+	xform -f combined_scene.rad > combined.rad
 
 ### Special test of rad ###
 
