@@ -142,7 +142,12 @@ jobs:
         run: |
           export PATH=$PATH:$Qt5_DIR/bin
           export PATH=$PATH:$Qt5_DIR/lib
-          sudo bash PackageMaker/Radiance/macInstall.sh
+
+          cd build
+          sudo cpack -G ZIP .
+          echo "=============================="
+          ls -R
+          # sudo bash PackageMaker/Radiance/macInstall.sh
 
           cd build/_CPack_Packages/Darwin/PackageMaker/
           sudo cp -r ./radiance*/usr/local/radiance .
