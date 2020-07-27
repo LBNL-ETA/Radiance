@@ -276,37 +276,7 @@ jobs:
           make clean
           make -j8
       
-      - name: test-gen
-        shell: pwsh
-        run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
-          rtrace -version
 
-          cd ./test/gen/
-          make clean
-          echo "====================genprism==================="
-          genprism tmat tprism 8 0 5 4 5 4 4 24.5 4 24.5 3 30 1.5 30 22 0 22 -l 0 0 -1.5 -r .2 > genprism.rad
-          echo "==================genworm====================="
-          genworm tmat tworm '0' '5*sin(t)' '5*cos(t)' '.4-(.5-t)*(.5-t)' 8 > genworm.rad
-          echo "==================gensurf====================="
-          gensurf tmat tsurf '15.5+x(theta(s),phi(t))' '10.5+y(theta(s),phi(t))' '30.75+z(theta(s),phi(t))' 4 15 -f basin.cal -s > gensurf.rad
-          echo "==================gensky====================="
-          gensky 11 15 14:21EST +s -g .25 -t 3.5 -a 40.7128 -o 74.006 > NYC11-15-14-21.rad
-          echo "==================genbox====================="
-          genbox tmat tbox 1 2 3 -i -b .1 > genbox.rad
-
-      - name: Zip Build Artifact
-        shell: pwsh
-        run: |
-          Compress-Archive -U -Path ./test/gen/* -DestinationPath gen_rad
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: gen_rad
-          path: gen_rad.zip
-      
       - name: run tests -gen
         shell: pwsh
         run: |
@@ -329,73 +299,6 @@ jobs:
           make clean
           make -j8
 
-      - name: test-px-cmd
-        shell: cmd
-        run: |
-          set RAYPATH=.;${{ github.workspace }}\lib
-          set PATH=%PATH%;${{ github.workspace }}\bin
-          rtrace -version
-          cd ./test/px/
-          powershell -Command make test.hdr --trace -j1 --debug
-          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor
-
-
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: test_CMD
-          path: test/px/test.hdr
-
-      
-      - name: test-px
-        shell: pwsh
-        run: |
-          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
-          $Env:PATH += ";${{ github.workspace }}\bin"
-          $PSVersionTable
-          rtrace -version
-
-
-          cd ./test/px/
-          # make clean
-          echo "====================test-pfilt==================="
-          make test-pfilt --trace -j1 --debug
-          echo "====================pfilt==================="
-          # pfilt -x /2.5 -y /2.5 -r .6 ../renders/sunset.hdr | ra_xyze -r > test.hdr
-          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/test.hdr test.hdr
-
-          echo "==================pinterp====================="
-          # pinterp -vtv -vh 60 -vv 40 -x 200 -y 200 test.hdr 1.0 > pinterp.hdr
-          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pinterp.hdr pinterp.hdr
-
-          echo "==================pextrem====================="
-          # pextrem -o test.hdr > test_extrema.txt
-          # radcompare ref/test_extrema.txt test_extrema.txt
-
-          echo "==================pcomb====================="
-          # pcomb -e 'm=1/(gi(1)+.1);ro=gi(1)*m;go=bi(1)*m;bo=ri(1)*m' test.hdr > pcomb.hdr
-          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/pcomb.hdr pcomb.hdr
-
-          echo "==================pcond====================="
-          # pcond -h test.hdr pcondh.hdr
-          # radcompare -h -rms 0.03 -rel 0.007 -max 0.2 ref/pcondh.hdr pcondh.hdr
-
-          echo "==================falsecolor====================="
-          # perl ../../src/px/falsecolor.pl -s 2e5 -log 5 -i test.hdr > false.hdr
-          # radcompare -rms 0.07 -rel 1e-6 -max 0.2 ref/false.hdr false.hdr
-
-      - name: Zip Build Artifact
-        shell: pwsh
-        run: |
-          Compress-Archive -U -Path ./test/px/* -DestinationPath px
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: px
-          path: px.zip
-
       - name: run tests -px
         shell: cmd
         run: |
@@ -404,11 +307,8 @@ jobs:
           rtrace -version
 
           cd ./test/px/
-          cmd.exe /c make clean
-          cmd.exe /c echo "==================test-pfilt====================="
-          cmd.exe /c make test-pfilt
-          cmd.exe /c echo "==================make====================="
-          cmd.exe /c make --trace -j1 --debug
+          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor
+
 
       - name: run tests -renders
         shell: cmd
@@ -421,72 +321,6 @@ jobs:
           make clean
           make
   
-  Test_Windows2:
-    needs: [build_Windows]
-    name: Test Windows build 2
-    runs-on: windows-latest
-    steps:
-      - name: "Checkout Master Branch"
-        uses: actions/checkout@v2
-        with:
-          ref: master
-      
-      - name: Download Windows installers
-        uses: actions/download-artifact@v2
-        with:
-          name: Radiance_Windows_both
-      
-      - name: unzip artifacts
-        run: |
-          unzip Radiance_Windows_both.zip
-          unzip WindowsBuild/Radiance_Windows.zip 
-      
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: install perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.30'
-      
-      - name: test-px
-        shell: cmd
-        run: |
-          set RAYPATH=.;${{ github.workspace }}\lib
-          set PATH=%PATH%;${{ github.workspace }}\bin
-          rtrace -version
-          cd ./test/px/
-          ra_ps -b -C test.hdr > ra_psC.ps
-
-      - name: Zip Build Artifact
-        shell: pwsh
-        run: |
-          Compress-Archive -U -Path ./test/px/* -DestinationPath px
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: test_px2
-          path: px.zip
-
-      
-      - name: run tests -px
-        shell: cmd
-        run: |
-          set RAYPATH=.;${{ github.workspace }}\lib
-          set PATH=%PATH%;${{ github.workspace }}\bin
-          rtrace -version
-
-          cd ./test/px/
-          cmd.exe /c make clean
-          cmd.exe /c echo "==================test-pfilt====================="
-          cmd.exe /c make test-pfilt
-          cmd.exe /c echo "==================make====================="
-          make --trace -j1 --debug
-
-      
-
-      
 
   Test_OSX:
     needs: [build_OSX]
@@ -559,31 +393,7 @@ jobs:
           make clean
           make -j8
 
-      - name: test-inst-def
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/radiance/bin
-          cd ./test/renders/
-
-          make clean
-          rad -v   def    inst.rif
-          pfilt -1 -r 1 -x 128 -y 128 -pa 1   inst_def.hdr > inst_def2.hdr
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: inst_def2_Mac
-          path: test/renders/inst_def2.hdr
-
-      - name: test-inst-def compare
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/radiance/bin
-          cd ./test/renders/
-
-          radcompare -rms 0.07 -max 1.5 ref/inst_def.hdr  inst_def2.hdr
-
-
+    
       - name: run tests -renders
         run: |
           export RAYPATH=.:${{ github.workspace }}/radiance/lib
@@ -667,29 +477,6 @@ jobs:
           
           make clean
           make -j8
-
-      - name: test-inst-def
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
-          cd ./test/renders/
-
-          rad -v   def    inst.rif
-          pfilt -1 -r 1 -x 128 -y 128 -pa 1   inst_def.hdr > inst_def2.hdr
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: inst_def2_Linux
-          path: test/renders/inst_def2.hdr
-
-      - name: test-inst-def compare
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
-          cd ./test/renders/
-
-          radcompare -rms 0.07 -max 1.5 ref/inst_def.hdr  inst_def2.hdr
 
       - name: run tests -renders
         run: |
