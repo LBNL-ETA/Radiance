@@ -63,14 +63,12 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
@@ -144,14 +142,12 @@ jobs:
         with:
           ref: master
       
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
@@ -235,14 +231,12 @@ jobs:
         with:
           ref: master
       
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
