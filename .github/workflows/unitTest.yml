@@ -239,7 +239,7 @@ jobs:
 
   Test_Windows:
     needs: [build_Windows]
-    name: Test Windows build
+    name: Test for Windows
     runs-on: windows-latest
     defaults:
       run:
@@ -310,9 +310,9 @@ jobs:
           rtrace -version
 
           cd ./test/px/
-          powershell -Command make test-pfilt test-pvalue test-pcompos test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign test-falsecolor test-ra_ps
-
-
+          make clean
+          make -j8
+  
       - name: run tests -renders
         shell: cmd
         run: |
