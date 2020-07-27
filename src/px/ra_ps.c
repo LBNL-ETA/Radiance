@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.31 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.32 2020/07/27 01:25:33 greg Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: ra_ps.c,v 2.31 2019/12/28 18:05:14 greg Exp $"
 #include  <ctype.h>
 
 #include  "platform.h"
+#include  "paths.h"
 #include  "rtio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -58,7 +59,7 @@ typedef void putprimf_t(COLR *scn, int pri);
 static gethfunc headline;
 static putprimf_t Aputprim, Bputprim, Cputprim;
 
-static double unit2inch(register char *s);
+static double unit2inch(char *s);
 static int matchid(char *name, char *id);
 static void parsepaper(char *ps);
 static void quiterr(char *err);
@@ -94,7 +95,7 @@ main(int  argc, char  *argv[])
 	int  i;
 	double	d;
 	
-	progname = argv[0];
+	progname = fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')
@@ -196,7 +197,7 @@ userr:
 
 static double
 unit2inch(		/* determine unit */
-	register char	*s
+	char	*s
 )
 {
 	static struct unit {char n; float f;} u[] = {
@@ -204,7 +205,7 @@ unit2inch(		/* determine unit */
 		{'m', 1./25.4},
 		{'c', 1./2.54},
 		{'\0',0} };
-	register struct unit	*up;
+	struct unit	*up;
 
 	while (*s && !isalpha(*s))
 		s++;
@@ -218,10 +219,10 @@ unit2inch(		/* determine unit */
 static int
 matchid(	/* see if name matches id (case insensitive) */
 	char	*name,
-	register char	*id
+	char	*id
 )
 {
-	register char	*s = name;
+	char	*s = name;
 
 	while (*s) {
 		if (isalpha(*s)) {
@@ -261,8 +262,8 @@ parsepaper(		/* determine paper size from name */
 		{"DL", 4.33, 8.66},
 		{"hagaki", 3.94, 5.83},
 		{"",0.0,0.0} };
-	register struct psize	*pp;
-	register char	*s = ps;
+	struct psize	*pp;
+	char	*s = ps;
 	double	d;
 
 	if (isdigit(*s)) {		/* check for WWxHH specification */
@@ -425,7 +426,7 @@ PSprocdef(			/* define PS procedure to read image */
 )
 {
 	short  itab[128];
-	register int  i;
+	int  i;
 				/* assign code values */
 	for (i = 0; i < 128; i++)	/* clear */
 		itab[i] = -1;
@@ -464,7 +465,7 @@ PSprocdef(			/* define PS procedure to read image */
 static void
 ra2ps(void)				/* convert Radiance scanlines to 6-bit */
 {
-	register COLR	*scanin;
+	COLR	*scanin;
 	int	y;
 						/* allocate scanline */
 	scanin = (COLR *)malloc(xmax*sizeof(COLR));
@@ -503,7 +504,7 @@ Aputprim(		/* put out hex ASCII primary from scanline */
 {
 	static char	hexdigit[] = "0123456789ABCDEF";
 	static int	col = 0;
-	register int	x, c;
+	int	x, c;
 
 	for (x = 0; x < xmax; x++) {
 		if (pri == GRY)
@@ -527,7 +528,7 @@ Bputprim(		/* put out binary primary from scanline */
 	int	pri
 )
 {
-	register int	x, c;
+	int	x, c;
 
 	for (x = 0; x < xmax; x++) {
 		if (pri == GRY)
@@ -546,8 +547,8 @@ Cputprim(		/* put out compressed primary from scanline */
 	int	pri
 )
 {
-	register int	c;
-	register int	x;
+	int	c;
+	int	x;
 	int	lastc, cnt;
 
 	lastc = -1; cnt = 0;
@@ -572,8 +573,8 @@ Cputprim(		/* put out compressed primary from scanline */
 
 static void
 putrle(		/* put out cnt of cod */
-	register int	cnt,
-	register int	cod
+	int	cnt,
+	int	cod
 )
 {
 	static int	col = 0;
