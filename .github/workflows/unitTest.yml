@@ -399,7 +399,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make 
+          make -j8
 
   Test_Linux:
     needs: [build_Linux]
@@ -483,6 +483,6 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make
+          make -j8
 
       
