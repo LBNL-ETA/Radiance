@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetline.c,v 2.9 2016/03/04 00:21:21 greg Exp $";
+static const char	RCSid[] = "$Id: fgetline.c,v 2.10 2020/07/29 18:19:31 greg Exp $";
 #endif
 /*
  * fgetline.c - read line with escaped newlines.
@@ -34,5 +34,10 @@ fgetline(		/* read in line with escapes, elide final newline */
 	if ((cp == s) & (c == EOF))
 		return(NULL);
 	*cp = '\0';
+#if defined(_WIN32) || defined(_WIN64)
+						/* remove escaped newlines */
+	for (cp = s; (cp = strchr(cp, '\\')) != NULL && cp[1] == '\n'; )
+		memmove(cp, cp+2, strlen(cp+2)+1);
+#endif
 	return(s);
 }
