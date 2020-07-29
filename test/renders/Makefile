@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.24 2020/07/27 16:49:56 greg Exp $
+# RCSid $Id: Makefile,v 1.25 2020/07/29 18:45:00 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -311,7 +311,7 @@ prism2_fish.hdr:	prism2.oct
 
 ### Octree for   tfunc ###
 
-tfunc.oct:	tfunc.rif
+tfunc1.oct:	tfunc.rif
 	rad -v 0   tfunc.rif
 
 ### Reference and test for   tfunc view   def ###
@@ -323,7 +323,7 @@ ref/tfunc_def.hdr:
 	make   tfunc_def.hdr
 	$(RDU_PFILT)   tfunc_def.hdr > ref/tfunc_def.hdr
 
-tfunc_def.hdr:	tfunc.oct
+tfunc_def.hdr:	tfunc1.oct
 	rad -v   def   tfunc.rif
 
 ### End   tfunc-def   tests
@@ -337,7 +337,7 @@ ref/tfunc_fish.hdr:
 	make   tfunc_fish.hdr
 	$(RDU_PFILT)   tfunc_fish.hdr > ref/tfunc_fish.hdr
 
-tfunc_fish.hdr:	tfunc.oct
+tfunc_fish.hdr:	tfunc1.oct
 	rad -v  fish   tfunc.rif
 
 ### End   tfunc-fish  tests
