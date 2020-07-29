@@ -1,4 +1,4 @@
-# RCSid $Id: torus.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: torus.rad,v 1.2 2020/07/29 23:38:22 greg Exp $
 # A green metal torus with glowing red stripes
 
 void metal green_metal
@@ -16,5 +16,5 @@ void mixfunc striped
 0
 3 -4 2.5 1.5
 
-!genrev striped torus 'sin(2*PI*t)' '2+cos(2*PI*t)' 32 -s \
+!genrev striped torus "sin(2*PI*t)" "2+cos(2*PI*t)" 32 -s \
 	| xform -ry 52 -s .2 -t -4 2.5 1.5

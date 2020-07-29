@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.25 2020/07/29 18:45:00 greg Exp $
+# RCSid $Id: Makefile,v 1.26 2020/07/29 23:38:22 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -377,7 +377,7 @@ trans_fish.hdr:	trans.oct
 
 ### Octree for  trans2 ###
 
-trans2.oct:	trans2.rif
+trans21.oct:	trans2.rif
 	rad -v 0  trans2.rif
 
 ### Reference and test for  trans2 view   def ###
@@ -389,7 +389,7 @@ ref/trans2_def.hdr:
 	make  trans2_def.hdr
 	$(RDU_PFILT)  trans2_def.hdr > ref/trans2_def.hdr
 
-trans2_def.hdr:	trans2.oct
+trans2_def.hdr:	trans21.oct
 	rad -v   def  trans2.rif
 
 ### End  trans2-def   tests
@@ -403,7 +403,7 @@ ref/trans2_fish.hdr:
 	make  trans2_fish.hdr
 	$(RDU_PFILT)  trans2_fish.hdr > ref/trans2_fish.hdr
 
-trans2_fish.hdr:	trans2.oct
+trans2_fish.hdr:	trans21.oct
 	rad -v  fish  trans2.rif
 
 ### End  trans2-fish  tests
@@ -417,7 +417,7 @@ ref/trans2_win.hdr:
 	make  trans2_win.hdr
 	$(RDU_PFILT)  trans2_win.hdr > ref/trans2_win.hdr
 
-trans2_win.hdr:	trans2.oct
+trans2_win.hdr:	trans21.oct
 	rad -v   win  trans2.rif
 
 ### End  trans2-win   tests
