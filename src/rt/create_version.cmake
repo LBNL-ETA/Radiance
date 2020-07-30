@@ -17,5 +17,5 @@ file(READ "${VERSION_IN_FILE}" VERSION)
 string(STRIP "${VERSION}" VERSION)
 message("${VERSION}")
 file(WRITE "${VERSION_OUT_FILE}"
-  "char VersionID[]=\"RADIANCE ${VERSION} ${DATE_STR} LBNL (${RADIANCE_VERSION})\";\n"
+  "char VersionID[]=\"${VERSION} ${DATE_STR} LBNL (${RADIANCE_VERSION})\";\n"
 )
