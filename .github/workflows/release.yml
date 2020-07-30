@@ -1,79 +1,63 @@
-name: Import from CVS and Build + Deploy
+name: Release Installers
 
 on:
   push:
     branches: [ cvsimport ]
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 12 * * 0"
 
 jobs:
-  cvs_import:
-    name: "Run CVS Import"
+
+  check_if_release:
+    name: Check if there is new
     runs-on: ubuntu-20.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
 
     steps:
-      - name: Clone this repo to machine
-        run: |
-          git clone -b master https://github.com/${{ github.repository }}
-          cd Radiance
-          git branch -a
-          git checkout cvsimport
-          ls
-      
-      - name: Install cvsimport
-        run: |
-          sudo apt-get update
-          sudo apt-get install git-cvs
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          fetch-depth: 0
 
-      - name: Run CVS Import
-        run: |
-          cd Radiance
-          bash cvsimport.sh
-
-      - name: Set up build trigger
+      - name: check if there is any new commits from last release
         id: ifBuildTrigger
         run: |
-          cd Radiance
-          git checkout master
+          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
+          RAD_VERSION=$(cat src/rt/VERSION)
+          RAD_VERSION="${RAD_VERSION/RADIANCE /}"
+          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
+
+          LAST_TAG=$(git describe --tags --abbrev=0)
 
           unset HAS_NEW_COMMITS
-          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          if [[ "$RELEASE_TAG" != "$LAST_TAG" ]]; then HAS_NEW_COMMITS='true' ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
-      - name: Push updates to master branch
-        uses: ad-m/github-push-action@master
-        with:
-          directory: Radiance
-          github_token: ${{ secrets.GH_TOKEN }}
-          branch: master
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
-      
-  
+
   build_Windows:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for Windows"
     runs-on: windows-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: '0'
 
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
+
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
@@ -87,9 +71,10 @@ jobs:
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
+          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON'
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
@@ -98,11 +83,12 @@ jobs:
         run: |
           setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
           setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+
       - name: Build installer
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtBasic
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
           buildWithCMakeArgs: "--config Release --target PACKAGE"
@@ -132,26 +118,23 @@ jobs:
           name: Radiance_Windows_both
           path: Radiance_Windows_both.zip
 
-
   build_OSX:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for OSX"
     runs-on: macos-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
         with:
           ref: master
       
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
@@ -164,15 +147,6 @@ jobs:
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
       
-      - name: Install PackageMaker
-        run: |
-          mkdir PackageMaker
-          cd PackageMaker
-          git clone -b cvsimport https://github.com/${{ github.repository }}
-          cd Radiance
-          ls
-          unzip -q -o PackageMaker.app.zip -d /Applications/
-        shell: bash
       
       - name: Install XQuartz
         run: |
@@ -194,9 +168,12 @@ jobs:
         run: |
           export PATH=$PATH:$Qt5_DIR/bin
           export PATH=$PATH:$Qt5_DIR/lib
-          sudo bash PackageMaker/Radiance/macInstall.sh
 
-          cd build/_CPack_Packages/Darwin/PackageMaker/
+          cd build
+          sudo cpack -G ZIP .
+          echo "=============================="
+
+          cd ./_CPack_Packages/Darwin/ZIP/
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
           sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
@@ -209,7 +186,7 @@ jobs:
           mkdir OSXBuild
           sudo cp Radiance_OSX.pkg ./OSXBuild/Radiance_OSX.pkg
 
-          sudo mv ./build/_CPack_Packages/Darwin/PackageMaker/radiance-*-Darwin/usr/local/radiance ./radiance
+          sudo mv ./build/_CPack_Packages/Darwin/ZIP/radiance-*-Darwin/usr/local/radiance ./radiance
           sudo zip -r Radiance_OSX.zip ./radiance
           sudo cp ./Radiance_OSX.zip ./OSXBuild/Radiance_OSX.zip
 
@@ -223,26 +200,23 @@ jobs:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
 
-
   build_Linux:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for Linux"
     runs-on: ubuntu-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
         with:
           ref: master
       
-      - name: override CMakeLists.txt and update version
+      - name: override update version
         run: |
           git fetch
           git checkout cvsimport
-          cp CMakeLists.txt ../CMakeLists.txt
           cp checkVersion.py ../checkVersion.py
           git checkout master
-          cp ../CMakeLists.txt CMakeLists.txt
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
@@ -293,7 +267,6 @@ jobs:
         with:
           name: Radiance_Linux
           path: Radiance_Linux.zip
-
 
   release_installers:
     needs: [build_Windows, build_OSX, build_Linux]
