@@ -1,10 +1,14 @@
-# RCSid $Id: Makefile,v 1.26 2020/07/29 23:38:22 greg Exp $
+# RCSid $Id: Makefile,v 1.27 2020/07/30 02:19:27 greg Exp $
 #
 # Render and primitive type testing
 #
 
 # Number of processes to use on tests that run multi-core
-NPROC = 2
+ifeq ($(OS),Windows_NT)  # is Windows
+	NPROC := 1
+else
+	NPROC := 2
+endif
 
 # Image reduction for comparisons
 RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
