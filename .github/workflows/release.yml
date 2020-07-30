@@ -1,62 +1,47 @@
-name: Import from CVS and Build + Deploy
+name: Release Installers
 
 on:
   push:
     branches: [ cvsimport ]
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 12 * * 0"
 
 jobs:
-  cvs_import:
-    name: "Run CVS Import"
+
+  check_if_release:
+    name: Check if there is new
     runs-on: ubuntu-20.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
 
     steps:
-      - name: Clone this repo to machine
-        run: |
-          git clone -b master https://github.com/${{ github.repository }}
-          cd Radiance
-          git branch -a
-          git checkout cvsimport
-          ls
-      
-      - name: Install cvsimport
-        run: |
-          sudo apt-get update
-          sudo apt-get install git-cvs
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          fetch-depth: 0
 
-      - name: Run CVS Import
-        run: |
-          cd Radiance
-          bash cvsimport.sh
-
-      - name: Set up build trigger
+      - name: check if there is any new commits from last release
         id: ifBuildTrigger
         run: |
-          cd Radiance
-          git checkout master
+          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
+          RAD_VERSION=$(cat src/rt/VERSION)
+          RAD_VERSION="${RAD_VERSION/RADIANCE /}"
+          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
+
+          LAST_TAG=$(git describe --tags --abbrev=0)
 
           unset HAS_NEW_COMMITS
-          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          if [[ "$RELEASE_TAG" != "$LAST_TAG" ]]; then HAS_NEW_COMMITS='true' ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
-      - name: Push updates to master branch
-        uses: ad-m/github-push-action@master
-        with:
-          directory: Radiance
-          github_token: ${{ secrets.GH_TOKEN }}
-          branch: master
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
-      
-  
+
   build_Windows:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for Windows"
     runs-on: windows-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
@@ -133,12 +118,11 @@ jobs:
           name: Radiance_Windows_both
           path: Radiance_Windows_both.zip
 
-
   build_OSX:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for OSX"
     runs-on: macos-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -216,12 +200,11 @@ jobs:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
 
-
   build_Linux:
-    needs: cvs_import
+    needs: check_if_release
     name: "Build for Linux"
     runs-on: ubuntu-latest
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
+    if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -284,7 +267,6 @@ jobs:
         with:
           name: Radiance_Linux
           path: Radiance_Linux.zip
-
 
   release_installers:
     needs: [build_Windows, build_OSX, build_Linux]

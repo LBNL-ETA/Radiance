@@ -1,18 +1,66 @@
-name: Run Unit tests
+name: Import from CVS and Build + Test
 
 on:
   push:
     branches: [ cvsimport ]
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
+  cvs_import:
+    name: "Run CVS Import"
+    runs-on: ubuntu-20.04
+    outputs:
+      HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
+
+    steps:
+      - name: Clone this repo to machine
+        run: |
+          git clone -b master https://github.com/${{ github.repository }}
+          cd Radiance
+          git branch -a
+          git checkout cvsimport
+          ls
+      
+      - name: Install cvsimport
+        run: |
+          sudo apt-get update
+          sudo apt-get install git-cvs
+
+      - name: Run CVS Import
+        run: |
+          cd Radiance
+          bash cvsimport.sh
+
+      - name: Set up build trigger
+        id: ifBuildTrigger
+        run: |
+          cd Radiance
+          git checkout master
+
+          unset HAS_NEW_COMMITS
+          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+          echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
+
+      - name: Push updates to master branch
+        uses: ad-m/github-push-action@master
+        with:
+          directory: Radiance
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: master
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
+      
+  
   build_Windows:
+    needs: cvs_import
     name: "Build for Windows"
     runs-on: windows-latest
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: master
           fetch-depth: '0'
 
       - name: override update version
@@ -45,7 +93,7 @@ jobs:
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
-      
+
       - name: set up QT path
         run: |
           setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
@@ -85,9 +133,12 @@ jobs:
           name: Radiance_Windows_both
           path: Radiance_Windows_both.zip
 
+
   build_OSX:
+    needs: cvs_import
     name: "Build for OSX"
     runs-on: macos-latest
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -165,9 +216,12 @@ jobs:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
 
+
   build_Linux:
+    needs: cvs_import
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -230,6 +284,7 @@ jobs:
         with:
           name: Radiance_Linux
           path: Radiance_Linux.zip
+
 
   Test_Windows:
     needs: [build_Windows]
@@ -318,7 +373,6 @@ jobs:
           make clean
           make
   
-
   Test_OSX:
     needs: [build_OSX]
     name: "Test for OSX"
@@ -485,4 +539,3 @@ jobs:
           make clean
           make -j8
 
-      
