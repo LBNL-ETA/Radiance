@@ -1,3 +1,5 @@
+![Import + Build + Test](https://github.com/LBNL-ETA/Radiance/workflows/Import%20from%20CVS%20and%20Build%20+%20Test/badge.svg) 
+[![GitHub All Releases](https://img.shields.io/github/downloads/LBNL-ETA/Radiance/total?label=Download%20Release)](https://github.com/LBNL-ETA/Radiance/releases)
 # Radiance
 A Validated Lighting Simulation Tool
 
