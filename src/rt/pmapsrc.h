@@ -1,16 +1,20 @@
-/* RCSid $Id: pmapsrc.h,v 2.6 2018/03/20 19:55:33 rschregle Exp $ */
+/* RCSid $Id: pmapsrc.h,v 2.7 2020/08/07 01:21:13 rschregle Exp $ */
 
 /* 
-   ==================================================================
+   ======================================================================
    Photon map support routines for emission from light sources
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation (DFG) 
+       under the FARESYS project.
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF #147053).
+   (c) Tokyo University of Science,
+       supported by the JSPS KAKENHI Grant Number JP19KK0115.
+   ======================================================================
    
-   $Id: pmapsrc.h,v 2.6 2018/03/20 19:55:33 rschregle Exp $
+   $Id: pmapsrc.h,v 2.7 2020/08/07 01:21:13 rschregle Exp $
 */
 
 
@@ -54,6 +58,13 @@
    } EmissionMap;
 
 
+   
+   /* Photon port flags (orientation relative to surface normal):
+    * Forward, backward, both (bidirectional). */
+   #define PMAP_PORTFWD 1
+   #define PMAP_PORTBWD 2
+   #define PMAP_PORTBI  (PMAP_PORTFWD | PMAP_PORTBWD)
+   
 
    /* Photon ports for emission from geometry en lieu of light sources */
    extern char *photonPortList [MAXSET + 1];

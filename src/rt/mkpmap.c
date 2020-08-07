@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.9 2018/03/20 19:55:33 rschregle Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle Exp $";
 #endif
 
 
@@ -9,12 +9,15 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.9 2018/03/20 19:55:33 rschregle E
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts
+       supported by the German Research Foundation (DFG) 
+       under the FARESYS project.
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation (SNSF #147053).
+   (c) Tokyo University of Science,
+       supported by the JSPS KAKENHI Grant Number JP19KK0115.
    ======================================================================
    
-   $Id: mkpmap.c,v 2.9 2018/03/20 19:55:33 rschregle Exp $    
+   $Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle Exp $    
 */
 
 
@@ -97,11 +100,11 @@ void printdefaults()
    printf("-apD %f\t\t\t\t# predistribution factor\n", preDistrib);
    printf("-apM %d\t\t\t\t\t# max predistrib passes\n", maxPreDistrib);
 #if 1
-   /* Kept for backwards compat, will be gradually phased out by -lD, -lr */
+   /* Kept for backwards compat, will be gradually phased out by -ld, -lr */
    printf("-apm %ld\t\t\t\t# limit photon bounces\n", photonMaxBounce);
 #endif
-   puts("-apo mod\t\t\t\t# photon port modifier");
-   puts("-apO file\t\t\t\t# photon ports from file");
+   puts("-apo+ mod\t\t\t\t# photon port modifier");
+   puts("-apO+ file\t\t\t\t# photon ports from file");
    printf("-apP %f\t\t\t\t# precomputation factor\n", finalGather);
    printf("-apr %d\t\t\t\t\t# random seed\n", randSeed);
    puts("-aps mod\t\t\t\t# antimatter sensor modifier");
@@ -115,7 +118,7 @@ void printdefaults()
    printf(clobber ? "-fo+\t\t\t\t\t# force overwrite\n"
                   : "-fo-\t\t\t\t\t# do not overwrite\n");
 #ifdef PMAP_EKSPERTZ
-   /* NU STUFF for Ze Exspertz! */      
+   /* (Formerly) NU STUFF for Ze Exspertz! */      
    printf("-ld %.1f\t\t\t\t\t# limit photon distance\n", photonMaxDist);
    printf("-lr %ld\t\t\t\t# limit photon bounces\n", photonMaxBounce);   
 #endif   
@@ -126,7 +129,7 @@ void printdefaults()
           colval(cextinction,BLU));          
    printf("-mg  %.2f\t\t\t\t# scattering eccentricity\n", seccg);
 #if NIX   
-   /* Multiprocessing on NIX only */
+   /* Multiprocessing on NIX only; so tuff luck, Windoze Weenies! */
    printf("-n   %d\t\t\t\t\t# number of parallel processes\n", nproc);
 #endif   
    printf("-t   %-9d\t\t\t\t# time between reports\n", photonRepTime);
@@ -137,23 +140,39 @@ void printdefaults()
 
 int main (int argc, char* argv [])
 {
-   #define check(ol, al) if (argv [i][ol] || \
-                             badarg(argc - i - 1,argv + i + 1, al)) \
-                            goto badopt
-                            
+   #define check(ol, al) if ( \
+      argv [i][ol] || badarg(argc - i - 1,argv + i + 1, al) \
+   ) goto badopt
+   
+   /* Evaluate boolean option, setting var accordingly */                         
    #define check_bool(olen, var) switch (argv [i][olen]) { \
-                             case '\0': var = !var; break; \
-                             case 'y': case 'Y': case 't': case 'T': \
-                             case '+': case '1': var = 1; break; \
-                             case 'n': case 'N': case 'f': case 'F': \
-                             case '-': case '0': var = 0; break; \
-                             default: goto badopt; \
-                          }   
+      case '\0': \
+         var = !var; break; \
+      case 'y': case 'Y': case 't': case 'T': case '+': case '1': \
+         var = 1; break; \
+      case 'n': case 'N': case 'f': case 'F': case '-': case '0': \
+         var = 0; break; \
+      default: \
+         goto badopt; \
+   }
+   
+   /* Evaluate trinary option, setting bits v1 and v2 in var accordingly */
+   #define check_tri(olen, v1, v2, var) switch (argv [i][olen]) { \
+      case '\0': case '+': \
+         var = v1; break; \
+      case '-': \
+         var = v2; break;\
+      case '0': \
+         var = v1 | v2; break; \
+      default: \
+         goto badopt; \
+   }
 
-   int loadflags = IO_CHECK | IO_SCENE | IO_TREE | IO_BOUNDS, rval, i, j, n;
-   char **portLp = photonPortList, **sensLp = photonSensorList,
-        **amblp = NULL;
-   struct stat pmstat;
+   int      loadflags = IO_CHECK | IO_SCENE | IO_TREE | IO_BOUNDS, 
+            rval, i, j, n;
+   char     **portLp = photonPortList, **sensLp = photonSensorList, 
+            **amblp = NULL, sbuf [MAXSTR], portFlags [2] = "\0\0";
+   struct   stat pmstat;
 
    /* Global program name */
    progname = fixargv0(argv [0]);
@@ -362,25 +381,49 @@ int main (int argc, char* argv [])
                      
                      case 'o': /* Photon port */ 
                      case 'O':
-                        check(4, "s");
+                        /* Check for bad arg and length, taking into account
+                         * default forward orientation if none specified, in
+                         * order to maintain previous behaviour */
+                        check(argv [i][4] ? 5 : 4, "s");
+                        /* Get port orientation flags */
+                        check_tri(
+                           4, PMAP_PORTFWD, PMAP_PORTBWD, portFlags [0]
+                        );
+                        
                         if (argv [i][3] == 'O') {	
                            /* Add port modifiers from file */
-                           rval = wordfile(portLp, 
-                                           MAXSET - (portLp - photonPortList),
-                                           getpath(argv [++i],
-                                           getrlibpath(), R_OK));
+                           rval = wordfile(
+                              portLp, MAXSET - (portLp - photonPortList),
+                              getpath(argv [++i], getrlibpath(), R_OK)
+                           );
                            if (rval < 0) {
-                               sprintf(errmsg, 
-                                       "cannot open photon port file %s", 
-                                       argv [i]);
+                               sprintf(
+                                  errmsg, "cannot open photon port file %s", 
+                                  argv [i]
+                               );
                                error(SYSTEM, errmsg);
                            }
-                           portLp += rval;
+                           /* HACK: append port orientation flags to every 
+                            * modifier; note this requires reallocation */
+                           for (; rval--; portLp++) {
+                              j = strlen(*portLp);
+                              if (!(*portLp = realloc(*portLp, j + 2))) {
+                                  sprintf(
+                                     errmsg, 
+                                     "cannot allocate photon port modifiers"
+                                     " from file %s", argv [i]
+                                  );
+                                  error(SYSTEM, errmsg);
+                              }
+                              strcat(*portLp, portFlags);
+                           }
                         } 
                         else {
-                           /* Add port modifier from next arg, mark end with
-                            * NULL */
-                           *portLp++ = savqstr(argv [++i]);
+                           /* Append port flags to port modifier, add to 
+                            * port list and mark of end list with NULL */
+                           strcpy(sbuf, argv [++i]);
+                           strcat(sbuf, portFlags);
+                           *portLp++ = savqstr(sbuf);
                            *portLp = NULL;
                         }
                         break;

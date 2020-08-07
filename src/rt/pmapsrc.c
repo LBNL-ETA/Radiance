@@ -1,16 +1,21 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.17 2018/11/08 00:54:07 greg Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.18 2020/08/07 01:21:13 rschregle Exp $";
 #endif
 /* 
-   ==================================================================
+   ======================================================================
    Photon map support routines for emission from light sources
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation (DFG) 
+       under the FARESYS project.
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
- 
+       supported by the Swiss National Science Foundation (SNSF #147053).
+   (c) Tokyo University of Science,
+       supported by the JSPS KAKENHI Grant Number JP19KK0115.
+   ======================================================================
+
+   $Id: pmapsrc.c,v 2.18 2020/08/07 01:21:13 rschregle Exp $"
 */
 
 
@@ -21,6 +26,8 @@ static const char RCSid[] = "$Id: pmapsrc.c,v 2.17 2018/11/08 00:54:07 greg Exp 
 #include "otypes.h"
 #include "otspecial.h"
 
+
+
 /* List of photon port modifier names */
 char *photonPortList [MAXSET + 1] = {NULL};
 /* Photon port objects (with modifiers in photonPortMods) */
@@ -30,11 +37,138 @@ unsigned numPhotonPorts = 0;
 void (*photonPartition [NUMOTYPE]) (EmissionMap*);
 void (*photonOrigin [NUMOTYPE]) (EmissionMap*);
 
+
+
+/* PHOTON PORT SUPPORT ROUTINES ------------------------------------------ */
+
+
+
+/* Get/set photon port orientation flags from/in source flags.
+ * HACK: the port orientation flags are embedded in the source flags and
+ * shifted so they won't clobber the latter, since these are interpreted 
+ * by the *PhotonPartition() and *PhotonOrigin() routines! */
+#define PMAP_SETPORTFLAGS(portdir) ((int)(portdir) << 14)
+#define PMAP_GETPORTFLAGS(sflags)  ((sflags) >> 14)
+
+/* Set number of source partitions.
+ * HACK: this is doubled if the source acts as a bidirectionally
+ * emitting photon port, resulting in alternating front/backside partitions,
+ * although essentially each partition is just used twice with opposing
+ * normals. */
+#define PMAP_SETNUMPARTITIONS(emap)   ( \
+   (emap) -> numPartitions <<= ( \
+      (emap) -> port && \
+      PMAP_GETPORTFLAGS((emap) -> port -> sflags) == PMAP_PORTBI \
+   ) \
+)
+
+/* Get current source partition and numer of partitions
+ * HACK: halve the number partitions if the source acts as a bidrectionally
+ * emitting photon port, since each partition is used twice with opposing 
+ * normals. */
+#define PMAP_GETNUMPARTITIONS(emap) (\
+   (emap) -> numPartitions >> ( \
+      (emap) -> port && \
+      PMAP_GETPORTFLAGS((emap) -> port -> sflags) == PMAP_PORTBI \
+   ) \
+)
+#define PMAP_GETPARTITION(emap)  ( \
+   (emap) -> partitionCnt >> ( \
+      (emap) -> port && \
+      PMAP_GETPORTFLAGS((emap) -> port -> sflags) == PMAP_PORTBI \
+   ) \
+)
+
+
+
+void getPhotonPorts (char **portList)
+/* Find geometry declared as photon ports from modifiers in portList */
+{
+   OBJECT   i;
+   OBJREC   *obj, *mat;
+   int      mLen;
+   char     **lp;   
+   
+   /* Init photon port objects */
+   photonPorts = NULL;
+   
+   if (!portList [0])
+      return;
+   
+   for (i = numPhotonPorts = 0; i < nobjects; i++) {
+      obj = objptr(i);
+      mat = findmaterial(obj);
+      
+      /* Check if object is a surface and NOT a light source (duh) and 
+       * resolve its material (if any) via any aliases, then check for 
+       * inclusion in modifier list; note use of strncmp() to ignore port 
+       * flags */
+      if (issurface(obj -> otype) && mat && !islight(mat -> otype)) {
+         mLen = strlen(mat -> oname);
+         for (lp = portList; *lp && strncmp(mat -> oname, *lp, mLen); lp++);
+         
+         if (*lp) {
+            /* Add photon port */
+            photonPorts = (SRCREC*)realloc(
+               photonPorts, (numPhotonPorts + 1) * sizeof(SRCREC)
+            );
+            if (!photonPorts) 
+               error(USER, "can't allocate photon ports");
+            
+            photonPorts [numPhotonPorts].so = obj;
+            /* Extract port orientation flags and embed in source flags.
+             * Note setsource() combines (i.e. ORs) these with the actual 
+             * source flags below. */
+            photonPorts [numPhotonPorts].sflags = 
+               PMAP_SETPORTFLAGS((*lp) [mLen]);
+         
+            if (!sfun [obj -> otype].of || !sfun[obj -> otype].of -> setsrc)
+               objerror(obj, USER, "illegal photon port");
+         
+            setsource(photonPorts + numPhotonPorts, obj);
+            numPhotonPorts++;
+         }
+      }
+   }
+   if (!numPhotonPorts)
+      error(USER, "no valid photon ports found");
+}
+
+
+
+static void setPhotonPortNormal (EmissionMap* emap)
+/* Set normal for current photon port partition based on its orientation */
+{
+   /* Extract photon port orientation flags, set surface normal as follows:
+      -- Port oriented forwards --> flip surface normal to point
+         outwards, since normal points inwards per mkillum convention) 
+      -- Port oriented backwards --> surface normal is NOT flipped,
+         since it already points inwards.
+      -- Port is bidirectionally/bilaterally oriented --> flip normal based
+         on the parity of the current partition emap -> partitionCnt.
+         In this case, photon emission alternates between port front/back
+         faces for consecutive partitions.
+   */
+   int i, portFlags = PMAP_GETPORTFLAGS(emap -> port -> sflags);
+
+   if (
+      portFlags == PMAP_PORTFWD || 
+      portFlags == PMAP_PORTBI && !(emap -> partitionCnt & 1)
+   )
+      for (i = 0; i < 3; i++)     
+         emap -> ws [i] = -emap -> ws [i];
+}
+
+
+
+/* SOURCE / PHOTON PORT PARTITIONING ROUTINES----------------------------- */
    
 
-static int flatPhotonPartition2 (EmissionMap* emap, unsigned long mp, 
-                                 FVECT cent, FVECT u, FVECT v, 
-                                 double du2, double dv2)
+
+static int flatPhotonPartition2 (
+   EmissionMap* emap, unsigned long mp, FVECT cent, FVECT u, FVECT v, 
+   double du2, double dv2
+)
 /* Recursive part of flatPhotonPartition(..) */
 {
    FVECT newct, newax;
@@ -43,14 +177,17 @@ static int flatPhotonPartition2 (EmissionMap* emap, unsigned long mp,
    if (mp > emap -> maxPartitions) {
       /* Enlarge partition array */
       emap -> maxPartitions <<= 1;
-      emap -> partitions = (unsigned char*)realloc(emap -> partitions, 
-                                           emap -> maxPartitions >> 1);
+      emap -> partitions = (unsigned char*)realloc(
+         emap -> partitions, emap -> maxPartitions >> 1
+      );
 
       if (!emap -> partitions) 
          error(USER, "can't allocate source partitions");
 
-      memset(emap -> partitions + (emap -> maxPartitions >> 2), 0,
-             emap -> maxPartitions >> 2);
+      memset(
+         emap -> partitions + (emap -> maxPartitions >> 2), 0,
+         emap -> maxPartitions >> 2
+      );
    }
    
    if (du2 * dv2 <= 1) {                /* hit limit? */
@@ -111,10 +248,10 @@ static void flatPhotonPartition (EmissionMap* emap)
    vp = emap -> src -> ss [SV];
    dv2 = DOT(vp, vp) / emap -> partArea;
    emap -> partitionCnt = 0;
-   emap -> numPartitions = flatPhotonPartition2(emap, 1, emap -> src -> sloc, 
-                                                emap -> src -> ss [SU], 
-                                                emap -> src -> ss [SV], 
-                                                du2, dv2);
+   emap -> numPartitions = flatPhotonPartition2(
+      emap, 1, emap -> src -> sloc, 
+      emap -> src -> ss [SU], emap -> src -> ss [SV], du2, dv2
+   );
    emap -> partitionCnt = 0;
    emap -> partArea = emap -> src -> ss2 / emap -> numPartitions;
 }
@@ -126,15 +263,16 @@ static void sourcePhotonPartition (EmissionMap* emap)
    distant source */
 {   
    if (emap -> port) {
-      /* Partition photon port */
+      /* Relay partitioning to photon port */
       SRCREC *src = emap -> src;
       emap -> src = emap -> port;
       photonPartition [emap -> src -> so -> otype] (emap);
+      PMAP_SETNUMPARTITIONS(emap);
       emap -> src = src;
    }
    
    else {
-      /* No photon ports defined, so partition scene cube faces */
+      /* No photon ports defined; partition scene cube faces (SUBOPTIMAL) */
       memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
       setpart(emap -> partitions, 0, S0);
       emap -> partitionCnt = 0;
@@ -156,8 +294,8 @@ static void spherePhotonPartition (EmissionMap* emap)
    memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
    setpart(emap -> partitions, 0, S0);
    emap -> partArea = 4 * PI * sqr(emap -> src -> srad);
-   emap -> numPartitions = emap -> partArea / 
-                           sqr(srcsizerat * thescene.cusize);
+   emap -> numPartitions = 
+      emap -> partArea / sqr(srcsizerat * thescene.cusize);
 
    numTheta = max(sqrt(2 * emap -> numPartitions / PI) + 0.5, 1);
    numPhi = 0.5 * PI * numTheta + 0.5;
@@ -169,8 +307,9 @@ static void spherePhotonPartition (EmissionMap* emap)
 
 
 
-static int cylPhotonPartition2 (EmissionMap* emap, unsigned long mp, 
-                                FVECT cent, FVECT axis, double d2)
+static int cylPhotonPartition2 (
+   EmissionMap* emap, unsigned long mp, FVECT cent, FVECT axis, double d2
+)
 /* Recursive part of cyPhotonPartition(..) */
 {
    FVECT newct, newax;
@@ -179,13 +318,16 @@ static int cylPhotonPartition2 (EmissionMap* emap, unsigned long mp,
    if (mp > emap -> maxPartitions) {
       /* Enlarge partition array */
       emap -> maxPartitions <<= 1;
-      emap -> partitions = (unsigned char*)realloc(emap -> partitions,
-                                                   emap -> maxPartitions >> 1);
+      emap -> partitions = (unsigned char*)realloc(
+         emap -> partitions, emap -> maxPartitions >> 1
+      );
       if (!emap -> partitions) 
          error(USER, "can't allocate source partitions");
          
-      memset(emap -> partitions + (emap -> maxPartitions >> 2), 0,
-            emap -> maxPartitions >> 2);
+      memset(
+         emap -> partitions + (emap -> maxPartitions >> 2), 0,
+         emap -> maxPartitions >> 2
+      );
    }
    
    if (d2 <= 1) {
@@ -232,11 +374,16 @@ static void cylPhotonPartition (EmissionMap* emap)
    d2 *= d2 * DOT(emap -> src -> ss [SU], emap -> src -> ss [SU]);
 
    emap -> partitionCnt = 0;
-   emap -> numPartitions = cylPhotonPartition2(emap, 1, emap -> src -> sloc, 
-                                               emap -> src -> ss [SU], d2);
+   emap -> numPartitions = cylPhotonPartition2(
+      emap, 1, emap -> src -> sloc, emap -> src -> ss [SU], d2
+   );
    emap -> partitionCnt = 0;
    emap -> partArea = PI * emap -> src -> ss2 / emap -> numPartitions;
 }
+
+
+
+/* PHOTON ORIGIN ROUTINES ------------------------------------------------ */
 
 
 
@@ -251,7 +398,7 @@ static void flatPhotonOrigin (EmissionMap* emap)
    cent [0] = cent [1] = cent [2] = 0;
    size [0] = size [1] = size [2] = emap -> maxPartitions;
    parr [0] = 0; 
-   parr [1] = emap -> partitionCnt;
+   parr [1] = PMAP_GETPARTITION(emap);
    
    if (!skipparts(cent, size, parr, emap -> partitions))
       error(CONSISTENCY, "bad source partition in flatPhotonOrigin");
@@ -267,22 +414,18 @@ static void flatPhotonOrigin (EmissionMap* emap)
       
    /* Get origin */
    for (i = 0; i < 3; i++) 
-      emap -> photonOrg [i] = emap -> src -> sloc [i] + 
-                              vpos [SU] * emap -> src -> ss [SU][i] + 
-                              vpos [SV] * emap -> src -> ss [SV][i] + 
-                              vpos [SW] * emap -> src -> ss [SW][i];
+      emap -> photonOrg [i] = 
+         emap -> src -> sloc [i] + 
+         vpos [SU] * emap -> src -> ss [SU][i] +
+         vpos [SV] * emap -> src -> ss [SV][i] + 
+         vpos [SW] * emap -> src -> ss [SW][i];
                               
    /* Get surface axes */
    VCOPY(emap -> us, emap -> src -> ss [SU]);
    normalize(emap -> us);
    VCOPY(emap -> ws, emap -> src -> ss [SW]);
-
-   if (emap -> port) 
-      /* Acts as a photon port; reverse normal as it points INSIDE per
-       * mkillum convention */
-      for (i = 0; i < 3; i++)
-         emap -> ws [i] = -emap -> ws [i];
-         
+   /* Flip normal emap -> ws if port and required by its orientation */
+   setPhotonPortNormal(emap);
    fcross(emap -> vs, emap -> ws, emap -> us);
    
    /* Get hemisphere axes & aperture */
@@ -320,23 +463,19 @@ static void spherePhotonOrigin (EmissionMap* emap)
    RREAL cosTheta, sinTheta, phi;
 
    /* Get current partition */
-   numTheta = max(sqrt(2 * emap -> numPartitions / PI) + 0.5, 1);
+   numTheta = max(sqrt(2 * PMAP_GETNUMPARTITIONS(emap) / PI) + 0.5, 1);
    numPhi = 0.5 * PI * numTheta + 0.5;
 
-   t = emap -> partitionCnt / numPhi;
-   p = emap -> partitionCnt - t * numPhi;
+   t = PMAP_GETPARTITION(emap) / numPhi;
+   p = PMAP_GETPARTITION(emap) - t * numPhi;
 
    emap -> ws [2] = cosTheta = 1 - 2 * (t + pmapRandom(partState)) / numTheta;
    sinTheta = sqrt(1 - sqr(cosTheta));
    phi = 2 * PI * (p + pmapRandom(partState)) / numPhi;
    emap -> ws [0] = cos(phi) * sinTheta;
    emap -> ws [1] = sin(phi) * sinTheta;
-
-   if (emap -> port) 
-      /* Acts as a photon port; reverse normal as it points INSIDE per
-       * mkillum convention */
-      for (i = 0; i < 3; i++)
-         emap -> ws [i] = -emap -> ws [i];   
+   /* Flip normal emap -> ws if port and required by its orientation */
+   setPhotonPortNormal(emap);
 
    /* Get surface axes us & vs perpendicular to ws */
    do {
@@ -387,7 +526,7 @@ static void sourcePhotonOrigin (EmissionMap* emap)
    RREAL du, dv;                            
       
    if (emap -> port) {
-      /* Get origin on photon port */
+      /* Relay to photon port; get origin on its surface */
       SRCREC *src = emap -> src;
       emap -> src = emap -> port;
       photonOrigin [emap -> src -> so -> otype] (emap);
@@ -395,12 +534,11 @@ static void sourcePhotonOrigin (EmissionMap* emap)
    }
    
    else {
-      /* No ports defined, so get origin on scene cube face and SUFFA! */
+      /* No ports defined, so get origin on scene cube face (SUBOPTIMAL) */
       /* Get current face from partition number */
       partsPerDim = 1 / srcsizerat;
       partsPerFace = sqr(partsPerDim);
       face = emap -> partitionCnt / partsPerFace;
-
       if (!(emap -> partitionCnt % partsPerFace)) {
          /* Skipped to a new face; get its normal */
          emap -> ws [0] = emap -> ws [1] = emap -> ws [2] = 0;
@@ -421,10 +559,10 @@ static void sourcePhotonOrigin (EmissionMap* emap)
 
       /* Jittered destination point within partition */
       for (i = 0; i < 3; i++)
-         emap -> photonOrg [i] = thescene.cuorg [i] + 
-                                 thescene.cusize * (0.5 + du * emap -> us [i] +
-                                                    dv * emap -> vs [i] +
-                                                    0.5 * emap -> ws [i]);
+         emap -> photonOrg [i] = thescene.cuorg [i] + thescene.cusize * (
+            0.5 + du * emap -> us [i] + dv * emap -> vs [i] +
+            0.5 * emap -> ws [i]
+         );
    }
    
    /* Get hemisphere axes & aperture */
@@ -457,7 +595,7 @@ static void cylPhotonOrigin (EmissionMap* emap)
    cent [0] = cent [1] = cent [2] = 0;
    size [0] = size [1] = size [2] = emap -> maxPartitions;
    parr [0] = 0; 
-   parr [1] = emap -> partitionCnt;
+   parr [1] = PMAP_GETPARTITION(emap);
 
    if (!skipparts(cent, size, parr, emap -> partitions))
       error(CONSISTENCY, "bad source partition in cylPhotonOrigin");
@@ -476,15 +614,13 @@ static void cylPhotonOrigin (EmissionMap* emap)
 
    /* Get surface axes */
    for (i = 0; i < 3; i++) 
-      emap -> photonOrg [i] = emap -> ws [i] = 
-                              (v [SV] * emap -> src -> ss [SV][i] + 
-                               v [SW] * emap -> src -> ss [SW][i]) / 0.8559;
+      emap -> photonOrg [i] = emap -> ws [i] = (
+         v [SV] * emap -> src -> ss [SV][i] + 
+         v [SW] * emap -> src -> ss [SW][i]
+      ) / 0.8559;
 
-   if (emap -> port) 
-      /* Acts as a photon port; reverse normal as it points INSIDE per
-       * mkillum convention */
-      for (i = 0; i < 3; i++)
-         emap -> ws [i] = -emap -> ws [i];
+   /* Flip normal emap -> ws if port and required by its orientation */
+   setPhotonPortNormal(emap);
 
    normalize(emap -> ws);
    VCOPY(emap -> us, emap -> src -> ss [SU]);
@@ -493,8 +629,8 @@ static void cylPhotonOrigin (EmissionMap* emap)
 
    /* Get origin */
    for (i = 0; i < 3; i++) 
-      emap -> photonOrg [i] += v [SU] * emap -> src -> ss [SU][i] + 
-                               emap -> src -> sloc [i];
+      emap -> photonOrg [i] += 
+         v [SU] * emap -> src -> ss [SU][i] + emap -> src -> sloc [i];
 
    /* Get hemisphere axes & aperture */
    if (emap -> src -> sflags & SSPOT) {
@@ -521,52 +657,7 @@ static void cylPhotonOrigin (EmissionMap* emap)
 
 
 
-void getPhotonPorts (char **portList)
-/* Find geometry declared as photon ports from modifiers in portList */
-{
-   OBJECT i;
-   OBJREC *obj, *mat;
-   char **lp;   
-   
-   /* Init photon port objects */
-   photonPorts = NULL;
-   
-   if (!portList [0])
-      return;
-   
-   for (i = 0; i < nobjects; i++) {
-      obj = objptr(i);
-      mat = findmaterial(obj);
-      
-      /* Check if object is a surface and NOT a light source (duh) and
-       * resolve its material via any aliases, then check for inclusion in
-       * modifier list */
-      if (issurface(obj -> otype) && mat && !islight(mat -> otype)) {
-         for (lp = portList; *lp && strcmp(mat -> oname, *lp); lp++);
-         
-         if (*lp) {
-            /* Add photon port */
-            photonPorts = (SRCREC*)realloc(photonPorts, 
-                                           (numPhotonPorts + 1) * 
-                                           sizeof(SRCREC));
-            if (!photonPorts) 
-               error(USER, "can't allocate photon ports");
-            
-            photonPorts [numPhotonPorts].so = obj;
-            photonPorts [numPhotonPorts].sflags = 0;
-         
-            if (!sfun [obj -> otype].of || !sfun[obj -> otype].of -> setsrc)
-               objerror(obj, USER, "illegal photon port");
-         
-            setsource(photonPorts + numPhotonPorts, obj);
-            numPhotonPorts++;
-         }
-      }
-   }
-   
-   if (!numPhotonPorts)
-      error(USER, "no valid photon ports found");
-}
+/* PHOTON EMISSION ROUTINES ---------------------------------------------- */
 
 
 
@@ -600,7 +691,7 @@ void initPhotonEmissionFuncs ()
 
 
 void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
-/* Initialize photon emission from partitioned light source emap -> src;
+/* Initialise photon emission from partitioned light source emap -> src;
  * this involves integrating the flux emitted from the current photon
  * origin emap -> photonOrg and setting up a PDF to sample the emission
  * distribution with numPdfSamples samples */
@@ -609,63 +700,47 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
    double phi, cosTheta, sinTheta, du, dv, dOmega, thetaScale;
    EmissionSample* sample;
    const OBJREC* mod =  findmaterial(emap -> src -> so);
-   static RAY r;
-#if 0   
-   static double lastCosNorm = FHUGE;
-   static SRCREC *lastSrc = NULL, *lastPort = NULL;
-#endif   
-
-   setcolor(emap -> partFlux, 0, 0, 0);
+   static RAY r;   
 
    photonOrigin [emap -> src -> so -> otype] (emap);
-   cosTheta = DOT(emap -> ws, emap -> wh);
-
-#if 0   
-   if (emap -> src == lastSrc && emap -> port == lastPort &&        
-       (emap -> src -> sflags & SDISTANT || mod -> omod == OVOID) &&
-       cosTheta == lastCosNorm)
-      /* Same source, port, and aperture-normal angle, and source is 
-         either distant (and thus translationally invariant) or has
-         no modifier --> flux unchanged */
-      /* BUG: this optimisation ignores partial occlusion of ports and
-         can lead to erroneous "zero emission" bailouts.
-         It can also lead to bias with modifiers exhibiting high variance!
-         Disabled for now -- RS 12/13 */         
-      return;
-      
-   lastSrc = emap -> src;
-   lastPort = emap -> port;
-   lastCosNorm = cosTheta;      
-#endif
-         
-   /* Need to recompute flux & PDF */
+   setcolor(emap -> partFlux, 0, 0, 0);   
    emap -> cdf = 0;
    emap -> numSamples = 0;
+   cosTheta = DOT(emap -> ws, emap -> wh);         
    
-   if (cosTheta <= 0 && 
-       sqrt(1 - sqr(cosTheta)) <= emap -> cosThetaMax + FTINY)
-      /* Aperture below surface; no emission from current origin */
+   if (cosTheta <= 0 && sqrt(1-sqr(cosTheta)) <= emap -> cosThetaMax + FTINY)
+      /* Aperture completely below surface; no emission from current origin */
       return;
    
-   if (mod -> omod == OVOID && !emap -> port &&
-       (cosTheta >= 1 - FTINY || (emap -> src -> sflags & SDISTANT && 
-        acos(cosTheta) + acos(emap -> cosThetaMax) <= 0.5 * PI))) {
+   if (
+      mod -> omod == OVOID && !emap -> port && (
+         cosTheta >= 1 - FTINY || (
+            emap -> src -> sflags & SDISTANT && 
+            acos(cosTheta) + acos(emap -> cosThetaMax) <= 0.5 * PI
+         )
+      )
+   ) {
       /* Source is unmodified and has no port (which requires testing for 
          occlusion), and is either local with normal aligned aperture or 
-         distant with aperture above surface; analytical flux & PDF */
-      setcolor(emap -> partFlux, mod -> oargs.farg [0], 
-               mod -> oargs.farg [1], mod -> oargs.farg [2]);
+         distant with aperture above surface
+         --> get flux & PDF via analytical solution */
+      setcolor(
+         emap -> partFlux, mod -> oargs.farg [0], mod -> oargs.farg [1], 
+         mod -> oargs.farg [2]
+      );
 
-      /* Multiply radiance by Omega * dA to get flux */
-      scalecolor(emap -> partFlux, 
-                 PI * cosTheta * (1 - sqr(max(emap -> cosThetaMax, 0))) *
-                 emap -> partArea);
+      /* Multiply radiance by projected Omega * dA to get flux */
+      scalecolor(
+         emap -> partFlux, 
+         PI * cosTheta * (1 - sqr(max(emap -> cosThetaMax, 0))) * 
+            emap -> partArea
+      );
    }
    
    else {
       /* Source is either modified, has a port, is local with off-normal 
-         aperture, or distant with aperture partly below surface; get flux
-         via numerical integration */
+         aperture, or distant with aperture partly below surface
+         --> get flux via numerical integration */
       thetaScale = (1 - emap -> cosThetaMax);
       
       /* Figga out numba of aperture samples for integration;
@@ -678,10 +753,10 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
       thetaScale /= emap -> numTheta;
       
       /* Allocate PDF, baby */
-      sample = emap -> samples = (EmissionSample*)
-                                 realloc(emap -> samples, 
-                                         sizeof(EmissionSample) * 
-                                         emap -> numTheta * emap -> numPhi);
+      sample = emap -> samples = (EmissionSample*)realloc(
+         emap -> samples, 
+         sizeof(EmissionSample) * emap -> numTheta * emap -> numPhi
+      );
       if (!emap -> samples) 
          error(USER, "can't allocate emission PDF");     
          
@@ -700,8 +775,10 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
             rayorigin(&r, PRIMARY, NULL, NULL);
             
             for (i = 0; i < 3; i++)
-               r.rdir [i] = du * emap -> uh [i] + dv * emap -> vh [i] +
-                            cosTheta * emap -> wh [i];            
+               r.rdir [i] = (
+                  du * emap -> uh [i] + dv * emap -> vh [i] +
+                  cosTheta * emap -> wh [i]
+               );            
                             
             /* Sample behind surface? */
             VCOPY(r.ron, emap -> ws);
@@ -720,8 +797,10 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
                continue; 
                
             raytexture(&r, mod -> omod);
-            setcolor(r.rcol, mod -> oargs.farg [0], mod -> oargs.farg [1], 
-                     mod -> oargs.farg [2]);
+            setcolor(
+               r.rcol, mod -> oargs.farg [0], mod -> oargs.farg [1], 
+               mod -> oargs.farg [2]
+            );
             multcolor(r.rcol, r.pcol);
             
             /* Multiply by cos(theta_surface) */
@@ -765,8 +844,10 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
    /* If we have a local glow source with a maximum radius, then
       restrict our photon to the specified distance, otherwise we set
       the limit imposed by photonMaxDist (or no limit if 0) */
-   if (mod -> otype == MAT_GLOW && !(emap -> src -> sflags & SDISTANT)
-		&& mod -> oargs.farg[3] > FTINY)
+   if (
+      mod -> otype == MAT_GLOW && 
+      !(emap -> src -> sflags & SDISTANT) && mod -> oargs.farg[3] > FTINY
+   )
       ray -> rmax = mod -> oargs.farg[3];
    else
       ray -> rmax = photonMaxDist;
@@ -774,22 +855,25 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
    
    if (!emap -> numSamples) {
       /* Source is unmodified and has no port, and either local with 
-         normal aligned aperture, or distant with aperture above surface; 
-         use cosine weighted distribution */
-      cosThetaSqr = 1 - pmapRandom(emitState) * 
-                        (1 - sqr(max(emap -> cosThetaMax, 0)));
+         normal aligned aperture, or distant with aperture above surface
+         --> use cosine weighted distribution */
+      cosThetaSqr = (1 - 
+         pmapRandom(emitState) * (1 - sqr(max(emap -> cosThetaMax, 0)))
+      );
       cosTheta = sqrt(cosThetaSqr);
       sinTheta = sqrt(1 - cosThetaSqr);
       phi = 2 * PI * pmapRandom(emitState);
-      setcolor(ray -> rcol, mod -> oargs.farg [0], mod -> oargs.farg [1], 
-               mod -> oargs.farg [2]);
+      setcolor(
+         ray -> rcol, mod -> oargs.farg [0], mod -> oargs.farg [1], 
+         mod -> oargs.farg [2]
+      );
    }
    
    else {
       /* Source is either modified, has a port, is local with off-normal 
-         aperture, or distant with aperture partly below surface; choose 
-         direction from constructed cumulative distribution function with
-         Monte Carlo inversion using binary search. */
+         aperture, or distant with aperture partly below surface
+         --> choose  direction from constructed cumulative distribution 
+         function with Monte Carlo inversion using binary search. */
       du = pmapRandom(emitState) * emap -> cdf;
       lo = 1;
       hi = emap -> numSamples;
@@ -805,8 +889,10 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
       }
       
       /* This is a uniform mapping, mon */
-      cosTheta = 1 - (sample -> theta + pmapRandom(emitState)) *
-                     (1 - emap -> cosThetaMax) / emap -> numTheta;
+      cosTheta = (1 - 
+         (sample -> theta + pmapRandom(emitState)) *
+         (1 - emap -> cosThetaMax) / emap -> numTheta
+      );
       sinTheta = sqrt(1 - sqr(cosTheta));
       phi = 2 * PI * (sample -> phi + pmapRandom(emitState)) / emap -> numPhi;
       copycolor(ray -> rcol, sample -> pdf);
@@ -840,6 +926,10 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
 
 
 
+/* SOURCE CONTRIBS FROM DIRECT / VOLUME PHOTONS -------------------------- */
+
+
+
 void multDirectPmap (RAY *r)
 /* Factor irradiance from direct photons into r -> rcol; interface to
  * direct() */
@@ -863,3 +953,4 @@ void inscatterVolumePmap (RAY *r, COLOR inscatter)
    /* Add ambient in-scattering via lookup callback */
    (volumePmap -> lookup)(volumePmap, r, inscatter);
 }
+
