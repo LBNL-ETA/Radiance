@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.12 2019/06/03 17:08:23 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2019/06/03 17:08:23 $ $Revision: 1.12 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.13 2020/08/07 01:22:59 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2020/08/07 01:22:59 $ $Revision: 1.13 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -122,21 +122,37 @@ if some photon maps are still empty. This option is rarely needed as
 an aborted prepass may indicate an anomaly in the geometry or an
 incompatibility with the specified photon map types (see \fBNOTES\fR below).
 
-.IP "\fB\-apo \fImod\fR"
+.IP "\fB\-apo\fR[\fB+\fR|\fB-\fR|\fB0\fR] \fImod\fR"
 Specifies a modifier \fImod\fR to act as a \fIphoton port\fR. All
 objects using this modifier will emit photons directly in lieu of any
 light sources defined with the \fIsource\fR material. This greatly
 accelerates photon distribution in scenes where photons have to enter a
 space which separates them from the emitting light source via an
-opening, or port. 
+aperture (e.g. fenestration, skylight) acting as a port. 
 .IP
-A typical application is daylight simulation, where a fenestration acts as
-port to admit photons into an interior after emission from an external light
-source.  Multiple instances of this option may be specified.
+In a typical daylight simulation scenario, a fenestration acts as a port to
+admit photons into an interior after emission from sky and solar sources. 
+Multiple instances of this option may be specified.
 .IP
-Note that port objects must be defined with their surface normals
-pointing \fIinside\fR as per \fImkillum\fR convention.
-
+By default, ports are oriented to emit in the halfspace defined
+by their associated surface normal. This can be overridden by
+specifying a trivalent suffix as follows:
+.RS
+.IP \fB+\fR: 
+Forward emission; this is equivalent to the abovementioned default behaviour.
+.IP \fB-\fR: 
+Backward emission; the port is reversed and photons are emitted into the 
+halfspace facing away from the surface normal.
+.IP \fB0\fR: 
+Bidirectional emission; photons are emitted from both sides of the port.
+.RE
+.IP
+Situations that call for a reversed photon port include, for
+example, using fenestrations as ports that were (for whatever
+reason) defined with outward facing normals, or using a \fBmist\fR 
+primitive as a port, since this requires outward facing normals in order to 
+register the photons as having entered the volume.
+   
 .IP "\fB\-apO \fImodfile\fR"
 Read photon port modifiers from the file \fImodfile\fR as a more convenient
 alternative to multiple instances of \fB\-apo\fR.
@@ -340,14 +356,15 @@ mkpmap \-app bonzo-precomp.gpm 80k 40 \-apP 0.25 bonzo.oct
 .PP
 Generate 1 million global photons by emitting them from external light 
 sources of type \fIsource\fR into a reference room via a fenestration 
-with modifier \fIglazingMat\fR:
+with modifier \fIglazingMat\fR acting as photon port, with inward-facing 
+normal:
 .IP
 mkpmap \-apg refRoom.gpm 1m \-apo glazingMat refRoom.oct
 .PP
-Generate a contribution photon map containing 200000 photons suitable for 
-obtaining light source contributions with \fIrcontrib(1)\fR:
+Generate a contribution photon map containing 10 million photons to bin 
+light source contributions with \fIrcontrib(1)\fR:
 .IP
-mkpmap \-apC bonzo-contrib.gpm 200k bonzo.oct
+mkpmap \-apC bonzo-contrib.gpm 10m bonzo.oct
 
 .SH BUGS
 The focus of a spotlight source, as defined by the length of its direction
@@ -361,15 +378,39 @@ Light sources simply absorb incoming photons.
 Roland Schregle (roland.schregle@{hslu.ch,gmail.com})
 
 .SH COPYRIGHT
-(c) Fraunhofer Institute for Solar Energy Systems, Lucerne University of 
-Applied Sciences and Arts.
+(c) Fraunhofer Institute for Solar Energy Systems,
+.br
+(c) Lucerne University of Applied Sciences and Arts,
+.br
+(c) Tokyo University of Science.
 
-.SH ACKNOWLEDGEMENT
-Development of the RADIANCE photon mapping extension was sponsored by the 
-German Research Foundation (DFG) and the Swiss National Science Foundation 
-(SNF). 
+.SH ACKNOWLEDGEMENTS
+Development of the RADIANCE photon mapping extension was supported by:
+
+.RS
+\fIFraunhofer Institute for Solar Energy Systems\fR funded by
+the German Research Foundation (\fIDFG LU204/10-2\fR, "Fassadenintegrierte 
+Regelsysteme (FARESYS)"), 
+
+\fILucerne University of Applied Sciences and Arts\fR funded by
+the Swiss National Science Foundation (\fISNSF 147053\fR, "Daylight redirecting components"),
+
+\fITokyo University of Science\fR funded by the JSPS Grants-in-Aid for Scientific 
+Research Programme (\fIKAKENHI JP19KK0115\fR, "Three-dimensional light flow"). 
+.RE
+
+Many thanks also to the many individuals who tested the code and provided
+valuable feedback. Special greetz to Don Gregorio, PAB and Capt.\~B!
 
 .SH "SEE ALSO"
-rpict(1), rtrace(1), rvu(1), rcontrib(1), \fIThe RADIANCE Photon Map
-Manual\fR, \fIDevelopment and Integration of the RADIANCE Photon Map
-Extension: Technical Report\fR
+rpict(1), rtrace(1), rvu(1), rcontrib(1), 
+.br
+\fIThe RADIANCE Photon Map Manual\fR,
+.br
+\fIDevelopment and Integration of the RADIANCE Photon Map Extension: 
+Technical Report\fR,
+.br
+\fIThe RADIANCE Out-of-Core Photon Map: Technical Report\fR,
+.br
+\fIBonzo Daylighting Tool a.k.a. EvilDRC [TM]\fR
+
