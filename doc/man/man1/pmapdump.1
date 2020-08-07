@@ -1,5 +1,5 @@
-.\" RCSid "$Id: pmapdump.1,v 1.8 2019/08/14 18:03:23 rschregle Exp $"
-.TH PMAPDUMP 1 "$Date: 2019/08/14 18:03:23 $ $Revision: 1.8 $" RADIANCE
+.\" RCSid "$Id: pmapdump.1,v 1.9 2020/08/07 01:26:20 rschregle Exp $"
+.TH PMAPDUMP 1 "$Date: 2020/08/07 01:26:20 $ $Revision: 1.9 $" RADIANCE
 
 .SH NAME
 pmapdump - generate RADIANCE scene description or point list representing
@@ -68,7 +68,7 @@ scientific notation if necessary to accommodate their high dynamic range.
 As \fIpmapdump\fR groups its options per photon map, this option must be
 specified per photon map for consistent output. This prevents erroneously
 dumping RADIANCE scene descriptions along with point lists, which will
-fail to load in the 3D point cloud viewer.
+fail to load in the 3D point cloud processor/viewer.
 
 .IP "\fB-c\fR \fIrcol\fR \fIgcol\fR \fIbcol\fR"
 Specifies a custom sphere/point colour for the next photon map. The colour
@@ -133,7 +133,7 @@ number of spheres in this example):
 pmapdump zombo.pm | objview
 .PP
 Instead of a RADIANCE scene, dump photons as a (really long) point list to
-an ASCII file for import into a 3D point cloud viewer:
+an ASCII file for import into a 3D point cloud processor/viewer:
 .IP
 pmapdump -a -f -n 1m lotsa.pm > lotsa_pointz.txt
 
@@ -141,17 +141,42 @@ pmapdump -a -f -n 1m lotsa.pm > lotsa_pointz.txt
 Roland Schregle (roland.schregle@{hslu.ch,gmail.com})
 
 .SH COPYRIGHT
-(c) Fraunhofer Institute for Solar Energy Systems, Lucerne University of 
-Applied Sciences and Arts.
+(c) Fraunhofer Institute for Solar Energy Systems,
+.br
+(c) Lucerne University of Applied Sciences and Arts,
+.br
+(c) Tokyo University of Science.
 
-.SH ACKNOWLEDGEMENT
-Development of the RADIANCE photon mapping extension was sponsored by the 
-German Research Foundation (DFG) and the Swiss National Science Foundation 
-(SNF). Greetz to Capt. B!
+.SH ACKNOWLEDGEMENTS
+Development of the RADIANCE photon mapping extension was supported by:
+
+.RS
+\fIFraunhofer Institute for Solar Energy Systems\fR 
+funded by
+the German Research Foundation (\fIDFG LU204/10-2\fR, "Fassadenintegrierte 
+Regelsysteme (FARESYS)"), 
+
+\fILucerne University of Applied Sciences and Arts\fR 
+funded by
+the Swiss National Science Foundation (\fISNSF 147053\fR, "Daylight redirecting components"),
+
+\fITokyo University of Science\fR 
+funded by the JSPS Grants-in-Aid for Scientific 
+Research Programme (\fIKAKENHI JP19KK0115\fR, "Three-dimensional light flow"). 
+.RE
+
+Many thanks also to the many individuals who tested the code and provided
+valuable feedback. Special greetz to Don Gregorio, PAB and Capt.\~B!
 
 .SH "SEE ALSO"
 mkpmap(1), objview(1), oconv(1), rpict(1), rvu(1), 
+.br
 \fIThe RADIANCE Photon Map Manual\fR,
-\fIBonzo Daylighting Tool [TM]\fR
-
+.br
+\fIDevelopment and Integration of the RADIANCE Photon Map Extension: 
+Technical Report\fR,
+.br
+\fIThe RADIANCE Out-of-Core Photon Map: Technical Report\fR,
+.br
+\fIBonzo Daylighting Tool a.k.a. EvilDRC [TM]\fR
 
