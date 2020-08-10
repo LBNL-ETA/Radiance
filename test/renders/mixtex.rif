@@ -1,4 +1,4 @@
-# RCSid $Id: mixtex.rif,v 1.5 2018/12/07 23:07:37 greg Exp $
+# RCSid $Id: mixtex.rif,v 1.6 2020/08/10 20:48:12 greg Exp $
 #
 # A test of different mixtures and textures on disks
 #
@@ -31,7 +31,7 @@ VAR = Hi
 DET = Med
 PEN = True
 
-mkpmap = -apo m_blinds20c_f
+mkpmap = -apo glass_blue
 
 render = @render.opt -ss 16
 
