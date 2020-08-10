@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.18 2020/08/07 01:21:13 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.19 2020/08/10 19:51:20 rschregle Exp $";
 #endif
 /* 
    ======================================================================
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: pmapsrc.c,v 2.18 2020/08/07 01:21:13 rschregle
        supported by the JSPS KAKENHI Grant Number JP19KK0115.
    ======================================================================
 
-   $Id: pmapsrc.c,v 2.18 2020/08/07 01:21:13 rschregle Exp $"
+   $Id: pmapsrc.c,v 2.19 2020/08/10 19:51:20 rschregle Exp $"
 */
 
 
@@ -137,26 +137,32 @@ void getPhotonPorts (char **portList)
 
 
 static void setPhotonPortNormal (EmissionMap* emap)
-/* Set normal for current photon port partition based on its orientation */
+/* Set normal for current photon port partition (if defined) based on its
+ * orientation */
 {
-   /* Extract photon port orientation flags, set surface normal as follows:
-      -- Port oriented forwards --> flip surface normal to point
-         outwards, since normal points inwards per mkillum convention) 
-      -- Port oriented backwards --> surface normal is NOT flipped,
-         since it already points inwards.
-      -- Port is bidirectionally/bilaterally oriented --> flip normal based
-         on the parity of the current partition emap -> partitionCnt.
-         In this case, photon emission alternates between port front/back
-         faces for consecutive partitions.
-   */
-   int i, portFlags = PMAP_GETPORTFLAGS(emap -> port -> sflags);
 
-   if (
-      portFlags == PMAP_PORTFWD || 
-      portFlags == PMAP_PORTBI && !(emap -> partitionCnt & 1)
-   )
-      for (i = 0; i < 3; i++)     
-         emap -> ws [i] = -emap -> ws [i];
+   int i, portFlags;
+   
+   if (emap -> port) {
+      /* Extract photon port orientation flags, set surface normal as follows:
+         -- Port oriented forwards --> flip surface normal to point outwards, 
+            since normal points inwards per mkillum convention) 
+         -- Port oriented backwards --> surface normal is NOT flipped, since 
+            it already points inwards.
+         -- Port is bidirectionally/bilaterally oriented --> flip normal based
+            on the parity of the current partition emap -> partitionCnt. In 
+            this case, photon emission alternates between port front/back 
+            faces for consecutive partitions.
+      */   
+      portFlags = PMAP_GETPORTFLAGS(emap -> port -> sflags);
+
+      if (
+         portFlags == PMAP_PORTFWD || 
+         portFlags == PMAP_PORTBI && !(emap -> partitionCnt & 1)
+      )
+         for (i = 0; i < 3; i++)     
+            emap -> ws [i] = -emap -> ws [i];
+   }
 }
 
 
