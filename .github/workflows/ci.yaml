@@ -58,6 +58,7 @@ jobs:
     
     steps:
       - uses: actions/checkout@v2
+
       - name: install perl pp
         run: |
           unzip PAR.zip
@@ -89,9 +90,7 @@ jobs:
           pp --version
           ls c:\strawberry\perl\site\bin
 
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: '0'
+
       
       - name: override update version
         run: |
@@ -126,18 +125,12 @@ jobs:
 
       - name: Compile perl scripts
         run: |
-          cd build\bin\Release
-          ls
+          cd build\
+          ls -R
           echo "List perl bin============================="
           # use -d to reduce the size, but need to add perl530.dll to the same folder
-          pp -o falsecolor.exe falsecolor.pl -d
-          ls
-
-      - name: Upload artifact falsecolor.exe
-        uses: actions/upload-artifact@v1
-        with:
-          name: falsecolor
-          path: build\bin\Release\falsecolor.exe
+          # pp -o falsecolor.exe falsecolor.pl -d
+          # ls
 
       - name: set up QT path
         run: |
