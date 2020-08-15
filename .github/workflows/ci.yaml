@@ -62,33 +62,9 @@ jobs:
       - name: install perl pp
         run: |
           unzip PAR.zip
-         
           python merge.py
-
-
-          # cpan -f install pp
-          # cpan RSCHUPP/PAR-Packer-1.049.tar.gz
-          # perl -MCPAN -e shell
-          # force install PAR::Packer
-          # cpan -i App::cpanminus
-          # cpanm --force --verbose pp
-          cpan Getopt::ArgvFile
-          cpan Module::ScanDeps
-          # cpan Win32::Exe
-          # cpan PAR::Packer --force --verbose
-          # unzip PAR-Packer-1.050.zip
-          # cd PAR-Packer-1.050
-          # perl Makefile.pl
-          # gmake install
-
-        
-
-          # Copy-Item -Path .\site\bin\* -Destination "c:\strawberry\perl\site\bin" -Recurse
-          # Copy-Item -Path .\site\lib\* -Destination "c:\strawberry\perl\site\lib" -Recurse
-          # Copy-Item -Path .\vendor\lib\* -Destination "c:\strawberry\perl\vendor\lib" -Recurse
-
           pp --version
-          ls c:\strawberry\perl\site\bin
+          # ls c:\strawberry\perl\site\bin
 
 
       
@@ -123,15 +99,13 @@ jobs:
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
 
-      - name: Compile perl scripts
+      - name: list 
         run: |
-          cd build\
-          ls -R
-          echo "List perl bin============================="
-          # use -d to reduce the size, but need to add perl530.dll to the same folder
-          # pp -o falsecolor.exe falsecolor.pl -d
-          # ls
-
+          echo "List src\util============================="
+          ls src\util
+          echo "List src\px============================="
+          ls src\px
+         
       - name: set up QT path
         run: |
           setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
