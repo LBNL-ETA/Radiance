@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.12 2020/04/13 17:12:19 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.13 2020/08/15 03:28:56 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -14,9 +14,9 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 .B "\-d|\-s|\-n"
 ][
 .B "\-D sunfile"
-][
+[
 .B "\-M sunmods"
-][
+]][
 .B "\-r deg"
 ][
 .B "\-m N"
@@ -93,8 +93,18 @@ will include its contribution in the four nearest sky patches,
 distributing energy according to centroid proximity.
 .PP
 The
+.I \-u
+option ignores input times when the sun is below the horizon.
+This is a convenient way to average daylight hours only with the
+.I \-A
+option or to ensure that matrix entries correspond to solar positions
+produced with the
+.I \-D
+option, described below.
+.PP
+The
 .I \-n
-option may be used if no matrix output is desired.
+option may be used if no matrix output is desired at all.
 This may be used to merely check the input, or in combination with the
 .I \-D
 option, below.

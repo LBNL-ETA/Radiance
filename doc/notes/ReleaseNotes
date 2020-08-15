@@ -2378,3 +2378,6 @@ Improved peak extraction method, which was undervaluing transmission
 in many cases.
 
 New version of evalglare from Jan Wienold.
+
+Added -u option to gendaymtx to elide data columns (time steps) when
+the sun is not visible above the horizon.

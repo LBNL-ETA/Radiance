@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.36 2020/04/13 17:12:19 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.37 2020/08/15 03:28:56 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -134,7 +134,6 @@ extern void ComputeSky( float *parr );
 
 /* Radiuans into degrees */
 #define RadToDeg(rad)	((rad)*(180./PI))
-
 
 /* Perez sky model coefficients */
 
@@ -312,6 +311,7 @@ main(int argc, char *argv[])
 	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
 	int	leap_day = 0;		/* add leap day? */
+	int	sun_hours_only = 0;	/* only output sun hours? */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
 	FILE	*sunsfp = NULL;		/* output file for individual suns */
 	FILE	*modsfp = NULL;		/* modifier output file */
@@ -406,6 +406,9 @@ main(int argc, char *argv[])
 		case 's':			/* sky only (no direct) */
 			suncolor[0] = suncolor[1] = suncolor[2] = 0;
 			break;
+		case 'u':			/* solar hours only */
+			sun_hours_only = 1;
+			break;
 		case 'r':			/* rotate distribution */
 			if (argv[i][2] && argv[i][2] != 'z')
 				goto userr;
@@ -498,15 +501,7 @@ main(int argc, char *argv[])
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
 		double		sda, sta;
-
-		mtx_offset = 3*nskypatch*nstored;
-		nstored += !avgSky | !nstored;
-					/* make space for next row */
-		if (nstored > tstorage) {
-			tstorage += (tstorage>>1) + nstored + 7;
-			mtx_data = resize_dmatrix(mtx_data, tstorage, nskypatch);
-		}
-		ntsteps++;		/* keep count of time steps */
+		int		sun_in_sky;
 					/* compute solar position */
 		if ((mo == 2) & (da == 29)) {
 			julian_date = 60;
@@ -516,13 +511,26 @@ main(int argc, char *argv[])
 		sda = sdec(julian_date);
 		sta = stadj(julian_date);
 		altitude = salt(sda, hr+sta);
+		sun_in_sky = (altitude > -DegToRad(SUN_ANG_DEG/2.));
+		if (sun_hours_only && !sun_in_sky)
+			continue;	/* skipping nighttime points */
 		azimuth = sazi(sda, hr+sta) + PI - DegToRad(rotation);
+
+		mtx_offset = 3*nskypatch*nstored;
+		nstored += !avgSky | !nstored;
+					/* make space for next row */
+		if (nstored > tstorage) {
+			tstorage += (tstorage>>1) + nstored + 7;
+			mtx_data = resize_dmatrix(mtx_data, tstorage, nskypatch);
+		}
+		ntsteps++;		/* keep count of time steps */
 
 		if (dir+dif <= 1e-4) {	/* effectively nighttime? */
 			if (!avgSky | !mtx_offset)
 				memset(mtx_data+mtx_offset, 0,
 						sizeof(float)*3*nskypatch);
-			if (sunsfp)	/* output black sun */
+					/* output black sun? */
+			if (sunsfp && sun_in_sky)
 				OutputSun(solar_minute(julian_date,hr), 0,
 							sunsfp, modsfp);
 			continue;
@@ -539,8 +547,8 @@ main(int argc, char *argv[])
 		}
 					/* compute sky patch values */
 		ComputeSky(mtx_data+mtx_offset);
-
-		if (sunsfp)		/* output sun if requested */
+					/* output sun if requested */
+		if (sunsfp && sun_in_sky)
 			OutputSun(solar_minute(julian_date,hr), 1,
 						sunsfp, modsfp);
 
@@ -642,7 +650,7 @@ alldone:
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-h][-A][-d|-s|-n][-D file][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-h][-A][-d|-s|-n][-u][-D file [-M modfile]][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:
@@ -814,10 +822,6 @@ OutputSun(int id, int goodsun, FILE *fp, FILE *mfp)
 	FVECT	sv;
 
 	srad = DegToRad(SUN_ANG_DEG/2.);
-
-	if (altitude < -srad)		/* well below horizon? */
-		return;
-
 	srad = goodsun ? dir_illum/(WHTEFFICACY * PI*srad*srad) : 0;
 	vector(sv, altitude, azimuth);
 	fprintf(fp, "\nvoid light solar%d\n0\n0\n", id);
