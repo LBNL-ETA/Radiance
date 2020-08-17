@@ -64,10 +64,7 @@ jobs:
           unzip PAR.zip
           python merge.py
           pp --version
-          # ls c:\strawberry\perl\site\bin
 
-
-      
       - name: override update version
         run: |
           git fetch
