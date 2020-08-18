@@ -169,15 +169,55 @@ file(COPY
 )
 
 if(WIN32)
-  install(PROGRAMS
-    bsdfview.pl
-    genBSDF.pl
-    genklemsamp.pl
-    genskyvec.pl
-    ltpict.pl
-    ltview.pl
-    objpict.pl
-    objview.pl
+   add_custom_target(bsdfview ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/bsdfview.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/bsdfview.exe -d
+  )
+  add_custom_target(genBSDF ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genBSDF.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genBSDF.exe -d
+  )
+  add_custom_target(genklemsamp ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.exe -d
+  )
+  add_custom_target(genskyvec ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genskyvec.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genskyvec.exe -d
+  )
+  add_custom_target(ltpict ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/ltpict.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/ltpict.exe -d
+  )
+  add_custom_target(ltview ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/ltview.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/ltview.exe -d
+  )
+  add_custom_target(objpict ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/objpict.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/objpict.exe -d
+  )
+  add_custom_target(objview ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/objview.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/objview.exe -d
+  )
+  add_custom_target(genambpos ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genambpos.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genambpos.exe -d
+  )
+  add_custom_target(genklemsamp ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.exe -d
+  )
+  add_custom_target(rcode2bmp ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/rcode2bmp.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/rcode2bmp.exe -d
+  )
+  add_custom_target(rtpict ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/rtpict.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/rtpict.exe -d
+  )
+ install(PROGRAMS
+    bsdfview.exe
+    genBSDF.exe
+    genklemsamp.exe
+    genskyvec.exe
+    ltpict.exe
+    ltview.exe
+    objpict.exe
+    objview.exe
+    genambpos.exe
+    genklemsamp.exe
+    rcode2bmp.exe
+    rtpict.exe
     DESTINATION "bin"
   )
 else()
@@ -187,7 +227,7 @@ else()
     dayfact.csh
     fieldcomb.csh
     genBSDF.pl
-    genambpos.csh
+    genambpos.pl
     genklemsamp.pl
     genskyvec.pl
     glare.csh

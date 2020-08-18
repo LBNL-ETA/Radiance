@@ -94,8 +94,14 @@ file(COPY
   DESTINATION "${CMAKE_BINARY_DIR}/lib"
 )
 
-if(NOT WIN32)
-  install(PROGRAMS optics2rad.csh
+if(WIN32)
+  add_custom_target(optics2rad ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.exe -d
+  install(PROGRAMS optics2rad.exe
+    DESTINATION "bin"
+  )
+else()
+  install(PROGRAMS optics2rad.pl
     DESTINATION "bin"
     RENAME optics2rad
   )
