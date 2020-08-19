@@ -97,6 +97,7 @@ file(COPY
 if(WIN32)
   add_custom_target(optics2rad ALL
     COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.exe -d
+  )
   install(PROGRAMS optics2rad.exe
     DESTINATION "bin"
   )
