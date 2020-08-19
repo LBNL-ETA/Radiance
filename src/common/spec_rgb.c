@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.24 2012/05/18 22:48:39 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.25 2020/08/19 17:36:37 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -111,7 +111,7 @@ int  s,			/* starting and ending wavelengths */
 int  e
 )
 {
-	register int  i, d, r;
+	int  i, d, r;
 	
 	s -= STARTWL;
 	if (s < 0)
@@ -164,7 +164,7 @@ COLOR  upper
 	int  rflags = 0;
 	double  brtmin, brtmax, v, vv;
 	COLOR  cgry;
-	register int  i;
+	int  i;
 					/* check for no check */
 	if (gamut == 0) return(0);
 					/* check brightness limits */
@@ -202,9 +202,9 @@ COLOR  upper
 
 void
 colortrans(			/* convert c1 by mat and put into c2 */
-register COLOR  c2,
-register COLORMAT  mat,
-register COLOR  c1
+COLOR  c2,
+COLORMAT  mat,
+COLOR  c1
 )
 {
 	COLOR	cout;
@@ -225,7 +225,7 @@ COLORMAT  m1
 )
 {
 	COLORMAT  mt;
-	register int  i, j;
+	int  i, j;
 
 	for (i = 0; i < 3; i++)
 		for (j = 0; j < 3; j++)
@@ -269,7 +269,7 @@ RGBPRIMS  pr
 int
 compxyz2rgbmat(			/* compute conversion from CIE to RGB space */
 COLORMAT  mat,
-register RGBPRIMS  pr
+RGBPRIMS  pr
 )
 {
 	double  C_rD, C_gD, C_bD;
@@ -329,7 +329,7 @@ register RGBPRIMS  pr
 int
 comprgb2xyzmat(			/* compute conversion from RGB to CIE space */
 COLORMAT  mat,
-register RGBPRIMS  pr
+RGBPRIMS  pr
 )
 {
 	double  C_rD, C_gD, C_bD, D;
