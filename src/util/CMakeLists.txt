@@ -196,9 +196,6 @@ if(WIN32)
   add_custom_target(genambpos ALL
     COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genambpos.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genambpos.exe -d
   )
-  add_custom_target(genklemsamp ALL
-    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/genklemsamp.exe -d
-  )
   add_custom_target(rcode2bmp ALL
     COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/rcode2bmp.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/rcode2bmp.exe -d
   )
@@ -215,7 +212,6 @@ if(WIN32)
     objpict.exe
     objview.exe
     genambpos.exe
-    genklemsamp.exe
     rcode2bmp.exe
     rtpict.exe
     DESTINATION "bin"
@@ -240,7 +236,11 @@ else()
     rcode2bmp.pl
     rlux.csh
     rtpict.pl
-    trad.wsh
     vinfo.csh
+  )
+  add_custom_target(trad ALL
+    COMMAND csh -f  ${CMAKE_CURRENT_SOURCE_DIR}/tradinstall.csh
+	RUNTIME DESTINATION "bin"
+	${CMAKE_BINARY_DIR}/lib
   )
 endif()
