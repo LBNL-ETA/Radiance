@@ -46,18 +46,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+
       - name: install perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.30.2'
-          distribution: strawberry
-          
+        run: |
+          # run in powershell
+          choco install strawberryperl --version 5.30.3.1 --force
+          perl -version
+
       - name: install perl pp
         run: |
-          setx path "%path%;C:\hostedtoolcache\windows\perl\5.30.2\x64\perl\site\bin"
           unzip PAR.zip
-          python merge.py
+          python merge.py c:\\strawberry\\perl
+          ls c:\strawberry\perl\site\bin
           pp --version
+          
 
       - name: override update version
         run: |
@@ -244,6 +246,7 @@ jobs:
       - name: set dev packages
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
+          sudo apt-get install csh
 
       - name: Compile
         run: |

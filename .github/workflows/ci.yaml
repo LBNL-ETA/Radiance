@@ -67,12 +67,12 @@ jobs:
 
       - name: install perl pp
         run: |
-          # ls C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64
-          # ls C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64\\perl\\site\\bin
-          # unzip PAR.zip
-          # python merge.py C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64
-          # perl -version
-          # pp --version
+          unzip PAR.zip
+          python merge.py c:\\strawberry\\perl
+          ls c:\strawberry\perl\site\bin
+          pp --version
+          
+
 
       - name: override update version
         run: |
@@ -268,6 +268,7 @@ jobs:
       - name: set dev packages
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
+          sudo sudo apt-get install csh
 
       - name: Compile
         run: |
