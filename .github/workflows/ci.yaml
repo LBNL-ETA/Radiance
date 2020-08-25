@@ -59,11 +59,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install perl
+        run: |
+          # run in powershell
+          choco install strawberryperl --version 5.30.3.1 --force
+          perl -version
+
       - name: install perl pp
         run: |
-          unzip PAR.zip
-          python merge.py
-          pp --version
+          # ls C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64
+          # ls C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64\\perl\\site\\bin
+          # unzip PAR.zip
+          # python merge.py C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64
+          # perl -version
+          # pp --version
 
       - name: override update version
         run: |

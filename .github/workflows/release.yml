@@ -46,8 +46,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.30.2'
+          distribution: strawberry
+          
       - name: install perl pp
         run: |
+          setx path "%path%;C:\hostedtoolcache\windows\perl\5.30.2\x64\perl\site\bin"
           unzip PAR.zip
           python merge.py
           pp --version

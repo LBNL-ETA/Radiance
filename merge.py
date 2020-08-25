@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 
 def mergefolders(root_src_dir, root_dst_dir):
@@ -16,5 +17,12 @@ def mergefolders(root_src_dir, root_dst_dir):
 
 
 working_dir = os.getcwd()
-mergefolders(f'{working_dir}\\PAR', 'c:\\strawberry\\perl')
+
+ARGS = sys.argv[1:]
+# 'C:\\hostedtoolcache\\windows\\perl\\5.30.2\\x64'
+PATH = ARGS[0]
+print(PATH)
+
+
+mergefolders(f'{working_dir}\\PAR', PATH)
 
