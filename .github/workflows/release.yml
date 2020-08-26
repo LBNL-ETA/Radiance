@@ -38,9 +38,9 @@ jobs:
 
 
   build_Windows:
-    needs: check_if_release
     name: "Build for Windows"
     runs-on: windows-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
@@ -132,9 +132,9 @@ jobs:
           path: Radiance_Windows_both.zip
 
   build_OSX:
-    needs: check_if_release
     name: "Build for OSX"
     runs-on: macos-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -157,10 +157,6 @@ jobs:
         with:
           version: '5.12.8'
 
-      - name: Install CMake 
-        uses: ilammy/msvc-dev-cmd@v1
-      
-      
       - name: Install XQuartz
         run: |
           wget https://dl.bintray.com/xquartz/downloads/XQuartz-2.7.11.dmg
@@ -214,9 +210,9 @@ jobs:
           path: Radiance_OSX_both.zip
 
   build_Linux:
-    needs: check_if_release
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -239,10 +235,6 @@ jobs:
         with:
           version: '5.12.8'
 
-      - name: Install CMake 
-        uses: ilammy/msvc-dev-cmd@v1
-      
-
       - name: set dev packages
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
@@ -258,7 +250,7 @@ jobs:
 
       - name: list files
         run: |
-          cd $Qt5_DIR
+          cd ./build
           ls -R
         shell: bash
 
@@ -269,6 +261,10 @@ jobs:
           cd build
           make package -j8
 
+      - name: list files
+        run: |
+          cd ./build
+          ls -R
       - name: Zip Build Artifact
         run: |
           cd  ./build
