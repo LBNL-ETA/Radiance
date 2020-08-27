@@ -1,9 +1,12 @@
 #!/bin/csh -fe
-# RCSid: $Id: tradinstall.csh,v 2.10 2019/05/01 16:47:54 greg Exp $
+# RCSid: $Id: tradinstall.csh,v 2.11 2020/08/27 17:46:52 greg Exp $
 # Install correct version of trad for wish or wish4.0
 #
 set instdir = $1
 set libdir = $2
+
+# Need to execute in containing directory:
+if ($0:h != $0) cd $0:h
 
 set TLIBFILES = ( *[a-z].tcl *.hlp trad.icon tclIndex )
 
