@@ -1,4 +1,4 @@
-{ RCSid $Id: fisheye_corr.cal,v 1.5 2016/09/14 20:39:08 greg Exp $ }
+{ RCSid $Id: fisheye_corr.cal,v 1.6 2020/08/28 19:39:22 greg Exp $ }
 {
 	Correct fisheye image using a distortion function:
 
@@ -17,16 +17,6 @@
 
 	If you know you have a solid-angle preserving distortion, use
 	"rad(r)=mapsolid(r)" or leave off definition, as this is the default.
-
-	Note that you will need to add back the VIEW= line to the header, e.g.:
-
-		echo "VIEW= -vta -vh 180 -vv 180" > corrected.hdr
-		(above_command) >> corrected.hdr
-
-	Or:
-
-		(above_command) | getinfo -a "VIEW= -vta -vh 180 -vv 180" \
-			> corrected.hdr
 }
 xc : xres/2;
 yc : yres/2;
