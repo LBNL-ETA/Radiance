@@ -38,15 +38,28 @@ jobs:
 
 
   build_Windows:
-    needs: check_if_release
     name: "Build for Windows"
     runs-on: windows-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: '0'
+
+
+      - name: install perl
+        run: |
+          # run in powershell
+          choco install strawberryperl --version 5.30.3.1 --force
+          perl -version
+
+      - name: install perl pp
+        run: |
+          unzip PAR.zip
+          python merge.py c:\\strawberry\\perl
+          ls c:\strawberry\perl\site\bin
+          pp --version
+          
 
       - name: override update version
         run: |
@@ -119,9 +132,9 @@ jobs:
           path: Radiance_Windows_both.zip
 
   build_OSX:
-    needs: check_if_release
     name: "Build for OSX"
     runs-on: macos-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -144,10 +157,6 @@ jobs:
         with:
           version: '5.12.8'
 
-      - name: Install CMake 
-        uses: ilammy/msvc-dev-cmd@v1
-      
-      
       - name: Install XQuartz
         run: |
           wget https://dl.bintray.com/xquartz/downloads/XQuartz-2.7.11.dmg
@@ -201,9 +210,9 @@ jobs:
           path: Radiance_OSX_both.zip
 
   build_Linux:
-    needs: check_if_release
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    needs: check_if_release
     if: needs.check_if_release.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -226,13 +235,10 @@ jobs:
         with:
           version: '5.12.8'
 
-      - name: Install CMake 
-        uses: ilammy/msvc-dev-cmd@v1
-      
-
       - name: set dev packages
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
+          sudo apt-get install csh
 
       - name: Compile
         run: |
@@ -244,7 +250,7 @@ jobs:
 
       - name: list files
         run: |
-          cd $Qt5_DIR
+          cd ./build
           ls -R
         shell: bash
 
@@ -255,6 +261,10 @@ jobs:
           cd build
           make package -j8
 
+      - name: list files
+        run: |
+          cd ./build
+          ls -R
       - name: Zip Build Artifact
         run: |
           cd  ./build
@@ -268,8 +278,264 @@ jobs:
           name: Radiance_Linux
           path: Radiance_Linux.zip
 
+
+  Test_Windows:
+    needs: [build_Windows]
+    name: Test for Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: Download Windows installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Windows_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Windows_both.zip
+          unzip WindowsBuild/Radiance_Windows.zip 
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: install perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.30'
+      
+
+      - name: run tests -util
+        shell: pwsh
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+          cd ./test/util/
+          make clean
+          make -j8
+      
+
+      - name: run tests -gen
+        shell: pwsh
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+
+          cd ./test/gen/
+          make clean
+          make -j8
+
+      - name: run tests -cal
+        shell: pwsh
+        run: |
+          $Env:RAYPATH = ".;${{ github.workspace }}\lib"
+          $Env:PATH += ";${{ github.workspace }}\bin"
+          rtrace -version
+
+          cd ./test/cal/
+          make clean
+          make -j8
+
+      - name: run tests -px
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/px/
+          make clean
+          make -j8
+  
+      - name: run tests -renders
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make
+  
+  Test_OSX:
+    needs: [build_OSX]
+    name: "Test for OSX"
+    runs-on: macos-latest
+
+    steps:
+      - name: get os version
+        run: |
+          uname -a
+          echo "=============================="
+          sw_vers -productVersion
+
+
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download OSX installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_OSX_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_OSX_both.zip
+          unzip OSXBuild/Radiance_OSX.zip
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+      
+      - name: run tests -util
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+          cd ./test/util/
+          
+          make clean
+          make -j8
+      
+      - name: run tests -gen
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+          cd ./test/gen/
+          
+          make clean
+          make -j8
+
+      - name: run tests -cal
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+          cd ./test/cal/
+          
+          make clean
+          make -j8
+
+      - name: run tests -px
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+          cd ./test/px/
+          
+          make clean
+          make -j8
+
+    
+      - name: run tests -renders
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make -j8
+
+  Test_Linux:
+    needs: [build_Linux]
+    name: "Test for Linux"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download Linux installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Linux
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Linux.zip
+          ls
+          echo "========== Extracting tar.gz ==========="
+          tar -xvf radiance-*-Linux.tar.gz
+          ls
+          echo "========== Extracting tar ==========="
+          
+
+      - name: copy compiled folder
+        run: |
+          mkdir buildRad
+          sudo cp -avr ./radiance-*-Linux/usr/local/radiance ./buildRad
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: run tests -util
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+          cd ./test/util/
+          
+          make clean
+          make -j8
+      
+      - name: run tests -gen
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+          cd ./test/gen/
+          
+          make clean
+          make -j8
+
+      - name: run tests -cal
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+          cd ./test/cal/
+          
+          make clean
+          make -j8
+
+      - name: run tests -px
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+          cd ./test/px/
+          
+          make clean
+          make -j8
+
+      - name: run tests -renders
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make -j8
+
+
+
   release_installers:
-    needs: [build_Windows, build_OSX, build_Linux]
+    needs: [Test_Windows, Test_OSX, Test_Linux]
     name: deploy installers
     runs-on: ubuntu-latest
     steps:

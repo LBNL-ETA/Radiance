@@ -53,15 +53,28 @@ jobs:
       
   
   build_Windows:
-    needs: cvs_import
     name: "Build for Windows"
     runs-on: windows-latest
+    needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
-    
+
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: '0'
+
+      - name: install perl
+        run: |
+          # run in powershell
+          choco install strawberryperl --version 5.30.3.1 --force
+          perl -version
+
+      - name: install perl pp
+        run: |
+          unzip PAR.zip
+          python merge.py c:\\strawberry\\perl
+          ls c:\strawberry\perl\site\bin
+          pp --version
+          
+
 
       - name: override update version
         run: |
@@ -94,6 +107,13 @@ jobs:
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
 
+      - name: list 
+        run: |
+          echo "List src\util============================="
+          ls src\util
+          echo "List src\px============================="
+          ls src\px
+         
       - name: set up QT path
         run: |
           setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
@@ -135,9 +155,9 @@ jobs:
 
 
   build_OSX:
-    needs: cvs_import
     name: "Build for OSX"
     runs-on: macos-latest
+    needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
@@ -160,10 +180,7 @@ jobs:
         with:
           version: '5.12.8'
 
-      - name: Install CMake 
-        uses: ilammy/msvc-dev-cmd@v1
-      
-      
+
       - name: Install XQuartz
         run: |
           wget https://dl.bintray.com/xquartz/downloads/XQuartz-2.7.11.dmg
@@ -180,7 +197,7 @@ jobs:
           cmake ..
           make -j8
 
-      - name: Build installer
+      - name: Run CPack
         run: |
           export PATH=$PATH:$Qt5_DIR/bin
           export PATH=$PATH:$Qt5_DIR/lib
@@ -188,8 +205,10 @@ jobs:
           cd build
           sudo cpack -G ZIP .
           echo "=============================="
-
-          cd ./_CPack_Packages/Darwin/ZIP/
+      
+      - name: Build pkg installer
+        run: |
+          cd ./build/_CPack_Packages/Darwin/ZIP/
           sudo cp -r ./radiance*/usr/local/radiance .
           ls
           sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
@@ -218,11 +237,11 @@ jobs:
 
 
   build_Linux:
-    needs: cvs_import
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
-
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -250,6 +269,7 @@ jobs:
       - name: set dev packages
         run: |
           sudo apt install libglu1-mesa-dev freeglut3-dev
+          sudo sudo apt-get install csh
 
       - name: Compile
         run: |
@@ -261,7 +281,7 @@ jobs:
 
       - name: list files
         run: |
-          cd $Qt5_DIR
+          cd ./build
           ls -R
         shell: bash
 
