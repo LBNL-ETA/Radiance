@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.28 2020/04/02 18:00:34 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.29 2020/08/31 15:06:20 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -637,6 +637,8 @@ getdefn(void)
 	    ep2 = newnode();
 	    ep2->type = SYM;
 	    ep2->v.name = savestr(getname());
+	    if (strchr(ep2->v.name, CNTXMARK) != NULL)
+		syntax("illegal parameter name");
 	    addekid(ep1, ep2);
 	} while (nextc == ',');
 	if (nextc != ')')
