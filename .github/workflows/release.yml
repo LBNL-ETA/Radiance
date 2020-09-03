@@ -25,14 +25,10 @@ jobs:
         id: ifBuildTrigger
         run: |
           LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
-          RAD_VERSION=$(cat src/rt/VERSION)
-          RAD_VERSION="${RAD_VERSION/RADIANCE /}"
-          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
-
           LAST_TAG=$(git describe --tags --abbrev=0)
 
           unset HAS_NEW_COMMITS
-          if [[ "$RELEASE_TAG" != "$LAST_TAG" ]]; then HAS_NEW_COMMITS='true' ; fi
+          if [[ "$LAST_COMMIT_ID" != "$LAST_TAG" ]]; then HAS_NEW_COMMITS='true' ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
@@ -277,7 +273,6 @@ jobs:
         with:
           name: Radiance_Linux
           path: Radiance_Linux.zip
-
 
   Test_Windows:
     needs: [build_Windows]
@@ -573,10 +568,7 @@ jobs:
         id: get_release_note
         run: |
           LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
-          RAD_VERSION=$(cat src/rt/VERSION)
-          RAD_VERSION="${RAD_VERSION/RADIANCE /}"
-
-          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
+          RELEASE_TAG=${LAST_COMMIT_ID}
           LAST_TAG=$(git describe --tags --abbrev=0)
 
           echo "The last tag: $LAST_TAG"
@@ -594,7 +586,7 @@ jobs:
           RAD_VERSION=$(cat src/rt/VERSION)
           RAD_VERSION="${RAD_VERSION/RADIANCE /}"
 
-          RELEASE_TAG="${RAD_VERSION}.${LAST_COMMIT_ID}"
+          RELEASE_TAG=${LAST_COMMIT_ID}
           RELEASE_NAME='Radiance '"${RAD_VERSION}"' ('$(date +'%Y-%m-%d')')'
           
           echo "Found Radiance version: [$RAD_VERSION]"
