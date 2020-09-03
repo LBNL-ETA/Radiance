@@ -2237,7 +2237,7 @@ Updates to evalglare and gendaylit from Jan Wienold, including new
 colored sky option.
 
 =========================
-Version 5.3
+Version 5.3 (Released September 1, 2020)
 
 Created radcompare program to compare Radiance tool output to reference outputs
 during unit-testing.
@@ -2381,3 +2381,6 @@ New version of evalglare from Jan Wienold.
 
 Added -u option to gendaymtx to elide data columns (time steps) when
 the sun is not visible above the horizon.
+
+=========================
+Version 5.4

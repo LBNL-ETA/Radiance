@@ -1,7 +1,7 @@
-		RCSid "$Id: README.txt,v 1.6 2018/10/09 17:57:17 greg Exp $"
+		RCSid "$Id: README.txt,v 1.7 2020/09/03 15:46:32 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
-the twenty-fourth release, Version 5.3, and it includes all source files
+the twenty-fifth release, Version 5.4, and it includes all source files
 for local compilation with a standard C compiler.  To find out what's
 new in this release, check the text file "doc/notes/ReleaseNotes".
 
