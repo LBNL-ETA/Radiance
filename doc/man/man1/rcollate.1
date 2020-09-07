@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.13 2019/11/11 18:50:07 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.14 2020/09/07 17:08:08 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or re-order matrix data
@@ -9,7 +9,9 @@ rcollate - resize or re-order matrix data
 ][
 .B \-w
 ][
-.B \-f[afdb][N]
+.B \-c
+][
+.B \-f{a|f|d|b}[N]
 ][
 .B \-t
 ][
@@ -60,6 +62,16 @@ by itself turns off both input and output headers.
 The
 .I \-w
 option turns off non-fatal warning messages, such as unexpected EOD.
+.PP
+Normally,
+.I rcollate
+detects whether any transformation is actually taking place, and will
+reproduce the data verbatim if the input size and shape should be unaltered.
+The
+.I \-c
+opiton forces the operation to proceed, even if it appears to be a no-op,
+which can be useful to correct a misshapen input matrix or check that
+the data is the proper size.
 .PP
 The input format is assumed to be ASCII, with three white-space separated words
 (typically numbers) in each record.

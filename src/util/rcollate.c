@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.35 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.36 2020/09/07 17:08:08 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -293,6 +293,7 @@ int		i_header = 1;			/* input header? */
 int		o_header = 1;			/* output header? */
 int		outArray[MAXLEVELS][2];		/* output block nesting */
 int		outLevels = 0;			/* number of blocking levels */
+int		check = 0;			/* force data check? */
 
 /* parse RxCx... string */
 static int
@@ -407,9 +408,9 @@ do_reorder(const MEMLOAD *mp)
 	int			i, j;
 						/* propogate sizes */
 	if (ni_rows <= 0)
-		ni_rows = no_columns;
+		ni_rows = transpose ? no_columns : no_rows;
 	if (ni_columns <= 0)
-		ni_columns = no_rows;
+		ni_columns = transpose ? no_rows : no_columns;
 						/* get # records (& index) */
 	if (!comp_size) {
 		if ((rp = index_records(mp, n_comp)) == NULL)
@@ -429,7 +430,7 @@ do_reorder(const MEMLOAD *mp)
 						/* check sizes */
 	if ((ni_rows <= 0) & (ni_columns > 0))
 		ni_rows = nrecords/ni_columns;
-	if ((ni_columns <= 0) & (ni_rows > 0))
+	else if ((ni_columns <= 0) & (ni_rows > 0))
 		ni_columns = nrecords/ni_rows;
 	if (nrecords != ni_rows*ni_columns)
 		goto badspec;
@@ -451,6 +452,11 @@ do_reorder(const MEMLOAD *mp)
 		fputs("Number of input and output records do not match\n",
 				stderr);
 		return(0);
+	}
+	if (o_header) {				/* finish header? */
+		printf("NROWS=%d\n", no_rows);
+		printf("NCOLS=%d\n", no_columns);
+		fputc('\n', stdout);
 	}
 						/* reorder records */
 	for (i = 0; i < no_rows; i++) {
@@ -488,8 +494,17 @@ do_resize(FILE *fp)
 	long	records2go = ni_rows*ni_columns;
 	int	columns2go = no_columns;
 	char	word[256];
+			
+	if (o_header) {				/* finish header? */
+		if (no_rows > 0)
+			printf("NROWS=%d\n", no_rows);
+		if (no_columns > 0)
+			printf("NCOLS=%d\n", no_columns);
+		fputc('\n', stdout);
+	}
 						/* sanity checks */
-	if (comp_size || (no_columns == ni_columns) & (no_rows == ni_rows))
+	if (comp_size || !check &
+			(no_columns == ni_columns) & (no_rows == ni_rows))
 		return(output_stream(fp));	/* no-op -- just copy */
 	if (no_columns <= 0) {
 		fprintf(stderr, "Missing -oc specification\n");
@@ -499,7 +514,7 @@ do_resize(FILE *fp)
 		records2go = no_rows*no_columns;
 	else if (no_rows*no_columns != records2go) {
 		fprintf(stderr,
-			"Input and output data sizes disagree (%dx%d != %dx%d)\n",
+			"Number of input and output records disagree (%dx%d != %dx%d)\n",
 				ni_rows, ni_columns, no_rows, no_columns);
 		return(0);
 	}
@@ -666,6 +681,9 @@ main(int argc, char *argv[])
 		case 'w':			/* warnings on/off */
 			warnings = !warnings;
 			break;
+		case 'c':			/* force check operation */
+			check = 1;
+			break;
 		default:
 			goto userr;
 		}
@@ -685,7 +703,7 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdout);
 	}
 						/* check for no-op */
-	if (!transpose & (outLevels <= 1) & (i_header == o_header) &&
+	if (!transpose & !check & (outLevels <= 1) & (i_header == o_header) &&
 			(no_columns == ni_columns) & (no_rows == ni_rows)) {
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
@@ -709,15 +727,10 @@ main(int argc, char *argv[])
 		if (!i_header)
 			newheader("RADIANCE", stdout);
 		printargs(a, argv, stdout);
-		if (no_rows > 0)
-			printf("NROWS=%d\n", no_rows);
-		if (no_columns > 0)
-			printf("NCOLS=%d\n", no_columns);
 		printf("NCOMP=%d\n", n_comp);
 		fputformat(fmtid, stdout);
-		fputc('\n', stdout);		/* finish new header */
 	}
-	if (transpose | (outLevels > 1)) {	/* moving stuff around? */
+	if (transpose | check | (outLevels > 1) || (o_header && no_rows <= 0)) {
 		MEMLOAD	myMem;			/* need to map into memory */
 		if (a == argc-1) {
 			if (load_file(&myMem, stdin) <= 0) {
@@ -733,12 +746,12 @@ main(int argc, char *argv[])
 		if (!do_reorder(&myMem))
 			return(1);
 		/* free_load(&myMem);	about to exit, so don't bother */
-	} else if (!do_resize(stdin))		/* reshaping input */
+	} else if (!do_resize(stdin))		/* just reshaping input */
 		return(1);
 	return(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-h[io]][-w][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row][-o RxC[xR1xC1..]] [input.dat]\n",
+"Usage: %s [-h[io]][-w][-c][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row][-o RxC[xR1xC1..]] [input.dat]\n",
 			argv[0]);
 	return(1);
 }
