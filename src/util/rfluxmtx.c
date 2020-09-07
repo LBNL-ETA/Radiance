@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.51 2020/03/02 22:00:05 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.52 2020/09/07 04:06:17 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -720,9 +720,9 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 					/* compute projected areas */
 	for (i = 0, sp = p->slist; sp != NULL; i++, sp = sp->next) {
 		projsa[i] = -DOT(sp->snrm, rdir) * sp->area;
-		tarea += projsa[i] *= (double)(projsa[i] > FTINY);
+		tarea += projsa[i] *= (double)(projsa[i] > 0);
 	}
-	if (tarea < 0) {		/* wrong side of sender? */
+	if (tarea < FTINY*FTINY) {	/* wrong side of sender? */
 		fputs(progname, stderr);
 		fputs(": internal - sample behind all sender elements!\n",
 				stderr);
@@ -997,7 +997,7 @@ finish_polygon(SURF *p)
 		VCOPY(e1, e2);
 	}
 	p->area = normalize(p->snrm)*0.5;
-	return(p->area > FTINY);
+	return(p->area > FTINY*FTINY);
 }
 
 /* Add a surface to our current parameters */
@@ -1060,7 +1060,7 @@ add_surface(int st, const char *oname, FILE *fp)
 		snew->area *= PI*snew->area;
 		break;
 	}
-	if ((snew->area <= FTINY) & (verbose >= 0)) {
+	if ((snew->area <= FTINY*FTINY) & (verbose >= 0)) {
 		fprintf(stderr, "%s: warning - zero area for surface '%s'\n",
 				progname, oname);
 		free(snew);
