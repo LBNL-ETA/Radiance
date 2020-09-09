@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.18 2018/01/18 19:43:43 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.19 2020/09/09 21:28:19 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -42,6 +42,8 @@ int	using_stdout = 0;		/* are we using stdout? */
 
 int	imm_irrad = 0;			/* compute immediate irradiance? */
 int	lim_dist = 0;			/* limit distance? */
+
+int	report_intvl = 0;		/* reporting interval (seconds) */
 
 const char	*modname[MAXMODLIST];	/* ordered modifier name list */
 int		nmods = 0;		/* number of modifiers */
@@ -294,6 +296,10 @@ main(int argc, char *argv[])
 		case 'M':			/* modifier file */
 			check(2,"s");
 			addmodfile(argv[++i], curout, prms, binval, bincnt);
+			break;
+		case 't':			/* reporting interval */
+			check(2,"i");
+			report_intvl = atoi(argv[++i]);
 			break;
 		default:
 			goto badopt;

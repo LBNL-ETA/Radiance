@@ -2387,3 +2387,6 @@ Version 5.4
 
 Added rcollate -c option to force operation to continue even if it
 seems unnecessary.  Made tool more robust.
+
+Added -t option to rcontrib (and rfluxmtx) to report progress after the
+given number of seconds.

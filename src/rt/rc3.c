@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.23 2018/05/27 18:35:57 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.24 2020/09/09 21:28:19 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -444,7 +444,7 @@ parental_loop()
 			}
 			put_zero_record(++lastray);
 		}
-		if (raysleft && !--raysleft)
+		if (!morays())
 			break;				/* preemptive EOI */
 	}
 	while (next_child_nq(1) >= 0)		/* empty results queue */
@@ -529,7 +529,7 @@ feeder_loop()
 				lastdone = lastray = 0;
 			ninq = 0;
 		}
-		if (raysleft && !--raysleft)
+		if (!morays())
 			break;				/* preemptive EOI */
 	}
 	if (ninq) {				/* polish off input */

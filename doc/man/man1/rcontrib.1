@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.17 2020/03/14 16:25:46 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.18 2020/09/09 21:28:19 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -8,6 +8,8 @@ rcontrib - compute contribution coefficients in a RADIANCE scene
 .B "\-n nprocs"
 ][
 .B \-V
+][
+.B "\-t secs"
 ][
 .B "\-c count"
 ][
@@ -118,6 +120,11 @@ a parallel source such as the sun to a diffuse surface, for example.
 Note that output flushing via zero-direction rays is disabled with
 .I \-c
 set to zero.
+.PP
+If progress reports are desired, the
+.I \-t
+option specifies a time interval in seconds for reports sent to
+standard error.
 .PP
 The output of
 .I rcontrib

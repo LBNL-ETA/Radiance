@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.15 2016/09/12 20:31:34 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.16 2020/09/09 21:28:19 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -41,6 +41,8 @@ extern long		waitflush;	/* how long until next flush */
 
 extern RNUMBER		lastray;	/* last ray number sent */
 extern RNUMBER		lastdone;	/* last ray processed */
+
+extern int		report_intvl;	/* reporting interval (seconds) */
 
 typedef double		DCOLOR[3];	/* double-precision color */
 
@@ -120,6 +122,8 @@ extern int		in_rchild(void);
 extern void		end_children(int immed);
 
 extern void		put_zero_record(int ndx);
+
+extern int		morays(void);		/* reached end of input? */
 
 extern void		parental_loop(void);	/* controlling process */
 

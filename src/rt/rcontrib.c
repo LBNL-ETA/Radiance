@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.36 2020/07/20 15:54:29 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.37 2020/09/09 21:28:19 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -172,8 +172,35 @@ addmodfile(char *fname, char *outf, char *prms, char *binv, int bincnt)
 }
 
 
+/* Check if we have any more rays left (and report progress) */
+int
+morays(void)
+{
+	static RNUMBER	total_rays;
+	static time_t	tstart, last_report;
+	time_t		tnow;
+
+	if (!raysleft)
+		return(1);	/* unknown total, so nothing to do or say */
+
+	if (report_intvl > 0 && (tnow = time(0)) >= last_report+report_intvl) {
+		if (!total_rays) {
+			total_rays = raysleft;
+			tstart = tnow;
+		}
+		sprintf(errmsg, "%.2f%% done after %.3f hours",
+				100.-100.*raysleft/total_rays,
+				(1./3600.)*(tnow - tstart));
+		eputs(errmsg);
+		last_report = tnow;
+	}
+	return(--raysleft);
+}
+
+
+/* Quit program */
 void
-quit(			/* quit program */
+quit(
 	int  code
 )
 {
@@ -364,7 +391,7 @@ rcontrib(void)
 		}
 		done_contrib();		/* accumulate/output */
 		++lastdone;
-		if (raysleft && !--raysleft)
+		if (!morays())
 			break;		/* preemptive EOI */
 	}
 	if (nchild != -1 && (accumulate <= 0) | (account < accumulate)) {
