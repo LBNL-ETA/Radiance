@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.18 2020/09/09 21:28:19 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.19 2020/09/10 17:52:46 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -121,10 +121,25 @@ Note that output flushing via zero-direction rays is disabled with
 .I \-c
 set to zero.
 .PP
+Output flushing at fixed intervals may be enabled with the
+.I \-x
+option, which specifies the number of records
+(-c accumulations) before each flush.
+If the
+.I \-y
+option is also set, then periodic flushing is disabled and the
+output size for an RGB image is the taken from the x and y dimensions.
+In lieu of periodic flushing, a flush may be forced as mentioned above
+by sending a sample with a zero direction vector, although you
+must still send a full record of rays before output occurs.
+.PP
 If progress reports are desired, the
 .I \-t
 option specifies a time interval in seconds for reports sent to
 standard error.
+This requires that the number of input samples is known, meaning a
+.I \-y
+parameter has been specified.
 .PP
 The output of
 .I rcontrib
