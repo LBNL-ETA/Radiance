@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.38 2020/09/10 00:45:01 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.39 2020/09/10 01:01:18 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -187,11 +187,12 @@ morays(void)
 		if (!total_rays) {
 			total_rays = raysleft;
 			tstart = tnow;
+		} else {
+			sprintf(errmsg, "%.2f%% done after %.3f hours\n",
+					100.-100.*raysleft/total_rays,
+					(1./3600.)*(tnow - tstart));
+			eputs(errmsg);
 		}
-		sprintf(errmsg, "%.2f%% done after %.3f hours\n",
-				100.-100.*raysleft/total_rays,
-				(1./3600.)*(tnow - tstart));
-		eputs(errmsg);
 		last_report = tnow;
 	}
 	return(--raysleft);
