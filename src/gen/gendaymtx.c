@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.37 2020/08/15 03:28:56 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.38 2020/09/11 16:50:50 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -89,8 +89,7 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.37 2020/08/15 03:28:56 greg Ex
 #include "color.h"
 #include "sun.h"
 
-char *progname;								/* Program name */
-char errmsg[128];							/* Error message buffer */
+char *progname;					/* Program name */
 const double DC_SolarConstantE = 1367.0;	/* Solar constant W/m^2 */
 const double DC_SolarConstantL = 127.5;		/* Solar constant klux */
 
@@ -535,8 +534,12 @@ main(int argc, char *argv[])
 							sunsfp, modsfp);
 			continue;
 		}
+		if (!sun_in_sky && dir > (input==1 ? 20. : 20.*WHTEFFICACY))
+			fprintf(stderr,
+				"%s: warning - unusually bright at %.1f on %d-%d\n",
+					progname, hr, mo, da);
 					/* convert measured values */
-		if (dir_is_horiz && altitude > 0.)
+		if (dir_is_horiz && altitude > FTINY)
 			dir /= sin(altitude);
 		if (input == 1) {
 			dir_irrad = dir;
