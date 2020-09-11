@@ -2390,3 +2390,5 @@ seems unnecessary.  Made tool more robust.
 
 Added -t option to rcontrib (and rfluxmtx) to report progress after the
 given number of seconds.
+
+Added "test" target to makeall to run unit tests.
