@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.25 2020/08/19 17:36:37 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.26 2020/09/16 00:42:36 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -16,9 +16,9 @@ static const char	RCSid[] = "$Id: spec_rgb.c,v 2.25 2020/08/19 17:36:37 greg Exp
 
 #define CEPS	1e-4			/* color epsilon */
 
-#define CEQ(v1,v2)	((v1) <= (v2)+CEPS && (v2) <= (v1)+CEPS)
+#define CEQ(v1,v2)	(((v1) <= (v2)+CEPS) & ((v2) <= (v1)+CEPS))
 
-#define XYEQ(c1,c2)	(CEQ((c1)[CIEX],(c2)[CIEX]) && CEQ((c1)[CIEY],(c2)[CIEY]))
+#define XYEQ(c1,c2)	(CEQ((c1)[CIEX],(c2)[CIEX]) & CEQ((c1)[CIEY],(c2)[CIEY]))
 
 
 RGBPRIMS  stdprims = STDPRIMS;	/* standard primary chromaticities */
@@ -242,7 +242,16 @@ RGBPRIMS  pr
 )
 {
 	int	i, j;
-	
+				/* check white point */
+	if ((pr[3][CIEX] <= CEPS) | (pr[3][CIEX] >= 1.-CEPS) |
+			(pr[3][CIEY] <= CEPS) | (pr[3][CIEY] >= 1.-CEPS))
+		return(0);
+	for (i = 3; i--; )	/* check for XYZ color primaries */
+		if (!CEQ(pr[i][CIEX],(i==0)) | !CEQ(pr[i][CIEY],(i==1)))
+			break;
+	if (i < 0)
+		return(-1);	/* flag as XYZ color space */
+				/* check color primaries */
 	for (i = 0; i < 3; i++) {
 		if ((pr[i][CIEX] <= -2.) | (pr[i][CIEY] <= -2.))
 			return(0);
@@ -253,12 +262,9 @@ RGBPRIMS  pr
 		if (pr[i][CIEX] + pr[i][CIEY] >= 3.)
 			return(0);
 	}
-	if ((pr[3][CIEX] <= 0.) | (pr[3][CIEX] >= 1.) |
-			(pr[3][CIEY] <= 0.) | (pr[3][CIEY] >= 1.))
-		return(0);
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)	/* make sure space is 3-dimensional */
 		for (j = i+1; j < 4; j++)
-			if (CEQ(pr[i][CIEX],pr[j][CIEX]) &&
+			if (CEQ(pr[i][CIEX],pr[j][CIEX]) &
 					CEQ(pr[i][CIEY],pr[j][CIEY]))
 				return(0);
 	return(1);
