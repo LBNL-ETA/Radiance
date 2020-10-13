@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.34 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.35 2020/10/13 00:08:46 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -71,14 +71,22 @@ int	len
 		returnErr(TM_E_NOMEM);
 	for (i = len; i--; ) {
 		if (tmNeedMatrix(tms)) {		/* apply color xform */
+			bi = 0;
 			for (j = 3; j--; ) {
 				vl =	cd->cmatb[j][RED]*(int32)scan[i][RED] +
 					cd->cmatb[j][GRN]*(int32)scan[i][GRN] +
 					cd->cmatb[j][BLU]*(int32)scan[i][BLU] ;
-				if (vl < 0) cmon[j] = vl/0x10000;
-				else cmon[j] = vl>>16;
+				if (vl < 0)
+					cmon[j] = vl/(int32)0x10000;
+				else if ((cmon[j] = vl>>16) > bi)
+					bi = cmon[j];
 			}
 			cmon[EXP] = scan[i][EXP];
+			while (bi >= 256) {		/* handle overflow */
+				cmon[EXP]++;
+				for (j = 3; j--; ) cmon[j] >>= 1;
+				bi >>= 1;
+			}
 		} else
 			copycolr(cmon, scan[i]);
 							/* world luminance */
@@ -117,7 +125,7 @@ int	len
 			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
 		} else {
 			for (j = 3; j--; )
-				if (cmon[j] < 0) cmon[j] = 0;
+				cmon[j] *= (cmon[j] > 0);
 		}
 		bi = ( (uint32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 12;
 		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
