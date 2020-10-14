@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.16 2020/01/06 17:03:26 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.17 2020/10/14 02:39:10 greg Exp $
 
 use warnings;
 use strict;
@@ -350,12 +350,8 @@ if ($legwidth > 0) {
 } else {
     # Create dummy colour scale and legend labels so we don't
     # need to change the final command line.
-    open(FHscolpic, ">$scolpic");
-    print FHscolpic "\n-Y 1 +X 1\naaa\n";
-    close(FHscolpic);
-    open(FHslabpic, ">$slabpic");
-    print FHslabpic "\n-Y 1 +X 1\naaa\n";
-    close(FHslabpic);
+    system "pcomb -x 1 -y 1 -e lo=1 > $scolpic";
+    system "pcomb -x 1 -y 1 -e lo=1 > $slabpic";
 }
 
 # Legend: Invert the text labels (for dropshadow)
