@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.23 2019/05/04 00:36:58 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.24 2020/10/17 16:39:23 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -198,16 +198,17 @@ freeobjects(				/* free a range of objects */
 		freefargs(&o->oargs);
 		memset((void *)o, '\0', sizeof(OBJREC));
 	}
-	clearobjndx();
 					/* free objects off end */
 	for (obj = nobjects; obj-- > 0; )
 		if (objptr(obj)->oname != NULL)
 			break;
-	++obj;
+	if (++obj >= nobjects)
+		return;
 	while (nobjects > obj)		/* free empty end blocks */
 		if ((--nobjects & (OBJBLKSIZ-1)) == 0) {
 			int	i = nobjects >> OBJBLKSHFT;
 			free((void *)objblock[i]);
 			objblock[i] = NULL;
 		}
+	truncobjndx();			/* truncate modifier look-up */
 }

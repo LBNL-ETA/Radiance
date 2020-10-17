@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.17 2013/12/09 18:17:13 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.18 2020/10/17 16:39:23 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -189,18 +189,30 @@ insertobject(			/* insert new object into our list */
 
 
 void
-clearobjndx(void)		/* clear object hash tables */
+truncobjndx(void)		/* remove bogus table entries past end */
 {
-	if (modtab.htab != NULL) {
-		free((void *)modtab.htab);
-		modtab.htab = NULL;
-		modtab.hsiz = 100;
+	int	ndx;
+
+	if (nobjects <= 0) {
+		if (modtab.htab != NULL) {
+			free((void *)modtab.htab);
+			modtab.htab = NULL;
+			modtab.hsiz = 100;
+		}
+		if (objtab.htab != NULL) {
+			free((void *)objtab.htab);
+			objtab.htab = NULL;
+			objtab.hsiz = 100;
+		}
+		return;
 	}
-	if (objtab.htab != NULL) {
-		free((void *)objtab.htab);
-		objtab.htab = NULL;
-		objtab.hsiz = 100;
-	}
+	for (ndx = modtab.hsiz*(modtab.htab != NULL); ndx--; )
+		if (modtab.htab[ndx] >= nobjects)
+			modtab.htab[ndx] = OVOID;
+
+	for (ndx = objtab.hsiz*(objtab.htab != NULL); ndx--; )
+		if (objtab.htab[ndx] >= nobjects)
+			objtab.htab[ndx] = OVOID;
 }
 
 
