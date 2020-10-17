@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.18 2020/10/17 16:39:23 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.19 2020/10/17 17:48:46 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -222,7 +222,8 @@ nexthsiz(			/* return next hash table size */
 )
 {
 	static int  hsiztab[] = {
-		251, 509, 1021, 2039, 4093, 8191, 16381, 0
+		251, 509, 1021, 2039, 4093, 8191, 16381,
+		32749, 65521, 131071, 262139, 0
 	};
 	int  *hsp;
 
@@ -239,6 +240,7 @@ otndx(				/* get object table index for name */
 	struct ohtab  *tab
 )
 {
+	char	*onm;
 	OBJECT  *oldhtab;
 	int  hval, i;
 	int  ndx;
@@ -257,8 +259,10 @@ otndx(				/* get object table index for name */
 tryagain:
 	for (i = 0; i < tab->hsiz; i++) {
 		ndx = (hval + (unsigned long)i*i) % tab->hsiz;
-		if (tab->htab[ndx] == OVOID ||
-				!strcmp(objptr(tab->htab[ndx])->oname, name))
+		if (tab->htab[ndx] == OVOID)
+			return(ndx);
+		onm = objptr(tab->htab[ndx])->oname;
+		if (onm != NULL && !strcmp(onm, name))
 			return(ndx);
 	}
 					/* table is full, reallocate */
@@ -267,7 +271,10 @@ tryagain:
 	tab->htab = NULL;
 	while (ndx--)
 		if (oldhtab[ndx] != OVOID) {
-			i = otndx(objptr(oldhtab[ndx])->oname, tab);
+			onm = objptr(oldhtab[ndx])->oname;
+			if (onm == NULL)
+				continue;
+			i = otndx(onm, tab);
 			tab->htab[i] = oldhtab[ndx];
 		}
 	free((void *)oldhtab);
