@@ -1,4 +1,4 @@
-name: Release Installers
+name: Test Perl version
 
 on:
   push:
@@ -9,7 +9,6 @@ jobs:
   build_Windows:
     name: "Build for Windows"
     runs-on: windows-latest
-    needs: check_if_release
     
     steps:
       - uses: actions/checkout@v2
