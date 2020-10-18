@@ -13,11 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: uninstall perl
+        run: |
+          # run in powershell
+          choco uninstall strawberryperl
 
       - name: install perl
         run: |
           # run in powershell
-          MsiExec.exe /X{FFFA4206-7CDD-1014-8B25-CEB51AB4960F} /passive /norestart
           choco install strawberryperl --version 5.30.3.1 --force
           perl -version
 
