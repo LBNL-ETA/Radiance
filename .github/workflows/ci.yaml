@@ -64,6 +64,7 @@ jobs:
       - name: install perl
         run: |
           # run in powershell
+          choco uninstall strawberryperl
           choco install strawberryperl --version 5.30.3.1 --force
           perl -version
 
