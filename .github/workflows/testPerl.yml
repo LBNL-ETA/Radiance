@@ -1,0 +1,91 @@
+name: Release Installers
+
+on:
+  push:
+    branches: [ cvsimport ]
+
+jobs:
+
+  build_Windows:
+    name: "Build for Windows"
+    runs-on: windows-latest
+    needs: check_if_release
+    
+    steps:
+      - uses: actions/checkout@v2
+
+
+      - name: install perl
+        run: |
+          # run in powershell
+          MsiExec.exe /X{FFFA4206-7CDD-1014-8B25-CEB51AB4960F} /passive /norestart
+          choco install strawberryperl --version 5.30.3.1 --force
+          perl -version
+
+      - name: install perl pp
+        run: |
+          unzip PAR.zip
+          python merge.py c:\\strawberry\\perl
+          ls c:\strawberry\perl\site\bin
+          pp --version
+          
+
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          arch: 'win64_msvc2017_64'
+
+      - name: Install CMake 
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Compile
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: VS16Win64
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
+          cmakeBuildType: Release
+          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON'
+          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
+          buildDirectory: ${{ github.workspace }}/build
+          buildWithCMake: true
+
+      - name: set up QT path
+        run: |
+          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
+          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+
+      - name: Build installer
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: VS16Win64
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
+          cmakeBuildType: Release
+          buildWithCMakeArgs: "--config Release --target PACKAGE"
+          buildDirectory: ${{ github.workspace }}/build
+          buildWithCMake: true
+      
+      - name: Zip Compiled Artifact
+        run: |
+          mv build\_CPack_Packages\win64\NSIS\radiance-*-Windows\ radiance
+          Compress-Archive -U -Path radiance\* -DestinationPath Radiance_Windows
+
+      - name: list files
+        run: |
+          mkdir WindowsBuild
+          cp ./build/radiance-*.exe ./WindowsBuild/Radiance_Windows.exe
+          cp ./Radiance_Windows.zip ./WindowsBuild/Radiance_Windows.zip
+          ls -R
+        shell: bash
+
+      - name: Zip Build Artifact
+        run: |
+          Compress-Archive -U -Path WindowsBuild -DestinationPath Radiance_Windows_both
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_both
+          path: Radiance_Windows_both.zip
