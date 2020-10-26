@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.53 2020/10/26 21:12:20 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.54 2020/10/26 21:28:18 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -718,6 +718,10 @@ record2header(char *s)
 	strcpy(head_buf+cur_headlen, s);
 	cur_headlen += len;
 
+#if defined(_WIN32) || defined(_WIN64)
+	if (head_buf[cur_headlen-1] == '\n')
+		head_buf[cur_headlen-1] = '\t';
+#endif
 	return(1);
 }
 
