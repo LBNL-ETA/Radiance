@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.28 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.29 2020/10/26 21:12:20 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: bsdf2klems.c,v 2.28 2019/12/28 18:05:14 greg E
 #define _USE_MATH_DEFINES
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 #include "random.h"
 #include "platform.h"
 #include "paths.h"
@@ -575,6 +576,39 @@ wrap_up(void)
 }
 #endif
 
+#define	HEAD_BUFLEN	8192
+static char	head_buf[HEAD_BUFLEN];
+static int	cur_headlen = 0;
+
+/* Record header line as comment associated with this SIR input */
+static int
+record2header(char *s)
+{
+	int	len = strlen(s);
+
+	if (cur_headlen+len >= HEAD_BUFLEN-6)
+		return(0);
+					/* includes EOL */
+	strcpy(head_buf+cur_headlen, s);
+	cur_headlen += len;
+
+	return(1);
+}
+
+/* Finish off header for this file */
+static void
+done_header(void)
+{
+	while (cur_headlen > 0 && isspace(head_buf[cur_headlen-1]))
+		--cur_headlen;
+	head_buf[cur_headlen] = '\0';
+	if (!cur_headlen)
+		return;
+	add_wbsdf("-C", 1);
+	add_wbsdf(head_buf, 0);
+	head_buf[cur_headlen=0] = '\0';
+}
+
 /* Read in BSDF and interpolate as Klems matrix representation */
 int
 main(int argc, char *argv[])
@@ -699,9 +733,13 @@ main(int argc, char *argv[])
 						progname, argv[i]);
 				return(1);
 			}
+			sprintf(pbuf, "%s:\n", argv[i]);
+			record2header(pbuf);
+			sir_headshare = &record2header;
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
+			done_header();
 			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
 			prog_start(pbuf);
 			eval_rbf();

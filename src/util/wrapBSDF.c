@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.25 2020/07/21 15:24:42 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.26 2020/10/26 21:12:20 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -27,7 +27,7 @@ const char	legal_units[] = "meter|foot|inch|centimeter|millimeter";
 					/* system materials & geometry */
 const char	*mgf_geometry = NULL;
 					/* comment list */
-#define MAXCOMM		30
+#define MAXCOMM		80
 const char	*commlist[MAXCOMM];
 int		ncomm = 0;
 					/* angle bases */
@@ -817,7 +817,7 @@ main(int argc, char *argv[])
 						argv[0]);
 				return 1;
 			}
-			if (strchr(argv[++i], '>') != NULL) {
+			if (strstr(argv[++i], "-->") != NULL) {
 				fprintf(stderr, "%s: illegal character in comment\n",
 						argv[0]);
 				return 1;

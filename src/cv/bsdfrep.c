@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.33 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.34 2020/10/26 21:12:20 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -52,6 +52,9 @@ MIGRATION		*mig_list = NULL;
 
 				/* current input direction */
 double			theta_in_deg, phi_in_deg;
+
+				/* header line sharing callback */
+int			(*sir_headshare)(char *s) = NULL;
 
 /* Register new input direction */
 int
@@ -661,22 +664,26 @@ headline(char *s, void *p)
 	char	fmt[MAXFMTLEN];
 	int	i;
 
+	if (isheadid(s))
+		return(0);
 	if (!strncmp(s, "NAME=", 5)) {
 		strcpy(bsdf_name, s+5);
 		bsdf_name[strlen(bsdf_name)-1] = '\0';
+		return(1);
 	}
 	if (!strncmp(s, "MANUFACT=", 9)) {
 		strcpy(bsdf_manuf, s+9);
 		bsdf_manuf[strlen(bsdf_manuf)-1] = '\0';
+		return(1);
 	}
 	if (!strncmp(s, "SYMMETRY=", 9)) {
 		inp_coverage = atoi(s+9);
 		single_plane_incident = !inp_coverage;
-		return(0);
+		return(1);
 	}
 	if (!strncmp(s, "IO_SIDES=", 9)) {
 		sscanf(s+9, "%d %d", &input_orient, &output_orient);
-		return(0);
+		return(1);
 	}
 	if (!strncmp(s, "COLORIMETRY=", 12)) {
 		fmt[0] = '\0';
@@ -687,22 +694,24 @@ headline(char *s, void *p)
 		if (i < 0)
 			return(-1);
 		rbf_colorimetry = i;
-		return(0);
+		return(1);
 	}
 	if (!strncmp(s, "GRIDRES=", 8)) {
 		sscanf(s+8, "%d", &grid_res);
-		return(0);
+		return(1);
 	}
 	if (!strncmp(s, "BSDFMIN=", 8)) {
 		sscanf(s+8, "%lf", &bsdf_min);
-		return(0);
+		return(1);
 	}
 	if (!strncmp(s, "BSDFSPEC=", 9)) {
 		sscanf(s+9, "%lf %lf", &bsdf_spec_val, &bsdf_spec_rad);
-		return(0);
+		return(1);
 	}
-	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))
-		return(-1);
+	if (formatval(fmt, s))
+		return (strcmp(fmt, BSDFREP_FMT) ? -1 : 0);
+	if (sir_headshare != NULL)
+		return ((*sir_headshare)(s));
 	return(0);
 }
 

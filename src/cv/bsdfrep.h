@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.24 2016/01/30 01:31:57 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.25 2020/10/26 21:12:20 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -137,6 +137,10 @@ extern double		theta_in_deg, phi_in_deg;
 extern GRIDVAL		dsf_grid[GRIDRES][GRIDRES];
 extern float		(*spec_grid)[GRIDRES][GRIDRES];
 extern int		nspec_grid;
+
+ 				/* header line sharing callback */
+extern int		(*sir_headshare)(char *s);
+
 
 /* Register new input direction */
 extern int		new_input_direction(double new_theta, double new_phi);
