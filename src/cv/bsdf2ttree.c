@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.54 2020/10/26 21:28:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.55 2020/10/28 18:54:21 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -651,7 +651,7 @@ eval_anisotropic(char *funame)
 static int
 wrap_up(void)
 {
-	char	cmd[8192];
+	char	cmd[32700];
 
 	if (bsdf_manuf[0]) {
 		add_wbsdf("-f", 1);
