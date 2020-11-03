@@ -1,11 +1,11 @@
-{ RCSid $Id: filt.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
+{ RCSid $Id: filt.cal,v 1.3 2020/11/03 20:19:02 greg Exp $ }
 {
 	Filter Kernal set-up for pcomb.
 
 	5/22/92	Greg Ward
 
 	Usage:
-	pcomb -x xres -y yres -f kern.cal -f filt.cal input.pic > output.pic
+	pcomb -x xres -y yres -f kern.cal -f filt.cal input.hdr > output.hdr
 
 	The file "kern.cal" must define the constant function kern(x,y), which
 	describes how the kernal behaves as a function of offset in x and y
@@ -24,10 +24,10 @@ K10 : k( 0,-1); K11 : k( 0, 0); K12 : k( 0, 1);
 K20 : k( 1,-1); K21 : k( 1, 0); K22 : k( 1, 1);
 sumtotal : K00+K01+K02+K10+K11+K12+K20+K21+K22;
 
-f(p) = ( K00*p(1,-1,-1) + K01*p(1,-1, 0) + K02*p(1,-1, 1) +
-	 K10*p(1, 0,-1) + K11*p(1, 0, 0) + K12*p(1, 0, 1) +
-	 K20*p(1, 1,-1) + K21*p(1, 1, 0) + K22*p(1, 1, 1) ) / sumtotal;
+f(p,i) = ( K00*p(i,-1,-1) + K01*p(i,-1, 0) + K02*p(i,-1, 1) +
+	   K10*p(i, 0,-1) + K11*p(i, 0, 0) + K12*p(i, 0, 1) +
+	   K20*p(i, 1,-1) + K21*p(i, 1, 0) + K22*p(i, 1, 1) ) / sumtotal;
 
-ro = f(ri);
-go = f(gi);
-bo = f(bi);
+ro = f(ri,1);
+go = f(gi,1);
+bo = f(bi,1);
