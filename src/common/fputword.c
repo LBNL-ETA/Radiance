@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fputword.c,v 3.9 2011/06/22 16:55:35 greg Exp $";
+static const char	RCSid[] = "$Id: fputword.c,v 3.10 2020/11/13 01:06:14 greg Exp $";
 #endif
 /*
  * Write word to stream, quoting as necessary
@@ -25,9 +25,9 @@ FILE  *fp;
 	for (cp = s; *cp; cp++)
 		if (isspace(*cp))
 			hasspace++;
-		else if (*cp == '"')
+		else if ((cp > s) & (*cp == '"') && cp[1])
 			quote = '\'';
-		else if (*cp == '\'')
+		else if ((cp > s) & (*cp == '\'') && cp[1])
 			quote = '"';
 
 	if (hasspace || quote) {	/* output with quotes */
