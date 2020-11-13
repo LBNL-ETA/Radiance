@@ -69,6 +69,7 @@ target_link_libraries(mgf2meta mgf meta rtrad)
 install(TARGETS
   3ds2mgf
   bsdf2klems
+  bsdf2rad
   bsdf2ttree
   epw2wea
   ies2rad
