@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.55 2020/10/28 18:54:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.56 2020/11/13 19:21:11 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -702,7 +702,7 @@ wrap_up(void)
 }
 #endif
 
-#define	HEAD_BUFLEN	8192
+#define	HEAD_BUFLEN	10240
 static char	head_buf[HEAD_BUFLEN];
 static int	cur_headlen = 0;
 
@@ -743,18 +743,24 @@ done_header(void)
 int
 main(int argc, char *argv[])
 {
-	static char	tfmt[2][4] = {"t4", "t3"};
-	int	dofwd = 0, dobwd = 1;
-	char	buf[2048];
-	int	i, na;
+	static const char	tfmt[2][4] = {"t4", "t3"};
+	int			dofwd = 0, dobwd = 1;
+	int			nsirs = 0;
+	char			buf[1024];
+	int			i;
 
 	progname = argv[0];
 	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
 	esupport &= ~(E_INCHAN|E_OUTCHAN);
 	scompile("PI:3.14159265358979323846", NULL, 0);
 	biggerlib();
-	for (i = 1; i < argc && (argv[i][0] == '-') | (argv[i][0] == '+'); i++)
-		switch (argv[i][1]) {		/* get options */
+	strcpy(buf, "File produced by: ");
+	if (convert_commandline(buf+18, sizeof(buf)-18, argv) != NULL) {
+		add_wbsdf("-C", 1); add_wbsdf(buf, 0);
+	}
+	for (i = 1; i < argc; i++)
+	    if ((argv[i][0] == '-') | (argv[i][0] == '+')) {
+		switch (argv[i][1]) {		/* get option */
 		case 'e':
 			scompile(argv[++i], NULL, 0);
 			if (single_plane_incident < 0)
@@ -832,11 +838,39 @@ main(int argc, char *argv[])
 		default:
 			goto userr;
 		}
-	strcpy(buf, "File produced by: ");
-	if (convert_commandline(buf+18, sizeof(buf)-18, argv) != NULL) {
-		add_wbsdf("-C", 1); add_wbsdf(buf, 0);
-	}
-	if (single_plane_incident >= 0) {	/* function-based BSDF? */
+	    } else {				/* input SIR or function */
+		FILE	*fpin;
+		if (!nsirs & (single_plane_incident >= 0))
+			break;			/* must be a function */
+		if (nsirs >= 4) {
+			fprintf(stderr, "At most 4 SIR inputs supported\n");
+			goto userr;
+		}
+		fpin = fopen(argv[i], "rb");	/* open SIR file */
+		if (fpin == NULL) {
+			fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
+					progname, argv[i]);
+			return(1);
+		}
+		sprintf(buf, "%s:\n", argv[i]);
+		record2header(buf);
+		sir_headshare = &record2header;
+		if (!load_bsdf_rep(fpin))
+			return(1);
+		fclose(fpin);
+		done_header();
+		sprintf(buf, "Interpolating component '%s'", argv[i]);
+		prog_start(buf);
+		if (!nsirs++) {
+			add_wbsdf("-a", 1);
+			add_wbsdf(tfmt[single_plane_incident], 1);
+		}
+		if (single_plane_incident)
+			eval_isotropic(NULL);
+		else
+			eval_anisotropic(NULL);
+	    }
+	if (i < argc) {				/* function-based BSDF? */
 		void	(*evf)(char *s) = single_plane_incident ?
 				eval_isotropic : eval_anisotropic;
 		if (i != argc-1 || fundefined(argv[i]) < 3) {
@@ -867,53 +901,24 @@ main(int argc, char *argv[])
 			prog_start("Evaluating inside->outside transmission");
 			(*evf)(argv[i]);
 		}
-		return(wrap_up());
+	} else if (!nsirs) {			/* else load SIR from stdin? */
+		record2header("<stdin>:\n");
+		sir_headshare = &record2header;
+		if (!load_bsdf_rep(stdin))
+			return(1);
+		done_header();
+		prog_start("Interpolating from standard input");
+		add_wbsdf("-a", 1);
+		add_wbsdf(tfmt[single_plane_incident], 1);
+		if (single_plane_incident)	/* resample dist. */
+			eval_isotropic(NULL);
+		else
+			eval_anisotropic(NULL);
 	}
-	if (i < argc) {				/* open input files if given */
-		int	nbsdf = 0;
-		for ( ; i < argc; i++) {	/* interpolate each component */
-			char	pbuf[256];
-			FILE	*fpin = fopen(argv[i], "rb");
-			if (fpin == NULL) {
-				fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
-						progname, argv[i]);
-				return(1);
-			}
-			sprintf(pbuf, "%s:\n", argv[i]);
-			record2header(pbuf);
-			sir_headshare = &record2header;
-			if (!load_bsdf_rep(fpin))
-				return(1);
-			fclose(fpin);
-			done_header();
-			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
-			prog_start(pbuf);
-			if (!nbsdf++) {
-				add_wbsdf("-a", 1);
-				add_wbsdf(tfmt[single_plane_incident], 1);
-			}
-			if (single_plane_incident)
-				eval_isotropic(NULL);
-			else
-				eval_anisotropic(NULL);
-		}
-		return(wrap_up());
-	}
-	SET_FILE_BINARY(stdin);			/* load from stdin */
-	if (!load_bsdf_rep(stdin))
-		return(1);
-	prog_start("Interpolating from standard input");
-	add_wbsdf("-a", 1);
-	add_wbsdf(tfmt[single_plane_incident], 1);
-	if (single_plane_incident)		/* resample dist. */
-		eval_isotropic(NULL);
-	else
-		eval_anisotropic(NULL);
-
-	return(wrap_up());
+	return(wrap_up());			/* call wrapBSDF */
 userr:
 	fprintf(stderr,
-	"Usage: %s [{+|-}a][-g Nlog2][-t pctcull][-n nss][-s thresh][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
+	"Usage: %s [{+|-}a][-g Nlog2][-t pctcull][-n nss][-s thresh][-l maxlobes][bsdf.sir ..] > bsdf.xml\n",
 				progname);
 	fprintf(stderr,
 	"   or: %s -t{3|4} [{+|-}a][-g Nlog2][-t pctcull][-n nss][-s thresh][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",

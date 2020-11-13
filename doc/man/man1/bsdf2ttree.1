@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.8 2020/05/18 20:08:57 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.9 2020/11/13 19:21:11 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -18,8 +18,7 @@ bsdf2ttree - generate XML tensor tree description of a BSDF
 .B "\-s thresh"
 ][
 .B "\-l maxlobes"
-]
-[
+][
 .B "bsdf.sir .."
 ]
 .br
@@ -109,6 +108,9 @@ option may be used to specify the maximum number of lobes in any
 interpolated radial basis function.
 The default value is 15000, which generally keeps the interpolation tractable.
 Setting the value to 0 turns off this limit.
+Parameter options may be altered between input files, in case a different
+resolution or culling percentage is indicated for transmission versus
+reflection for example.
 .PP
 In the second invocation form,
 .I bsdf2ttree
@@ -162,9 +164,10 @@ Computing both incident hemispheres takes about twice as long as one, but
 is recommended when rays will be impinging from either side.
 .SH EXAMPLE
 To take two components of an intermediate BSDF representation and create
-a high-resolution tensor tree with 85% culling:
+a high-resolution tensor tree with 85% culling on transmission and 95%
+culling on reflection:
 .IP "" .2i
-bsdf2ttree -g 7 -t 85 transmitted.sir reflected.sir > combined.xml
+bsdf2ttree -g 7 -t 85 transmitted.sir -t 95 reflected.sir > combined.xml
 .PP
 To create a low-res BSDF corresponding to a one-sided,
 isotropic Phong distribution:

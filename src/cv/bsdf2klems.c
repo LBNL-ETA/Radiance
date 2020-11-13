@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.31 2020/10/28 18:54:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.32 2020/11/13 19:21:11 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -576,7 +576,7 @@ wrap_up(void)
 }
 #endif
 
-#define	HEAD_BUFLEN	8192
+#define	HEAD_BUFLEN	10240
 static char	head_buf[HEAD_BUFLEN];
 static int	cur_headlen = 0;
 
@@ -618,7 +618,7 @@ int
 main(int argc, char *argv[])
 {
 	int	dofwd = 0, dobwd = 1;
-	char	buf[2048];
+	char	buf[1024];
 	char	*cp;
 	int	i, na;
 
@@ -730,29 +730,31 @@ main(int argc, char *argv[])
 	if (i < argc) {				/* open input files if given */
 		int	nbsdf = 0;
 		for ( ; i < argc; i++) {	/* interpolate each component */
-			char	pbuf[256];
 			FILE	*fpin = fopen(argv[i], "rb");
 			if (fpin == NULL) {
 				fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
 						progname, argv[i]);
 				return(1);
 			}
-			sprintf(pbuf, "%s:\n", argv[i]);
-			record2header(pbuf);
+			sprintf(buf, "%s:\n", argv[i]);
+			record2header(buf);
 			sir_headshare = &record2header;
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
 			done_header();
-			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
-			prog_start(pbuf);
+			sprintf(buf, "Interpolating component '%s'", argv[i]);
+			prog_start(buf);
 			eval_rbf();
 		}
 		return(wrap_up());
 	}
 	SET_FILE_BINARY(stdin);			/* load from stdin */
+	record2header("<stdin>:\n");
+	sir_headshare = &record2header;
 	if (!load_bsdf_rep(stdin))
 		return(1);
+	done_header();
 	prog_start("Interpolating from standard input");
 	eval_rbf();				/* resample dist. */
 	return(wrap_up());
