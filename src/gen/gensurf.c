@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.27 2020/06/14 03:54:23 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.28 2020/11/14 00:29:51 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -78,9 +78,7 @@ int norminterp(FVECT resmat[4], POINT *p0, POINT *p1, POINT *p2, POINT *p3);
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(int argc, char *argv[])
 {
 	POINT  *row0, *row1, *row2, *rp;
 	int  i, j, m, n;
@@ -160,6 +158,7 @@ char  *argv[];
 	compnorms(row0, row1, row2, n);
 	if (objout) {
 		printf("\nusemtl %s\n\n", modname);
+		printf("o %s\n\n", surfname);
 		putobjrow(row1, n);
 	}
 						/* for each row */
