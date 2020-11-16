@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.4 2020/05/02 00:12:45 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.5 2020/11/16 18:40:53 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -276,9 +276,12 @@ loadOBJ(Scene *sc, const char *fspec)
 			fprintf(stderr, " %8d statements\r", nstats);
 	}
 #if POPEN_SUPPORT
-	if (fspec[0] == '!')
-		pclose(fp);
-	else
+	if (fspec[0] == '!' && pclose(fp) != 0) {
+		sprintf(errmsg, "Bad return status from: %s", fspec+1);
+		error(USER, errmsg);
+		freeScene(sc);
+		return(NULL);
+	} else
 #endif
 	if (fp != stdin)
 		fclose(fp);
