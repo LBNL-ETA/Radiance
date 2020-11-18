@@ -21,7 +21,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.19 2019/12/04 18:11:57 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.20 2020/11/18 17:18:41 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -1427,14 +1427,14 @@ void coeff_lum_perez(double Z, double epsilon, double Delta, float coeff_perez[]
 /* degrees into radians */
 double radians(double degres)
 {
-	return degres*M_PI/180.0;
+	return degres*(M_PI/180.);
 }
 
 
 /* radian into degrees */
 double degres(double radians)
 {
-	return radians/M_PI*180.0;
+	return radians*(180./M_PI);
 }
 
 
@@ -1465,7 +1465,7 @@ double integ_lv(float *lv,float *theta)
 		buffer += (*(lv+i))*cos(radians(*(theta+i)));
 	}
 			
-	return buffer*2*M_PI/144;
+	return buffer*(2.*M_PI/145.);
 }
 
 
