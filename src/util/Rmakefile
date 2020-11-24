@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.98 2020/03/02 22:00:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.99 2020/11/24 16:30:15 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -58,7 +58,8 @@ genskyvec.pl genBSDF.pl bsdfview.pl rtpict.pl rcode2bmp.pl $(LIBFILES)
 	cd $(INSTDIR) ; chmod 755 objview objpict \
 		glare dayfact debugcal rlux raddepend objline \
 		compamb vinfo genambpos fieldcomb genklemsamp \
-		genskyvec genBSDF rtpict rcode2bmp
+		genskyvec genBSDF rtpict rcode2bmp bsdfview \
+		ltview ltpict
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
