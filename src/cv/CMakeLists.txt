@@ -82,6 +82,7 @@ install(TARGETS
   obj2rad
   pkgBSDF
   rad2mgf
+  robjutil
   tmesh2rad
   RUNTIME DESTINATION "bin"
 )
