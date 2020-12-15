@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.85 2018/11/08 00:54:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.86 2020/12/15 23:54:00 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -111,8 +111,6 @@ all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
 install:	all rayinit.cal
 	$(INSTALL) $(PROGS) $(INSTDIR)
-	cd $(INSTDIR) ; rm -f rview ; ln -s rvu rview
-	cd $(INSTDIR) ; rm -f rtcontrib ; ln -s rcontrib rtcontrib
 	rm -f $(LIBDIR)/rayinit.cal
 	cp rayinit.cal $(LIBDIR)
 
