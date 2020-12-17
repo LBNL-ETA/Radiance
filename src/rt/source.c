@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.73 2020/07/03 00:42:20 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.74 2020/12/17 03:30:37 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -477,19 +477,17 @@ direct(					/* add direct component */
 						/* compute number to check */
 	nshadcheck = pow((double)ncnts, shadcert) + .5;
 						/* modify threshold */
-	if (ncnts > MINSHADCNT)
-		ourthresh = shadthresh / r->rweight;
-	else
-		ourthresh = 0;
+	ourthresh = shadthresh / r->rweight;
 						/* test for shadows */
 	for (nhits = 0, hwt = 0.0, sn = 0; sn < ncnts;
 			hwt += (double)source[scp->sno].nhits /
 				(double)source[scp->sno].ntests,
 			sn++) {
 						/* check threshold */
-		if ((sn+nshadcheck>=ncnts ? cntord[sn].brt :
+		if (sn >= MINSHADCNT &&
+			    (sn+nshadcheck>=ncnts ? cntord[sn].brt :
 				cntord[sn].brt-cntord[sn+nshadcheck].brt)
-				< ourthresh*bright(r->rcol))
+					< ourthresh*bright(r->rcol))
 			break;
 		scp = srccnt + cntord[sn].sndx;
 						/* test for hit */
