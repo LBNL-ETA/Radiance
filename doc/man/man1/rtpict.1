@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtpict.1,v 1.7 2020/08/17 21:45:03 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.8 2020/12/17 02:01:23 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
 rtpict - generate a RADIANCE picture or layered image using rtrace
@@ -100,7 +100,7 @@ with the 'v' type will be renamed
 .I "irradiance.hdr"
 and some other output types become irrelevant (i.e., 'r', 'x', 'R', and 'X').
 If one or more of the associated output files already exists in the
-destination directory, it will be overwritten with the new data.
+destination directory, an error will be printed and the command will abort.
 .SH EXAMPLES
 To render a scene with four processes:
 .IP "" .2i
