@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writewfobj.c,v 2.3 2020/04/23 22:35:27 greg Exp $";
+static const char RCSid[] = "$Id: writewfobj.c,v 2.4 2020/12/18 00:15:47 greg Exp $";
 #endif
 /*
  *  writewfobj.c
@@ -194,7 +194,7 @@ toOBJ(Scene *sc, FILE *fp)
 					/* write out each object group */
 	for (i = 0; i < sc->ngrps; i++) {
 		if (verbose)
-			fprintf(stderr, " Writing faces %s               \r",
+			fprintf(stderr, " Writing faces %-50s\r",
 					sc->grpname[i]);
 		write_group(sc, i, fp);
 	}
@@ -202,6 +202,9 @@ toOBJ(Scene *sc, FILE *fp)
 		error(SYSTEM, "Error flushing .OBJ output");
 		return(-1);
 	}
+	if (verbose)
+		fprintf(stderr, "Wrote %d faces                                                           \n",
+				sc->nfaces);
 	return(sc->nfaces);
 }
 

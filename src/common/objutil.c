@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.9 2020/06/24 01:16:09 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.10 2020/12/18 00:15:47 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -460,6 +460,8 @@ findDuplicateFaces(Scene *sc)
 			++nfound;
 		}
 	}
+	if (verbose)
+		fprintf(stderr, "Found %d duplicate faces\n", nfound);
 	return(nfound);
 }
 

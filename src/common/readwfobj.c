@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.6 2020/12/14 20:07:34 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.7 2020/12/18 00:15:47 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -287,6 +287,8 @@ loadOBJ(Scene *sc, const char *fspec)
 #endif
 	if (fp != stdin)
 		fclose(fp);
+	if (verbose)
+		fprintf(stderr, "Read %d statements\n", nstats);
 	sprintf(buf, "%d statements read from \"%s\"", nstats, fspec);
 	addComment(sc, buf);
 	if (nunknown) {
