@@ -1,4 +1,4 @@
-# RCSid $Id: mixtex.rif,v 1.6 2020/08/10 20:48:12 greg Exp $
+# RCSid $Id: mixtex.rif,v 1.7 2021/01/01 20:15:35 greg Exp $
 #
 # A test of different mixtures and textures on disks
 #
@@ -20,7 +20,7 @@ ZONE = I -8 0 0 5 0 3
 
 EXP = 1.5
 
-PGMAP = mixtex.gpm 1M 40
+PGMAP = mixtex.gpm 1M 40 100
 PCMAP = mixtex.cpm 10M 40
 
 RES = 1024
