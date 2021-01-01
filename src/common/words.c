@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: words.c,v 2.12 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: words.c,v 2.13 2021/01/01 02:10:32 greg Exp $";
 #endif
 /*
  * Routines for recognizing and moving about words in strings.
@@ -82,8 +82,7 @@ iskip(char *s)			/* skip integer in string */
 {
 	while (isspace(*s))
 		s++;
-	if ((*s == '-') | (*s == '+'))
-		s++;
+	s += (*s == '-') | (*s == '+');
 	if (!isdigit(*s))
 		return(NULL);
 	do
@@ -100,8 +99,7 @@ fskip(char *s)			/* skip float in string */
 
 	while (isspace(*s))
 		s++;
-	if ((*s == '-') | (*s == '+'))
-		s++;
+	s += (*s == '-') | (*s == '+');
 	cp = s;
 	while (isdigit(*cp))
 		cp++;
@@ -163,7 +161,7 @@ isname(char *s)			/* check for legal identifier name */
 {
 	while (*s == '_')			/* skip leading underscores */
 		s++;
-	if (!isascii(*s) || !isalpha(*s))	/* start with a letter */
+	if (!isascii(*s) | !isalpha(*s))	/* start with a letter */
 		return(0);
 	while (isascii(*++s) && isgraph(*s))	/* all visible characters */
 		;
