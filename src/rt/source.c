@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.74 2020/12/17 03:30:37 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.75 2021/01/04 19:07:15 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -364,15 +364,9 @@ sourcehit(			/* check to see if ray hit distant source */
 			return(0);	/* nothing usable */
 	}
 	/*
-	 * Make assignments.
+	 * Assign object index
 	 */
 	r->robj = objndx(r->ro);
-	for (i = 0; i < 3; i++)
-		r->ron[i] = -r->rdir[i];
-	r->rod = 1.0;
-	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
-	r->uv[0] = r->uv[1] = 0.0;
-	r->rox = NULL;
 	return(1);
 }
 
