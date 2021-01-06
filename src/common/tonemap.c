@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.37 2011/05/20 02:06:38 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.38 2021/01/06 19:25:00 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: tonemap.c,v 3.37 2011/05/20 02:06:38 greg Exp 
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<math.h>
+#include	<string.h>
 #include	"tmprivat.h"
 #include	"tmerrmsg.h"
 
@@ -374,12 +375,12 @@ int	wt
 	horig = HISTI(tms->hbrmin);
 	hlen = HISTI(tms->hbrmax) + 1 - horig;
 	if (hlen > oldlen) {			/* (re)allocate histogram */
-		int	*newhist = (int *)calloc(hlen, sizeof(int));
+		HIST_TYP  *newhist = (HIST_TYP *)calloc(hlen, sizeof(HIST_TYP));
 		if (newhist == NULL)
 			returnErr(TM_E_NOMEM);
 		if (oldlen) {			/* copy and free old */
-			for (i = oldlen, j = i+oldorig-horig; i; )
-				newhist[--j] = tms->histo[--i];
+			memcpy((MEM_PTR)newhist+(oldorig-horig),
+				(MEM_PTR)tms->histo, oldlen*sizeof(HIST_TYP));
 			free((MEM_PTR)tms->histo);
 		}
 		tms->histo = newhist;
@@ -453,11 +454,12 @@ double	Ldmax
 )
 {
 	static const char funcName[] = "tmComputeMapping";
-	int	*histo;
+	HIST_TYP	*histo;
 	float	*cumf;
-	int	brt0, histlen, threshold, ceiling, trimmings;
+	int	brt0, histlen;
+	HIST_TYP	threshold, ceiling, trimmings;
 	double	logLddyn, Ldmin, Ldavg, Lwavg, Tr, Lw, Ld;
-	int32	histot;
+	HIST_TYP	histot;
 	double	sum;
 	double	d;
 	int	i, j;
@@ -491,7 +493,7 @@ double	Ldmax
 			tms->hbrmax - tms->hbrmin < TM_BRTSCALE*logLddyn)
 		goto linearmap;
 					/* clamp histogram */
-	histo = (int *)malloc(histlen*sizeof(int));
+	histo = (HIST_TYP *)malloc(histlen*sizeof(HIST_TYP));
 	cumf = (float *)malloc((histlen+2)*sizeof(float));
 	if ((histo == NULL) | (cumf == NULL))
 		returnErr(TM_E_NOMEM);
@@ -608,18 +610,17 @@ TMstruct	*tms
 	*tmnew = *tms;		/* copy everything */
 	if (tmnew->histo != NULL) {	/* duplicate histogram */
 		len = HISTI(tmnew->hbrmax) + 1 - HISTI(tmnew->hbrmin);
-		tmnew->histo = (int *)malloc(len*sizeof(int));
+		tmnew->histo = (HIST_TYP *)malloc(len*sizeof(HIST_TYP));
 		if (tmnew->histo != NULL)
-			for (i = len; i--; )
-				tmnew->histo[i] = tms->histo[i];
+			memcpy((MEM_PTR)tmnew->histo, (MEM_PTR)tms->histo,
+					len*sizeof(HIST_TYP));
 	}
 	if (tmnew->lumap != NULL) {	/* duplicate luminance mapping */
 		len = tmnew->mbrmax-tmnew->mbrmin+1;
-		tmnew->lumap = (unsigned short *)malloc(
-						len*sizeof(unsigned short) );
+		tmnew->lumap = (TMAP_TYP *)malloc(len*sizeof(TMAP_TYP));
 		if (tmnew->lumap != NULL)
-			for (i = len; i--; )
-				tmnew->lumap[i] = tms->lumap[i];
+			memcpy((MEM_PTR)tmnew->lumap, (MEM_PTR)tms->lumap,
+					len*sizeof(TMAP_TYP));
 	}
 					/* clear package data */
 	for (i = tmNumPkgs; i--; )
@@ -683,7 +684,7 @@ TMstruct	*tms
 	if (tms->mbrmin > tms->mbrmax)
 		return 0;
 	if (tms->lumap == NULL)
-		tms->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
+		tms->lumap = (TMAP_TYP *)malloc(sizeof(TMAP_TYP)*
 					(tms->mbrmax-tms->mbrmin+1));
 	return(tms->lumap != NULL);
 }

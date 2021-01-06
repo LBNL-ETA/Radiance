@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.26 2011/05/20 02:06:38 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.27 2021/01/06 19:25:00 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -53,7 +53,7 @@ extern "C" {
 
 #define	TM_BRTSCALE	256		/* brightness scale factor (integer) */
 
-#define TM_NOBRT	(-1<<15)	/* bogus brightness value */
+#define TM_NOBRT	(~0x7fff)	/* bogus brightness value */
 #define TM_NOLUM	(1e-17)		/* ridiculously small luminance */
 
 #define	TM_MAXPKG	8		/* maximum number of color formats */
@@ -64,6 +64,10 @@ extern "C" {
 #ifndef	MEM_PTR
 #define	MEM_PTR		void *
 #endif
+#ifndef HIST_TYP
+#define HIST_TYP	unsigned long
+#endif
+#define TMAP_TYP	unsigned short
 
 extern char	*tmErrorMessage[];	/* error messages */
 
@@ -81,9 +85,9 @@ typedef struct {
 	MEM_PTR		inpdat;		/* current input client data */
 	COLORMAT	cmat;		/* color conversion matrix */
 	TMbright	hbrmin, hbrmax;	/* histogram brightness limits */	
-	int		*histo;		/* input histogram */
+	HIST_TYP	*histo;		/* input histogram */
 	TMbright	mbrmin, mbrmax;	/* mapped brightness limits */
-	unsigned short	*lumap;		/* computed luminance map */
+	TMAP_TYP	*lumap;		/* computed luminance map */
 	MEM_PTR		pd[TM_MAXPKG];	/* pointers to private data */
 	int		lastError;	/* last error incurred */
 	const char	*lastFunc;	/* error-generating function name */
