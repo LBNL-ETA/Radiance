@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.38 2021/01/06 19:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.39 2021/01/06 20:34:10 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -379,7 +379,7 @@ int	wt
 		if (newhist == NULL)
 			returnErr(TM_E_NOMEM);
 		if (oldlen) {			/* copy and free old */
-			memcpy((MEM_PTR)newhist+(oldorig-horig),
+			memcpy((MEM_PTR)(newhist+(oldorig-horig)),
 				(MEM_PTR)tms->histo, oldlen*sizeof(HIST_TYP));
 			free((MEM_PTR)tms->histo);
 		}
@@ -457,9 +457,8 @@ double	Ldmax
 	HIST_TYP	*histo;
 	float	*cumf;
 	int	brt0, histlen;
-	HIST_TYP	threshold, ceiling, trimmings;
+	HIST_TYP	threshold, ceiling, trimmings, histot;
 	double	logLddyn, Ldmin, Ldavg, Lwavg, Tr, Lw, Ld;
-	HIST_TYP	histot;
 	double	sum;
 	double	d;
 	int	i, j;
