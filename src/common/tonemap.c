@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.39 2021/01/06 20:34:10 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.40 2021/01/07 02:13:49 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -67,7 +67,7 @@ double	gamval
 		tmnew->mongam = gamval;
 						/* set color divisors */
 	for (i = 0; i < 3; i++)
-		tmnew->cdiv[i] = 256.*pow(tmnew->clf[i], 1./tmnew->mongam);
+		tmnew->cdiv[i] = TM_BRES*pow(tmnew->clf[i], 1./tmnew->mongam);
 
 						/* set input transform */
 	tmnew->inppri = tmnew->monpri;
@@ -143,7 +143,7 @@ MEM_PTR	dat
 			tms->cmat[i][j] *= tms->inpsf;
 						/* set color divisors */
 	for (i = 0; i < 3; i++)
-		tms->cdiv[i] = 256.*pow(tms->clf[i] < .001 ? .001 :
+		tms->cdiv[i] = TM_BRES*pow(tms->clf[i] < .001 ? .001 :
 						tms->clf[i], 1./tms->mongam);
 						/* notify packages */
 	for (i = tmNumPkgs; i--; )
@@ -436,7 +436,7 @@ double	gamval
 		gamval = tms->mongam;
 	d = log(expmult/tms->inpsf);
 	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
-		double	val = 256. * exp(
+		double	val = TM_BRES * exp(
 			( d + (tms->mbrmin+i)*(1./TM_BRTSCALE) )
 			/ gamval);
 		tms->lumap[i] = val >= (double)0xffff ? 0xffff : (int)val;
@@ -539,7 +539,7 @@ double	Ldmax
 		d -= (double)j;
 		Ld = Ldmin*exp(logLddyn*((1.-d)*cumf[j]+d*cumf[j+1]));
 		d = (Ld - Ldmin)/(Ldmax - Ldmin);
-		tms->lumap[i] = 256.*pow(d, 1./gamval);
+		tms->lumap[i] = TM_BRES*pow(d, 1./gamval);
 	}
 	free((MEM_PTR)histo);		/* clean up and return */
 	free((MEM_PTR)cumf);

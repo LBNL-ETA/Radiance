@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.27 2021/01/06 19:25:00 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.28 2021/01/07 02:13:49 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -55,6 +55,8 @@ extern "C" {
 
 #define TM_NOBRT	(~0x7fff)	/* bogus brightness value */
 #define TM_NOLUM	(1e-17)		/* ridiculously small luminance */
+
+#define TM_BRES		4096		/* luminance tone-map resolution */
 
 #define	TM_MAXPKG	8		/* maximum number of color formats */
 
