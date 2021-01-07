@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.40 2021/01/07 02:13:49 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.41 2021/01/07 19:13:57 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -439,7 +439,9 @@ double	gamval
 		double	val = TM_BRES * exp(
 			( d + (tms->mbrmin+i)*(1./TM_BRTSCALE) )
 			/ gamval);
-		tms->lumap[i] = val >= (double)0xffff ? 0xffff : (int)val;
+		tms->lumap[i] = val;
+		if (sizeof(TMAP_TYP) == 2 && val >= 0xffff)
+			tms->lumap[i] = 0xffff;
 	}
 	returnOK;
 }
@@ -563,22 +565,24 @@ int	len
 )
 {
 	static const char funcName[] = "tmMapPixels";
-	int32	li, pv;
+	TMbright	lv;
+	TMAP_TYP	li;
+	int		pv;
 
 	if (tms == NULL || tms->lumap == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ps == NULL) | (ls == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	while (len--) {
-		if ((li = *ls++) < tms->mbrmin) {
+		if ((lv = *ls++) < tms->mbrmin) {
 			li = 0;
 		} else {
-			if (li > tms->mbrmax)
-				li = tms->mbrmax;
-			li = tms->lumap[li - tms->mbrmin];
+			if (lv > tms->mbrmax)
+				lv = tms->mbrmax;
+			li = tms->lumap[lv - tms->mbrmin];
 		}
 		if (cs == TM_NOCHROM)
-			*ps++ = li>255 ? 255 : li;
+			*ps++ = li>=TM_BRES ? 255 : (int)(256*li/TM_BRES);
 		else {
 			pv = *cs++ * li / tms->cdiv[RED];
 			*ps++ = pv>255 ? 255 : pv;

@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.28 2021/01/07 02:13:49 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.29 2021/01/07 19:13:57 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -69,7 +69,9 @@ extern "C" {
 #ifndef HIST_TYP
 #define HIST_TYP	unsigned long
 #endif
-#define TMAP_TYP	unsigned short
+#ifndef TMAP_TYP
+#define TMAP_TYP	uint16
+#endif
 
 extern char	*tmErrorMessage[];	/* error messages */
 
