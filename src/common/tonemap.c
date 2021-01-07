@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.41 2021/01/07 19:13:57 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.42 2021/01/07 20:34:45 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -499,8 +499,8 @@ double	Ldmax
 	if ((histo == NULL) | (cumf == NULL))
 		returnErr(TM_E_NOMEM);
 	cumf[histlen+1] = 1.;		/* guard for assignment code */
-	for (i = histlen; i--; )	/* make malleable copy */
-		histo[i] = tms->histo[i];
+					/* make malleable copy */
+	memcpy((MEM_PTR)histo, (MEM_PTR)tms->histo, histlen*sizeof(HIST_TYP));
 	do {				/* iterate to solution */
 		sum = 0;		/* cumulative probability */
 		for (i = 0; i < histlen; i++) {
@@ -597,7 +597,7 @@ int	len
 
 
 TMstruct *
-tmDup(				/* duplicate top tone mapping */
+tmDup(				/* duplicate tone mapping */
 TMstruct	*tms
 )
 {
