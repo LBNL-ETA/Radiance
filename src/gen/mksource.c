@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.8 2014/03/06 00:42:21 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.9 2021/01/15 20:56:50 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -398,9 +398,11 @@ getlost(LOSTLIGHT **llp, COLOR intens, FVECT cent, double omega)
 void
 mksources(TRITREE *samptree, double thresh, double maxang)
 {
+#define MAXITER		100
 	const int	ethresh = (int)(log(thresh)/log(2.) + (COLXS+.5));
 	const double	maxomega = 2.*PI*(1. - cos(PI/180./2.*maxang));
 	const double	minintens = .05*thresh*maxomega;
+	int		niter = MAXITER;
 	int		nsrcs = 0;
 	LOSTLIGHT	*lostlightlist = NULL;
 	int		emax;
@@ -426,7 +428,7 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 	 */
 	if (thresh <= FTINY)
 		return;
-	for ( ; ; ) {
+	while (niter--) {
 		emax = ethresh;		/* find brightest unclaimed */
 		startleaf = NULL;
 		for (i = 0; i < NTRUNKBR; i++) {
@@ -489,7 +491,9 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 		printf("0\n0\n4 %f %f %f %f\n",
 				curcent[0], curcent[1], curcent[2],
 				2.*180./PI*currad);
+		niter = MAXITER;
 	}
+#undef MAXITER
 }
 
 int
