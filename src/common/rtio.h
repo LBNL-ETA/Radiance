@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.23 2019/11/07 23:20:28 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.24 2021/01/15 18:31:38 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -89,18 +89,18 @@ extern char	*gethomedir(char *uname, char *path, int plen);
 					/* defined in getpath.c */
 extern char	*getpath(char *fname, char *searchpath, int mode);
 					/* defined in byteswap.c */
-extern void	swap16(char *wp, int n);
-extern void	swap32(char *wp, int n);
-extern void	swap64(char *wp, int n);
+extern void	swap16(char *wp, size_t n);
+extern void	swap32(char *wp, size_t n);
+extern void	swap64(char *wp, size_t n);
 					/* defined in portio.c */
 extern void	putstr(char *s, FILE *fp);
 extern void	putint(long i, int siz, FILE *fp);
 extern void	putflt(double f, FILE *fp);
-extern int	putbinary(const void *s, int elsiz, int nel, FILE *fp);
+extern size_t	putbinary(const void *s, size_t elsiz, size_t nel, FILE *fp);
 extern char	*getstr(char *s, FILE *fp);
 extern long	getint(int siz, FILE *fp);
 extern double	getflt(FILE *fp);
-extern int	getbinary(void *s, int elsiz, int nel, FILE *fp);
+extern size_t	getbinary(void *s, size_t elsiz, size_t nel, FILE *fp);
 					/* defined in rexpr.c */
 extern int	ecompile(char *sp, int iflg, int wflag);
 extern char	*expsave(void);

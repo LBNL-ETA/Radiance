@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.30 2021/01/15 17:22:23 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.31 2021/01/15 18:31:38 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -309,14 +309,14 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			}
 	} else {					/* read binary file */
 		if (sizeof(COLOR) == cm_elem_size[dtype]) {
-			int	nread = 0;
+			size_t	nread = 0;
 			do {				/* read all we can */
 				nread += getbinary(cm->cmem + 3*nread,
 						sizeof(COLOR),
-						cm->nrows*cm->ncols - nread,
+						(size_t)cm->nrows*cm->ncols - nread,
 						fp);
 				if (nrows <= 0) {	/* unknown length */
-					if (nread == cm->nrows*cm->ncols)
+					if (nread == (size_t)cm->nrows*cm->ncols)
 							/* need more space? */
 						cm = cm_resize(cm, cm->nrows+ROWINC);
 					else if (nread && !(nread % cm->ncols))
@@ -324,22 +324,22 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 						cm = cm_resize(cm, nread/cm->ncols);
 					else		/* ended mid-row */
 						goto EOFerror;
-				} else if (nread < cm->nrows*cm->ncols)
+				} else if (nread < (size_t)cm->nrows*cm->ncols)
 					goto EOFerror;
-			} while (nread < cm->nrows*cm->ncols);
+			} while (nread < (size_t)cm->nrows*cm->ncols);
 
 			if (swap) {
 				if (sizeof(COLORV) == 4)
 					swap32((char *)cm->cmem,
-							3*cm->nrows*cm->ncols);
+							3*(size_t)cm->nrows*cm->ncols);
 				else /* sizeof(COLORV) == 8 */
 					swap64((char *)cm->cmem,
-							3*cm->nrows*cm->ncols);
+							3*(size_t)cm->nrows*cm->ncols);
 			}
 		} else if (dtype == DTdouble) {
 			double	dc[3];			/* load from double */
 			COLORV	*cvp = cm->cmem;
-			int	n = nrows*ncols;
+			size_t	n = (size_t)nrows*ncols;
 
 			if (n <= 0)
 				goto not_handled;
@@ -353,7 +353,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		} else /* dtype == DTfloat */ {
 			float	fc[3];			/* load from float */
 			COLORV	*cvp = cm->cmem;
-			int	n = nrows*ncols;
+			size_t	n = (size_t)nrows*ncols;
 
 			if (n <= 0)
 				goto not_handled;

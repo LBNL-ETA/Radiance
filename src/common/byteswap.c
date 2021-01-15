@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: byteswap.c,v 3.1 2006/12/23 17:27:45 greg Exp $";
+static const char RCSid[] = "$Id: byteswap.c,v 3.2 2021/01/15 18:31:38 greg Exp $";
 #endif
 /*
  * Byte swapping routines
@@ -12,11 +12,11 @@ static const char RCSid[] = "$Id: byteswap.c,v 3.1 2006/12/23 17:27:45 greg Exp 
 
 void
 swap16(		/* swap n 16-bit words */
-	register char  *wp,
-	int  n
+	char  *wp,
+	size_t  n
 )
 {
-	register int	t;
+	int	t;
 
 	while (n-- > 0) {
 		t = wp[0]; wp[0] = wp[1]; wp[1] = t;
@@ -27,11 +27,11 @@ swap16(		/* swap n 16-bit words */
 
 void
 swap32(		/* swap n 32-bit words */
-	register char  *wp,
-	int  n
+	char  *wp,
+	size_t  n
 )
 {
-	register int	t;
+	int	t;
 
 	while (n-- > 0) {
 		t = wp[0]; wp[0] = wp[3]; wp[3] = t;
@@ -43,11 +43,11 @@ swap32(		/* swap n 32-bit words */
 
 void
 swap64(		/* swap n 64-bit words */
-	register char  *wp,
-	int  n
+	char  *wp,
+	size_t  n
 )
 {
-	register int	t;
+	int	t;
 
 	while (n-- > 0) {
 		t = wp[0]; wp[0] = wp[7]; wp[7] = t;
