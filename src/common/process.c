@@ -1,10 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: process.c,v 2.10 2020/04/03 17:06:16 greg Exp $";
+static const char	RCSid[] = "$Id: process.c,v 2.11 2021/01/15 19:01:53 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
  *
- * External symbols declared in standard.h
+ * External symbols declared in rtprocess.h
  */
 
 #include "copyright.h"
@@ -37,14 +37,14 @@ process(		/* process data through pd */
 
 
 
-int
+ssize_t
 readbuf(		/* read all of requested buffer */
 	int	fd,
 	char	*bpos,
-	int	siz
+	ssize_t	siz
 )
 {
-	int	cc = 0, nrem = siz;
+	ssize_t	cc = 0, nrem = siz;
 retry:
 	while (nrem > 0 && (cc = read(fd, bpos, nrem)) > 0) {
 		bpos += cc;
@@ -61,14 +61,14 @@ retry:
 }
 
 
-int
+ssize_t
 writebuf(		/* write all of requested buffer */
 int	fd,
 char	*bpos,
-int	siz
+ssize_t	siz
 )
 {
-	int	cc = 0, nrem = siz;
+	ssize_t	cc = 0, nrem = siz;
 retry:
 	while (nrem > 0 && (cc = write(fd, bpos, nrem)) > 0) {
 		bpos += cc;
