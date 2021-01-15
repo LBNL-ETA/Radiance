@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.36 2020/09/07 17:08:08 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.37 2021/01/15 17:22:23 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -29,7 +29,7 @@ typedef struct {
 
 typedef struct {
 	int	nw_rec;		/* number of words per record */
-	long	nrecs;		/* number of records we found */
+	ssize_t	nrecs;		/* number of records we found */
 	char	*rec[1];	/* record array (extends struct) */
 } RECINDEX;
 
@@ -218,7 +218,7 @@ count_columns(const RECINDEX *rp)
 
 /* copy nth record from index to stdout */
 static int
-print_record(const RECINDEX *rp, long n)
+print_record(const RECINDEX *rp, ssize_t n)
 {
 	int	words2go = rp->nw_rec;
 	char	*scp;
@@ -360,10 +360,10 @@ check_sizes()
 }
 
 /* call to compute block input position */
-static long
+static ssize_t
 get_block_pos(int r, int c, int blklvl[][2], int nlvls)
 {
-	long	n = 0;
+	ssize_t	n = 0;
 
 	while (nlvls > 1) {
 		int	sr = r/blklvl[1][0];
@@ -379,22 +379,22 @@ get_block_pos(int r, int c, int blklvl[][2], int nlvls)
 }
 
 /* return input offset based on array ordering and transpose option */
-static long
+static ssize_t
 get_input_pos(int r, int c)
 {
-	long	n;
+	ssize_t	n;
 
 	if (outLevels > 1) {		/* block reordering */
 		n = get_block_pos(r, c, outArray, outLevels);
 		if (transpose) {
 			r = n/ni_rows;
 			c = n - r*ni_rows;
-			n = (long)c*ni_columns + r;
+			n = (ssize_t)c*ni_columns + r;
 		}
 	} else if (transpose)		/* transpose only */
-		n = (long)c*ni_columns + r;
+		n = (ssize_t)c*ni_columns + r;
 	else				/* XXX should never happen! */
-		n = (long)r*no_columns + c;
+		n = (ssize_t)r*no_columns + c;
 	return(n);
 }
 
@@ -404,7 +404,7 @@ do_reorder(const MEMLOAD *mp)
 {
 	static const char	tabEOL[2] = {'\t','\n'};
 	RECINDEX		*rp = NULL;
-	long			nrecords;
+	ssize_t			nrecords;
 	int			i, j;
 						/* propogate sizes */
 	if (ni_rows <= 0)
@@ -419,7 +419,7 @@ do_reorder(const MEMLOAD *mp)
 			ni_columns = count_columns(rp);
 		nrecords = rp->nrecs;
 	} else if ((ni_rows > 0) & (ni_columns > 0)) {
-		nrecords = ni_rows*ni_columns;
+		nrecords = (ssize_t)ni_rows*ni_columns;
 		if (nrecords > mp->len/(n_comp*comp_size)) {
 			fputs("Input too small for specified size and type\n",
 					stderr);
@@ -432,7 +432,7 @@ do_reorder(const MEMLOAD *mp)
 		ni_rows = nrecords/ni_columns;
 	else if ((ni_columns <= 0) & (ni_rows > 0))
 		ni_columns = nrecords/ni_rows;
-	if (nrecords != ni_rows*ni_columns)
+	if (nrecords != (ssize_t)ni_rows*ni_columns)
 		goto badspec;
 	if (transpose) {
 		if (no_columns <= 0)
@@ -461,7 +461,7 @@ do_reorder(const MEMLOAD *mp)
 						/* reorder records */
 	for (i = 0; i < no_rows; i++) {
 	    for (j = 0; j < no_columns; j++) {
-		long	n = get_input_pos(i, j);
+		ssize_t	n = get_input_pos(i, j);
 		if (n >= nrecords) {
 			fputs("Index past end-of-file\n", stderr);
 			return(0);
@@ -491,7 +491,7 @@ badspec:
 static int
 do_resize(FILE *fp)
 {
-	long	records2go = ni_rows*ni_columns;
+	ssize_t	records2go = ni_rows*ni_columns;
 	int	columns2go = no_columns;
 	char	word[256];
 			

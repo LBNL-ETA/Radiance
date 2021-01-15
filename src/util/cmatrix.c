@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.29 2021/01/15 02:46:28 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.30 2021/01/15 17:22:23 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -65,9 +65,9 @@ cm_resize(CMATRIX *cm, int nrows)
 		cm_free(cm);
 		return(NULL);
 	}
-	old_size = sizeof(CMATRIX) + sizeof(COLOR)*(cm->nrows*cm->ncols - 1);
+	old_size = sizeof(CMATRIX) + sizeof(COLOR)*((size_t)cm->nrows*cm->ncols - 1);
 	adjacent_ra_sizes(ra_bounds, old_size);
-	new_size = sizeof(CMATRIX) + sizeof(COLOR)*(nrows*cm->ncols - 1);
+	new_size = sizeof(CMATRIX) + sizeof(COLOR)*((size_t)nrows*cm->ncols - 1);
 	if (nrows < cm->nrows ? new_size <= ra_bounds[0] :
 				new_size > ra_bounds[1]) {
 		adjacent_ra_sizes(ra_bounds, new_size);
@@ -483,6 +483,7 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 	static const char	tabEOL[2] = {'\t','\n'};
 	const COLORV		*mp;
 	int			r, c;
+	size_t			n, rv;
 
 	if (!cm)
 		return(0);
@@ -498,18 +499,18 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 	case DTfloat:
 	case DTdouble:
 		if (sizeof(COLOR) == cm_elem_size[dtype]) {
-			r = cm->ncols*cm->nrows;
-			while (r > 0) {
-				c = putbinary(mp, sizeof(COLOR), r, fp);
-				if (c <= 0)
+			n = (size_t)cm->ncols*cm->nrows;
+			while (n > 0) {
+				rv = fwrite(mp, sizeof(COLOR), n, fp);
+				if (rv <= 0)
 					return(0);
-				mp += 3*c;
-				r -= c;
+				mp += 3*rv;
+				n -= rv;
 			}
 		} else if (dtype == DTdouble) {
 			double	dc[3];
-			r = cm->ncols*cm->nrows;
-			while (r--) {
+			n = (size_t)cm->ncols*cm->nrows;
+			while (n--) {
 				copycolor(dc, mp);
 				if (putbinary(dc, sizeof(double), 3, fp) != 3)
 					return(0);
@@ -517,8 +518,8 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 			}
 		} else /* dtype == DTfloat */ {
 			float	fc[3];
-			r = cm->ncols*cm->nrows;
-			while (r--) {
+			n = (size_t)cm->ncols*cm->nrows;
+			while (n--) {
 				copycolor(fc, mp);
 				if (putbinary(fc, sizeof(float), 3, fp) != 3)
 					return(0);
