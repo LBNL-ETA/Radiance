@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.44 2020/05/07 18:45:16 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.45 2021/01/15 02:46:28 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -24,7 +24,7 @@ rmx_alloc(int nr, int nc, int n)
 	if ((nr <= 0) | (nc <= 0) | (n <= 0))
 		return(NULL);
 	dnew = (RMATRIX *)malloc(sizeof(RMATRIX)-sizeof(dnew->mtx) +
-					sizeof(dnew->mtx[0])*(n*nr*nc));
+					sizeof(dnew->mtx[0])*n*nr*nc);
 	if (!dnew)
 		return(NULL);
 	dnew->nrows = nr; dnew->ncols = nc; dnew->ncomp = n;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.28 2020/03/30 20:41:47 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.29 2021/01/15 02:46:28 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -33,7 +33,7 @@ cm_alloc(int nrows, int ncols)
 	if ((nrows <= 0) | (ncols <= 0))
 		error(USER, "attempt to create empty matrix");
 	cm = (CMATRIX *)malloc(sizeof(CMATRIX) +
-				sizeof(COLOR)*(nrows*ncols - 1));
+				sizeof(COLOR)*((size_t)nrows*ncols - 1));
 	if (!cm)
 		error(SYSTEM, "out of memory in cm_alloc()");
 	cm->nrows = nrows;
