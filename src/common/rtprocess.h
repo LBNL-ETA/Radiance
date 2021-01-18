@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.20 2021/01/15 19:01:53 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.21 2021/01/18 03:55:33 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -19,9 +19,9 @@
   #define execvp _execvp
 #else
   #include <sys/param.h>
-  #include <sys/types.h>
   typedef pid_t RT_PID;
 #endif
+#include <sys/types.h>
 
 #include "paths.h"
 
