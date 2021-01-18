@@ -73,7 +73,6 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
-          arch: 'win64_msvc2017_64'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
