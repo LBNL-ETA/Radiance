@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.21 2021/01/18 03:55:33 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.22 2021/01/19 18:15:32 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -8,8 +8,8 @@
 #ifndef _RAD_PROCESS_H_
 #define _RAD_PROCESS_H_
 
-#include  <errno.h>
-#include <stdio.h>
+#include <errno.h>
+#include "paths.h"
 #if defined(_WIN32) || defined(_WIN64)
   #include <windows.h> /* DWORD etc. */
   typedef DWORD RT_PID;
@@ -17,13 +17,14 @@
   #define getpid _getpid
   #define execv _execv
   #define execvp _execvp
+  #ifdef _MSC_VER
+    #include <BaseTsd.h>
+    typedef SSIZE_T ssize_t;
+  #endif
 #else
-  #include <sys/param.h>
   typedef pid_t RT_PID;
 #endif
-#include <sys/types.h>
 
-#include "paths.h"
 
 #ifdef __cplusplus
 extern "C" {
