@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.31 2021/01/15 18:31:38 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.32 2021/01/19 23:32:00 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -14,6 +14,8 @@ static const char RCSid[] = "$Id: cmatrix.c,v 2.31 2021/01/15 18:31:38 greg Exp 
 #include "platform.h"
 #include "paths.h"
 #include "resolu.h"
+
+const char	stdin_name[] = "<stdin>";
 
 const char	*cm_fmt_id[] = {
 			"unknown", COLRFMT, CIEFMT,
@@ -212,13 +214,15 @@ CMATRIX *
 cm_load(const char *inspec, int nrows, int ncols, int dtype)
 {
 	const int	ROWINC = 2048;
-	FILE		*fp = stdin;
 	int		swap = 0;
+	FILE		*fp;
 	COLOR		scale;
 	CMATRIX		*cm;
 
-	if (!inspec)
-		inspec = "<stdin>";
+	if (!inspec || !*inspec)
+		return(NULL);
+	if (inspec == stdin_name)
+		fp = stdin;
 	else if (inspec[0] == '!') {
 		fp = popen(inspec+1, "r");
 		if (!fp) {

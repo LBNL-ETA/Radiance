@@ -2395,4 +2395,8 @@ Added "test" target to makeall to run unit tests.
 
 Modified bsdf2ttree to allow different parameters per input SIR file.
 
-Fixed issues with very large matrix files (> 2GB) in dctimestep, rmtxop, and rcollate.
+Fixed issues with very large matrix files (> 2GB) in dctimestep, rmtxop,
+and rcollate.
+
+Added -rf and -rb options to rmtxop to load front or back reflectance
+matrix data from XML file rather than transmission.  (Lars Grobe suggested.)

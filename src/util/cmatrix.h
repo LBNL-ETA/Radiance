@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.12 2020/03/25 01:51:09 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.13 2021/01/19 23:32:00 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -18,6 +18,7 @@ extern "C" {
 /* Data types for file loading */
 enum {DTfromHeader=0, DTrgbe, DTxyze, DTfloat, DTascii, DTdouble, DTend};
 
+extern const char	stdin_name[];
 extern const char	*cm_fmt_id[];
 extern const int	cm_elem_size[];
 
@@ -58,7 +59,10 @@ extern CMATRIX	*cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2);
 extern int	cm_write(const CMATRIX *cm, int dtype, FILE *fp);
 
 /* Load and convert a matrix BTDF from the given XML file */
-extern CMATRIX	*cm_loadBTDF(char *fname);
+extern CMATRIX	*cm_loadBTDF(const char *fname);
+
+/* Load and convert a matrix BRDF from the given XML file */
+extern CMATRIX	*cm_loadBRDF(const char *fname, int backside);
 
 #ifdef __cplusplus
 }

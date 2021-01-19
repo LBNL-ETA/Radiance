@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.17 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.18 2021/01/19 23:32:00 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -14,8 +14,6 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.17 2019/12/28 18:05:14 greg Exp $
 
 #define MAXCOMP		16		/* #components we support */
 
-static const char	stdin_name[] = "<stdin>";
-
 /* unary matrix operation(s) */
 typedef struct {
 	double		sca[MAXCOMP];		/* scalar coefficients */
@@ -28,6 +26,7 @@ typedef struct {
 /* matrix input source and requested operation(s) */
 typedef struct {
 	const char	*inspec;		/* input specification */
+	RMPref		rmp;			/* matrix preference */
 	RUNARYOP	preop;			/* unary operation(s) */
 	RMATRIX		*mtx;			/* original matrix if loaded */
 	int		binop;			/* binary op with next (or 0) */
@@ -42,8 +41,7 @@ loadmatrix(ROPMAT *rop)
 	if (rop->mtx != NULL)
 		return(0);
 
-	rop->mtx = rmx_load(rop->inspec == stdin_name ?
-				(const char *)NULL : rop->inspec);
+	rop->mtx = rmx_load(rop->inspec, rop->rmp);
 	if (rop->mtx == NULL) {
 		fputs(rop->inspec, stderr);
 		fputs(": cannot load matrix\n", stderr);
@@ -382,6 +380,14 @@ main(int argc, char *argv[])
 					get_factors(mop[nmats].preop.cmat,
 							n, argv+i+1);
 				break;
+			case 'r':
+				if (argv[i][2] == 'f')
+					mop[nmats].rmp = RMPreflF;
+				else if (argv[i][2] == 'b')
+					mop[nmats].rmp = RMPreflB;
+				else
+					goto userr;
+				break;
 			default:
 				fprintf(stderr, "%s: unknown operation '%s'\n",
 						argv[0], argv[i]);
@@ -424,7 +430,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..] m1 [.+*/] .. > mres\n",
+	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..][-r[fb]] m1 [.+*/] .. > mres\n",
 			argv[0]);
 	return(1);
 }

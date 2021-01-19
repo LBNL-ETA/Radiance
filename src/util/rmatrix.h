@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.12 2020/03/25 01:51:09 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.13 2021/01/19 23:32:00 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -11,6 +11,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Preferred BSDF component:
+	transmission, reflection front (normal side), reflection back */
+typedef enum {RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
 /* General plane-ordered component matrix */
 typedef struct {
@@ -34,7 +38,7 @@ extern void	rmx_free(RMATRIX *rm);
 extern int	rmx_newtype(int dtyp1, int dtyp2);
 
 /* Load matrix from supported file type (NULL for stdin, '!' with command) */
-extern RMATRIX	*rmx_load(const char *inspec);
+extern RMATRIX	*rmx_load(const char *inspec, RMPref rmp);
 
 /* Append header information associated with matrix data */
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);

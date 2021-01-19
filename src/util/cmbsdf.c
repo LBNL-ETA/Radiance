@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.8 2020/03/17 23:24:05 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.9 2021/01/19 23:32:00 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -144,34 +144,70 @@ cm_bsdf_Lamb(const COLOR diffBSDF)
 
 /* Load and convert a matrix BTDF from the given XML file */
 CMATRIX *
-cm_loadBTDF(char *fname)
+cm_loadBTDF(const char *fname)
 {
 	CMATRIX		*Tmat;
 	int		recip;
 	SDError		ec;
 	SDData		myBSDF;
 	SDSpectralDF	*tdf;
-	COLOR		diffBSDF;
+	COLOR		diffBTDF;
 
 	SDclearBSDF(&myBSDF, fname);	/* load XML and check type */
 	ec = SDloadFile(&myBSDF, fname);
 	if (ec)
 		error(USER, transSDError(ec));
-	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, diffBSDF);
+	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, diffBTDF);
 	recip = (myBSDF.tb == NULL);
 	tdf = recip ? myBSDF.tf : myBSDF.tb;
 	if (tdf == NULL) {		/* no non-Lambertian transmission? */
 		SDfreeBSDF(&myBSDF);
-		return(cm_bsdf_Lamb(diffBSDF));
+		return(cm_bsdf_Lamb(diffBTDF));
 	}
 	if (tdf->ncomp != 1 || tdf->comp[0].func != &SDhandleMtx) {
 		sprintf(errmsg, "unsupported BSDF '%s'", fname);
 		error(USER, errmsg);
 	}
 					/* convert BTDF to matrix */
-	Tmat = recip ? cm_bsdf_recip(diffBSDF, (SDMat *)tdf->comp[0].dist)
-			: cm_bsdf(diffBSDF, (SDMat *)tdf->comp[0].dist);
+	Tmat = recip ? cm_bsdf_recip(diffBTDF, (SDMat *)tdf->comp[0].dist)
+			: cm_bsdf(diffBTDF, (SDMat *)tdf->comp[0].dist);
 					/* free BSDF and return */
 	SDfreeBSDF(&myBSDF);
 	return(Tmat);
+}
+
+/* Load and convert a matrix BRDF from the given XML file */
+CMATRIX *
+cm_loadBRDF(const char *fname, int backside)
+{
+	CMATRIX		*Rmat;
+	SDError		ec;
+	SDData		myBSDF;
+	SDSpectralDF	*rdf;
+	COLOR		diffBRDF;
+
+	SDclearBSDF(&myBSDF, fname);	/* load XML and check type */
+	ec = SDloadFile(&myBSDF, fname);
+	if (ec)
+		error(USER, transSDError(ec));
+	if (backside) {
+		ccy2rgb(&myBSDF.rLambBack.spec, myBSDF.rLambBack.cieY/PI, diffBRDF);
+		rdf = myBSDF.rb;
+	} else {
+		ccy2rgb(&myBSDF.rLambFront.spec, myBSDF.rLambFront.cieY/PI, diffBRDF);
+		rdf = myBSDF.rf;
+	}
+	if (rdf == NULL) {		/* no non-Lambertian reflection? */
+		SDfreeBSDF(&myBSDF);
+		return(cm_bsdf_Lamb(diffBRDF));
+	}
+	if (rdf->ncomp != 1 || rdf->comp[0].func != &SDhandleMtx) {
+		sprintf(errmsg, "unsupported BSDF '%s'", fname);
+		error(USER, errmsg);
+	}
+					/* convert BRDF to matrix */
+	Rmat = cm_bsdf(diffBRDF, (SDMat *)rdf->comp[0].dist);
+					/* free BSDF and return */
+	SDfreeBSDF(&myBSDF);
+	return(Rmat);
 }

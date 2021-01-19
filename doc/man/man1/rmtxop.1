@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.19 2020/08/31 22:17:56 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.20 2021/01/19 23:32:00 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -14,6 +14,8 @@ rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matri
 .B "\-s sf .."
 ][
 .B "\-c ce .."
+][
+.B -r[fb]
 ]
 .B m1
 [
@@ -47,9 +49,14 @@ instead of a file by
 using quotes and a beginning exclamation point ('!').
 .PP
 Two special cases are handled for component matrices that are either
-XML files containing BTDF data, or Radiance picture files.
-In the first case, a BSDF library is used to load and interpret the
-transmission matrix.
+XML files containing BSDF data, or Radiance picture files.
+In the first case, the BSDF library loads and interprets the
+transmission matrix by default.
+Alternatively, the front (normal-side) reflectance is selected if the
+.I \-rf
+option precedes the file name, or the backside reflectance if
+.I \-rb
+is specified.
 (XML files cannot be read from the standard input or from a command.)\0
 In the second case, the RGBE or XYZE values are loaded in a 3-component
 matrix where the number of columns match the X-dimension of the picture, and
