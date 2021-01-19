@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.86 2020/12/15 23:54:00 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.87 2021/01/19 23:31:47 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -175,7 +175,7 @@ devcomm.o:	devcomm.c
 
 Version.c:	VERSION $(RSRC) $(HEADERS)
 	( cat VERSION ; date ; whoami ; hostname ) > Version.c
-	ed - Version.c < verscript.ed
+	ed - Version.c < verscript.ed || rm Version.c
 
 #
 # Include dependencies:
