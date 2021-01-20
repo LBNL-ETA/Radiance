@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.22 2020/01/13 17:12:19 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.23 2021/01/20 19:44:15 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -1578,8 +1578,8 @@ static int brdfPhotonScatter (OBJREC *mat, RAY *rayIn)
             objerror(mat, WARNING, "illegal perturbation");
             VCOPY(rayOut.rdir, rayIn -> rdir);
          }
-         else VCOPY(rayOut.rdir, rayIn -> rdir);
       }
+      else VCOPY(rayOut.rdir, rayIn -> rdir);
    }
    else if (xi > (albedo -= prDiff)) {
       /* Diffuz reflekzion */
