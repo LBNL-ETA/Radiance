@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.127 2020/04/07 00:49:09 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.128 2021/01/21 21:36:28 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -790,8 +790,8 @@ ambval(void)				/* compute ambient value */
 {
 	if (vdef(EXPOSURE)) {
 		if (vval(EXPOSURE)[0] == '+' || vval(EXPOSURE)[0] == '-')
-			return(.5/pow(2.,vflt(EXPOSURE)));
-		return(.5/vflt(EXPOSURE));
+			return(.18/pow(2.,vflt(EXPOSURE)));
+		return(.18/vflt(EXPOSURE));
 	}
 	if (vlet(ZONE) == 'E')
 		return(10.);
