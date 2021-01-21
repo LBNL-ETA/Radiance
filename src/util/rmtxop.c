@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.18 2021/01/19 23:32:00 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.19 2021/01/21 17:47:07 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -430,7 +430,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..][-r[fb]] m1 [.+*/] .. > mres\n",
+	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..][-rf|-rb] m1 [.+*/] .. > mres\n",
 			argv[0]);
 	return(1);
 }
