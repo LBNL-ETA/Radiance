@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.32 2021/01/19 23:32:00 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.33 2021/01/22 16:19:15 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -219,11 +219,13 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	COLOR		scale;
 	CMATRIX		*cm;
 
-	if (!inspec || !*inspec)
+	if (!inspec)
+		inspec = stdin_name;
+	else if (!*inspec)
 		return(NULL);
-	if (inspec == stdin_name)
+	if (inspec == stdin_name) {		/* reading from stdin? */
 		fp = stdin;
-	else if (inspec[0] == '!') {
+	} else if (inspec[0] == '!') {
 		fp = popen(inspec+1, "r");
 		if (!fp) {
 			sprintf(errmsg, "cannot start command '%s'", inspec);
