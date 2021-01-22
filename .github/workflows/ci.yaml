@@ -91,6 +91,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -179,6 +180,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
 
       - name: Install XQuartz
@@ -261,6 +263,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
