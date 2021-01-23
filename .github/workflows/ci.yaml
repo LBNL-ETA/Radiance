@@ -395,6 +395,8 @@ jobs:
           cd ./test/renders/
           make clean
           make
+      
+
   
   Test_OSX:
     needs: [build_OSX]
@@ -561,4 +563,16 @@ jobs:
           cd ./test/renders/
           make clean
           make -j8
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Linux_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Linux_Failed
+          path: Radiance_Linux_Failed.zip
 
