@@ -76,7 +76,6 @@ jobs:
           pp --version
           
 
-
       - name: override update version
         run: |
           git fetch
@@ -91,7 +90,8 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
-          arch: 'win64_msvc2017_64'
+          version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -180,6 +180,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
 
       - name: Install XQuartz
@@ -262,6 +263,7 @@ jobs:
         uses: jurplel/install-qt-action@v2
         with:
           version: '5.12.8'
+          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
@@ -393,6 +395,19 @@ jobs:
           cd ./test/renders/
           make clean
           make
+        
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Windows_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_Failed
+          path: Radiance_Windows_Failed.zip
+
   
   Test_OSX:
     needs: [build_OSX]
@@ -475,6 +490,18 @@ jobs:
           cd ./test/renders/
           make clean
           make -j8
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Mac_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Mac_Failed
+          path: Radiance_Mac_Failed.zip
 
   Test_Linux:
     needs: [build_Linux]
@@ -559,4 +586,16 @@ jobs:
           cd ./test/renders/
           make clean
           make -j8
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Linux_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Linux_Failed
+          path: Radiance_Linux_Failed.zip
 
