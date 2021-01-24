@@ -395,7 +395,18 @@ jobs:
           cd ./test/renders/
           make clean
           make
-      
+        
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Windows_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_Failed
+          path: Radiance_Windows_Failed.zip
 
   
   Test_OSX:
@@ -479,6 +490,18 @@ jobs:
           cd ./test/renders/
           make clean
           make -j8
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Mac_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Mac_Failed
+          path: Radiance_Mac_Failed.zip
 
   Test_Linux:
     needs: [build_Linux]
