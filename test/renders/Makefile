@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.30 2021/01/02 02:46:57 greg Exp $
+# RCSid $Id: Makefile,v 1.31 2021/01/24 01:53:41 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -14,7 +14,7 @@ endif
 RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 
 # Image comparison command
-IMG_CMP = radcompare -rms 0.08 -max 1.5
+IMG_CMP = radcompare -rms 0.1 -max 1.5
 
 # Default target is to test everything
 all:	test-xform test-oconv test-rad test-rfluxmtx test-rpiece \
