@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.10 2020/03/05 17:43:22 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.11 2021/01/26 18:47:25 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -252,14 +252,18 @@ compute_worldpos(FVECT wpos, DEPTHCODEC *dcp, int x, int y, double d)
 	RREAL	loc[2];
 	FVECT	rdir;
 
+	if (d >= FHUGE*.99)
+		goto badval;
+
 	pix2loc(loc, &dcp->res, x, y);
 
-	if (viewray(wpos, rdir, &dcp->vw, loc[0], loc[1]) < -FTINY) {
-		VCOPY(wpos, dcp->vw.vp);
-		return 0;
+	if (viewray(wpos, rdir, &dcp->vw, loc[0], loc[1]) >= -FTINY) {
+		VSUM(wpos, wpos, rdir, d);
+		return 1;
 	}
-	VSUM(wpos, wpos, rdir, d);
-	return 1;
+badval:
+	VCOPY(wpos, dcp->vw.vp);
+	return 0;
 }
 
 
