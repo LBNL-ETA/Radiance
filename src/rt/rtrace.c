@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.99 2020/07/20 15:54:29 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.100 2021/01/27 00:00:05 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -765,14 +765,11 @@ static RREAL	vdummy[3] = {0.0, 0.0, 0.0};
 
 
 static void
-oputp(				/* print point */
+oputp(				/* print intersection point */
 	RAY  *r
 )
 {
-	if (r->rot < FHUGE*.99)
-		(*putreal)(r->rop, 3);
-	else
-		(*putreal)(vdummy, 3);
+	(*putreal)(r->rop, 3);	/* set to ray origin if distant or no hit */
 }
 
 
@@ -781,17 +778,18 @@ oputN(				/* print unperturbed normal */
 	RAY  *r
 )
 {
-	if (r->rot < FHUGE*.99) {
-		if (r->rflips & 1) {	/* undo any flippin' flips */
-			FVECT	unrm;
-			unrm[0] = -r->ron[0];
-			unrm[1] = -r->ron[1];
-			unrm[2] = -r->ron[2];
-			(*putreal)(unrm, 3);
-		} else
-			(*putreal)(r->ron, 3);
-	} else
+	if (r->ro == NULL) {	/* zero vector if clipped or no hit */
 		(*putreal)(vdummy, 3);
+		return;
+	}
+	if (r->rflips & 1) {	/* undo any flippin' flips */
+		FVECT	unrm;
+		unrm[0] = -r->ron[0];
+		unrm[1] = -r->ron[1];
+		unrm[2] = -r->ron[2];
+		(*putreal)(unrm, 3);
+	} else
+		(*putreal)(r->ron, 3);
 }
 
 
@@ -802,7 +800,7 @@ oputn(				/* print perturbed normal */
 {
 	FVECT  pnorm;
 
-	if (r->rot >= FHUGE*.99) {
+	if (r->ro == NULL) {	/* clipped or no hit */
 		(*putreal)(vdummy, 3);
 		return;
 	}
