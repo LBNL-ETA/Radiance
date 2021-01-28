@@ -5,6 +5,7 @@
  * 				*BOUYGUES 
  *				1 Avenue Eugene Freyssinet, Saint-Quentin-Yvelines, France
 *  print colored output if activated in command line (-C). Based on model from A. Diakite, TU-Berlin. Implemented by J. Wienold, August 26 2018
+*  version 2.6 (2021/01/29): dew point dependency added according to Perez publication 1990 (W -> atm_preci_water=exp(0.07*Td-0.075) ). by J. Wienold, EPFL
 */
 
 #define  _USE_MATH_DEFINES
@@ -21,7 +22,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.20 2020/11/18 17:18:41 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.21 2021/01/28 19:03:15 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -133,7 +134,7 @@ double	skyclearness = 0;
 double  skybrightness = 0;
 double	solarradiance;
 double	diffuseilluminance, directilluminance, diffuseirradiance, directirradiance, globalirradiance;
-double	sunzenith, daynumber, atm_preci_water=2;
+double	sunzenith, daynumber, atm_preci_water, Td=10.97353115;
 
 /*double  sunaltitude_border = 0;*/
 double 	diffnormalization = 0;
@@ -199,6 +200,11 @@ int main(int argc, char** argv)
 	for (i = 4; i < argc; i++)
 		if (argv[i][0] == '-' || argv[i][0] == '+')
 			switch (argv[i][1]) {
+			case 'd':
+				Td = atof(argv[++i]);
+				if (Td < -40 || Td > 40) {
+					Td=10.97353115; }
+				break;
 			case 's':
 				cloudy = 0;
 				dosun = argv[i][0] == '+';
@@ -323,6 +329,7 @@ int main(int argc, char** argv)
 	{ fprintf(stderr,"Out of memory error in function main"); return 1; }
 
 	
+	atm_preci_water=exp(0.07*Td-0.075);
 	printhead(argc, argv);
 	computesky();
 	printsky();
@@ -700,6 +707,7 @@ void printsky()
 	
 	printf("# Local solar time: %.2f\n", st);
 	printf("# Solar altitude and azimuth: %.1f %.1f\n", altitude*180/M_PI, azimuth*180/M_PI);
+	printf("# epsilon, delta, atmospheric precipitable water content : %.4f %.4f %.4f \n", skyclearness, skybrightness,atm_preci_water );
 
 
 	if (dosun&&(skyclearness>1)) 
