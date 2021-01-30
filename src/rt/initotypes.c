@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.26 2019/04/18 22:58:03 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.27 2021/01/30 17:53:19 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -107,15 +107,18 @@ o_default(OBJREC *o, RAY *r)		/* default action is error */
 OBJREC *	
 findmaterial(OBJREC *o)			/* find an object's actual material */
 {
+	OBJECT	mod = OVOID;
+
 	while (!ismaterial(o->otype)) {
 		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
-			OBJECT  aobj;
 			OBJREC  *ao;
-			aobj = lastmod(objndx(o), o->oargs.sarg[0]);
-			if (aobj < 0)
+			if (mod < 0)
+				mod = objndx(o);
+			mod = lastmod(mod, o->oargs.sarg[0]);
+			if (mod < 0)
 				objerror(o, USER, "bad reference");
 					/* recursive check on alias branch */
-			if ((ao = findmaterial(objptr(aobj))) != NULL)
+			if ((ao = findmaterial(objptr(mod))) != NULL)
 				return(ao);
 		}
 		if (o->omod == OVOID) {
@@ -124,7 +127,7 @@ findmaterial(OBJREC *o)			/* find an object's actual material */
 				break;
 			return(NULL);	/* else no material found */
 		}
-		o = objptr(o->omod);
+		o = objptr(mod = o->omod);
 	}
 	return(o);
 }
