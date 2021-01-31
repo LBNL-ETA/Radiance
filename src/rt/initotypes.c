@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.28 2021/01/31 17:49:21 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.29 2021/01/31 20:06:15 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -107,19 +107,23 @@ o_default(OBJREC *o, RAY *r)		/* default action is error */
 OBJREC *	
 findmaterial(OBJREC *o)			/* find an object's actual material */
 {
-	OBJECT	mod = OVOID;
+	OBJECT	obj = OVOID;
 
 	while (!ismaterial(o->otype)) {
 		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
-			OBJREC  *ao;	/* check if aliased to material */
-			if (mod == OVOID)
-				mod = objndx(o);
-			mod = lastmod(mod, o->oargs.sarg[0]);
-			if (mod < 0)
-				objerror(o, USER, "bad reference");
-			while ((ao = objptr(mod))->otype == MOD_ALIAS &&
-					!ao->oargs.nsargs)
-				mod = ao->omod;
+			OBJREC  *ao = o;
+			if (obj == OVOID)
+				obj = objndx(o);
+			do {
+				if (!ao->oargs.nsargs)
+					obj = ao->omod;
+				else
+					obj = lastmod(obj, ao->oargs.sarg[0]);
+				if (obj < 0)
+					objerror(ao, USER, "bad reference");
+				ao = objptr(obj);
+			} while (ao->otype == MOD_ALIAS);
+					/* check if aliased to material */
 			if (ismaterial(ao->otype))
 				return(ao);
 		}
@@ -129,7 +133,8 @@ findmaterial(OBJREC *o)			/* find an object's actual material */
 				break;
 			return(NULL);	/* else no material found */
 		}
-		o = objptr(mod = o->omod);
+		obj = o->omod;
+		o = objptr(obj);
 	}
 	return(o);
 }
