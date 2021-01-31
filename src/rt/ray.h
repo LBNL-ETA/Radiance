@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.44 2020/06/16 17:58:11 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.45 2021/01/31 18:08:04 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -221,6 +221,7 @@ extern int	ray_fifo_flush(void);
 extern int	rayorigin(RAY *r, int rt, const RAY *ro, const COLOR rc);
 extern void	rayclear(RAY *r);
 extern void	raytrace(RAY *r);
+extern int	rayreject(OBJREC *o, RAY *r, double t);
 extern void	rayhit(OBJECT *oset, RAY *r);
 extern void	raycont(RAY *r);
 extern void	raytrans(RAY *r);

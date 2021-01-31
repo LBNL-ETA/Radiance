@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sphere.c,v 2.8 2014/07/08 18:25:00 greg Exp $";
+static const char RCSid[] = "$Id: sphere.c,v 2.9 2021/01/31 18:08:04 greg Exp $";
 #endif
 /*
  *  sphere.c - compute ray intersection with spheres.
@@ -63,9 +63,8 @@ o_sphere(			/* compute intersection with sphere */
 			break;
 	if (i >= nroots)
 		return(0);			/* no positive root */
-
-	if (t >= r->rot)
-		return(0);			/* other is closer */
+	if (rayreject(so, r, t))
+		return(0);			/* previous hit better */
 
 	r->ro = so;
 	r->rot = t;

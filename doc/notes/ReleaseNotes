@@ -2400,3 +2400,11 @@ and rcollate.
 
 Added -rf and -rb options to rmtxop to load front or back reflectance
 matrix data from XML file rather than transmission.  (Lars Grobe suggested.)
+
+Improved behavior for coincident surfaces with different materials.
+Rather than returning one surface or the other based on floating-point
+vagaries, opaque materials are now preferred over transparent ones.
+If the materials are both transparent or both opaque, then whichever
+surface appeared later in the scene description will be selected.
+This came of a request for consistent behavior with legal CAD output
+from Peter Apian-Bennewitz.

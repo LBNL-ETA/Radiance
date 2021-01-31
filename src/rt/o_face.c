@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_face.c,v 2.7 2014/07/08 18:25:00 greg Exp $";
+static const char RCSid[] = "$Id: o_face.c,v 2.8 2021/01/31 18:08:04 greg Exp $";
 #endif
 /*
  *  o_face.c - compute ray intersection with faces.
@@ -27,8 +27,8 @@ o_face(		/* compute intersection with polygonal face */
 		
 	/*
 	 *  First, we find the distance to the plane containing the
-	 *  face.  If this distance is less than zero or greater
-	 *  than a previous intersection, we return.  Otherwise,
+	 *  face.  If the plane is parallel to our ray, or the
+	 *  previous hit was better, we return.  Otherwise,
 	 *  we determine whether in fact the ray intersects the
 	 *  face.  The ray intersects the face if the
 	 *  point of intersection with the plane of the face
@@ -36,12 +36,12 @@ o_face(		/* compute intersection with polygonal face */
 	 */
 						/* compute dist. to plane */
 	rdot = -DOT(r->rdir, f->norm);
-	if (rdot <= FTINY && rdot >= -FTINY)	/* ray parallels plane */
-		t = FHUGE;
-	else
-		t = (DOT(r->rorg, f->norm) - f->offset) / rdot;
+	if ((rdot <= FTINY) & (rdot >= -FTINY))	/* ray parallels plane */
+		return(0);
+
+	t = (DOT(r->rorg, f->norm) - f->offset) / rdot;
 	
-	if (t <= FTINY || t >= r->rot)		/* not good enough */
+	if (rayreject(o, r, t))			/* previous hit is better? */
 		return(0);
 						/* compute intersection */
 	VSUM(pisect, r->rorg, r->rdir, t);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.82 2021/01/04 19:07:15 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.83 2021/01/31 18:08:04 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -516,6 +516,34 @@ flipsurface(			/* reverse surface orientation */
 	r->rflips++;
 }
 
+
+int
+rayreject(		/* check if candidate hit is worse than current */
+	OBJREC *o,
+	RAY *r,
+	double t
+)
+{
+	OBJREC	*mnew, *mray;
+
+	if ((t <= FTINY) | (t > r->rot + FTINY))
+		return 1;
+	if (t < r->rot - FTINY)		/* is new hit significantly closer? */
+		return 0;
+					/* coincident, so decide... */
+	if (o == r->ro)
+		return 1;		/* shouldn't happen */
+	if (r->ro == NULL)
+		return 0;		/* ditto */
+	if ((mnew = findmaterial(o)) == NULL)
+		return 1;		/* new has no material */
+	if ((mray = findmaterial(r->ro)) == NULL)
+		return 0;		/* old has no material(!) */
+	if (istransp(mnew->otype))
+		return 1;		/* new is transparent */
+
+	return !istransp(mray->otype);	/* reject unless old is */
+}
 
 void
 rayhit(			/* standard ray hit test */
