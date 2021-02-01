@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.29 2021/01/31 20:06:15 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.30 2021/02/01 16:19:49 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -119,7 +119,7 @@ findmaterial(OBJREC *o)			/* find an object's actual material */
 					obj = ao->omod;
 				else
 					obj = lastmod(obj, ao->oargs.sarg[0]);
-				if (obj < 0)
+				if (obj == OVOID)
 					objerror(ao, USER, "bad reference");
 				ao = objptr(obj);
 			} while (ao->otype == MOD_ALIAS);

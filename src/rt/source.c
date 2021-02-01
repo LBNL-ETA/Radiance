@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.75 2021/01/04 19:07:15 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.76 2021/02/01 16:19:49 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -60,7 +60,7 @@ marksources(void)			/* find and mark source objects */
 		if (!issurface(o->otype) || o->omod == OVOID)
 			continue;
 					/* find material */
-		m = findmaterial(objptr(o->omod));
+		m = findmaterial(o);
 		if (m == NULL)
 			continue;
 		if (m->otype == MAT_CLIP) {
@@ -154,7 +154,7 @@ distantsources(void)			/* only mark distant sources */
 		if ((o->otype != OBJ_SOURCE) | (o->omod == OVOID))
 			continue;
 					/* find material */
-		m = findmaterial(objptr(o->omod));
+		m = findmaterial(o);
 		if (m == NULL)
 			continue;
 		if (!islight(m->otype))
@@ -294,11 +294,10 @@ nomat:
 
 static int
 transillum(			/* check if material is transparent illum */
-	OBJECT	obj
+	OBJREC *m
 )
 {
-	OBJREC *m = findmaterial(objptr(obj));
-	
+	m = findmaterial(m);
 	if (m == NULL)
 		return(1);
 	if (m->otype != MAT_ILLUM)
@@ -344,7 +343,7 @@ sourcehit(			/* check to see if ray hit distant source */
 				glowsrc = i;
 			continue;
 		}
-		if (transillum(source[i].so->omod)) {
+		if (transillum(source[i].so)) {
 			if (transrc < 0)
 				transrc = i;
 			continue;
@@ -664,17 +663,16 @@ srcscatter(			/* compute source scattering into ray */
  */
 
 static int
-weaksrcmat(OBJECT obj)		/* identify material */
+weaksrcmat(OBJREC *m)		/* identify material */
 {
-	OBJREC *m = findmaterial(objptr(obj));
-	
+	m = findmaterial(m);
 	if (m == NULL) return(0);
 	return((m->otype==MAT_ILLUM) | (m->otype==MAT_GLOW));
 }
 
 #define  illumblock(m, r)	(!(source[r->rsrc].sflags&SVIRTUAL) && \
 				r->rod > 0.0 && \
-				weaksrcmat(source[r->rsrc].so->omod))
+				weaksrcmat(source[r->rsrc].so))
 
 /* wrongsource *
  *

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.10 2018/12/05 02:12:23 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.11 2021/02/01 16:19:49 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -46,7 +46,7 @@ m_alias(			/* transfer shading to alias target */
 			aobj = lastmod(aobj, aop->oargs.sarg[0]);
 		else
 			objerror(aop, INTERNAL, "bad # string arguments");
-		if (aobj < 0)
+		if (aobj == OVOID)
 			objerror(aop, USER, "bad reference");
 		aop = objptr(aobj);
 	} while (aop->otype == MOD_ALIAS);
