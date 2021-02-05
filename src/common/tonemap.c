@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.42 2021/01/07 20:34:45 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.43 2021/02/05 01:07:28 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -581,9 +581,13 @@ int	len
 				lv = tms->mbrmax;
 			li = tms->lumap[lv - tms->mbrmin];
 		}
-		if (cs == TM_NOCHROM)
-			*ps++ = li>=TM_BRES ? 255 : (int)(256*li/TM_BRES);
-		else {
+		if (cs == TM_NOCHROM) {
+#if !(TM_BRES & 0xff)
+			*ps++ = li>=TM_BRES ? 255 : li/(TM_BRES>>8);
+#else
+			*ps++ = li>=TM_BRES ? 255 : (li<<8)/TM_BRES;
+#endif
+		} else {
 			pv = *cs++ * li / tms->cdiv[RED];
 			*ps++ = pv>255 ? 255 : pv;
 			pv = *cs++ * li / tms->cdiv[GRN];
