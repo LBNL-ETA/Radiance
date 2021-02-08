@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.8 2017/09/05 18:41:22 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.9 2021/02/08 18:43:21 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -36,7 +36,7 @@ typedef struct {
 	int32		width;		/* bitmap width (pixels) */
 	int32		height;		/* bitmap height (pixels) */
 	/* the following fields must not be altered after allocation */
-	int		bpp;		/* bits per sample (1,4,8,16,24,32) */
+	int		bpp;		/* bits per pixel (1,4,8,16,24,32) */
 	uint32		infoSiz;	/* info buffer size (bytes) */
 	/* but the color table should be filled by writer before open call */
 	RGBquad		palette[3];	/* color palette (extends struct) */
