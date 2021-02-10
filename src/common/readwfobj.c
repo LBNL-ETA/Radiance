@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.7 2020/12/18 00:15:47 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.8 2021/02/10 17:57:28 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -171,7 +171,7 @@ loadOBJ(Scene *sc, const char *fspec)
 	FILE    *fp;
 	char	*argv[MAXARG];
 	int	argc;
-	char    buf[256];
+	char    buf[1024];
 	int	nstats=0, nunknown=0;
 	int     onfaces;
 	VNDX    ondx;
@@ -289,7 +289,10 @@ loadOBJ(Scene *sc, const char *fspec)
 		fclose(fp);
 	if (verbose)
 		fprintf(stderr, "Read %d statements\n", nstats);
-	sprintf(buf, "%d statements read from \"%s\"", nstats, fspec);
+	if (strlen(fspec) < sizeof(buf)-32)
+		sprintf(buf, "%d statements read from \"%s\"", nstats, fspec);
+	else
+		sprintf(buf, "%d statements read from (TOO LONG TO SHOW)", nstats);
 	addComment(sc, buf);
 	if (nunknown) {
 		sprintf(buf, "\t%d unrecognized", nunknown);
