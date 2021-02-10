@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oocsort.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: oocsort.c,v 2.5 2021/02/10 21:48:50 rschregle Exp $";
 #endif
 
 
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: oocsort.c,v 2.4 2017/08/14 21:12:10 rschregle 
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: oocsort.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $
+   $Id: oocsort.c,v 2.5 2021/02/10 21:48:50 rschregle Exp $
 */
 
 
@@ -332,7 +332,7 @@ static int OOC_SortRecurse (FILE *in, unsigned long blkLo,
                exit(0);
             }
             else if (pid < 0) {
-               fprintf(stderr, "OOC_Sort: failed to fork subprocess\n");
+               perror("OOC_Sort: failed to fork subprocess");
                return -1;
             }
 
