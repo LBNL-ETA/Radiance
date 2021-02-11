@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.5 2019/06/12 00:09:18 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.6 2021/02/11 03:05:34 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -496,9 +496,14 @@ main(int argc, char *argv[])
 		char	*flist[MAX_INPUTS];
 		int	k, n;
 		n = wordfile(flist, MAX_INPUTS, argv[i+j]);
-		if (n <= 0) {
+		if ((n <= 0) | (n >= MAX_INPUTS-1)) {
 			fputs(argv[i+j], stderr);
-			fputs(": cannot load input file names\n", stderr);
+			if (n < 0)
+				fputs(": cannot load input file names\n", stderr);
+			else if (n == 0)
+				fputs(": empty file\n", stderr);
+			else /* n >= MAX_INPUTS-1 */
+				fputs(": too many file names\n", stderr);
 			return(1);
 		}
 		slist[j] = (PGINPUT *)malloc(sizeof(PGINPUT)*(n+1));
