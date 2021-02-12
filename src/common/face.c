@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.14 2020/06/14 02:10:44 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.15 2021/02/12 00:47:33 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -98,7 +98,7 @@ getface(				/* get arguments for a face */
 	if (f->nv > 3 && badvert)
 		objerror(o, WARNING, "non-planar vertex");
 						/* find axis */
-	f->ax = fabs(f->norm[0]) > fabs(f->norm[1]) ? 0 : 1;
+	f->ax = (fabs(f->norm[0]) > fabs(f->norm[1]));
 	if (fabs(f->norm[2]) > fabs(f->norm[f->ax]))
 		f->ax = 2;
 
@@ -144,11 +144,17 @@ inface(				/* determine if point is in face */
 			tst = (p0[xi] > x) + (p1[xi] > x);
 			if (tst == 2)
 				ncross++;
-			else if (tst)
-				ncross += (p1[yi] > p0[yi]) ^
-						((p0[yi]-y)*(p1[xi]-x) >
-						(p0[xi]-x)*(p1[yi]-y));
-		}
+			else if (tst) {
+				double	prodA = (p0[yi]-y)*(p1[xi]-x);
+				double	prodB = (p0[xi]-x)*(p1[yi]-y);
+				if (FRELEQ(prodA, prodB))
+					return(1);	/* edge case #1 */
+				ncross += (p1[yi] > p0[yi]) ^ (prodA > prodB);
+			} else if (FRELEQ(p0[xi], x) && FRELEQ(p1[xi], x))
+				return(1);		/* edge case #2 */
+		} else if (FRELEQ(p0[yi], y) && FRELEQ(p1[yi], y) &&
+				(p0[xi] > x) ^ (p1[xi] > x))
+			return(1);			/* edge case #3 */
 		p0 = p1;
 		p1 += 3;
 	}
