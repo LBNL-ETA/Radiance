@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.9 2021/02/12 01:57:49 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.10 2021/02/12 15:35:07 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -17,9 +17,10 @@
 #define POPEN_SUPPORT		1       /* support "!command" i/o */
 #endif
 					/* face flags */
-#define FACE_SELECTED		01
-#define FACE_DEGENERATE		02
-#define FACE_DUPLICATE		04
+#define FACE_DEGENERATE		01
+#define FACE_DUPLICATE		02
+#define FACE_SELECTED		04
+#define FACE_CUSTOM(n)		(1<<(2+(n)))
 
 struct Face;				/* forward declaration */
 
