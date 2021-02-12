@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.51 2020/05/14 20:49:57 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.52 2021/02/12 00:47:08 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -14,11 +14,6 @@ static const char	RCSid[] = "$Id: image.c,v 2.51 2020/05/14 20:49:57 greg Exp $"
 #include  "rtmath.h"
 #include  "paths.h"
 #include  "view.h"
-
-
-#define  FEQ(x,y)	(fabs((x)-(y)) <= FTINY)
-#define  VEQ(v,w)	(FEQ((v)[0],(w)[0]) && FEQ((v)[1],(w)[1]) \
-				&& FEQ((v)[2],(w)[2]))
 
 VIEW  stdview = STDVIEW;		/* default view parameters */
 
@@ -514,44 +509,44 @@ VIEW  *vp
 		sprintf(cp, " -vt%c", vp->type);
 		cp += strlen(cp);
 	}
-	if (!VEQ(vp->vp,stdview.vp)) {
+	if (!VABSEQ(vp->vp,stdview.vp)) {
 		sprintf(cp, " -vp %.6g %.6g %.6g",
 				vp->vp[0], vp->vp[1], vp->vp[2]);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->vdist,stdview.vdist) || !VEQ(vp->vdir,stdview.vdir)) {
+	if (!FABSEQ(vp->vdist,stdview.vdist) || !VABSEQ(vp->vdir,stdview.vdir)) {
 		sprintf(cp, " -vd %.6g %.6g %.6g",
 				vp->vdir[0]*vp->vdist,
 				vp->vdir[1]*vp->vdist,
 				vp->vdir[2]*vp->vdist);
 		cp += strlen(cp);
 	}
-	if (!VEQ(vp->vup,stdview.vup)) {
+	if (!VABSEQ(vp->vup,stdview.vup)) {
 		sprintf(cp, " -vu %.6g %.6g %.6g",
 				vp->vup[0], vp->vup[1], vp->vup[2]);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->horiz,stdview.horiz)) {
+	if (!FABSEQ(vp->horiz,stdview.horiz)) {
 		sprintf(cp, " -vh %.6g", vp->horiz);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->vert,stdview.vert)) {
+	if (!FABSEQ(vp->vert,stdview.vert)) {
 		sprintf(cp, " -vv %.6g", vp->vert);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->vfore,stdview.vfore)) {
+	if (!FABSEQ(vp->vfore,stdview.vfore)) {
 		sprintf(cp, " -vo %.6g", vp->vfore);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->vaft,stdview.vaft)) {
+	if (!FABSEQ(vp->vaft,stdview.vaft)) {
 		sprintf(cp, " -va %.6g", vp->vaft);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->hoff,stdview.hoff)) {
+	if (!FABSEQ(vp->hoff,stdview.hoff)) {
 		sprintf(cp, " -vs %.6g", vp->hoff);
 		cp += strlen(cp);
 	}
-	if (!FEQ(vp->voff,stdview.voff)) {
+	if (!FABSEQ(vp->voff,stdview.voff)) {
 		sprintf(cp, " -vl %.6g", vp->voff);
 		cp += strlen(cp);
 	}
