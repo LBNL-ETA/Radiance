@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.71 2021/02/01 16:19:49 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.72 2021/02/12 00:41:19 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -483,7 +483,6 @@ getexposure(				/* get new exposure */
 }
 
 typedef union {int i; double d; COLOR C;}	*MyUptr;
-#define  FEQ(x,y)     (fabs((x)-(y)) <= FTINY)
 
 int
 getparam(		/* get variable from user */
@@ -521,7 +520,7 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf", &d0) != 1)
 				return(0);
 		}
-		if (FEQ(ptr->d, d0))
+		if (FABSEQ(ptr->d, d0))
 			return(0);
 		ptr->d = d0;
 		break;
@@ -553,9 +552,9 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf %lf %lf", &d0, &d1, &d2) != 3)
 				return(0);
 		}
-		if (FEQ(colval(ptr->C,RED), d0) &&
-				FEQ(colval(ptr->C,GRN), d1) &&
-				FEQ(colval(ptr->C,BLU), d2))
+		if (FABSEQ(colval(ptr->C,RED), d0) &&
+				FABSEQ(colval(ptr->C,GRN), d1) &&
+				FABSEQ(colval(ptr->C,BLU), d2))
 			return(0);
 		setcolor(ptr->C, d0, d1, d2);
 		break;

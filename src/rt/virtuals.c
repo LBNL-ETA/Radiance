@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.24 2021/02/01 16:19:49 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.25 2021/02/12 00:41:19 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -19,8 +19,6 @@ static const char	RCSid[] = "$Id: virtuals.c,v 2.24 2021/02/01 16:19:49 greg Exp
 #define  MINSAMPLES	16		/* minimum number of pretest samples */
 #define  STESTMAX	32		/* maximum seeks per sample */
 
-#define FEQ(a,b)	((a)-(b)+FTINY >= 0 && (b)-(a)+FTINY >= 0)
-
 
 static OBJECT  *vobject;		/* virtual source objects */
 static int  nvobjects = 0;		/* number of virtual source objects */
@@ -33,7 +31,7 @@ isident4(MAT4 m)
 
 	for (i = 4; i--; )
 		for (j = 4; j--; )
-			if (!FEQ(m[i][j], i==j))
+			if (!FABSEQ(m[i][j], i==j))
 				return(0);
 	return(1);
 }
