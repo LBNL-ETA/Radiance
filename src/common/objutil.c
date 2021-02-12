@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.11 2021/02/12 01:57:49 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.12 2021/02/12 20:44:04 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -259,13 +259,13 @@ replace_vertex(Scene *sc, int prev, int repl, double eps)
 	repl_tex[0] = -1;
 	for (f = sc->vert[repl].vflist; f != NULL; f = f->v[j].fnext) {
 					/* make sure prev isn't in there */
-		for (j = 0; j < f->nv; j++)
+		for (j = f->nv; j-- > 0; )
 			if (f->v[j].vid == prev)
 				return(0);
-		for (j = 0; j < f->nv; j++)
+		for (j = f->nv; j-- > 0; )
 			if (f->v[j].vid == repl)
 				break;
-		if (j >= f->nv)
+		if (j < 0)
 			goto linkerr;
 		if (f->v[j].tid < 0)
 			continue;
@@ -290,7 +290,7 @@ replace_vertex(Scene *sc, int prev, int repl, double eps)
 					/* get replacement normals */
 	repl_norm[0] = -1;
 	for (f = sc->vert[repl].vflist; f != NULL; f = f->v[j].fnext) {
-		for (j = 0; j < f->nv; j++)
+		for (j = f->nv; j-- > 0; )
 			if (f->v[j].vid == repl)
 				break;
 		if (f->v[j].nid < 0)
@@ -315,10 +315,10 @@ replace_vertex(Scene *sc, int prev, int repl, double eps)
 	}
 					/* replace occurrences of vertex */
 	for (f = sc->vert[prev].vflist; f != NULL; f = f->v[j].fnext) {
-		for (j = 0; j < f->nv; j++)
+		for (j = f->nv; j-- > 0; )
 			if (f->v[j].vid == prev)
 				break;
-		if (j >= f->nv)
+		if (j < 0)
 			goto linkerr;
 		/* XXX doesn't allow for multiple references to prev in face */
 		f->v[j].vid = repl;     /* replace vertex itself */
@@ -432,10 +432,10 @@ findDuplicateFaces(Scene *sc)
 						/* look for duplicates */
 		for (f1 = sc->vert[vid].vflist; f1 != NULL;
 					f1 = f1->v[j].fnext) {
-			for (j = 0; j < f1->nv; j++)
+			for (j = f1->nv; j-- > 0; )
 				if (f1->v[j].vid == vid)
 					break;
-			if (j >= f1->nv)
+			if (j < 0)
 				break;		/* missing link! */
 			if (f1 == f)
 				continue;       /* shouldn't happen */
@@ -488,10 +488,10 @@ deleteFaces(Scene *sc, int flreq, int flexc)
 					continue;
 				}
 				while (vf != NULL) {
-					for (j = 0; j < vf->nv; j++)
+					for (j = vf->nv; j-- > 0; )
 						if (vf->v[j].vid == vid)
 							break;
-					if (j >= vf->nv)
+					if (j < 0)
 						break;  /* error */
 					if (vf->v[j].fnext == ftst) {
 						vf->v[j].fnext =
@@ -588,10 +588,10 @@ add2facelist(Scene *sc, Face *f, int i)
 	for ( ; ; ) {				/* else find position */
 		if (fp == f)
 			return;			/* already in list */
-		for (j = 0; j < fp->nv; j++)
+		for (j = fp->nv; j-- > 0; )
 			if (fp->v[j].vid == vid)
 				break;
-		if (j >= fp->nv)
+		if (j < 0)
 			error(CONSISTENCY, "Link error in add2facelist()");
 		if (fp->v[j].fnext == NULL)
 			break;			/* reached the end */
