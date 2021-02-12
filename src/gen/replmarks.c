@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.17 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.18 2021/02/12 00:53:56 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -22,8 +22,6 @@ static const char RCSid[] = "$Id: replmarks.c,v 2.17 2016/02/02 18:02:32 greg Ex
 #else
 #define  PI		3.14159265358979323846
 #endif
-
-#define  FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
 
 #define  MAXVERT	6	/* maximum number of vertices for markers */
 #define  MAXMARK	128	/* maximum number of markers */
@@ -401,19 +399,19 @@ addrot(		/* compute rotation (x,y,z) => (xp,yp,zp) */
 	}
 	n = 0;
 	theta = atan2(yp[2], zp[2]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -rx %f", theta*(180./PI));
 		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = Asin(-xp[2]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -ry %f", theta*(180./PI));
 		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = atan2(xp[1], xp[0]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -rz %f", theta*(180./PI));
 		/* while (*xf) ++xf; */
 		n += 2;

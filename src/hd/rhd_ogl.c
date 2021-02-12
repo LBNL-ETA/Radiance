@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.33 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.34 2021/02/12 00:53:56 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -47,10 +47,6 @@ static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.33 2018/10/05 19:19:16 greg Exp 
 #endif
 #ifndef BORWIDTH
 #define BORWIDTH	5		/* border width */
-#endif
-
-#ifndef FEQ
-#define FEQ(a,b)	((a)-(b) <= FTINY && (a)-(b) >= -FTINY)
 #endif
 
 #define	VWHEADLOCK	01		/* head position is locked flag */
@@ -337,8 +333,8 @@ dev_view(			/* assign new driver view */
 	}
 	if (nv != &odev.v) {
 						/* resize window? */
-		if (!FEQ(nv->horiz,odev.v.horiz) ||
-				!FEQ(nv->vert,odev.v.vert)) {
+		if (!FABSEQ(nv->horiz,odev.v.horiz) ||
+				!FABSEQ(nv->vert,odev.v.vert)) {
 			int	dw = DisplayWidth(ourdisplay,ourscreen);
 			int	dh = DisplayHeight(ourdisplay,ourscreen);
 

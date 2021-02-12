@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.37 2021/02/12 00:53:56 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -40,8 +40,6 @@ const double	sph_xoffset = 15.;
 
 #define bsdf_rad	(sph_rad*.25)
 #define arrow_rad	(bsdf_rad*.015)
-
-#define	FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
 
 #define	set_minlog()	overall_min = (overall_min < 1e-5) ? 1e-5 : overall_min; \
 				min_log10 = log10(overall_min) - .1
@@ -348,19 +346,19 @@ addrot(char *xf, const FVECT xp, const FVECT yp, const FVECT zp)
 		return(4);
 	}
 	theta = atan2(yp[2], zp[2]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -rx %f", theta*(180./PI));
 		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = Asin(-xp[2]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -ry %f", theta*(180./PI));
 		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = atan2(xp[1], xp[0]);
-	if (!FEQ(theta,0.0)) {
+	if (!FABSEQ(theta,0.0)) {
 		sprintf(xf, " -rz %f", theta*(180./PI));
 		/* while (*xf) ++xf; */
 		n += 2;

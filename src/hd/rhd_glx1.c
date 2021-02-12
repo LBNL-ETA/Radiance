@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.10 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.11 2021/02/12 00:53:56 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -19,10 +19,6 @@ static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.10 2018/10/05 19:19:16 greg Exp
 
 #ifndef RAYQLEN
 #define RAYQLEN		50000		/* max. rays to queue before flush */
-#endif
-
-#ifndef FEQ
-#define FEQ(a,b)	((a)-(b) <= FTINY && (a)-(b) >= -FTINY)
 #endif
 
 #ifndef MAXCONE
@@ -250,8 +246,8 @@ dev_view(			/* assign new driver view */
 		return(0);
 	}
 	if (nv != &odev.v) {
-		if (!FEQ(nv->horiz,odev.v.horiz) ||	/* resize window? */
-				!FEQ(nv->vert,odev.v.vert)) {
+		if (!FABSEQ(nv->horiz,odev.v.horiz) ||	/* resize window? */
+				!FABSEQ(nv->vert,odev.v.vert)) {
 			int	dw = DisplayWidth(ourdisplay,ourscreen);
 			int	dh = DisplayHeight(ourdisplay,ourscreen);
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.14 2014/07/29 21:36:08 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.15 2021/02/12 00:53:56 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -8,10 +8,6 @@ static const char	RCSid[] = "$Id: findglare.c,v 2.14 2014/07/29 21:36:08 greg Ex
  */
 
 #include "glare.h"
-
-#define FEQ(a,b)	((a)-(b)<=FTINY&&(b)-(a)<=FTINY)
-#define VEQ(v1,v2)	(FEQ((v1)[0],(v2)[0])&&FEQ((v1)[1],(v2)[1]) \
-				&&FEQ((v1)[2],(v2)[2]))
 
 char	*rtargv[64] = {"rtrace", "-h-", "-ov", "-fff", "-ld-", "-i-", "-I-"};
 int	rtargc = 7;
@@ -195,7 +191,7 @@ main(
 			exit(1);
 		}
 		ourview = pictview;
-	} else if (picture != NULL && !VEQ(ourview.vp, pictview.vp)) {
+	} else if (picture != NULL && !VABSEQ(ourview.vp, pictview.vp)) {
 		fprintf(stderr, "%s: picture must have same viewpoint\n",
 				progname);
 		exit(1);
