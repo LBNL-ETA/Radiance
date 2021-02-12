@@ -2408,3 +2408,7 @@ If the materials are both transparent or both opaque, then whichever
 surface appeared later in the scene description will be selected.
 This came of a request for consistent behavior with legal CAD output
 from Peter Apian-Bennewitz.
+
+Added explicit tests for on-edge intersections with polygons.  This should
+eliminate stray rays and tiny light leaks that often appear even in
+well-constructed geometry.
