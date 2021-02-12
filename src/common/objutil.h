@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.8 2020/06/23 19:29:40 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.9 2021/02/12 01:57:49 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -88,8 +88,8 @@ Scene *		newScene(void);
 /* Add a .OBJ file to a scene */
 Scene *		loadOBJ(Scene *sc, const char *fspec);
 
-/* Duplicate a scene */
-Scene *		dupScene(const Scene *sc);
+/* Duplicate a scene, optionally selecting faces */
+Scene *		dupScene(const Scene *sc, int flreq, int flexc);
 
 /* Transform entire scene */
 int		xfScene(Scene *sc, int xac, char *xav[]);
@@ -175,6 +175,9 @@ void		setMaterial(Scene *sc, const char *nm);
 
 /* Add a new face to our scene, using current group and material */
 Face *		addFace(Scene *sc, VNDX vid[], int nv);
+
+/* Delete unreferenced vertices, normals, texture coords */
+void		deleteUnreferenced(Scene *sc);
 
 /* Free a scene */
 void		freeScene(Scene *sc);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writewfobj.c,v 2.4 2020/12/18 00:15:47 greg Exp $";
+static const char RCSid[] = "$Id: writewfobj.c,v 2.5 2021/02/12 01:57:49 greg Exp $";
 #endif
 /*
  *  writewfobj.c
@@ -12,99 +12,6 @@ static const char RCSid[] = "$Id: writewfobj.c,v 2.4 2020/12/18 00:15:47 greg Ex
 #include "paths.h"
 #include "rterror.h"
 #include "objutil.h"
-
-/* Delete unreferenced vertices */
-static void
-del_unref_verts(Scene *sc)
-{
-	int     *vmap;
-	Face    *f;
-	int     nused, i;
-						/* allocate index map */
-	if (!sc->nverts)
-		return;
-	i = sc->nverts;
-	if (sc->ntex > i)
-		i = sc->ntex;
-	if (sc->nnorms > i)
-		i = sc->nnorms;
-	vmap = (int *)emalloc(sizeof(int)*i);
-						/* remap positions */
-	for (i = nused = 0; i < sc->nverts; i++) {
-		if (sc->vert[i].vflist == NULL) {
-			vmap[i] = -1;
-			continue;
-		}
-		if (nused != i)
-			sc->vert[nused] = sc->vert[i];
-		vmap[i] = nused++;
-	}
-	if (nused == sc->nverts)
-		goto skip_pos;
-	sc->vert = (Vertex *)erealloc((char *)sc->vert,
-				sizeof(Vertex)*(nused+(CHUNKSIZ-1)));
-	sc->nverts = nused;
-	for (f = sc->flist; f != NULL; f = f->next)
-		for (i = f->nv; i--; )
-			if ((f->v[i].vid = vmap[f->v[i].vid]) < 0)
-				error(CONSISTENCY,
-					"Link error in del_unref_verts()");
-skip_pos:
-						/* remap texture coord's */
-	if (!sc->ntex)
-		goto skip_tex;
-	memset((void *)vmap, 0, sizeof(int)*sc->ntex);
-	for (f = sc->flist; f != NULL; f = f->next)
-		for (i = f->nv; i--; )
-			if (f->v[i].tid >= 0)
-				vmap[f->v[i].tid] = 1;
-	for (i = nused = 0; i < sc->ntex; i++) {
-		if (!vmap[i])
-			continue;
-		if (nused != i)
-			sc->tex[nused] = sc->tex[i];
-		vmap[i] = nused++;
-	}
-	if (nused == sc->ntex)
-		goto skip_tex;
-	sc->tex = (TexCoord *)erealloc((char *)sc->tex,
-				sizeof(TexCoord)*(nused+(CHUNKSIZ-1)));
-	sc->ntex = nused;
-	for (f = sc->flist; f != NULL; f = f->next)
-		for (i = f->nv; i--; )
-			if (f->v[i].tid >= 0)
-				f->v[i].tid = vmap[f->v[i].tid];
-skip_tex:
-						/* remap normals */
-	if (!sc->nnorms)
-		goto skip_norms;
-	memset((void *)vmap, 0, sizeof(int)*sc->nnorms);
-	for (f = sc->flist; f != NULL; f = f->next)
-		for (i = f->nv; i--; )
-			if (f->v[i].nid >= 0)
-				vmap[f->v[i].nid] = 1;
-	for (i = nused = 0; i < sc->nnorms; i++) {
-		if (!vmap[i])
-			continue;
-		if (nused != i)
-			memcpy((void *)sc->norm[nused],
-					(void *)sc->norm[i],
-					sizeof(Normal));
-		vmap[i] = nused++;
-	}
-	if (nused == sc->nnorms)
-		goto skip_norms;
-	sc->norm = (Normal *)erealloc((char *)sc->norm,
-				sizeof(Normal)*(nused+(CHUNKSIZ-1)));
-	sc->nnorms = nused;
-	for (f = sc->flist; f != NULL; f = f->next)
-		for (i = f->nv; i--; )
-			if (f->v[i].nid >= 0)
-				f->v[i].nid = vmap[f->v[i].nid];
-skip_norms:
-						/* clean up */
-	efree((char *)vmap);
-}
 
 /* Write out header comments */
 static void
@@ -186,7 +93,7 @@ toOBJ(Scene *sc, FILE *fp)
 		return(0);
 	if (verbose)
 		fputs(" Removing unreferenced vertices\r", stderr);
-	del_unref_verts(sc);		/* clean up, first */
+	deleteUnreferenced(sc);		/* clean up, first */
 	if (verbose)
 		fputs(" Writing vertices               \r", stderr);
 	write_header(sc, fp);		/* write out header */
