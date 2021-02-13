@@ -1,4 +1,4 @@
-/* RCSid $Id: interp2d.h,v 2.9 2013/02/15 19:15:16 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.10 2021/02/13 16:49:18 greg Exp $ */
 /*
  * Header for interpolation of anisotropic samples on 2-D plane.
  *
@@ -25,6 +25,7 @@ typedef struct {
 	float		smin[2];	/* sample minima */
 	float		smax[2];	/* sample maxima */
 	float		grid2;		/* grid diameter squared */
+	void		*c_data;	/* client data pointer */
 	struct interp2_samp {
 		unsigned short	dia[NI2DIR];
 		unsigned short	infl[NI2DIM];

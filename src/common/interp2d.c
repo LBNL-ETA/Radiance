@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.14 2014/06/06 00:56:42 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.15 2021/02/13 16:49:18 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -70,6 +70,7 @@ interp2_alloc(int nsamps)
 	nip->ns = nsamps;
 	nip->dmin = 1;		/* default minimum diameter */
 	nip->smf = NI2DSMF;	/* default smoothing factor */
+	nip->c_data = NULL;
 	nip->da = NULL;
 				/* caller must assign spt[] array */
 	return(nip);
