@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.37 2021/02/15 23:20:22 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -29,7 +29,6 @@ typedef struct {
 } PGINPUT;
 
 PGINPUT		*inpfile;	/* input files sorted by incidence */
-int		ninpfiles;	/* number of input files */
 
 int		rev_orient = 0;	/* shall we reverse surface orientation? */
 
@@ -47,12 +46,28 @@ cmp_indir(const void *p1, const void *p2)
 	return(inp1->igp[0] - inp2->igp[0]);
 }
 
+/* Assign grid position from theta and phi */
+static void
+set_grid_pos(PGINPUT *pip)
+{
+	FVECT	dv;
+
+	if (pip->theta <= FTINY) {
+		pip->igp[0] = pip->igp[1] = grid_res/2 - 1;
+		return;
+	}
+	dv[2] = sin(M_PI/180.*pip->theta);
+	dv[0] = cos(M_PI/180.*pip->phi)*dv[2];
+	dv[1] = sin(M_PI/180.*pip->phi)*dv[2];
+	dv[2] = sqrt(1. - dv[2]*dv[2]);
+	pos_from_vec(pip->igp, dv);
+}
+
 /* Prepare a PAB-Opto input file by reading its header */
 static int
 init_pabopto_inp(const int i, const char *fname)
 {
 	FILE	*fp = fopen(fname, "r");
-	FVECT	dv;
 	char	buf[2048];
 	int	c;
 	
@@ -122,14 +137,7 @@ init_pabopto_inp(const int i, const char *fname)
 				/* convert to Y-up orientation */
 	inpfile[i].phi += 90.-inpfile[i].up_phi;
 				/* convert angle to grid position */
-	dv[2] = sin(M_PI/180.*inpfile[i].theta);
-	dv[0] = cos(M_PI/180.*inpfile[i].phi)*dv[2];
-	dv[1] = sin(M_PI/180.*inpfile[i].phi)*dv[2];
-	dv[2] = sqrt(1. - dv[2]*dv[2]);
-	if (inpfile[i].theta <= FTINY)
-		inpfile[i].igp[0] = inpfile[i].igp[1] = grid_res/2 - 1;
-	else
-		pos_from_vec(inpfile[i].igp, dv);
+	set_grid_pos(&inpfile[i]);
 	return(1);
 }
 
@@ -174,8 +182,8 @@ add_pabopto_inp(const int i)
 			theta_out = 180. - theta_out;
 			phi_out = 360. - phi_out;
 		}
-		add_bsdf_data(theta_out, phi_out+90.-inpfile[i].up_phi,
-				val, inpfile[i].isDSF);
+		phi_out += 90.-inpfile[i].up_phi;
+		add_bsdf_data(theta_out, phi_out, val, inpfile[i].isDSF);
 	}
 	n = 0;
 	while ((c = getc(fp)) != EOF)
@@ -195,6 +203,7 @@ add_pabopto_inp(const int i)
 #define	SYM_QUAD	'Q'		/* quadrilateral symmetry */
 #define	SYM_BILAT	'B'		/* bilateral symmetry */
 #define	SYM_ANISO	'A'		/* anisotropic */
+#define SYM_UP		'U'		/* "up-down" (180°) symmetry */
 
 static const char	quadrant_rep[16][16] = {
 				"in-plane","0-90","90-180","0-180",
@@ -215,57 +224,66 @@ int
 main(int argc, char *argv[])
 {
 	extern int	nprocs;
-	const char	*symmetry = "U";
-	int		i;
+	const char	*symmetry = "0";
+	int		ninpfiles, totinc;
+	int		a, i;
 						/* start header */
 	SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
 	printargs(argc, argv, stdout);
 	fputnow(stdout);
 	progname = argv[0];			/* get options */
-	while (argc > 2 && argv[1][0] == '-') {
-		switch (argv[1][1]) {
+	for (a = 1; a < argc && argv[a][0] == '-'; a++)
+		switch (argv[a][1]) {
 		case 't':
 			rev_orient = !rev_orient;
 			break;
 		case 'n':
-			nprocs = atoi(argv[2]);
-			argv++; argc--;
+			nprocs = atoi(argv[++a]);
 			break;
 		case 's':
-			symmetry = argv[2];
-			argv++; argc--;
+			symmetry = argv[++a];
 			break;
 		default:
 			goto userr;
 		}
-		argv++; argc--;
-	}
-						/* initialize & sort inputs */
-	ninpfiles = argc - 1;
+	totinc = ninpfiles = argc - a;		/* initialize & sort inputs */
 	if (ninpfiles < 2)
 		goto userr;
-	inpfile = (PGINPUT *)malloc(sizeof(PGINPUT)*ninpfiles);
+	if (toupper(symmetry[0]) == SYM_UP)	/* special case for "up" symmetry */
+		totinc += ninpfiles;
+	inpfile = (PGINPUT *)malloc(sizeof(PGINPUT)*totinc);
 	if (inpfile == NULL)
 		return(1);
 	for (i = 0; i < ninpfiles; i++)
-		if (!init_pabopto_inp(i, argv[i+1]))
+		if (!init_pabopto_inp(i, argv[a+i]))
 			return(1);
+
+	for (i = ninpfiles; i < totinc; i++) {	/* copy for "up" symmetry */
+		inpfile[i] = inpfile[i-ninpfiles];
+		inpfile[i].phi += 180.;		/* invert duplicate data */
+		inpfile[i].up_phi -= 180.;
+		set_grid_pos(&inpfile[i]);	/* grid location for sorting */
+	}
 	qsort(inpfile, ninpfiles, sizeof(PGINPUT), cmp_indir);
 						/* compile measurements */
-	for (i = 0; i < ninpfiles; i++)
+	for (i = 0; i < totinc; i++)
 		if (!add_pabopto_inp(i))
 			return(1);
 	make_rbfrep();				/* process last data set */
 						/* check input symmetry */
 	switch (toupper(symmetry[0])) {
-	case 'U':				/* unspecified symmetry */
+	case '0':				/* unspecified symmetry */
 		if (quadrant_sym[inp_coverage] != SYM_ILL)
 			break;			/* anything legal goes */
 		fprintf(stderr, "%s: unsupported phi coverage (%s)\n",
 				progname, quadrant_rep[inp_coverage]);
 		return(1);
-	case SYM_ISO:				/* legal symmetry types */
+	case SYM_UP:				/* faux "up" symmetry */
+		if (quadrant_sym[inp_coverage] == SYM_ANISO)
+			break;
+		/* fall through */
+	case SYM_ISO:				/* usual symmetry types */
 	case SYM_QUAD:
 	case SYM_BILAT:
 	case SYM_ANISO:
@@ -277,7 +295,7 @@ main(int argc, char *argv[])
 		return(1);
 	default:
 		fprintf(stderr,
-  "%s: -s option must be Isotropic, Quadrilateral, Bilateral, or Anisotropic\n",
+  "%s: -s option must be Isotropic, Quadrilateral, Bilateral, Up, or Anisotropic\n",
 				progname);
 		return(1);
 	}
@@ -313,7 +331,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Usage: %s input.dat > output.rad\n", progname);
 		return(1);
 	}
-	ninpfiles = 1;
 	inpfile = &pginp;
 	if (!init_pabopto_inp(0, argv[1]) || !add_pabopto_inp(0))
 		return(1);

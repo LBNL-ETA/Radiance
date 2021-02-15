@@ -2412,3 +2412,8 @@ from Peter Apian-Bennewitz.
 Added explicit tests for on-edge intersections with polygons.  This should
 eliminate stray rays and tiny light leaks that often appear even in
 well-constructed geometry.
+
+Added "-s up" option to pabopto2bsdf to allow for 180 degree symmetry,
+meaning that data repeats after 180 degree rotation (as distinguished
+from "-s bilateral" that is mirrored about a vertical plane).  Thanks
+to Helen Rose for the suggestion and informing me that such a thing exists.
