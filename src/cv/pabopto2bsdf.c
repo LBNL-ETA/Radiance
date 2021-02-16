@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.37 2021/02/15 23:20:22 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.38 2021/02/16 15:49:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -265,7 +265,7 @@ main(int argc, char *argv[])
 		inpfile[i].up_phi -= 180.;
 		set_grid_pos(&inpfile[i]);	/* grid location for sorting */
 	}
-	qsort(inpfile, ninpfiles, sizeof(PGINPUT), cmp_indir);
+	qsort(inpfile, totinc, sizeof(PGINPUT), cmp_indir);
 						/* compile measurements */
 	for (i = 0; i < totinc; i++)
 		if (!add_pabopto_inp(i))
