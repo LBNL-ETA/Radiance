@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.19 2018/11/08 00:54:07 greg Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.20 2021/02/16 20:06:06 greg Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.19 2018/11/08 00:54:07 greg 
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapcontrib.c,v 2.19 2018/11/08 00:54:07 greg Exp $
+   $Id: pmapcontrib.c,v 2.20 2021/02/16 20:06:06 greg Exp $
 */
 
 
@@ -197,9 +197,6 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
    if (!nsources)
       error(USER, "no light sources in distribPhotonContrib");
 
-   if (nsources > MAXMODLIST)
-      error(USER, "too many light sources in distribPhotonContrib");
-      
    /* Allocate photon flux per light source; this differs for every 
     * source as all sources contribute the same number of distributed
     * photons (srcDistribTarget), hence the number of photons emitted per

@@ -2418,3 +2418,5 @@ meaning that data repeats after 180 degree rotation (as distinguished
 from "-s bilateral" whose data is mirrored about a vertical plane).
 Thanks to Helen Rose Wilson for the suggestion and informing me that
 such a thing exists.
+
+Removed upper limit on number of modifiers in rcontrib.

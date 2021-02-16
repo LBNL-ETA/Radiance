@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.39 2020/09/10 01:01:18 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.40 2021/02/16 20:06:06 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -102,13 +102,18 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		sprintf(errmsg, "duplicate modifier '%s'", modn);
 		error(USER, errmsg);
 	}
-	if (nmods >= MAXMODLIST) {
-		sprintf(errmsg, "too many modifiers (%d limit)", MAXMODLIST);
-		error(INTERNAL, errmsg);
-	}
 	if (!strcmp(modn, VOIDID)) {
 		sprintf(errmsg, "cannot track '%s' modifier", VOIDID);
 		error(USER, errmsg);
+	}
+	if (nmods >= modasiz) {		/* need bigger modifier array */
+		modasiz += modasiz/3 + 64;
+		if (modname == NULL)
+			modname = (char **)malloc(modasiz*sizeof(char *));
+		else
+			modname = (char **)realloc(modname, modasiz*sizeof(char *));
+		if (modname == NULL)
+			error(SYSTEM, "Out of memory in addmodifier()");
 	}
 	modname[nmods++] = modn;	/* XXX assumes static string */
 	lep->key = modn;		/* XXX assumes static string */
@@ -154,21 +159,18 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 void
 addmodfile(char *fname, char *outf, char *prms, char *binv, int bincnt)
 {
-	char	*mname[MAXMODLIST];
-	int	i;
-					/* find the file & store strings */
-	i = wordfile(mname, MAXMODLIST, getpath(fname, getrlibpath(), R_OK));
-	if (i < 0) {
-		sprintf(errmsg, "cannot find modifier file '%s'", fname);
+	char	*path = getpath(fname, getrlibpath(), R_OK);
+	char	mod[MAXSTR];
+	FILE	*fp;
+
+	if (path == NULL || (fp = fopen(path, "r")) == NULL) {
+		sprintf(errmsg, "cannot load modifier file '%s'",
+				path != NULL ? path : fname);
 		error(SYSTEM, errmsg);
 	}
-	if (i >= MAXMODLIST-1) {
-		sprintf(errmsg, "too many modifiers (%d limit) in file '%s'",
-				MAXMODLIST-1, fname);
-		error(INTERNAL, errmsg);
-	}
-	for (i = 0; mname[i]; i++)	/* add each one */
-		addmodifier(mname[i], outf, prms, binv, bincnt);
+	while (fgetword(mod, sizeof(mod), fp) != NULL)
+		addmodifier(mod, outf, prms, binv, bincnt);
+	fclose(fp);
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.19 2020/09/09 21:28:19 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.20 2021/02/16 20:06:06 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -45,8 +45,9 @@ int	lim_dist = 0;			/* limit distance? */
 
 int	report_intvl = 0;		/* reporting interval (seconds) */
 
-const char	*modname[MAXMODLIST];	/* ordered modifier name list */
-int		nmods = 0;		/* number of modifiers */
+char	**modname = NULL;		/* ordered modifier name list */
+int	nmods = 0;			/* number of modifiers */
+int	modasiz = 0;			/* allocated modifier array size */
 
 void	(*addobjnotify[8])() = {ambnotify, NULL};
 
