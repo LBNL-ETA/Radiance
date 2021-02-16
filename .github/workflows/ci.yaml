@@ -399,7 +399,7 @@ jobs:
       - name: The job has failed
         if: ${{ failure() }}
         run: |
-          zip -r Radiance_Windows_Failed.zip ./test/*
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
           
       - name: Upload artifact
         if: ${{ failure() }}
