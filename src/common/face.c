@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.15 2021/02/12 00:47:33 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.16 2021/02/16 16:48:11 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -98,7 +98,7 @@ getface(				/* get arguments for a face */
 	if (f->nv > 3 && badvert)
 		objerror(o, WARNING, "non-planar vertex");
 						/* find axis */
-	f->ax = (fabs(f->norm[0]) > fabs(f->norm[1]));
+	f->ax = (fabs(f->norm[1]) > fabs(f->norm[0]));
 	if (fabs(f->norm[2]) > fabs(f->norm[f->ax]))
 		f->ax = 2;
 
