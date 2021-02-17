@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.85 2019/05/14 17:39:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.86 2021/02/17 01:29:22 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -20,6 +20,10 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.85 2019/05/14 17:39:10 greg Exp 
 #include  "ray.h"
 #include  "ambient.h"
 #include  "random.h"
+
+#ifndef MINADIV
+#define MINADIV		7	/* minimum # divisions in each dimension */
+#endif
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
@@ -258,8 +262,8 @@ samp_hemi(				/* sample indirect hemisphere */
 			wt > (d = 0.8*intens(rcol)*r->rweight/(ambdiv*minweight)))
 		wt = d;			/* avoid ray termination */
 	n = sqrt(ambdiv * wt) + 0.5;
-	i = 1 + 5*(ambacc > FTINY);	/* minimum number of samples */
-	if (n < i)
+	i = 1 + (MINADIV-1)*(ambacc > FTINY);
+	if (n < i)			/* use minimum number of samples? */
 		n = i;
 					/* allocate sampling array */
 	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) + sizeof(AMBSAMP)*(n*n - 1));
@@ -291,8 +295,8 @@ samp_hemi(				/* sample indirect hemisphere */
 		hp->sampOK *= -1;	/* soft failure */
 		return(hp);
 	}
-	if (hp->sampOK < 64)
-		return(hp);		/* insufficient for super-sampling */
+	if (hp->sampOK <= MINADIV*MINADIV)
+		return(hp);		/* don't bother super-sampling */
 	n = ambssamp*wt + 0.5;
 	if (n > 8) {			/* perform super-sampling? */
 		ambsupersamp(hp, n);
@@ -713,7 +717,7 @@ doambient(				/* compute ambient component */
 		return(0);
 
 	if ((ra == NULL) & (pg == NULL) & (dg == NULL) ||
-			(hp->sampOK < 0) | (hp->ns < 6)) {
+			(hp->sampOK < 0) | (hp->ns < MINADIV)) {
 		free(hp);		/* Hessian not requested/possible */
 		return(-1);		/* value-only return value */
 	}
