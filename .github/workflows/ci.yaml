@@ -398,6 +398,7 @@ jobs:
         
       - name: The job has failed
         if: ${{ failure() }}
+        shell: pwsh
         run: |
           Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
           
