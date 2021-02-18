@@ -394,7 +394,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make
+          make -j8
         
       - name: The job has failed
         if: ${{ failure() }}
