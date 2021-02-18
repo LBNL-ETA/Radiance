@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.26 2020/07/27 16:49:56 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.27 2021/02/18 23:16:35 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -197,8 +197,9 @@ real_check(double r1, double r2)
 
 	if (rel_min > 0) {	/* doing relative differences? */
 		double	av2 = .25*(r1*r1 + 2.*fabs(r1*r2) + r2*r2);
-		if (av2 > rel_min*rel_min)
-			diff2 /= av2;
+		if (av2 < rel_min*rel_min)
+			av2 = rel_min*rel_min;
+		diff2 /= av2;
 	}
 	if (max_lim >= 0 && diff2 > max_lim*max_lim) {
 		if (report != REP_QUIET)
