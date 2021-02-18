@@ -1,16 +1,19 @@
-/* RCSid $Id: pmapio.h,v 2.7 2018/12/07 20:07:41 rschregle Exp $ */
+/* RCSid $Id: pmapio.h,v 2.8 2021/02/18 17:08:50 rschregle Exp $ */
 
 /* 
    ======================================================================
-   Photon map file I/O
+   Photon map portable file I/O
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme FARESYS") 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")   
    ======================================================================
    
-   $Id: pmapio.h,v 2.7 2018/12/07 20:07:41 rschregle Exp $
+   $Id: pmapio.h,v 2.8 2021/02/18 17:08:50 rschregle Exp $
 */
 
 
@@ -50,6 +53,9 @@
    #define PMAP_FILEVER       (PMAP_FILEVER_MAJ PMAP_FILEVER_TYP \
                                PMAP_FILEVER_FLX PMAP_FILEVER_PRIPOS \
                                PMAP_FILEVER_PRIDIR)
+   
+   /* Maximum portable size of a long int in photon map file */
+   #define PMAP_LONGSIZE      8                               
    
    
    void savePhotonMap (const PhotonMap *pmap, const char *fname,

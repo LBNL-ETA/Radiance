@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.17 2020/08/07 01:21:13 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.18 2021/02/18 17:08:50 rschregle Exp $";
 #endif
 
 /* 
@@ -9,15 +9,17 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.17 2020/08/07 01:21:13 rschregl
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       supported by the German Research Foundation (DFG) 
-       under the FARESYS project.
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme FARESYS") 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF #147053).
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    (c) Tokyo University of Science,
-       supported by the JSPS KAKENHI Grant Number JP19KK0115.
+       supported by the JSPS Grants-in-Aid for Scientific Research 
+       (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")   
    ======================================================================
    
-   $Id: pmapdump.c,v 2.17 2020/08/07 01:21:13 rschregle Exp $
+   $Id: pmapdump.c,v 2.18 2021/02/18 17:08:50 rschregle Exp $
 */
 
 
@@ -219,9 +221,12 @@ int main (int argc, char** argv)
             fputc('\n', stdout);
          }
       }
-      
-      /* Get number of photons */
-      pm.numPhotons = getint(sizeof(pm.numPhotons), pmapFile);
+
+      /* Get number of photons as fixed size, which possibly results in
+       * padding of MSB with 0 on some platforms.  Unlike sizeof() however,
+       * this ensures portability since this value may span 32 or 64 bits
+       * depending on platform.  */
+      pm.numPhotons = getint(PMAP_LONGSIZE, pmapFile);      
 
       /* Skip avg photon flux */ 
       for (j = 0; j < 3; j++) 
