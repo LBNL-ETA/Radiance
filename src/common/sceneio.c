@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sceneio.c,v 2.5 2011/09/22 02:15:56 greg Exp $";
+static const char RCSid[] = "$Id: sceneio.c,v 2.6 2021/02/19 16:51:10 greg Exp $";
 #endif
 /*
  *  Portable, binary Radiance i/o routines.
@@ -154,6 +154,6 @@ writescene(				/* write binary scene description */
 	for (i = firstobj; i < firstobj+nobjs; i++)
 		putobj(objptr(i), fp);
 	putobj(NULL, fp);		/* terminator */
-	if (ferror(fp))
-		error(SYSTEM, "write error in writescene");
+	if (fflush(fp) == EOF)
+		error(SYSTEM, "output error in writescene");
 }
