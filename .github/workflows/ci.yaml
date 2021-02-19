@@ -55,6 +55,7 @@ jobs:
   build_Windows:
     name: "Build for Windows"
     runs-on: windows-latest
+    timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
@@ -158,6 +159,7 @@ jobs:
   build_OSX:
     name: "Build for OSX"
     runs-on: macos-latest
+    timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
@@ -241,6 +243,7 @@ jobs:
   build_Linux:
     name: "Build for Linux"
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
     
@@ -313,6 +316,7 @@ jobs:
     needs: [build_Windows]
     name: Test for Windows 1
     runs-on: windows-latest
+    timeout-minutes: 40
     defaults:
       run:
         shell: cmd
@@ -379,7 +383,7 @@ jobs:
           make clean
           make -j8
   
-      - name: run tests -renders
+      - name: run tests -renders 1
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -407,6 +411,7 @@ jobs:
     needs: [build_Windows]
     name: Test for Windows 2
     runs-on: windows-latest
+    timeout-minutes: 40
     defaults:
       run:
         shell: cmd
@@ -429,7 +434,7 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
 
-      - name: run tests -renders
+      - name: run tests -renders2
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -457,6 +462,7 @@ jobs:
     needs: [build_Windows]
     name: Test for Windows 3
     runs-on: windows-latest
+    timeout-minutes: 40
     defaults:
       run:
         shell: cmd
@@ -507,6 +513,7 @@ jobs:
     needs: [build_Windows]
     name: Test for Windows 4
     runs-on: windows-latest
+    timeout-minutes: 40
     defaults:
       run:
         shell: cmd
@@ -558,6 +565,7 @@ jobs:
     needs: [build_OSX]
     name: "Test for OSX 1"
     runs-on: macos-latest
+    timeout-minutes: 40
 
     steps:
       - name: get os version
@@ -662,6 +670,7 @@ jobs:
     needs: [build_OSX]
     name: "Test for OSX 2"
     runs-on: macos-latest
+    timeout-minutes: 40
 
     steps:
       - name: get os version
@@ -725,6 +734,7 @@ jobs:
     needs: [build_Linux]
     name: "Test for Linux 1"
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       - name: "Checkout Master Branch"
@@ -831,6 +841,7 @@ jobs:
     needs: [build_Linux]
     name: "Test for Linux 2"
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       - name: "Checkout Master Branch"
