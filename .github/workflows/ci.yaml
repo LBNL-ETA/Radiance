@@ -921,17 +921,8 @@ jobs:
         run: |
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
-      - name: test if release 2
-        if: ${{steps.if_release.outputs.RELEASE_TODAY == "true"}} 
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
       - name: test if release 3
         if: ${{steps.if_release.outputs.RELEASE_TODAY  == false}}
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
-
-      - name: test if release4
-        if: ${{steps.if_release.outputs.RELEASE_TODAY == "false"}} 
         run: |
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
