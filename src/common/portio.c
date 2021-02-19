@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.23 2021/01/15 18:31:38 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.24 2021/02/19 02:59:32 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -33,6 +33,10 @@ putint(				/* write a siz-byte integer to fp */
 	FILE  *fp
 )
 {
+	while (siz > sizeof(long)) {
+		putc((i<0)*0xff, fp);
+		siz--;
+	}
 	siz <<= 3;
 	while ((siz -= 8) > 0)
 		putc((int)(i>>siz & 0xff), fp);
@@ -112,7 +116,9 @@ getint(				/* get a siz-byte integer */
 
 	if ((c = getc(fp)) == EOF)
 		return(EOF);
-	r = 0x80&c ? -1<<8|c : c;		/* sign extend */
+	r = c;
+	if (c & 0x80)		/* sign extend? */
+		r |= ~255L;
 	while (--siz > 0) {
 		if ((c = getc(fp)) == EOF)
 			return(EOF);
