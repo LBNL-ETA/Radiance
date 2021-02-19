@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Exp $";
+static const char RCSid[] = "$Id: pmap.c,v 2.18 2021/02/19 02:10:35 rschregle Exp $";
 #endif
 
 
@@ -9,11 +9,14 @@ static const char RCSid[] = "$Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Ex
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme FARESYS") 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    ======================================================================
    
-   $Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Exp $
+   $Id: pmap.c,v 2.18 2021/02/19 02:10:35 rschregle Exp $
 */
 
 
@@ -25,6 +28,7 @@ static const char RCSid[] = "$Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Ex
 #include "pmapbias.h"
 #include "pmapdiag.h"
 #include "otypes.h"
+#include "otspecial.h"
 #include <time.h>
 #if NIX
    #include <sys/stat.h>
@@ -169,10 +173,15 @@ void tracePhoton (RAY *ray)
    if (localhit(ray, &thescene)) {
       mod = ray -> ro -> omod;
 
-      if (port && ray -> ro != port) {
+      /* XXX: Is port -> omod != mod sufficient here? Probably not... */
+      if (
+         port && ray -> ro != port && 
+         findmaterial(port) != findmaterial(ray -> ro)
+      ) {
          /* !!! PHOTON PORT REJECTION SAMPLING HACK !!!
-          * Terminate photon if emitted from port without intersecting it;
-          * this can happen when the port's partitions extend beyond its
+          * Terminate photon if emitted from port without intersecting it or
+          * its other associated surfaces or same material. 
+          * This can happen when the port's partitions extend beyond its
           * actual geometry, e.g.  with polygons.  Since the total flux
           * relayed by the port is based on the (in this case) larger
           * partition area, it is overestimated; terminating these photons
