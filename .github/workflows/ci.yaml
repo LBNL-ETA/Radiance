@@ -899,11 +899,6 @@ jobs:
     name: deploy installers
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout Master Branch"
-        uses: actions/checkout@v2
-        with:
-          ref: master
-      
       - name: Check date if release
         id: if_release
         run: |
@@ -917,7 +912,11 @@ jobs:
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
       - name: test if release 1
-        if: ${{steps.if_release.outputs.RELEASE_TODAY}}
+        if: ${{steps.if_release.outputs.RELEASE_TODAY==true}}
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+      - name: test if release 1
+        if: ${{steps.if_release.outputs.RELEASE_TODAY==false}}
         run: |
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
@@ -928,7 +927,7 @@ jobs:
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
 
       - name: test if release 3
-        if: ${{steps.if_release_true.outputs.RELEASE_TODAY}}
+        if: ${{steps.if_release_true.outputs.RELEASE_TODAY==true}}
         run: |
           echo "${{steps.if_release_true.outputs.RELEASE_TODAY}}"
 
@@ -939,7 +938,7 @@ jobs:
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
 
       - name: test if release 3
-        if: ${{steps.if_release_false.outputs.RELEASE_TODAY}}
+        if: ${{steps.if_release_false.outputs.RELEASE_TODAY==true}}
         run: |
           echo "${{steps.if_release_false.outputs.RELEASE_TODAY}}"
 
