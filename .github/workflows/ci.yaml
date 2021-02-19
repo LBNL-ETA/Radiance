@@ -926,22 +926,3 @@ jobs:
         run: |
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
-      - name: test if release5
-        if: $steps.if_release.outputs.RELEASE_TODAY == true
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
-
-      - name: test if release6
-        if: $steps.if_release.outputs.RELEASE_TODAY == "true"
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
-
-      - name: test if release7
-        if: $steps.if_release.outputs.RELEASE_TODAY == true
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
-
-      - name: test if release8
-        if: $steps.if_release.outputs.RELEASE_TODAY == "true"
-        run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
