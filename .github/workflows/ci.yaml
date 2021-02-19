@@ -40,6 +40,7 @@ jobs:
 
           unset HAS_NEW_COMMITS
           if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          HAS_NEW_COMMITS='false'
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
@@ -56,7 +57,6 @@ jobs:
     name: "Build for Windows"
     runs-on: windows-latest
     needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -159,7 +159,6 @@ jobs:
     name: "Build for OSX"
     runs-on: macos-latest
     needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v2
@@ -242,7 +241,6 @@ jobs:
     name: "Build for Linux"
     runs-on: ubuntu-latest
     needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
     
     steps:
       - uses: actions/checkout@v2
@@ -894,10 +892,13 @@ jobs:
           name: Radiance_Linux_Failed2
           path: Radiance_Linux_Failed2.zip
 
-  release_installers:
+
+  check_if_release_installers:
     needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
     name: deploy installers
     runs-on: ubuntu-latest
+    outputs:
+      RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
     steps:
       - name: Check date if release
         id: if_release
@@ -907,19 +908,23 @@ jobs:
           if $IF_RELEASE; then echo "Release a new version today"; fi
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
 
+  release_installers:
+    name: deploy installers
+    runs-on: ubuntu-latest
+    needs: check_if_release_installers
+    if: needs.if_release.outputs.RELEASE_TODAY == 'true'
+
+    steps:
       - name: "Checkout Master Branch"
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/checkout@v2
         with:
           ref: master
           fetch-depth: 0
       
       - name: Download all installers
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/download-artifact@v2
 
       - name: unzip artifacts
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         run: |
           unzip Radiance_Linux.zip
           unzip Radiance_Windows_both.zip
@@ -927,7 +932,6 @@ jobs:
           
 
       - name: Get Git log
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         id: get_release_note
         run: |
           LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
@@ -943,7 +947,6 @@ jobs:
           echo ::set-output name=RELEASE_NOTE::${RELEASE_NOTE}
 
       - name: get release name
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         id: get_release_name
         run: |
           LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
@@ -962,14 +965,12 @@ jobs:
           echo ::set-output name=RELEASE_NAME::${RELEASE_NAME}
          
       - name: check release name/note
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         run: |
           echo "${{steps.get_release_name.outputs.RELEASE_TAG}}"
           echo "${{steps.get_release_name.outputs.RELEASE_NAME}}"
           echo "${{steps.get_release_note.outputs.RELEASE_NOTE}}"
 
       - name: Create Release
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         id: create_release
         uses: actions/create-release@v1.1.1
         env:
@@ -983,7 +984,6 @@ jobs:
           prerelease: true
       
       - name: Release Asset Radiance_Windows exe
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -994,7 +994,6 @@ jobs:
           asset_content_type: application/exe
       
       - name: Release Asset Radiance_Windows zip
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -1005,7 +1004,6 @@ jobs:
           asset_content_type: application/zip
 
       - name: Release Asset Radiance_Linux
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
@@ -1017,7 +1015,6 @@ jobs:
           asset_content_type: application/zip
       
       - name: Release Asset Radiance_OSX pkg
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -1028,7 +1025,6 @@ jobs:
           asset_content_type: application/pkg
 
       - name: Release Asset Radiance_OSX zip
-        if: ${{steps.if_release.outputs.RELEASE_TODAY=='true'}}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
