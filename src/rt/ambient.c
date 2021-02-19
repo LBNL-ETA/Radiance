@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.109 2020/03/10 15:57:52 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.110 2021/02/19 22:05:46 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -583,6 +583,7 @@ extambient(		/* extrapolate value at pv, nv */
 )
 {
 	const double	min_d = 0.05;
+	const double	max_d = 20.;
 	static FVECT	my_uvw[3];
 	FVECT		v1;
 	int		i;
@@ -602,8 +603,10 @@ extambient(		/* extrapolate value at pv, nv */
 	for (i = 3; i--; )
 		d += v1[i] * (ap->gdir[0]*uvw[0][i] + ap->gdir[1]*uvw[1][i]);
 	
-	if (d < min_d)			/* should not use if we can avoid it */
+	if (d < min_d)			/* clamp min/max scaling */
 		d = min_d;
+	else if (d > max_d)
+		d = max_d;
 	copycolor(cr, ap->val);
 	scalecolor(cr, d);
 	return(d > min_d);

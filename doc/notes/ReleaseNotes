@@ -2420,3 +2420,6 @@ Thanks to Helen Rose Wilson for the suggestion and informing me that
 such a thing exists.
 
 Removed upper limit on number of modifiers in rcontrib.
+
+Put cap on maximum ambient gradient to avoid over-extrapolation of
+poorly computed irradiance cache values.
