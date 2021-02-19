@@ -1,4 +1,4 @@
-# RCSid $Id: trans2.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: trans2.rif,v 1.2 2021/02/19 06:01:47 greg Exp $
 #
 # Simple version of space using trans2 illum for window - compare to tfunc.rif
 #
@@ -27,7 +27,9 @@ mkillum = -ab 1
 
 render = @render.opt
 
+pfilt = -m .3
+
 view = def -vf inside.vf
 view = fish -vf fish.vf
-view= win -vth -vo .54 -vp -7.59934 2.7701 1.66912 \
-	-vd -0.18224 -0.0321338 -0.068322 -vh 180 -vv 180
+view= win -vta -vp -7.6 2 1.5 -vd -0.19661 -0.00340317 0.0156469 \
+	-vh 180 -vv 180 -vo 0.56

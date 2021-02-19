@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.33 2021/02/18 23:24:12 greg Exp $
+# RCSid $Id: Makefile,v 1.34 2021/02/19 06:01:46 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -31,6 +31,21 @@ clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
 *.[cg]pm{,.leaf} inst_rad.txt combined.rad rfmirror.mtx
 
+######
+# More-or-less evenly divided batches for NPROC=1 (redundancies removed)
+
+batch1:	test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
+test-xform test-oconv test-rad test-obj2mesh
+
+batch2:	test-rfluxmtx test-mist-def test-glass-def test-glass-fish test-glass-up
+
+batch3:	test-inst-def test-inst-fish test-trans2-def test-trans2-fish test-trans2-win \
+test-dielectric-def test-dielectric-fish
+
+batch4:	test-rtrace test-prism1-fish test-prism2-fish test-mirror-fish \
+test-mesh-def test-mesh-cyl test-mesh-cyl2 test-tfunc-def test-tfunc-fish \
+test-trans-def test-trans-fish test-patterns-def test-patterns-plan 
+
 ### Test Aliases ###
 
 test-rpict:	test-mirror-fish
@@ -61,13 +76,13 @@ test-obj2mesh:	cab.obj
 
 ### Special test of rtrace ###
 
-test-rtrace:	ref/mirror_fish.hdr  rtmirror_fish.hdr
+test-rtrace:	ref/mirror_fish.hdr rtmirror_fish.hdr
 	$(RDU_PFILT) rtmirror_fish.hdr | $(IMG_CMP) -h ref/mirror_fish.hdr -
 
 rtmirror_fish.hdr:	mirror.oct
 	rad -v 0 mirror.rif OPT=mirror.opt 
-	vwrays -ff -vf fish.vf -x 2048 -y 2048 | rtrace -n $(NPROC) @mirror.opt \
--ffc -x 2048 -y 2048 mirror.oct | pfilt -1 -e +3 -r .6 -x /2 -y /2 \
+	vwrays -ff -vf fish.vf -x 2048 -y 1991 | rtrace -n $(NPROC) @mirror.opt \
+-ffc -x 2048 -y 1991 mirror.oct | pfilt -1 -e +3 -r .6 -x /2 -y /2 \
 > rtmirror_fish.hdr
 	rm -f mirror.opt
 
