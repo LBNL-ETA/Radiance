@@ -905,6 +905,7 @@ jobs:
           IF_RELEASE=false
           if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
           if $IF_RELEASE; then echo "Release a new version today"; fi
+          exit 1
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
 
       - name: check release name/note
@@ -941,4 +942,5 @@ jobs:
         if: ${{steps.if_release_false.outputs.RELEASE_TODAY=='true'}}
         run: |
           echo "${{steps.if_release_false.outputs.RELEASE_TODAY}}"
+
 
