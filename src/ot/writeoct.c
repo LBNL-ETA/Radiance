@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writeoct.c,v 2.7 2004/11/09 16:09:20 greg Exp $";
+static const char RCSid[] = "$Id: writeoct.c,v 2.8 2021/02/19 17:45:37 greg Exp $";
 #endif
 /*
  *  writeoct.c - routines for writing octree information to stdout.
@@ -59,6 +59,9 @@ writeoct(		/* write octree structures to stdout */
 					/* write the octree */
 	puttree(scene->cutree);
 
+	if (fflush(stdout) == EOF)
+		error(SYSTEM, "output error in writeoct");
+
 	if (store & IO_FILES || !(store & IO_SCENE))
 		return;
 					/* write the scene */
@@ -68,12 +71,11 @@ writeoct(		/* write octree structures to stdout */
 
 static void
 oputstr(			/* write null-terminated string to stdout */
-	register char  *s
+	char  *s
 )
 {
-	putstr(s, stdout);
-	if (ferror(stdout))
-		error(SYSTEM, "write error in putstr");
+	if (putstr(s, stdout) == EOF)
+		error(SYSTEM, "write error in oputstr");
 }
 
 
@@ -83,7 +85,7 @@ putfullnode(			/* write out a full node */
 )
 {
 	OBJECT  oset[MAXSET+1];
-	register int  i;
+	int  i;
 
 	objset(oset, fn);
 	for (i = 0; i <= oset[0]; i++)
@@ -93,13 +95,12 @@ putfullnode(			/* write out a full node */
 
 static void
 oputint(			/* write a siz-byte integer to stdout */
-	register long  i,
-	register int  siz
+	long  i,
+	int  siz
 )
 {
-	putint(i, siz, stdout);
-	if (ferror(stdout))
-		error(SYSTEM, "write error in putint");
+	if (putint(i, siz, stdout) == EOF)
+		error(SYSTEM, "write error in oputint");
 }
 
 
@@ -108,18 +109,17 @@ oputflt(			/* put out floating point number */
 	double  f
 )
 {
-	putflt(f, stdout);
-	if (ferror(stdout))
-		error(SYSTEM, "write error in putflt");
+	if (putflt(f, stdout) == EOF)
+		error(SYSTEM, "write error in oputflt");
 }
 
 
 static void
 puttree(			/* write octree to stdout in pre-order form */
-	register OCTREE  ot
+	OCTREE  ot
 )
 {
-	register int  i;
+	int  i;
 	
 	if (istree(ot)) {
 		putc(OT_TREE, stdout);		/* indicate tree */
