@@ -897,7 +897,7 @@ jobs:
 
   check_if_release_installers:
     needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
-    name: deploy installers
+    name: check if release
     runs-on: ubuntu-latest
     outputs:
       RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
