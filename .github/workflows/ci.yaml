@@ -394,14 +394,14 @@ jobs:
         if: ${{ failure() }}
         shell: pwsh
         run: |
-          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed1
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Windows_Failed
-          path: Radiance_Windows_Failed.zip
+          name: Radiance_Windows_Failed1
+          path: Radiance_Windows_Failed1.zip
 
   Test_Windows_2:
     needs: [build_Windows]
@@ -444,14 +444,14 @@ jobs:
         if: ${{ failure() }}
         shell: pwsh
         run: |
-          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed2
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Windows_Failed
-          path: Radiance_Windows_Failed.zip
+          name: Radiance_Windows_Failed2
+          path: Radiance_Windows_Failed2.zip
 
   Test_Windows_3:
     needs: [build_Windows]
@@ -494,14 +494,14 @@ jobs:
         if: ${{ failure() }}
         shell: pwsh
         run: |
-          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed3
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Windows_Failed
-          path: Radiance_Windows_Failed.zip
+          name: Radiance_Windows_Failed3
+          path: Radiance_Windows_Failed3.zip
 
   Test_Windows_4:
     needs: [build_Windows]
@@ -545,14 +545,14 @@ jobs:
         if: ${{ failure() }}
         shell: pwsh
         run: |
-          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed4
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Windows_Failed
-          path: Radiance_Windows_Failed.zip
+          name: Radiance_Windows_Failed4
+          path: Radiance_Windows_Failed4.zip
 
   Test_OSX_1:
     needs: [build_OSX]
@@ -649,14 +649,14 @@ jobs:
       - name: The job has failed
         if: ${{ failure() }}
         run: |
-          zip -r Radiance_Mac_Failed.zip ./test/*
+          zip -r Radiance_Mac_Failed1.zip ./test/*
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Mac_Failed
-          path: Radiance_Mac_Failed.zip
+          name: Radiance_Mac_Failed1
+          path: Radiance_Mac_Failed1.zip
   
   Test_OSX_2:
     needs: [build_OSX]
@@ -712,14 +712,14 @@ jobs:
       - name: The job has failed
         if: ${{ failure() }}
         run: |
-          zip -r Radiance_Mac_Failed.zip ./test/*
+          zip -r Radiance_Mac_Failed2.zip ./test/*
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Mac_Failed
-          path: Radiance_Mac_Failed.zip
+          name: Radiance_Mac_Failed2
+          path: Radiance_Mac_Failed2.zip
 
   Test_Linux_1:
     needs: [build_Linux]
@@ -818,14 +818,14 @@ jobs:
       - name: The job has failed
         if: ${{ failure() }}
         run: |
-          zip -r Radiance_Linux_Failed.zip ./test/*
+          zip -r Radiance_Linux_Failed1.zip ./test/*
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Linux_Failed
-          path: Radiance_Linux_Failed.zip
+          name: Radiance_Linux_Failed1
+          path: Radiance_Linux_Failed1.zip
 
   Test_Linux_2:
     needs: [build_Linux]
@@ -885,14 +885,14 @@ jobs:
       - name: The job has failed
         if: ${{ failure() }}
         run: |
-          zip -r Radiance_Linux_Failed.zip ./test/*
+          zip -r Radiance_Linux_Failed2.zip ./test/*
           
       - name: Upload artifact
         if: ${{ failure() }}
         uses: actions/upload-artifact@v1
         with:
-          name: Radiance_Linux_Failed
-          path: Radiance_Linux_Failed.zip
+          name: Radiance_Linux_Failed2
+          path: Radiance_Linux_Failed2.zip
 
   release_installers:
     needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
