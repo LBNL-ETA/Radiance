@@ -311,7 +311,7 @@ jobs:
 
   Test_Windows_1:
     needs: [build_Windows]
-    name: Test for Windows
+    name: Test for Windows 1
     runs-on: windows-latest
     defaults:
       run:
@@ -334,12 +334,6 @@ jobs:
       
       - name: Display structure of downloaded files
         run: ls -R
-
-      - name: install perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.30'
-      
 
       - name: run tests -util
         shell: pwsh
@@ -385,7 +379,7 @@ jobs:
           make clean
           make -j8
   
-      - name: run tests -renders - batch1
+      - name: run tests -renders
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -396,17 +390,6 @@ jobs:
           make clean
           make batch1 -j8 
 
-      - name: run tests -renders - batch3
-        shell: cmd
-        run: |
-          set RAYPATH=.;${{ github.workspace }}\lib
-          set PATH=%PATH%;${{ github.workspace }}\bin
-          rtrace -version
-
-          cd ./test/renders/
-          make clean
-          make batch3 -j8 
-        
       - name: The job has failed
         if: ${{ failure() }}
         shell: pwsh
@@ -422,7 +405,7 @@ jobs:
 
   Test_Windows_2:
     needs: [build_Windows]
-    name: Test for Windows
+    name: Test for Windows 2
     runs-on: windows-latest
     defaults:
       run:
@@ -446,12 +429,7 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
 
-      - name: install perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.30'
-      
-      - name: run tests -renders - batch2
+      - name: run tests -renders
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -462,7 +440,97 @@ jobs:
           make clean
           make batch2 -j8 
 
-      - name: run tests -renders - batch4
+      - name: The job has failed
+        if: ${{ failure() }}
+        shell: pwsh
+        run: |
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_Failed
+          path: Radiance_Windows_Failed.zip
+
+  Test_Windows_3:
+    needs: [build_Windows]
+    name: Test for Windows 3
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: Download Windows installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Windows_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Windows_both.zip
+          unzip WindowsBuild/Radiance_Windows.zip 
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: run tests -renders 3
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j8 
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        shell: pwsh
+        run: |
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_Failed
+          path: Radiance_Windows_Failed.zip
+
+  Test_Windows_4:
+    needs: [build_Windows]
+    name: Test for Windows 4
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: Download Windows installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Windows_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Windows_both.zip
+          unzip WindowsBuild/Radiance_Windows.zip 
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      
+      - name: run tests -renders 4
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -486,10 +554,9 @@ jobs:
           name: Radiance_Windows_Failed
           path: Radiance_Windows_Failed.zip
 
-  
-  Test_OSX:
+  Test_OSX_1:
     needs: [build_OSX]
-    name: "Test for OSX"
+    name: "Test for OSX 1"
     runs-on: macos-latest
 
     steps:
@@ -517,7 +584,7 @@ jobs:
       
       - name: Display structure of downloaded files
         run: ls -R
-      
+    
       - name: run tests -util
         run: |
           export RAYPATH=.:${{ github.workspace }}/radiance/lib
@@ -558,8 +625,7 @@ jobs:
           make clean
           make -j8
 
-    
-      - name: run tests -renders
+      - name: run tests -renders 1
         run: |
           export RAYPATH=.:${{ github.workspace }}/radiance/lib
           export PATH=$PATH:${{ github.workspace }}/radiance/bin
@@ -567,7 +633,18 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make -j8
+          make batch1 -j8
+      
+          
+      - name: run tests -renders 3
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j8
       
       - name: The job has failed
         if: ${{ failure() }}
@@ -580,10 +657,73 @@ jobs:
         with:
           name: Radiance_Mac_Failed
           path: Radiance_Mac_Failed.zip
+  
+  Test_OSX_2:
+    needs: [build_OSX]
+    name: "Test for OSX 2"
+    runs-on: macos-latest
 
-  Test_Linux:
+    steps:
+      - name: get os version
+        run: |
+          uname -a
+          echo "=============================="
+          sw_vers -productVersion
+
+
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download OSX installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_OSX_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_OSX_both.zip
+          unzip OSXBuild/Radiance_OSX.zip
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+    
+      - name: run tests -renders 2
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch2 -j8
+
+      - name: run tests -renders 4
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch4 -j8
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Mac_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Mac_Failed
+          path: Radiance_Mac_Failed.zip
+
+  Test_Linux_1:
     needs: [build_Linux]
-    name: "Test for Linux"
+    name: "Test for Linux 1"
     runs-on: ubuntu-latest
 
     steps:
@@ -614,7 +754,7 @@ jobs:
 
       - name: Display structure of downloaded files
         run: ls -R
-
+      
       - name: run tests -util
         run: |
           export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
@@ -655,7 +795,7 @@ jobs:
           make clean
           make -j8
 
-      - name: run tests -renders
+      - name: run tests -renders 1
         run: |
           export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
           export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
@@ -663,8 +803,18 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make -j8
+          make batch1 -j8
       
+      - name: run tests -renders 3
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j8
+
       - name: The job has failed
         if: ${{ failure() }}
         run: |
@@ -677,3 +827,111 @@ jobs:
           name: Radiance_Linux_Failed
           path: Radiance_Linux_Failed.zip
 
+  Test_Linux_2:
+    needs: [build_Linux]
+    name: "Test for Linux 2"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download Linux installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Linux
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Linux.zip
+          ls
+          echo "========== Extracting tar.gz ==========="
+          tar -xvf radiance-*-Linux.tar.gz
+          ls
+          echo "========== Extracting tar ==========="
+          
+
+      - name: copy compiled folder
+        run: |
+          mkdir buildRad
+          sudo cp -avr ./radiance-*-Linux/usr/local/radiance ./buildRad
+
+      - name: Display structure of downloaded files
+        run: ls -R
+      
+
+      - name: run tests -renders 2
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch2 -j8
+      
+      - name: run tests -renders 4
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch4 -j8
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Linux_Failed.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Linux_Failed
+          path: Radiance_Linux_Failed.zip
+
+
+  release_installers:
+    name: deploy installers
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: Check date if release
+        id: if_release
+        run: |
+          IF_RELEASE=false
+          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
+          if $IF_RELEASE; then echo "Release a new version today"; fi
+          echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+
+      - name: check release name/note
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+
+      - name: test if release
+        if: ${{steps.if_release.outputs.RELEASE_TODAY}} == true
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+
+      - name: test if release
+        if: ${{steps.if_release.outputs.RELEASE_TODAY}} == "true"
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+
+      - name: test if release
+        if: ${{steps.if_release.outputs.RELEASE_TODAY}} == false
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+
+      - name: test if release
+        if: ${{steps.if_release.outputs.RELEASE_TODAY}} == "false"
+        run: |
+          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
