@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.24 2021/01/15 18:31:38 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.25 2021/02/19 16:15:23 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -93,9 +93,9 @@ extern void	swap16(char *wp, size_t n);
 extern void	swap32(char *wp, size_t n);
 extern void	swap64(char *wp, size_t n);
 					/* defined in portio.c */
-extern void	putstr(char *s, FILE *fp);
-extern void	putint(long i, int siz, FILE *fp);
-extern void	putflt(double f, FILE *fp);
+extern int	putstr(char *s, FILE *fp);
+extern int	putint(long i, int siz, FILE *fp);
+extern int	putflt(double f, FILE *fp);
 extern size_t	putbinary(const void *s, size_t elsiz, size_t nel, FILE *fp);
 extern char	*getstr(char *s, FILE *fp);
 extern long	getint(int siz, FILE *fp);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.24 2021/02/19 02:59:32 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.25 2021/02/19 16:15:23 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: portio.c,v 2.24 2021/02/19 02:59:32 greg Exp $
 #include <math.h>
 
 
-void
+int
 putstr(				/* write null-terminated string to fp */
 	char  *s,
 	FILE  *fp
@@ -22,11 +22,13 @@ putstr(				/* write null-terminated string to fp */
 {
 	do
 		putc(*s, fp);
-	while (*s++);
+	while (*++s);
+
+	return(putc(0, fp));	/* terminator */
 }
 
 
-void
+int
 putint(				/* write a siz-byte integer to fp */
 	long  i,
 	int  siz,
@@ -40,11 +42,12 @@ putint(				/* write a siz-byte integer to fp */
 	siz <<= 3;
 	while ((siz -= 8) > 0)
 		putc((int)(i>>siz & 0xff), fp);
-	putc((int)(i & 0xff), fp);
+
+	return(putc((int)(i & 0xff), fp) == EOF ? EOF : 0);
 }
 
 
-void
+int
 putflt(				/* put out floating point number */
 	double	f,
 	FILE  *fp
@@ -62,7 +65,7 @@ putflt(				/* put out floating point number */
 		e = 0;
 	}
 	putint(m, 4, fp);
-	putint(e, 1, fp);
+	return(putint(e, 1, fp));
 }
 
 
@@ -118,7 +121,7 @@ getint(				/* get a siz-byte integer */
 		return(EOF);
 	r = c;
 	if (c & 0x80)		/* sign extend? */
-		r |= ~255L;
+		r |= -256L;
 	while (--siz > 0) {
 		if ((c = getc(fp)) == EOF)
 			return(EOF);
