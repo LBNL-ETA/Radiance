@@ -917,12 +917,29 @@ jobs:
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
       - name: test if release 1
-        if: ${{steps.if_release.outputs.RELEASE_TODAY  == true}}
+        if: ${{steps.if_release.outputs.RELEASE_TODAY}}
         run: |
           echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
 
-      - name: test if release 3
-        if: ${{steps.if_release.outputs.RELEASE_TODAY  == false}}
+      - name: Check date if release true
+        id: if_release_true
         run: |
-          echo "${{steps.if_release.outputs.RELEASE_TODAY}}"
+          IF_RELEASE=true
+          echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+
+      - name: test if release 3
+        if: ${{steps.if_release_true.outputs.RELEASE_TODAY}}
+        run: |
+          echo "${{steps.if_release_true.outputs.RELEASE_TODAY}}"
+
+      - name: Check date if release false
+        id: if_release_false
+        run: |
+          IF_RELEASE=false
+          echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+
+      - name: test if release 3
+        if: ${{steps.if_release_false.outputs.RELEASE_TODAY}}
+        run: |
+          echo "${{steps.if_release_false.outputs.RELEASE_TODAY}}"
 
