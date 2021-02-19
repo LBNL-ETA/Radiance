@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.25 2021/02/19 16:15:23 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.26 2021/02/19 18:00:29 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -22,9 +22,9 @@ putstr(				/* write null-terminated string to fp */
 {
 	do
 		putc(*s, fp);
-	while (*++s);
+	while (*s++);
 
-	return(putc(0, fp));	/* terminator */
+	return(ferror(fp) ? EOF : 0);
 }
 
 
