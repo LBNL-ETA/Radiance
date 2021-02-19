@@ -309,7 +309,7 @@ jobs:
           path: Radiance_Linux.zip
 
 
-  Test_Windows:
+  Test_Windows_1:
     needs: [build_Windows]
     name: Test for Windows
     runs-on: windows-latest
@@ -385,7 +385,7 @@ jobs:
           make clean
           make -j8
   
-      - name: run tests -renders
+      - name: run tests -renders - batch1
         shell: cmd
         run: |
           set RAYPATH=.;${{ github.workspace }}\lib
@@ -394,8 +394,85 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make -j8
+          make batch1 -j8 
+
+      - name: run tests -renders - batch3
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j8 
         
+      - name: The job has failed
+        if: ${{ failure() }}
+        shell: pwsh
+        run: |
+          Compress-Archive -U -Path ./test/* -DestinationPath Radiance_Windows_Failed
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Windows_Failed
+          path: Radiance_Windows_Failed.zip
+
+  Test_Windows_2:
+    needs: [build_Windows]
+    name: Test for Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: Download Windows installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Windows_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Windows_both.zip
+          unzip WindowsBuild/Radiance_Windows.zip 
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: install perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.30'
+      
+      - name: run tests -renders - batch2
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch2 -j8 
+
+      - name: run tests -renders - batch4
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch4 -j8 
+
       - name: The job has failed
         if: ${{ failure() }}
         shell: pwsh
