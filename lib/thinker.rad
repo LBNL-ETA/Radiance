@@ -1,0 +1,24 @@
+#
+# Thinker statue model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Statue is approx. 16cm tall
+#
+
+void colorpict thinker_pat
+7 lim_r lim_g lim_b thinker.hdr climit.cal Lu Lv
+0
+3 0.590365561     0.496053531     0.39802193
+
+thinker_pat plastic thinker_clay
+0
+0
+5 1 1 1 0.04 0
+
+thinker_clay mesh thinker
+7 thinker.rtm -t 0 0 99 -s 0.1
+0
+0

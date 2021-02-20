@@ -1,0 +1,42 @@
+#
+# Bedroom Furniture
+# (scale in feet)
+#
+
+!xform -e -n bedroom_chair -rz 45 -s .08333 -t 10 .25 0 chair.norm
+
+
+#
+# The Cabin's Bed.
+#
+
+!genbox rose_spread bed 6 4.5 1.733 -r .2 | xform -t .08333 1.5 .1
+
+!genbox rose_spread pillows 1.333 4.5 .5 -r .2 | xform -t .08333 1.5 1.833
+
+
+
+# The Dresser in Bedroom
+
+!xform -e -n dresser -s .08333 -rz 180 -t 5 10.9 0 dresser.norm
+
+
+# Pictures
+
+void colorpict richgrove_image
+17 clip_r clip_g clip_b richgrove.hdr picture.cal pic_u pic_v
+	-s 3 -rx 90 -rz 90 -t 0.001 2.5 3
+0
+0
+
+richgrove_image alias richgrove_photo
+	photo_paper
+
+richgrove_photo polygon richgrove_poster
+0
+0
+12	
+	.001	2.5	3
+	.001	5.5	3
+	.001	5.5	7.441
+	.001	2.5	7.441

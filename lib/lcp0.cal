@@ -1,0 +1,64 @@
+{
+	The laser cut panel (LCP) with cuts normal to the surface
+	
+	A1 = D/W ratio (cut spacing divided by cut depth)
+	A2 = n, refractive index of panel material (1.5 for acrylic)
+
+	The panel is oriented in the yz plane with normal to the
+	front face in the x direction.  Cuts are parallel to the y direction.
+	Deflection is restricted to the z direction.
+	
+	The effects of multiple internal reflections and
+	reflection losses are considered.
+
+	The two strongest components (of undeflected, deflected and reflected
+	components) are displayed.
+
+	Example material definition (LCP turned with outward normal in y direction,
+	D/W=0.5, n=1.5):
+
+	void prism2 lcpmat
+	11 f1 dx1 dy1 dz1 f2 dx2 dy2 dz2 lcp0.cal -rz 90
+	0
+	2 0.5 1.5
+
+	The same material, transmitted components only:
+
+	void prism2 lcpmat_t
+	11 fu Dx Dy Dz fd Dx Dy -Dz lcp0.cal -rz 90
+	0
+	2 0.5 1.5
+
+	Phillip Greenup		3/9/98
+
+}
+
+{ Fresnel calculations of transmission and reflection }
+cos_i=abs(Rdot);
+cos_t=sqrt(A2*A2-1+cos_i*cos_i);
+rte=(cos_i-cos_t)/(cos_i+cos_t);
+rtm=(A2*A2*cos_i-cos_t)/(A2*A2*cos_i+cos_t);
+R=(rte*rte+rtm*rtm)/2;
+T=1-R;
+
+{ Fractions deflected and undeflected }
+tan_rp=abs(Dz)/(sqrt(A2*A2-1+Dx*Dx));
+m=floor(tan_rp/A1);
+fd0=(tan_rp/A1)*(-1)^m+2*floor((m+1)/2)*(-1)^(m+1);
+fu0=1-fd0;
+fd=fd0*T*T;
+fu=fu0*T*T;
+
+{ Selection of two strongest components }
+N1=if(fu-fd,if(fu-R,1,3),if(fd-R,2,3));
+N2=if(fu-fd,if(fu-R,if(fd-R,2,3),1),if(fd-R,if(fu-R,1,3),2));
+
+f1=select(N1,fu,fd,R);
+dx1=select(N1,Dx,Dx,-Dx);
+dy1=Dy;
+dz1=select(N1,Dz,-Dz,Dz);
+
+f2=select(N2,fu,fd,R);
+dx2=select(N2,Dx,Dx,-Dx);
+dy2=Dy;
+dz2=select(N2,Dz,-Dz,Dz);

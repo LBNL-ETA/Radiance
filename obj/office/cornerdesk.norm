@@ -1,0 +1,304 @@
+#
+#  A corner desk group with round end piece.
+#
+
+void brightfunc xgrain
+4 xgrain woodpat.cal -s .05
+0
+1               0.8
+
+void brightfunc ygrain
+4 ygrain woodpat.cal -s .05
+0
+1               0.8
+
+void brightfunc zgrain
+4 zgrain woodpat.cal -s .05
+0
+1               0.8
+
+xgrain plastic xpine
+0
+0
+5                0.6               0.25                0.1              0 .15
+
+ygrain plastic ypine
+0
+0
+5                0.6               0.25                0.1              0 .15
+
+zgrain plastic zpine
+0
+0
+5                0.6               0.25                0.1              0 .15
+
+void metal polished_brass
+0
+0
+5                0.6                0.3                0.1               0.95                  0
+
+void plastic grey_plastic
+0
+0
+5                0.4                0.4                0.4                  0               0.05
+
+zpine polygon desktop_left
+0
+0
+12
+                  0               2.25                2.5
+                  0               2.25                5.5
+                1.5               2.25                5.5
+                1.5               2.25                2.5
+
+zpine polygon deskbot_left
+0
+0
+12
+                1.5               2.15                5.5
+                  0               2.15                5.5
+                  0               2.15                2.5
+                1.5               2.15                2.5
+
+zpine cylinder deskedge_leftend
+0
+0
+7
+                  0                2.2                5.5
+                1.5                2.2                5.5
+               0.05
+
+zpine cylinder deskedge_leftrear
+0
+0
+7
+                  0                2.2                  0
+                  0                2.2                5.5
+               0.05
+
+zpine cylinder deskedge_leftfront
+0
+0
+7
+                1.5                2.2                2.5
+                1.5                2.2                5.5
+               0.05
+
+zpine sphere deskcorner_leftrear
+0
+0
+4                  0                2.2                5.5               0.05
+
+zpine sphere deskcorner_leftfront
+0
+0
+4                1.5                2.2                5.5               0.05
+
+xpine polygon desktop_middle
+0
+0
+18
+                  0               2.25                2.5
+                1.5               2.25                2.5
+                2.5               2.25                1.5
+                5.5               2.25                1.5
+                5.5               2.25                  0
+                  0               2.25                  0
+
+xpine polygon deskbot_middle
+0
+0
+18
+                5.5               2.15                  0
+                5.5               2.15                1.5
+                2.5               2.15                1.5
+                1.5               2.15                2.5
+                  0               2.15                2.5
+                  0               2.15                  0
+
+xpine cylinder deskedge_midrear
+0
+0
+7
+                  0                2.2                  0
+                7.5                2.2                  0
+               0.05
+
+xpine cylinder deskedge_midangle
+0
+0
+7
+                2.5                2.2                1.5
+                1.5                2.2                2.5
+               0.05
+
+xpine cylinder deskedge_midfront
+0
+0
+7
+                2.5                2.2                1.5
+                5.5                2.2                1.5
+               0.05
+
+xpine sphere deskcorner_midrear
+0
+0
+4                  0                2.2                  0               0.05
+
+zpine polygon desktop_right
+0
+0
+12
+                5.5               2.25                3.5
+                7.5               2.25                3.5
+                7.5               2.25                  0
+                5.5               2.25                  0
+
+zpine polygon deskbot_right
+0
+0
+12
+                7.5               2.15                  0
+                7.5               2.15                3.5
+                5.5               2.15                3.5
+                5.5               2.15                  0
+
+zpine ring desktop_rightend
+0
+0
+8
+                6.5               2.25                3.5
+                  0                  1                  0
+                  0                  1
+
+zpine ring deskbot_rightend
+0
+0
+8
+                6.5               2.15                3.5
+                  0                 -1                  0
+                  0                  1
+
+zpine cylinder deskedge_rightfront
+0
+0
+7
+                5.5                2.2                1.5
+                5.5                2.2                3.5
+               0.05
+
+zpine cylinder deskedge_rightrear
+0
+0
+7
+                7.5                2.2                  0
+                7.5                2.2                3.5
+               0.05
+
+zpine sphere deskcorner_rightrear
+0
+0
+4                7.5                2.2                  0               0.05
+
+!genrev zpine deskedge_rightend ".05*sin(PI*(t-.5))" "1+.05*sin(PI*t)" 7 -s \
+	| xform -rx -90 -t 6.5 2.2 3.5
+
+polished_brass cylinder post
+0
+0
+7
+                6.5                  0                3.5
+                6.5               2.15                3.5
+                0.2
+
+ypine polygon panelout_leftend
+0
+0
+12
+                  0                  0               5.55
+                1.5                  0               5.55
+                1.5                2.2               5.55
+                  0                2.2               5.55
+
+ypine polygon panelin_leftend
+0
+0
+12
+                1.5                2.2               5.45
+                1.5                  0               5.45
+                  0                  0               5.45
+                  0                2.2               5.45
+
+ypine cylinder paneledge_leftfront
+0
+0
+7
+                1.5                2.2                5.5
+                1.5                  0                5.5
+               0.05
+
+ypine cylinder paneledge_leftrear
+0
+0
+7
+                  0                2.2                5.5
+                  0                  0                5.5
+               0.05
+
+ypine polygon panelout_leftrear
+0
+0
+12
+              -0.05                2.2                  0
+              -0.05                  0                  0
+              -0.05                  0                5.5
+              -0.05                2.2                5.5
+
+ypine polygon panelin_leftrear
+0
+0
+12
+               0.05                  0                5.5
+               0.05                  0                  0
+               0.05                2.2                  0
+               0.05                2.2                5.5
+
+ypine cylinder paneledge_midrear
+0
+0
+7
+                  0                  0                  0
+                  0                2.2                  0
+               0.05
+
+ypine polygon panelout_midrear
+0
+0
+12
+                  0                2.2              -0.05
+                7.5                2.2              -0.05
+                7.5                  0              -0.05
+                  0                  0              -0.05
+
+ypine polygon panelin_midrear
+0
+0
+12
+                7.5                  0               0.05
+                7.5                2.2               0.05
+                  0                2.2               0.05
+                  0                  0               0.05
+
+ypine cylinder paneledge_rightrear
+0
+0
+7
+                7.5                  0                  0
+                7.5                2.2                  0
+               0.05
+
+!genbox grey_plastic top_drawer 1.4 .5 1.1 -r .05 | xform -t .1 1.6 4.375
+
+!genbox grey_plastic middle_drawer 1.4 .5 1.1 -r .05 | xform -t .1 1.05 4.375
+
+!genbox grey_plastic bottom_drawer 1.4 1 1.1 -r .05 | xform -t .1 0 4.375

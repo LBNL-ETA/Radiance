@@ -1,0 +1,224 @@
+		RADIANCE Scene Description Language
+
+Altogether there are at least 4 "languages" involved with Radiance
+scene descriptions:  the basic scene input language, the function file
+language, the data file language and the font language.
+
+Scene Input
+=========== 
+
+scenefile:	/* nothing */
+		| statement scenefile
+
+statement:	primitive
+		| alias
+		| command
+		| comment
+
+primitive:	modifier type STRING
+		INTEGER string_args
+		INTEGER integer_args
+		INTEGER real_args
+
+alias:		modifier alias STRING STRING
+
+modifier:	"void"
+		| "inherit"
+		| STRING
+
+command:	'!' STRING string_args command_end
+
+command_end:	'\n'
+		| '\\' '\n' string_args command_end
+
+comment:	'#' string_args '\n'
+
+string_args:	/* nothing */
+		| STRING string_args
+
+integer_args:	/* nothing */
+		| INTEGER integer_args
+
+real_args:	/* nothing */
+		| REAL real_args
+
+type:		"polygon"
+		| "cone"
+		| "sphere"
+		| "texfunc"
+		| "ring"
+		| "cylinder"
+		| "instance"
+		| "cup"
+		| "bubble"
+		| "tube"
+		| "mesh"
+		| "plastic"
+		| "metal"
+		| "glass"
+		| "trans"
+		| "dielectric"
+		| "plastic2"
+		| "metal2"
+		| "trans2"
+		| "interface"
+		| "plasfunc"
+		| "metfunc"
+		| "brightfunc"
+		| "brightdata"
+		| "brighttext"
+		| "colorpict"
+		| "glow"
+		| "source"
+		| "light"
+		| "illum"
+		| "spotlight"
+		| "mist"
+		| "mirror"
+		| "transfunc"
+		| "BRTDfunc"
+		| "plasdata"
+		| "metdata"
+		| "transdata"
+		| "colorfunc"
+		| "antimatter"
+		| "colordata"
+		| "colortext"
+		| "texdata"
+		| "mixfunc"
+		| "mixdata"
+		| "mixtext"
+		| "prism1"
+		| "prism2"
+
+Function File
+============= 
+
+funcfile:	/* nothing */
+		| decl funcfile
+
+decl:		';'
+		| function_decl ';'
+		| variable_decl ';'
+
+function_decl:	ID '(' id_list ')' assign_op e1
+
+variable_decl:	ID assign_op e1
+
+id_list:	ID
+		| ID ',' id_list
+
+assign_op:	'='
+		| ':'
+
+e1:		e1 '+' e2
+		| e1 '-' e2
+		| e2
+
+e2:		e2 '*' e3
+		| e2 '/' e3
+		| e3
+
+e3:		e4 '^' e3
+		| e4
+
+e4:		'+' e5
+		| '-' e5
+		| e5
+
+e5:		'(' e1 ')'
+		| ID
+		| ID '(' id_list ')'
+		| REAL
+		| '$' INTEGER
+
+Comments may appear between any two tokens set off by curly braces {},
+and may be nested to any level.
+
+Data File
+========= 
+
+data:		dimensions value_list
+
+dimensions:	INTEGER dim_list
+
+dim_list:	dim
+		| dim dim_list
+
+dim:		REAL REAL INTEGER
+		| '0' '0' INTEGER indep_list
+
+indep_list:	REAL
+		| REAL indep_list
+
+value_list:	/* nothing */
+		| REAL value_list
+
+Comments begin with a pound sign ('#') and continue to the end of line.
+
+Font File
+========= 
+
+glyph_list:	/* nothing */
+		| glyph glyph_list
+
+glyph:		INTEGER INTEGER coord_list
+
+coord_list:	/* nothing */
+		| INTEGER INTEGER coord_list
+
+Comments begin with a pound sign ('#') and continue to the end of line.
+
+--------------------------------------------------------------
+
+With regards to your topics, I have the following comments.
+
+Specification of scene parameters:
+	- Radiance uses a right-hand coordinate system
+	- The eyepoint and view direction are given as options
+		to the renderers, and can be stored in a separate file
+
+Supported primitives:
+	- N-sided polygons
+	- spheres
+	- cones, cylinders, rings
+	- hierarchical instancing for very complex geometries
+
+Lighting models:
+	- Completely general
+	- Converter provided for IES luminaire specification
+
+Participating media:
+	- Single-scatter approximation
+	- Mist zones may have different scattering/absorption properties
+
+Textures:
+	- I break "textures" into two kinds, patterns and textures
+	- Patterns are variation in color, and can be specified as
+		pictures, data or functions in any combination
+	- Textures are perturbations in surface normal, and can
+		be specified in the same ways as patterns
+	- A light source distribution is a pattern
+
+Bit Mapping:
+	- Usually given as a picture-type pattern (ie. "colorpict" type)
+	- True bit-maps (ie. 1-bit depth images) may also be produced
+		using a special bit font
+
+CSG:
+	- Radiance has an "antimatter" type which supports some rudimentary
+		CSG subtraction, but otherwise we are strictly B-rep
+
+Looping constructs or Recursion:
+	- The function file language supports recursion
+	- The "xform" program provides iteration for repeated objects
+
+Functions or Procedures:
+	- The function file language supports functions without side effects
+
+User extensibility:
+	- The user may create function files, data files and font files,
+		or provide his/her own images for patterns
+	- General bidirectional reflection distribution functions may
+		also be specified in the same way as patterns and textures
+

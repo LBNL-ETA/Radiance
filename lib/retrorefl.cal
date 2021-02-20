@@ -1,0 +1,39 @@
+{
+	Glass Bead Retroreflector BRDF
+
+	4/25/2002	Greg Ward
+
+	Use with metfunc type, where A4 is estimated total retroreflection
+	(doesn't need to be accurate) and A5 is the specific intensity
+	(candelas per lux per square meter) at normal incidence and a
+	0.5 degree observation angle.  If you have a value at some
+	other angle, simply divide it by obs_mult1(obs_meas_deg)
+	to get the equivalent value at 0.5 degrees.
+
+	Do not use this file with prismatic retroreflectors!
+}
+ldot(x,y,z) = max(cos(89.5*DEGREE), Nx*x + Ny*y + Nz*z);
+normk = A5 / grey(A1,A2,A3) / A4;
+normf(x,y,z) = normk / ldot(x,y,z);
+
+			{ fitted function of observation angle }
+			{ based on ray simulation of glass bead }
+obs_mult1(a) = if(.5-a,
+			cos(PI/2/.5*a)*3 + 1,
+			if(20-a,
+				.07/sin(7.6*PI/180*a) + .02,
+				.157/(a-19)
+			)
+		);
+obs_mult(x,y,z) = obs_mult1(Acos(-Dx*x-Dy*y-Dz*z)/DEGREE);
+
+			{ use the following when normal value is unknown }
+retro_paint(x,y,z) = normf(x,y,z) * obs_mult(x,y,z);
+
+			{ fitted function of entrance angle }
+			{ based on 3M sheet reflector }
+ent_mult1(a) = exp(-a*a/2220);
+ent_mult(x,y,z) = ent_mult1(Acos(ldot(x,y,z))/DEGREE);
+
+			{ use the following for sheet reflectors }
+retro_sheet(x,y,z) = normf(x,y,z) * obs_mult(x,y,z) * ent_mult(x,y,z);

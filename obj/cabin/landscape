@@ -1,0 +1,503 @@
+#
+# The landscape around our cabin scene.
+# The y-axis points north, the x-axis points east.
+# The landscape is 200 feet square, centered around
+# the center of the cabin's foundation (13,9,-1.5)
+#
+
+!gensurf groundmat ground '-87+200*s' '-91+200*t'\
+	'mag(s,t)*noise2(s*4,t*4)*8-1.5' 15 15 -s \
+	-e 'mag(s,t)=(1-cos(PI/.5*sqrt(sq(.5-s)+sq(.5-t))))/2'\
+	-e 'sq(a)=a*a' -f noise2.cal
+
+void instance tree.1
+9 tree.oct -rz             126.03 -s              0.394384
+	-t  -19.1078   16.1078  -1.01182
+0
+0
+
+void instance tree.2
+9 tree.oct -rz            263.657 -s              0.391416
+	-t  -30.8726  0.421569  0.449458
+0
+0
+
+void instance tree.3
+9 tree.oct -rz            114.609 -s              0.447748
+	-t  -13.2255  -9.38235  -0.99751
+0
+0
+
+void instance tree.4
+9 tree.oct -rz            144.007 -s              0.323912
+	-t   9.81372   28.3627  -1.53105
+0
+0
+
+void instance tree.5
+9 tree.oct -rz            69.0987 -s              0.329867
+	-t   35.3039    26.402  -1.75356
+0
+0
+
+void instance tree.6
+9 tree.oct -rz            213.722 -s              0.472111
+	-t   41.1863   3.85294  -2.18997
+0
+0
+
+void instance tree.7
+9 tree.oct -rz            347.298 -s              0.431003
+	-t   34.3235  -13.7941  -1.49538
+0
+0
+
+void instance tree.8
+9 tree.oct -rz            298.906 -s              0.373451
+	-t   8.83333  -14.2843  -1.41474
+0
+0
+
+void instance tree.9
+9 tree.oct -rz            49.3844 -s              0.336481
+	-t  -33.8137   25.9118 -0.353857
+0
+0
+
+void instance tree.10
+9 tree.oct -rz            300.589 -s              0.375542
+	-t   -51.951   10.2255   1.06368
+0
+0
+
+void instance tree.11
+9 tree.oct -rz            114.983 -s              0.362891
+	-t  -53.9118  -12.8137   0.32906
+0
+0
+
+void instance tree.12
+9 tree.oct -rz            50.6218 -s              0.329135
+	-t  -63.2255    26.402 -0.977555
+0
+0
+
+void instance tree.13
+9 tree.oct -rz            291.515 -s              0.385615
+	-t  -47.5392   39.1471  -1.82994
+0
+0
+
+void instance tree.14
+9 tree.oct -rz            317.079 -s              0.414317
+	-t  -70.5784   3.36274  -2.26922
+0
+0
+
+void instance tree.15
+9 tree.oct -rz            258.552 -s              0.422441
+	-t  -79.8922   34.7353  -2.51389
+0
+0
+
+void instance tree.16
+9 tree.oct -rz            259.435 -s              0.310773
+	-t  -71.5588   54.3431  -2.16856
+0
+0
+
+void instance tree.17
+9 tree.oct -rz            291.313 -s              0.430576
+	-t  -50.4804   48.4608  -2.98917
+0
+0
+
+void instance tree.18
+9 tree.oct -rz            281.433 -s              0.339655
+	-t  -35.2843   43.0686  -2.58763
+0
+0
+
+void instance tree.19
+9 tree.oct -rz            81.7267 -s              0.417662
+	-t   -22.049   30.3235  -1.31016
+0
+0
+
+void instance tree.20
+9 tree.oct -rz            66.1332 -s              0.452005
+	-t  -19.1078   48.4608  -1.78123
+0
+0
+
+void instance tree.21
+9 tree.oct -rz            261.917 -s              0.429059
+	-t  -39.6961   66.1078  -3.95963
+0
+0
+
+void instance tree.22
+9 tree.oct -rz            185.987 -s              0.364907
+	-t  -60.2843   74.9314  -3.73566
+0
+0
+
+void instance tree.23
+9 tree.oct -rz            286.788 -s              0.344997
+	-t  -74.9902      71.5  -2.88361
+0
+0
+
+void instance tree.24
+9 tree.oct -rz            22.8207 -s              0.384891
+	-t  -75.9706   95.0294  -3.48231
+0
+0
+
+void instance tree.25
+9 tree.oct -rz            273.429 -s              0.407525
+	-t  -48.0294   97.4804  -6.76188
+0
+0
+
+void instance tree.26
+9 tree.oct -rz            121.189 -s              0.432848
+	-t  -6.85294   92.5784 -0.693484
+0
+0
+
+void instance tree.27
+9 tree.oct -rz            93.2992 -s              0.399371
+	-t   11.7745   96.0098   0.36603
+0
+0
+
+void instance tree.28
+9 tree.oct -rz             339.83 -s              0.318595
+	-t   14.2255   70.5196   1.36578
+0
+0
+
+void instance tree.29
+9 tree.oct -rz            209.999 -s              0.336426
+	-t    23.049   79.8333  0.670537
+0
+0
+
+void instance tree.30
+9 tree.oct -rz            323.256 -s              0.467748
+	-t    48.049   95.0294   1.40134
+0
+0
+
+void instance tree.31
+9 tree.oct -rz            125.551 -s              0.493846
+	-t   41.6765   81.7941  0.689241
+0
+0
+
+void instance tree.32
+9 tree.oct -rz            312.371 -s               0.49912
+	-t    45.598   61.6961  0.667962
+0
+0
+
+void instance tree.33
+9 tree.oct -rz             332.35 -s              0.313393
+	-t    27.951   57.7745  0.464538
+0
+0
+
+void instance tree.34
+9 tree.oct -rz             55.496 -s               0.37655
+	-t   74.0294    91.598   2.53845
+0
+0
+
+void instance tree.35
+9 tree.oct -rz            234.863 -s              0.390554
+	-t   71.0882   75.9118   2.27777
+0
+0
+
+void instance tree.36
+9 tree.oct -rz            233.976 -s              0.374182
+	-t   64.2255   52.3824   1.46625
+0
+0
+
+void instance tree.37
+9 tree.oct -rz            320.904 -s              0.300427
+	-t   90.6961    69.049  -1.61191
+0
+0
+
+void instance tree.38
+9 tree.oct -rz            287.362 -s              0.453603
+	-t   101.971   79.3431  -2.14432
+0
+0
+
+void instance tree.39
+9 tree.oct -rz            76.5567 -s              0.321231
+	-t   94.6176   100.422   1.42756
+0
+0
+
+void instance tree.40
+9 tree.oct -rz            117.667 -s              0.389835
+	-t    98.049   46.0098  -3.86787
+0
+0
+
+void instance tree.41
+9 tree.oct -rz            134.972 -s              0.392519
+	-t   82.8529   30.8137  -1.02802
+0
+0
+
+void instance tree.42
+9 tree.oct -rz            323.474 -s               0.39887
+	-t   99.0294   17.0882  0.440699
+0
+0
+
+void instance tree.43
+9 tree.oct -rz            145.381 -s               0.40428
+	-t   67.1667   21.9902  -2.39848
+0
+0
+
+void instance tree.44
+9 tree.oct -rz            270.256 -s              0.449702
+	-t   75.9902  -2.02941   -2.6723
+0
+0
+
+void instance tree.45
+9 tree.oct -rz            265.285 -s              0.323416
+	-t   94.1274  -5.46078 -0.361566
+0
+0
+
+void instance tree.46
+9 tree.oct -rz            308.296 -s              0.347481
+	-t    98.049  -28.9902     2.599
+0
+0
+
+void instance tree.47
+9 tree.oct -rz            211.303 -s              0.469844
+	-t      75.5  -24.5784  0.158488
+0
+0
+
+void instance tree.48
+9 tree.oct -rz             278.33 -s              0.358892
+	-t   58.3431   -33.402  0.625548
+0
+0
+
+void instance tree.49
+9 tree.oct -rz            185.574 -s              0.338089
+	-t   76.9706  -43.2059  0.637097
+0
+0
+
+void instance tree.50
+9 tree.oct -rz             22.862 -s               0.37386
+	-t   97.5588  -50.5588   1.32233
+0
+0
+
+void instance tree.51
+9 tree.oct -rz            153.257 -s               0.33776
+	-t    98.049  -70.1667  -1.97188
+0
+0
+
+void instance tree.52
+9 tree.oct -rz            120.451 -s              0.389058
+	-t   69.6176  -63.7941  0.260479
+0
+0
+
+void instance tree.53
+9 tree.oct -rz            283.905 -s              0.438047
+	-t   44.6176     -53.5  0.574098
+0
+0
+
+void instance tree.54
+9 tree.oct -rz            162.947 -s              0.394886
+	-t   33.3431  -75.5588   2.45862
+0
+0
+
+void instance tree.55
+9 tree.oct -rz            303.905 -s              0.455015
+	-t   20.1078  -36.3431 -0.380057
+0
+0
+
+void instance tree.56
+9 tree.oct -rz            341.594 -s              0.445418
+	-t  -3.42157  -27.5196 -0.511897
+0
+0
+
+void instance tree.57
+9 tree.oct -rz            202.478 -s              0.371782
+	-t  -1.95098   -51.049  0.235687
+0
+0
+
+void instance tree.58
+9 tree.oct -rz            220.472 -s              0.441904
+	-t   19.1274  -62.3235  0.790308
+0
+0
+
+void instance tree.59
+9 tree.oct -rz            47.7246 -s              0.390589
+	-t   4.42157   -80.951   2.82631
+0
+0
+
+void instance tree.60
+9 tree.oct -rz             154.27 -s               0.46445
+	-t   -22.049  -64.2843   1.53468
+0
+0
+
+void instance tree.61
+9 tree.oct -rz            263.588 -s               0.46987
+	-t  -26.4608  -36.8333 0.0745356
+0
+0
+
+void instance tree.62
+9 tree.oct -rz            205.554 -s              0.349024
+	-t  -38.7157  -18.6961  0.563505
+0
+0
+
+void instance tree.63
+9 tree.oct -rz            267.782 -s              0.492798
+	-t  -62.2451  -14.2843 -0.725863
+0
+0
+
+void instance tree.64
+9 tree.oct -rz            171.584 -s              0.429024
+	-t  -77.4412  -30.4608   -3.4891
+0
+0
+
+void instance tree.65
+9 tree.oct -rz            269.246 -s              0.343208
+	-t  -53.9118  -45.6569   -1.7043
+0
+0
+
+void instance tree.66
+9 tree.oct -rz            345.839 -s              0.425944
+	-t  -71.5588  -59.3824  -5.18527
+0
+0
+
+void instance tree.67
+9 tree.oct -rz            151.479 -s               0.36899
+	-t  -66.6569  -74.5784  -5.54072
+0
+0
+
+void instance tree.68
+9 tree.oct -rz            161.993 -s               0.31871
+	-t  -42.1471  -75.5588  0.989673
+0
+0
+
+void instance tree.69
+9 tree.oct -rz            128.421 -s              0.374155
+	-t  -44.1078  -60.8529 -0.571813
+0
+0
+
+void instance tree.70
+9 tree.oct -rz            105.453 -s              0.432136
+	-t  -22.5392  -53.0098  0.314208
+0
+0
+
+void instance tree.71
+9 tree.oct -rz            168.988 -s              0.465326
+	-t    85.795   -28.753      1.14
+0
+0
+
+void instance tree.72
+9 tree.oct -rz            184.907 -s              0.488143
+	-t    63.475   -39.906     0.911
+0
+0
+
+void instance tree.73
+9 tree.oct -rz            37.8858 -s               0.32415
+	-t    62.423    14.692    -3.034
+0
+0
+
+void instance sapling.1
+9 sapling.oct -rz             126.03 -s              0.394384
+	-t  -10.9609   4.20782  -1.36577
+0
+0
+
+void instance sapling.2
+9 sapling.oct -rz            263.657 -s              0.391416
+	-t  -7.23883   23.7488  -1.51133
+0
+0
+
+void instance sapling.3
+9 sapling.oct -rz            114.609 -s              0.447748
+	-t  0.112283   33.6123  -1.33298
+0
+0
+
+void instance sapling.4
+9 sapling.oct -rz            144.007 -s              0.323912
+	-t   14.9076   41.1495 -0.877064
+0
+0
+
+void instance sapling.5
+9 sapling.oct -rz            69.0987 -s              0.329867
+	-t   39.4733   15.5602   -2.0779
+0
+0
+
+void instance sapling.6
+9 sapling.oct -rz            213.722 -s              0.472111
+	-t   21.7004  -21.0093  -1.14604
+0
+0
+
+void instance sapling.7
+9 sapling.oct -rz            347.298 -s              0.431003
+	-t   15.9311  -6.21402   -1.5704
+0
+0
+
+void instance sapling.8
+9 sapling.oct -rz            298.906 -s              0.373451
+	-t   -19.987  -23.0565 -0.0889359
+0
+0
+
+void instance sapling.9
+9 sapling.oct -rz            49.3844 -s              0.336481
+	-t   30.8195  -27.1507 -0.726592
+0
+0

@@ -1,0 +1,22 @@
+Empirical irradiance from 51472 samples at (5.26,1.26,0.001):
+
+	6.23 watts/sq.meter
+
+Empirical position gradient from .1 meter displacement:
+
+	X Gradient:	-1.19 watts/sq.meter/meter
+	Y Gradient:	 2.49 watts/sq.meter/meter
+
+Pinterp estimate of position gradient using .2 meter disp:
+
+	X Gradient:	-1.43 watts/sq.meter/meter
+	Y Gradient:	 1.43 watts/sq.meter/meter
+
+Rtrace calculation of irradiance from 10000 samples:
+
+	6.10 watts/sq.meter
+
+Greg's estimate of position gradient:
+
+	X Gradient:	-1.73 watts/sq.meter/meter
+	Y Gradient:	 2.51 watts/sq.meter/meter

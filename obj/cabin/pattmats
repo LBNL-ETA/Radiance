@@ -1,0 +1,213 @@
+# These are the materials for the Cabin Tutorial Example.
+# This file contains patterns for chimney, porch, floor, roof, 
+# and pine furniture.
+
+
+# Cabin Foundation Material
+
+void plastic concrete
+0
+0
+5 .3 .3 .3 0 0
+
+
+# Cabin Wall Material
+
+void brightfunc zwoodpat
+4 zgrain woodpat.cal -s .05833
+0
+1 .15
+
+zwoodpat texfunc woodpaneltex
+6 paneltex_dx paneltex_dy paneltex_dz paneltex.cal -s .67
+0
+0
+
+woodpaneltex plastic wood_panel
+0
+0
+5 .5 .2 .1 0 .1
+
+
+# Cabin Window Pane Material
+
+void glass window_glass
+0
+0
+3  .96 .96 .96
+
+
+# Cabin Wood Floor Material
+
+void brightfunc dusty
+4 dirt dirt.cal -s 2
+0
+1 .15
+
+dusty colorpict oakfloor_pat
+9 red green blue oakfloor.hdr picture.cal tile_u tile_v
+	-s 1.1667 
+0
+1 .578313253
+
+oakfloor_pat plastic wood_floor
+0
+0
+5  .2  .1  .07  .02  .05
+
+
+# The dirtiness function for all exterior cabin surfaces.
+
+void brightfunc dirty
+2 dirt dirt.cal
+0
+1 .3
+
+
+# Cabin Fireplace and Porch Materials
+
+dirty colorpict xzbrick_pat
+11 red green blue brick.hdr picture.cal tile_u tile_v
+	-s .5 -rx 90
+0
+1 .699186992
+
+xzbrick_pat plastic xzbrick 
+0
+0
+5  .4  .15  .08  0  0
+
+dirty colorpict yzbrick_pat
+13 red green blue brick.hdr picture.cal tile_u tile_v
+	-s .5 -rx 90 -rz 90
+0
+1 .699186992
+
+yzbrick_pat alias yzbrick
+	xzbrick
+
+dirty colorpict yxbrick_pat
+9 red green blue brickweave.hdr picture.cal tile_u tile_v
+	-s .7083 
+0
+0
+
+yxbrick_pat alias yxbrick
+	xzbrick
+
+yxbrick_pat alias xybrick
+	xzbrick
+
+void plastic cinderblock
+0
+0
+5  .06  .04  .04  0  0
+
+
+# Cabin Roof Materials
+
+void plastic white_enamel
+0
+0
+5 .5 .5 .5 .02 .05
+
+void plastic light_wood
+0
+0 
+5 .5 .3 .2 0 0
+
+dirty colorpict nshake_pat
+13 red green blue shingle.hdr shake.cal shake_u shake_v
+	-s .7 -rz 180 -rx -45
+0
+1 1.7037037
+
+nshake_pat plastic north_shingle
+0
+0
+5  .15  .08  .05  0  0
+
+dirty colorpict sshake_pat
+11 red green blue shingle.hdr shake.cal shake_u shake_v
+	-s .7 -rx 45
+0
+1 1.7037037
+
+sshake_pat alias south_shingle
+	north_shingle
+
+
+# Cabin Window Frame Material
+
+void alias window_paint
+	white_enamel
+
+
+# Cabin Door Materials
+
+void alias door_paint
+	white_enamel
+
+void metal brass
+0
+0
+5	0.68	0.27	0.002	0.95	0
+
+
+# Furniture Materials
+
+void plastic brown_tweed
+0
+0
+5 	.35	.2	.1	0	0
+
+void brightfunc xwoodpat
+4 xgrain woodpat.cal -s .025
+0
+1 .3
+
+xwoodpat plastic xpine
+0
+0
+5	.7	.25	.08	0	0
+
+void brightfunc ywoodpat
+4 ygrain woodpat.cal -s .025
+0
+1 .3
+
+ywoodpat alias ypine
+	xpine
+
+void brightfunc zwoodpat
+4 zgrain woodpat.cal -s .05833
+0
+1 .3
+
+zwoodpat alias zpine
+	xpine
+
+void texfunc puckered
+6 puck_dx puck_dy puck_dz pucker.cal -s .5
+0
+1 .2
+
+puckered plastic rose_spread
+0
+0
+5	.4	.03	.03	0	0
+
+void mirror mirror
+0
+0
+3	.8	.8	.8
+
+void plastic red_clay
+0
+0
+5	.4	.1	.03	0	0
+
+void plastic photo_paper
+0
+0
+5	.82	.82	.82	0	0

@@ -1,0 +1,55 @@
+#
+#  An illum surface for mkillum
+#
+
+#@mkillum f=illum c=a d=blinds0.xml l- u=Y t=1.001
+
+void polygon illum_wind
+0
+0
+12
+              -23.5                 43                 29
+               23.5                 43                 29
+               23.5                 26                 29
+              -23.5                 26                 29
+
+# xform -t -23.5 26 29
+# genbox void illum_wind 47 17 1
+
+#@mkillum d=20 t=0
+
+void polygon illum_wind.1540
+0
+0
+12
+               23.5                 26                 29
+               23.5                 26                 30
+              -23.5                 26                 30
+              -23.5                 26                 29
+
+void polygon illum_wind.4620
+0
+0
+12
+              -23.5                 26                 30
+              -23.5                 43                 30
+              -23.5                 43                 29
+              -23.5                 26                 29
+
+void polygon illum_wind.3267
+0
+0
+12
+               23.5                 43                 29
+              -23.5                 43                 29
+              -23.5                 43                 30
+               23.5                 43                 30
+
+void polygon illum_wind.5137
+0
+0
+12
+               23.5                 26                 30
+               23.5                 26                 29
+               23.5                 43                 29
+               23.5                 43                 30

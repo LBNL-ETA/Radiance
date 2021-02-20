@@ -1,0 +1,14 @@
+#
+#  An illum surface for mkillum
+#
+
+#@mkillum f=illum c=a l-
+
+void polygon illum_wind
+0
+0
+12
+               23.5                 43                 29
+               23.5                 26                 29
+              -23.5                 26                 29
+              -23.5                 43                 29

@@ -1,0 +1,90 @@
+.\" RCSid "$Id: pmapdump.1,v 1.1 2015/02/24 19:39:26 greg Exp $"
+.TH PMAPDUMP 1 "$Date: 2015/02/24 19:39:26 $ $Revision: 1.1 $" RADIANCE
+
+.SH NAME
+pmapdump - generate RADIANCE scene description of photon map distribution
+
+.SH SYNOPSIS
+pmapdump [\fB-n\fR \fInspheres1\fR] [\fB-r\fR \fIradscale1\fR] \fIpmap1\fR 
+[\fB-n\fR \fInspheres2\fR] [\fB-r\fR \fIradscale2\fR] \fIpmap2\fR ... 
+
+.SH DESCRIPTION
+\fIpmapdump\fR takes one or more photon map files generated with
+\fImkpmap(1)\fR as input and sends a RADIANCE scene description of their
+photon distributions to the standard output. This can be visualised with
+e.g. \fIobjview(1)\fR, \fIrpict(1)\fR, or \fIrvu(1)\fR to assess the
+location and local density of photons in relation to the scene geometry.
+.PP
+An arbitrary number of photon maps can be specified on the command line and
+the respective photon type is determined automagically.  The different
+photon types are visualised as colour coded spheres according to the
+following schema:
+.IP
+\fIBlue\fR: global photons 
+.br
+\fICyan\fR: precomputed global photons
+.br
+\fIRed\fR: caustic photons
+.br
+\fIGreen\fR: volume photons
+.br
+\fIMagenta\fR: direct photons
+.br
+\fIYellow\fR: contribution photons
+
+.SH OPTIONS
+Options are effective for the photon map file immediately following on the
+command line, and are reset to their defaults after completion of each dump. 
+As such they may be set individually for each photon map.
+
+.IP "\fB-n \fInspheres\fR"
+Specifies the number of spheres to dump for the next photon map.  The dump
+is performed by random sampling with \fInspheres\fR as target count, hence
+the number actually output will be approximate.  \fINspheres\fR may be
+followed by a multiplier suffix for convenience, where \fIk\fR = 10^3 and
+\fIm\fR = 10^6, although the latter may lead to problems when processing the
+output geometry with \fIoconv(1)\fR.  The default number of spheres is 10k.
+
+.IP "\fB-r \fIradscale\fR"
+Specifies a relative scale factor \fIradscale\fR for the sphere radius. The
+sphere radius is determined automatically from an estimated average distance
+between spheres so as to reduce clustering, assuming a uniform distribution. 
+In cases where the distribution is substantially nonuniform (e.g.  highly
+localised caustics) the radius can be manually corrected with this option. 
+The default value is 1.0.
+
+.SH NOTES
+The output may contain many overlapping spheres in areas with high photon
+density, particularly in caustics.  This results in inefficient and slow
+octree generation with \fIoconv(1)\fR.  Generally this can be improved by
+reducing \fInspheres\fR and/or \fIradscale\fR.
+
+.SH EXAMPLES
+To visualise the distribution of global and caustic photons superimposed
+on the scene geometry with 5000 and 10000 spheres, respectively:
+.IP
+pmapdump -n 5k global.pm -n 10k caustic.pm | 
+oconv - scene.rad > scene_pmdump.oct
+.PP
+Alternatively, the dump may be viewed on its own by piping the output of
+\fIpmapdump\fR directly into \fIobjview(1)\fR (using the default number of
+spheres in this example):
+.IP
+pmapdump zombo.pm | objview
+
+.SH AUTHOR
+Roland Schregle (roland.schregle@{hslu.ch,gmail.com})
+
+.SH COPYRIGHT
+(c) Fraunhofer Institute for Solar Energy Systems, Lucerne University of 
+Applied Sciences and Arts.
+
+.SH ACKNOWLEDGEMENT
+Development of the RADIANCE photon mapping extension was sponsored by the 
+German Research Foundation (DFG) and the Swiss National Science Foundation 
+(SNF). 
+
+.SH "SEE ALSO"
+mkpmap(1), objview(1), oconv(1), rpict(1), rvu(1), 
+\fIThe RADIANCE Photon Map Manual\fR
+

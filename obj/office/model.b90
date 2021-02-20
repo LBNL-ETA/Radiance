@@ -1,0 +1,78 @@
+#
+#  Model on top of Building 90
+#
+
+void plastic ceiling_white
+0
+0
+5               0.83               0.83               0.83                  0                0.1
+
+void plastic wall_grey
+0
+0
+5               0.51               0.51               0.51                  0                0.1
+
+void plastic floor_brown
+0
+0
+5               0.33               0.22               0.22                  0                0.1
+
+wall_grey polygon wall.front
+0
+0
+30
+                 30               15.5                 30
+                -30               15.5                 30
+                -30                 51                 30
+                 30                 51                 30
+                 30                 26                 30
+               23.5                 26                 30
+               23.5                 43                 30
+              -23.5                 43                 30
+              -23.5                 26                 30
+                 30                 26                 30
+
+floor_brown polygon floor
+0
+0
+12
+                -30               15.5                -30
+                -30               15.5                 30
+                 30               15.5                 30
+                 30               15.5                -30
+
+wall_grey polygon wall.right
+0
+0
+12
+                -30               15.5                -30
+                -30                 51                -30
+                -30                 51                 30
+                -30               15.5                 30
+
+wall_grey polygon wall.back
+0
+0
+12
+                -30               15.5                -30
+                 30               15.5                -30
+                 30                 51                -30
+                -30                 51                -30
+
+ceiling_white polygon ceiling
+0
+0
+12
+                 30                 51                 30
+                -30                 51                 30
+                -30                 51                -30
+                 30                 51                -30
+
+wall_grey polygon wall.left
+0
+0
+12
+                 30                 51                 30
+                 30                 51                -30
+                 30               15.5                -30
+                 30               15.5                 30

@@ -1,0 +1,10 @@
+{
+	This puckered texture is used on the Cabin Bedspread
+	to provide it with a bumpy look.
+
+	A1	- The degree of puckeredness.
+}
+
+puck_dx = A1 * noise3a(Px, Py, Pz);
+puck_dy = A1 * noise3b(Px, Py, Pz);
+puck_dz = A1 * noise3c(Px, Py, Pz);

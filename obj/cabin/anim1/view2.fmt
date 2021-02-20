@@ -1,0 +1,1 @@
+VIEW= -vp ${s(Px)} ${s(Py)} ${s(Pz)} -vd ${s(Dx)} ${s(Dy)} ${s(Dz)}

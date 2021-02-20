@@ -1,0 +1,26 @@
+#
+#  A basic office scene
+#
+
+view = norm -vp 8 36 -27 -vd -0.560723 -0.233635 0.794358 -vh 39.9 -vv 27.5
+view = close -vp -6.94 28.08 -12.37 -vd -0.488 -0.244 0.838 -vh 39.9 -vv 27.5
+
+ZONE = I	-30        30      15.5        51       -30        30
+
+scene = model.b90 desk misc
+scene = window blinds lights lamp picture
+
+objects = bookbox.norm chair1.norm chair2.norm cornerdesk.norm 
+objects = mug.norm openbook.norm pageverts
+
+OCTREE = model.oct
+
+oconv = -f
+
+UP = Y
+
+EXPOSURE = 1
+
+QUALITY = MEDIUM
+
+VARIABILITY = MEDIUM

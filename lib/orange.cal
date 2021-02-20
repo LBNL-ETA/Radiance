@@ -1,0 +1,23 @@
+{
+	orange.cal - texture for orange
+
+	orange must be unit sphere centered at origin
+
+	A1 = angular frequency
+}
+otex_psiz : .006;			{ was .003 }
+otex_rand : .6;
+
+otex_dx = otex_psiz * PI*sin(2*otex_X)/2*Py/otex_rad/A1 / otex_denom;
+
+otex_dy = otex_psiz * -PI*sin(2*otex_X)/2*Px/otex_rad/A1 / otex_denom;
+
+otex_dz = otex_psiz * PI*(sin(2*otex_X)/2*(Pz*Atan2(Py,Px)-1/sqrt(3)) +
+		sin(2*otex_Y)/sqrt(3))/otex_rad/A1 / otex_denom;
+
+otex_X = PI * ((Atan2(Py,Px)*otex_rad - acos(Pz)/sqrt(3))/A1 +
+		otex_rand*noise3(Px/A1,Py/A1,Pz/A1));
+otex_Y = PI * (2*acos(Pz)/sqrt(3)/A1 +
+		otex_rand*noise3((Px+1)/A1,(Py+1)/A1,(Pz+1)/A1));
+otex_denom = (sq(sin(otex_X))+sq(sin(otex_Y)))^1.5;
+otex_rad = sqrt(1-Pz*Pz);

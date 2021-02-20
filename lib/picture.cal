@@ -1,0 +1,45 @@
+{
+	Calculation of 2d picture coordinates.
+	Picture is projected onto xy plane with lower left corner at origin.
+
+	A1		- Ratio of height to width for tiles.
+	A2		- Average red value for fadered or grey for fadegrey
+	A3		- Average green value for fadegreen
+	A4		- Average blue value for fadeblue
+	A2, A3, A4	- Chroma key color for mixpict
+}
+					{ straight coordinates }
+pic_u = Px;
+pic_v = Py;
+					{ picture aspect ratio }
+pic_aspect = if(arg(0)-.5, arg(1), 1);
+					{ compute borders for mixture }
+inpic = if(and(pic_u, and(pic_v,
+		if(pic_aspect-1, and(1-pic_u,pic_aspect-pic_v),
+				and(1/pic_aspect-pic_u,1-pic_v) ) ) ), 1, 0);
+					{ chroma-key mixing }
+chroma_sum`P = A2 + A3 + A4;
+chroma_tol`P = 0.02 * chroma_sum`P;
+intol`P(a,b) : and(a-b+chroma_tol`P, b-a+chroma_tol`P);
+ischroma`P(r,g,s) = if(FTINY-chroma_sum`P, .001-s,
+		if(.001-s, -1,
+		and(intol`P(r*chroma_sum`P,A2*s),intol`P(g*chroma_sum`P,A3*s))
+		) );
+infore(r,g,b) = if(inpic-.5, if(ischroma`P(r,g,r+g+b), 0, 1), 0);
+					{ standard tiling }
+tile_u = mod(pic_u,max(1,1/pic_aspect));
+tile_v = mod(pic_v,max(1,pic_aspect));
+					{ tiling with inversion matching }
+match_u = tri(pic_u,max(1,1/pic_aspect));
+match_v = tri(pic_v,max(1,pic_aspect));
+					{ brick-type staggering }
+stag_u = if(pic_aspect-1,
+		frac(if(frac(pic_v/pic_aspect/2)-.5,pic_u,pic_u+.5)),
+		mod(if(frac(pic_v/2)-.5,pic_u,pic_u+.5/pic_aspect),
+			1/pic_aspect));
+stag_v = tile_v;
+					{ fade colors for distant viewing }
+fadered(r,g,b) = fade(r, A2, T*.1);
+fadegreen(r,g,b) = fade(g, A3, T*.1);
+fadeblue(r,g,b) = fade(b, A4, T*.1);
+fadegrey(r,g,b) = fade(grey(r,g,b), A2, T*.1);

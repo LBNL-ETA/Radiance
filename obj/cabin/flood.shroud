@@ -1,0 +1,35 @@
+#
+# Shroud to go around floodlight
+#
+
+brass cylinder shroud.1
+0
+0
+7
+	0	0	-.05
+	0	0	.25
+	.375
+
+brass ring shroud.2
+0
+0
+8
+	0	0	.25
+	0	0	1
+	.375	.1875
+
+brass cylinder shroud.3
+0
+0
+7
+	0	0	.25
+	0	0	.75
+	.1875
+
+brass ring shroud.4
+0
+0
+8
+	0	0	.75
+	0	0	1
+	.1875	0

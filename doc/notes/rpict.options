@@ -1,0 +1,95 @@
+			SETTING RENDERING OPTIONS
+
+The table below gives some useful ranges for some Radiance 2.4 parameters.
+The "min" value gives the fastest, crudest rendering.  It is not
+necessarily the smallest value numerically.  The "fast" value gives
+a reasonably fast rendering.  The "accur" value gives a reasonably
+accurate rendering.  The "max" value gives the ultimate in accuracy.
+
+Param   Description             Min     Fast    Accur   Max     Notes
+=====   ====================    =====   =====   =====   =====   =====
+-ps     pixel sampling rate     16      8       4       1
+-pt     sampling threshold      1       .15     .05     0
+-pj     anti-aliasing jitter    0       .6      .9      1       A
+-pm	pixel motion		0	0	1	1	B
+-pd	pixel depth of field	0	0	depends	inf	B
+-dj     source jitter           0       0       .9      1       B
+-ds     source substructuring   0       .5      .15     .05
+-dt     direct thresholding     1       .5      .05     0	C
+-dc     direct certainty        0       .25     .5      1
+-dr	direct relays		0	1	3	6
+-dp	direct pretest density	32	64	512	0	C
+-ss	specular sampling	0	.3	32	inf	B
+-st	specular threshold	1	.85	.15	0	C
+-aw	ambient weight		0	100	10	inf	A
+-ab	ambient bounces		0	0	2	8
+-aa	ambient accuracy	.5	.2	.1	0	C
+-ar	ambient resolution	8	32	256	0	C
+-ad	ambient divisions	0	128	1024	8192
+-as	ambient super-samples	0	32	512	2048
+-ms	mist sampling dist.	0	10	1	.01
+-lr	limit reflection	0	6	8	16
+-lw	limit weight		.05	.01	.002	0	C
+
+NOTES:
+        A) This option does not affect the rendering time
+        B) This option adversely affects image sampling (ie. use -ps 1)
+	C) Maximum value disables optimization and can be very expensive
+
+-------------------------------------------------------------------------
+
+		ARTIFACTS ASSOCIATED WITH OPTIONS
+
+Param   Artifact				Solution
+=====   ===================================    	=========================
+-ps     "missing pieces" to objects		decrease value by 50%
+-pt     some soft edges are very jagged		decrease value by 50%
+-pj     diagonal edges are like staircases	increase value to 0.9
+-pj     edges look too erratic			decrease value to 0.4
+-dj     shadows are unnaturally sharp		increase value to 0.9
+-ds     large sources cast unnatural shadows	decrease value by 50%
+-dt     some shadows disappear			decrease value by 50%
+-dc     inaccurate values with many sources	increase value to .75
+-dr	missing multiple mirror reflections	increment value
+-dp	incorrect mirror reflections		double value
+-ss	specular reflections too fuzzy		decrease value to 0.2
+-ss	specular reflections too noisy		increase value to 16
+-st	some specular highlights missing	decrease value to 0.02
+-aw	shadows appear to glow			set value to 0
+-ab	lighting in shadows too flat		increment value
+-av	overall light level seems too high/low	decrease/increase value
+-aa	uneven shading boundaries in shadows	decrease value by 25%
+-ar	shading wrong in some areas		double or quadruple value
+-ad	"splotches" of light			double value
+-as	"splotches" of light			increase to half of -ad setting
+-ms	"noisy" mist scattering			divide value by 2
+-lr	some multiple specular reflections gone	increment value
+-lw	some specular reflections gone		decrease value by 50%
+
+-------------------------------------------------------------------------
+
+		TIMINGS ASSOCIATED WITH OPTIONS
+
+Param   Effect on Execution Time
+=====   ==================================================================
+-ps     inverse, halving value increases rendering time up to four times
+-pt     minor, decreasing value causes modest increase in rendering time
+-pj     no effect
+-pm	no effect
+-pd	no effect
+-dj     indirect, increasing value requires -ps parameter to be reduced
+-ds     inverse, halving value causes rendering time to approximately double
+-dt     inverse, halving value causes rendering time to increase about 50%
+-dc     direct, affects rendering time up to 50% over its 0 to 1 range
+-dr	direct, depending on the scene each new reflection can double time
+-dp	minor, affects start-up time only, higher values take longer
+-ss	no effect until > 1, then linear increase for specular surfaces
+-st	minor, a value of zero may increase rendering by 50% over maximum of 1
+-ab	direct, doubling this value can double rendering time
+-aa	direct, halving this value approximately quadruples rendering time
+-ar	direct, effect depends on scene, can quadruple time for double value
+-ad	direct, doubling value may double rendering time
+-as	direct, effectively adds to -ad parameter and its cost
+-ms	direct, halving value increases time by a factor of two in mist regions
+-lr	minor, increase causes very slightly longer rendering time
+-lw	minor, decrease causes very slightly longer rendering time

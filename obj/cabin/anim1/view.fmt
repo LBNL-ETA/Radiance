@@ -1,0 +1,3 @@
+-vp ${s(Px)} ${s(Py)} ${s(Pz)}
+-vd ${s(Dx)} ${s(Dy)} ${s(Dz)}
+-vu ${s(Ux)} ${s(Uy)} ${s(Uz)}

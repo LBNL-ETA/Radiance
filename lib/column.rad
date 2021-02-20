@@ -1,0 +1,19 @@
+#
+# Column model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Column is approx. 20cm tall by 14cm in diameter
+#
+
+void plastic column_mat
+0
+0
+5 0.5 0.5 0.5 0.04 0
+
+column_mat mesh column
+7 column.rtm -t 7.5 -3.2 102.576 -s .1
+0
+0

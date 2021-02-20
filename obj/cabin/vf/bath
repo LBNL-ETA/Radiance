@@ -1,0 +1,3 @@
+rview -vtv -vp 8 14.5 5 -vd -0.894427 0.447214 0 -vu 0 0 1 -vh 60 -vv 45 -vs 0 -vl 0
+rview -vtv -vp 8 14.5 5 -vd -0.874456 0.309256 -0.373747 -vu 0 0 1 -vh 60 -vv 60 -vs 0 -vl 0
+rview -vtv -vp 8 14.5 5 -vd -0.868092 0.4275 -0.252309 -vu 0 0 1 -vh 45 -vv 60 -vo 0 -va 0 -vs 0 -vl 0

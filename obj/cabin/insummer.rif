@@ -1,0 +1,17 @@
+# Rad Input File created by trad Tue Jul 08 10:32:08 PDT 1997
+DETAIL= Medium
+EXPOSURE= +.5
+INDIRECT= 0
+OCTREE= summercabin.oct
+PENUMBRAS= True
+PICTURE= sumcab
+QUALITY= Medium
+REPORT= 60
+RESOLUTION= 1024
+UP= Z
+VARIABILITY= High
+ZONE= Interior 0 27 0 18 0 9
+render= -aE tree.mat
+view= lv2 -vf vf/living2
+view= bed -vf vf/bed
+view= living -vtv -vp 15 9 5 -vd 0.986588 0.0507496 -0.155139 -vu 0 0 1 -vh 60 -vv 45 -vs 0 -vl 0

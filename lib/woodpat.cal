@@ -1,0 +1,14 @@
+{
+	Wood grain pattern:
+
+	A1 - magnitude (0 to 1)
+}
+
+xgrain = woodgrain(Ring(Py,Pz));	{ along x axis }
+ygrain = woodgrain(Ring(Px,Pz));	{ along y axis }
+zgrain = woodgrain(Ring(Px,Py));	{ along z axis }
+
+woodgrain(r) = hermite(.6-A1/2,.6+A1/2,2,.5,2*tri(r,.5));
+
+Ring(a,b) = sqrt( 25 + sq(mod(a,50)-25) + sq(mod(b,50)-25)) +
+		  7 * fnoise3(Px/40,Py/40,Pz/40) ;

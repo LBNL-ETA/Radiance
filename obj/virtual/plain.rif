@@ -1,0 +1,24 @@
+#
+# Rad input file for inside furnished view (no illums)
+#
+
+scene= plainoff.rad environ.rad
+scene= furniture.rad
+objects= desk.rad draft_ang.rad draft_flat.rad
+objects= orange_chair.rad stool.rad wastebasket.rad
+
+ZONE= I -0.25      6.25      -1.5      8.25         0      3.45
+
+view= back -vf back.vp
+
+OCTREE= illum0.oct
+
+AMBFILE= plain.amb
+EXPOSURE= -3
+PENUMBRAS= False
+VARIABILITY= High
+DETAIL= Med
+render=-dr 2
+REPORT= 1800
+QUALITY= Medium
+INDIRECT= 1

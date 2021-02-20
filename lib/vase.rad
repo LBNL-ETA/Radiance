@@ -1,0 +1,24 @@
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+#
+
+void colorpict vase_pat
+7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+0
+3 0.318558228     0.196044229     0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5 1 1 1 0 0
+
+vase_clay mesh vase
+7 vase.rtm -t 25 5 130 -s 0.1
+0
+0

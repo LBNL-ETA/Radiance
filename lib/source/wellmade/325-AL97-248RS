@@ -1,0 +1,27 @@
+#
+# Wellmade 2 lamp fixture, model 325-AL97-248RS
+#
+# 2x4' flush mount fluorescent with .5" metalized parabolic louver
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
+
+void brightdata lum_dist
+5 flatcorr source/wellmade/325-AL97-248RS.dat source.cal src_phi4 src_theta
+0
+0
+
+# this is scaled by 1/area (SI)
+lum_dist light lum_bright
+0
+0
+3 1.55 1.55 1.55
+
+lum_bright polygon luminaire
+0
+0
+12
+	-10.75	-22.75	0
+	-10.75	22.75	0
+	10.75	22.75	0
+	10.75	-22.75	0

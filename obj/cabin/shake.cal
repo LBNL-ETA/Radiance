@@ -1,0 +1,12 @@
+{
+	Calculation of picture coordinates for cabin roof shakes.
+	Shake_u (x-coordinate) is supposed to be aligned with roof length,
+	and uses smooth noise function, whereas shake_v (y-coordinate) uses
+	fractal noise function to give rough edges to the shakes.
+
+	A1		- Ratio of height to width for tiles.
+}
+
+shake_u = mod(Px+.1*noise3(Px,Py,Pz),max(1,1/A1));
+shake_v = mod(Py+.05*fnoise3(Px,Py,Pz),max(1,A1));
+

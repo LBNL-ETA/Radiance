@@ -1,0 +1,26 @@
+{
+	Calculation of randomly jiggled 2d picture coordinates.
+
+	A1		- Degree of jiggleing.
+	A2		- Ratio of height to width for non-square tiles.
+}
+
+jigglepic_u = Px + A1*noise3(Px+8.7,Py-31.2,Pz+44.4);
+jigglepic_v = Py + A1*noise3(Py-13.4,Py+11.7,Pz-33.8);
+
+fjigglepic_u = Px + A1*fnoise3(Px+8.7,Py-31.2,Pz+44.4);
+fjigglepic_v = Py + A1*fnoise3(Py-13.4,Py+11.7,Pz-33.8);
+
+jiggletile_u = mod(jigglepic_u,max(1,1/jgpic_aspect));
+jiggletile_v = mod(jigglepic_v,max(1,jgpic_aspect));
+
+jigglematch_u = tri(jigglepic_u,max(1,1/jgpic_aspect));
+jigglematch_v = tri(jigglepic_v,max(1,jgpic_aspect));
+
+fjiggletile_u = mod(fjigglepic_u,max(1,1/jgpic_aspect));
+fjiggletile_v = mod(fjigglepic_v,max(1,jgpic_aspect));
+
+fjigglematch_u = tri(fjigglepic_u,max(1,1/jgpic_aspect));
+fjigglematch_v = tri(fjigglepic_v,max(1,jgpic_aspect));
+
+jgpic_aspect = if(arg(0)-1.5, arg(2), 1);

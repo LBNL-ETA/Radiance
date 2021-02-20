@@ -1,0 +1,24 @@
+#
+# Lion model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Lion is approx. 26cm tall
+#
+
+void colorpict lion_pat
+7 lim_r lim_g lim_b lion.hdr climit.cal Lu Lv
+0
+3 0.235855384     0.154246077     0.0831284268
+
+lion_pat plastic lion_clay
+0
+0
+5 1 1 1 0.04 0
+
+lion_clay mesh lion
+7 lion.rtm -t 0 0 127 -s 0.1
+0
+0

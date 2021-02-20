@@ -1,0 +1,19 @@
+#
+# Goblet model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Goblet is approx. 22cm tall by 8cm in diameter.
+#
+
+void plastic goblet_mat
+0
+0
+5 0.5 0.5 0.5 0.04 0
+
+goblet_mat mesh goblet
+7 goblet.rtm -t 10 0 120 -s 0.1
+0
+0

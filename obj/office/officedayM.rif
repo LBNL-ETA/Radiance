@@ -1,0 +1,40 @@
+#
+#  A basic office scene
+#
+
+view = fish -vf fish.vp
+view = norm -vp 8 36 -27 -vd -0.560723 -0.233635 0.794358 -vh 39.9 -vv 27.5
+view = close -vp -6.94 28.08 -12.37 -vd -0.488 -0.244 0.838 -vh 39.9 -vv 27.5
+
+ZONE = I	-30        30      15.5        51       -30        30
+
+scene = '!gensky 7 12 17 | xform -rx -90 -ry 90' sky
+scene = model.b90 desk misc
+scene = window blinds lamp picture
+
+illum = illum0.rad
+
+objects = bookbox.norm chair1.norm chair2.norm cornerdesk.norm 
+objects = mug.norm openbook.norm pageverts
+
+OCTREE = modeldayM.oct
+
+oconv = -f
+
+mkillum = -aa 0 -ad 512 -as 0 -ab 3 -lw 1e-4 -lr -8 -u+
+
+IND = 1
+
+AMBF = officedayM.amb
+
+UP = Y
+
+EXPOSURE = .25
+
+QUALITY = High
+
+VARIABILITY = High
+
+PENUMBRAS = True
+
+RES = 1536

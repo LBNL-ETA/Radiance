@@ -1,0 +1,24 @@
+#
+# Gargoyle model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base near ledge; faces +X; Z-axis is up.
+# Gargoyle is approx. 11cm tall by 10cm wide by 18cm deep
+#
+
+void colorpict gargoyle_pat
+7 lim_r lim_g lim_b gargoyle.hdr climit.cal Lu Lv
+0
+3 0.546780223	0.431189552	0.317323761
+
+gargoyle_pat plastic gargoyle_clay
+0
+0
+5 .5 .5 .5 0 0
+
+gargoyle_clay mesh gargoyle
+9 gargoyle.rtm -t -5 40 58.6 -ry 85 -s 0.1
+0
+0

@@ -1,0 +1,39 @@
+#
+# A hanging picture
+#
+
+void colorpict pine_pattern
+15
+	clip_r clip_g clip_b pine.pic
+	picture.cal pic_u pic_v
+	-s 4 -ry 90 -t -29.9 26 24
+0
+0
+
+void plastic brown
+0
+0
+5 .3 .2 .1 0 0
+
+pine_pattern plastic paint_mat
+0
+0
+5 1 1 1 0 0
+
+paint_mat polygon painting
+0
+0
+12
+	-29.9	26	24
+	-29.9	26	20
+	-29.9	30	20
+	-29.9	30	24
+
+brown polygon mat
+0
+0
+12
+	-29.95	25	25
+	-29.95	25	19
+	-29.95	31	19
+	-29.95	31	25

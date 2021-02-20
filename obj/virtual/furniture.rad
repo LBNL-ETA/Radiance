@@ -1,0 +1,105 @@
+#
+# Drafting office furniture
+#
+
+# The receptionist's desk
+
+!xform -e -rz -90 -t .1 7.8 0 -mx -t 6 0 0 desk.rad
+
+!xform -e -rz 80 -t 1.3 7.2 0 -mx -t 6 0 0 orange_chair.rad
+
+!xform -e -rz 40 -t .8 6.25 0 -mx -t 6 0 0 wastebasket.rad
+
+# First draftperson's desk
+
+!xform -e -rz 183 -t 2.6 2.8 0 -mx -t 6 0 0 draft_ang.rad
+
+!xform -e -rz 10 -t 1.8 1.5 0 -mx -t 6 0 0 stool.rad
+
+!xform -e -rz -25 -t .5 3 0 -mx -t 6 0 0 wastebasket.rad
+
+# Second draftperson's desk
+
+!xform -e -rz 181 -t 2.8 4.7 0 -mx -t 6 0 0 draft_ang.rad
+
+!xform -e -rz 20 -t 2 3.5 0 -mx -t 6 0 0 stool.rad
+
+# Third draftperson's desk
+
+!xform -e -rz 98 -t 5.7 2.15 0 -mx -t 6 0 0 draft_ang.rad
+
+!xform -e -rz -65 -t 4.3 2.7 0 -mx -t 6 0 0 stool.rad
+
+!xform -e -rz -30 -t 4.3 4.1 0 -mx -t 6 0 0 wastebasket.rad
+
+# Fourth draftperson's desk
+
+!xform -e -rz 92 -t 5.5 4.8 0 -mx -t 6 0 0 draft_flat.rad
+
+!xform -e -rz -100 -t 4 5.8 0 -mx -t 6 0 0 stool.rad
+
+# A picture on the East wall
+
+void colorpict podpat
+7 clip_r clip_g clip_b podlife.pic . (4.25-Py)/.75 (Pz-1.75)/.75
+0
+0
+
+podpat plastic podpaper
+0
+0
+5 .8 .8 .8 0 0
+
+podpaper polygon podpicture
+0
+0
+12
+	5.998	4.25	1.75
+	5.998	3.5	1.75
+	5.998	3.5	2.5
+	5.998	4.25	2.5
+
+void plastic brownbacking
+0
+0
+5 .4 .15 .05 0 0
+
+brownbacking polygon podmount
+0
+0
+12
+	5.999	4.5	1.5
+	5.999	3.25	1.5
+	5.999	3.25	2.75
+	5.999	4.5	2.75
+
+# A picture resting on the fourth drafting table
+
+# xform -rz 75 -s .537 -t 1 5.2 1.24
+
+void colorpict cabpat
+15 clip_r clip_g clip_b summercab.pic . Px Py -rz 75 -s .537 -t 1 5.2 1.24
+0
+0
+
+void mixfunc cabpic
+12 cabpat void if(and(inside(0,Px,1.49),inside(0,Py,1)),1,0) .
+	-rz 75 -s .537 -t 1 5.2 1.24
+0
+0
+
+cabpic alias cabpaper
+	podpaper
+
+cabpaper polygon cabpicture
+0
+0
+12
+      1.04746454269      5.11778900051               1.239
+      1.29068974032      6.02551779576               1.239
+     0.642312029426      6.19925007979               1.239
+     0.399086831791      5.29152128453               1.239
+
+# A coffee mug on the fourth table
+
+!xform -e -rz -25 -s .01 -t 1.19 6.15 1.24 mug.rad

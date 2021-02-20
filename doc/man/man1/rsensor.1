@@ -1,0 +1,144 @@
+.\" RCSid "$Id: rsensor.1,v 1.6 2015/06/09 21:34:14 greg Exp $"
+.TH RSENSOR 1 4/11/2008 RADIANCE
+.SH NAME
+rsensor - compute sensor signal from a RADIANCE scene
+.SH SYNOPSIS
+.B rsensor
+[
+.B -n nprocs
+][
+.B -h
+][
+.B render options
+]
+[
+.B $EVAR
+]
+[
+.B @file
+]
+{
+[
+.B -rd nrays
+][
+.B -dn nsrc
+][
+.B sensor_view
+]
+.B sensor_file ..
+}
+.B octree
+.br
+.B rsensor
+[
+.B -h
+]
+{
+[
+.B -rd nrays
+][
+.B sensor_view
+]
+.B sensor_file ..
+}
+.B "."
+.br
+.B "rsensor [ options ] \-defaults"
+.SH DESCRIPTION
+.I Rsensor
+traces rays outward from one or more specified illumination
+sensors into the RADIANCE scene given by
+.I octree,
+sending the computed sensor value to the standard output.
+(The octree may be given as the output of a command enclosed in quotes
+and preceded by a `!'.)\0
+In the second form, a single period ('.') is given in place of an
+octree, and the origin and directions of the specified
+number of rays will be printed on the standard output.
+If these rays are later traced and added together, the results
+will sum to a signal proportional to the given sensor distribution.
+In the third form, the default values
+for the options (modified by those options present)
+are printed with a brief explanation.
+.PP
+Options may be given on the command line and/or read from the
+environment and/or read from a file.
+A command argument beginning with a dollar sign ('$') is immediately
+replaced by the contents of the given environment variable.
+A command argument beginning with an at sign ('@') is immediately
+replaced by the contents of the given file.
+.PP
+The sensor files themselves will be searched for in the path
+locations specified by the
+.I RAYPATH
+environment variable, similar to other types of Radiance
+auxiliary files.
+If the sensor file path begins with '/', '.' or '~', no search
+will take place.
+Before each sensor file, a separate view may be specified.
+In this case, the view origin and direction will correspond to
+the position and orientation of the sensor, and the view up
+vector will determine the zero azimuthal direction of the sensor.
+The fore clipping distance may be used as well, but other view
+options will be ignored.
+(See
+.I rpict(1)
+for details on how to specify a view.)\0
+The actual data contained in the sensor file corresponds to the
+.I SPOT
+tab-separated matrix specification, where the
+column header has "degrees" in the leftmost column, followed
+by evenly-spaced azimuthal angles.
+Azimuth angles must start at 0 and proceed to at least 270 degrees.
+No symmetry is applied to missing values.
+Each row begins with the polar angle, and is followed by the
+relative sensitivity values for each direction.
+Polar angles must start from 0 and continue to the edge of
+the sensor's view.
+Polar angles above the last row listed are assumed to have
+zero sensitivity.
+A low-resolution example of a sensor file is given below:
+.sp
+.nf
+	degrees	0	90	180	270
+	0	.02	.04	.02	.04
+	45	.01	.02	.01	.02
+	90	.001	.002	.001	.002
+.fi
+.sp
+As well as different views, the number of samples may be changed between
+sensors, where the
+.I \-rd
+option controls the number of ray samples sent at random, and the
+.I \-dn
+option controls the number of rays sent to each light source per sensor.
+.PP
+The
+.I \-h
+option toggles header output, which defaults to "on."
+The
+.I \-n
+option may be used to specify multiple calculation processes on
+systems with more than one CPU.
+For additional options, consult the
+.I rtrace(1)
+man page.
+The final
+.I octree
+argument must be given, as the octree cannot be read from the
+standard input.
+.SH EXAMPLES
+To compute values for the same sensor with two different positions:
+.IP "" .2i
+rsensor -ab 2 -vf posA.vf mysens.dat -vf posB.vf mysens.dat scene.oct
+.PP
+To generate a set of rays corresponding to a given sensor and compute
+the resulting signal with rtrace:
+.IP "" .2i
+rsensor -h -vf posC.vf mysens.dat . | rtrace -h scene.oct | total -m
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
+.SH AUTHOR
+Greg Ward for Architectural Energy Corporation
+.SH "SEE ALSO"
+oconv(1), rpict(1), rcontrib(1), rtrace(1)

@@ -1,0 +1,82 @@
+#
+# STD33 13 watt PL fluorescent fixture for desk illumination
+#
+#	17Apr1989
+#
+#  Units are in inches, origin at top center, lamp oriented along
+#  y-axis, 0 degrees azimuth along x-axis.
+#
+
+void plastic dark_plastic
+0
+0
+5 .2 .2 .2 0 0
+
+void brightdata std33_output
+9 flatcorr source/spi/std33.dat source.cal src_theta src_phi2 -t 0 0 -2
+0
+0
+
+# The following multiplies by the reciprocal of the area in square meters:
+
+std33_output glow std33_light
+0
+0
+4 20.66 20.66 20.66 150
+
+# xform -t -3.75 -5 -2
+# genbox dark_plastic std33 7.5 10 2
+
+dark_plastic polygon std33.1540
+0
+0
+12
+               3.75                 -5                 -2
+               3.75                 -5                  0
+              -3.75                 -5                  0
+              -3.75                 -5                 -2
+
+dark_plastic polygon std33.4620
+0
+0
+12
+              -3.75                 -5                  0
+              -3.75                  5                  0
+              -3.75                  5                 -2
+              -3.75                 -5                 -2
+
+std33_light polygon std33.source
+0
+0
+12
+              -3.75                  5                 -2
+               3.75                  5                 -2
+               3.75                 -5                 -2
+              -3.75                 -5                 -2
+
+dark_plastic polygon std33.3267
+0
+0
+12
+               3.75                  5                 -2
+              -3.75                  5                 -2
+              -3.75                  5                  0
+               3.75                  5                  0
+
+dark_plastic polygon std33.5137
+0
+0
+12
+               3.75                 -5                  0
+               3.75                 -5                 -2
+               3.75                  5                 -2
+               3.75                  5                  0
+
+dark_plastic polygon std33.6457
+0
+0
+12
+              -3.75                  5                  0
+              -3.75                 -5                  0
+               3.75                 -5                  0
+               3.75                  5                  0

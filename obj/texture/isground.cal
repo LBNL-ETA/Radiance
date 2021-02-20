@@ -1,0 +1,20 @@
+{
+	Use z-buffer to determine what's ground in texture picture.
+
+	5/24/01	GW
+
+	Usage:
+		rad tex1hi.rif
+		rad tex2hi.rif
+		pvalue -r -h -b -df `getinfo -d < tex2raw_std.pic` \
+			tex2raw_std.zbf \
+		| pcomb -f isground.cal -e 'w=if(isground,2,3)' \
+			-e 'ro=ri(w);go=gi(w);bo=bi(w)' \
+			- tex1raw_std.pic tex2raw_std.pic \
+		| pfilt -1 -e 1.5 -x /3 -y /3 -r .25 \
+		> tex1ground.pic
+}
+
+YGROUND : .15;			{ max. ground height (Y) }
+
+isground = YGROUND - ( Oy(2) + Dy(2)*gi(1) );

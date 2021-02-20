@@ -1,0 +1,25 @@
+#
+#  A humble scene
+#
+
+void plastic grey
+0
+0
+5 .5 .5 .5 0 0
+
+#grey polygon floor
+#0
+#0
+#12
+#                  0                  0.01                108
+#                144                  0.01                108
+#                144                  0.01                  0
+#                  0                  0.01                  0
+
+!xform -ry -40 -rx 10 -t 52 1.1 51.8 ornament
+
+!xform -rx -165 -rz 80 -t 52.7 1.2 49.8 orange
+
+!zcat tennis4.Z | xform -rz 20 -rx 15 -t 54 1 51.5
+
+!xform -rx -90 -s 2.5 -t 48 .1 47 paper

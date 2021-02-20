@@ -1,0 +1,130 @@
+#
+# Cabin lights, switched off.
+# 
+
+# Brightness for 100 watt .5 radius globe lights
+
+void plastic big_globe_light
+0
+0
+5	.5	.5	.5	.05	0
+
+
+# Bedroom Overhead Light
+
+big_globe_light sphere bedlight
+0
+0
+4	6	5.5	8	.5
+
+brass cylinder bedlight.support
+0
+0
+7
+	6	5.5	8.5
+	6	5.5	13.6
+	.02
+
+
+# Livingroom Overhead Lights
+
+big_globe_light sphere lvgrmlight1
+0
+0
+4	19.6	6	8.5	.5
+
+brass cylinder lvgrmlight1.support
+0
+0
+7
+	19.6	6	9
+	19.6	6	14.1
+	.02
+
+big_globe_light sphere lvgrmlight2
+0
+0
+4	19.6	12	8.5	.5
+
+brass cylinder lvrmlight2.support
+0
+0
+7
+	19.6	12	9
+	19.6	12	14.1
+	.02
+
+
+# Livingroom spotlight
+
+!xform -n lvgrmspot -e -t 0 0 -.5 -ry 30 -t 15.25 4 11 flood.shroud
+
+brass cylinder lvgrmspot.support
+0
+0
+7	15.25	4	11
+	15.25	4	12.1
+	.02
+
+
+# Bedroom spotlight
+
+!xform -n bedroomspot -e -t 0 0 -.5 -ry 30 -t 3 4 11 flood.shroud
+
+brass cylinder bedroomspot.support
+0
+0
+7	3	4	11
+	3	4	12.1
+	.02
+
+
+# Brightness for 60 watt .29 radius globe lights
+
+void plastic small_globe_light
+0
+0
+5	.5	.5	.5	.05	0
+
+
+# Front Porch Light
+
+small_globe_light sphere porchlight
+0
+0
+4	18.5	18.9	6.5	.29
+
+brass cone porchlight.support
+0
+0
+8
+	18.5	18.5	6.5
+	18.5	18.7	6.5
+	.2	.12
+
+
+# Bathroom lights
+
+small_globe_light sphere bathlight1
+0
+0
+4	2.7	17.6	6.75	.29
+
+brass cone bathlight1.support
+0
+0
+8	2.7	17.99	6.75
+	2.7	17.7	6.75
+	.2	.12
+
+small_globe_light sphere bathlight2
+0
+0
+4	5.7	17.6	6.75	.29
+
+brass cone bathlight1.support
+0
+0
+8	5.7	17.99	6.75
+	5.7	17.7	6.75
+	.2	.12

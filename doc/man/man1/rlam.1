@@ -1,0 +1,100 @@
+.\" RCSid "$Id: rlam.1,v 1.8 2016/03/24 18:48:28 greg Exp $"
+.TH RLAM 1 7/8/97 RADIANCE
+.SH NAME
+rlam - laminate records from multiple files
+.SH SYNOPSIS
+.B rlam
+[
+.B \-tS
+][
+.B \-u
+][
+.B \-iaN
+|
+.B \-ifN
+|
+.B \-idN
+|
+.B \-iiN
+|
+.B \-iwN
+|
+.B \-ibN
+][
+.B "\-in M"
+]
+input1 input2 ..
+.SH DESCRIPTION
+.I Rlam
+simply joins records (or lines) from multiple inputs, separating them with
+the given string (TAB by default).
+Different separators may be given for different files by specifying
+additional
+.I \-t
+options in between each file name.
+Note that there is no space between this option and its argument.
+If none of the input files uses an ASCII separator, then no end-of-line
+character will be printed, either.
+.PP
+An input is either a stream or a command.
+Commands are given in quotes, and begin with an exclamantion point ('!').
+If the inputs do not have the same number of lines, then
+shorter files will stop contributing to the output as they
+run out.
+.PP
+The
+.I \-ia
+option may be used to specify ASCII input (the default), or the
+.I \-if
+option may be used to indicated binary IEEE 32-bit floats on input.
+Similarly, the
+.I \-id
+and
+.I \-ii
+options may be used to indicate binary 64-bit doubles or integer words,
+respectively.
+The
+.I \-iw
+option specifies 2-byte short words, and the
+.I \-ib
+option specifies bytes.
+If a number is immediately follows any of these options, then it
+indicates that multiple such values are expected for each record.
+For example,
+.I \-if3
+indicates three floats per input record for the next named input.
+In the case of the
+.I \-ia
+option, no number indicates one line per input record, and numbers
+greater than zero indicate that many characters exactly per record.
+For binary input formts, no number implies one value per record.
+For anything other than EOL-separated input, the default tab separator
+is reset to the empty string.
+.PP
+If a
+.I \-in
+option is given with a positive integer argument, this will be the
+maximum number of records that will be read or produced by
+.I rlam.
+.PP
+A hyphen ('-') by itself can be used to indicate the standard
+input, and may appear multiple times.
+The
+.I \-u
+option forces output after each record (i.e., one run through inputs).
+.SH EXAMPLE
+To join files output1 and output2, separated by a comma:
+.IP "" .2i
+rlam \-t, output1 output2
+.PP
+To join a file with line numbers (starting at 0) and its reverse:
+.IP "" .2i
+cnt `wc \-l < lam.c` | rlam \- \-t: lam.c \-t\| '!tail \-r lam.c'
+.PP
+To join four data files, each having three doubles per record:
+.IP "" .2i
+rlam \-id3 file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), histo(1), neaten(1), rcalc(1), tabfunc(1), total(1)

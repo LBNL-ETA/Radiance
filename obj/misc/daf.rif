@@ -1,0 +1,15 @@
+#
+# Render file for daffodil example
+#
+
+view= close -vp 50 60 40 -vd 0 -1 -1 -vh 20 -vv 20
+
+ZONE= I  0 144  0 96  0 108
+
+UP= Y
+
+EXPOSURE= 1
+
+scene= daf.rad
+
+object= daffodil

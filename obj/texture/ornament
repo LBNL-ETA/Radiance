@@ -1,0 +1,50 @@
+#
+#  A silver Christmas ball
+#
+
+void metal silver
+0
+0
+5 .8 .8 .8 1 0
+
+void metal dirty_brass
+0
+0
+5 .6 .4 .01 .7 .015
+
+silver sphere ball
+0
+0
+4 0 0 0 1
+
+silver cone stem.1
+0
+0
+8
+                  0                  0              0.925
+                  0                  0              1.025
+              0.285              0.24
+
+silver cone stem.2
+0
+0
+8
+                  0                  0              1.025
+                  0                  0              1.145
+              0.24               0.23
+
+silver ring stem.3
+0
+0
+8
+                  0                  0              1.145
+                  0                  0                1.5
+               0.23              0.075
+
+dirty_brass cylinder loop
+0
+0
+7
+              -0.03                  0              1.265
+               0.03                  0              1.265
+              0.135

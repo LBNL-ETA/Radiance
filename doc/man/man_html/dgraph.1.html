@@ -1,0 +1,74 @@
+<!--#exec cmd="header dgraph" -->
+<ul>
+</ul><H2>NAME </H2><ul>
+
+dgraph - do a set of graphs to a dumb terminal
+
+</ul><H2>SYNOPSIS </H2><ul>
+
+<b>dgraph</b> 
+[
+<b>-w</b> <b>width</b> 
+][
+<b>-l</b> <b>length</b> 
+][
+<b>+variable</b> <b>value</b> <b>..</b> 
+][
+<b>file</b> <b>..</b> 
+]
+
+</ul><H2>DESCRIPTION </H2><ul>
+
+<i>Dgraph</i> 
+reads each graph
+<i>file</i> 
+in sequence and converts it to a character plot
+displayable on any ascii device.
+If no files are given, the standard input is read.
+
+<p>
+Across the top of the plot, the extrema are printed.
+This is the only indication of the axis size.
+Curves are represented with their respective letter ('A' for
+curve A, etc.) at each point.
+Where two or more curves cross, a number is shown instead.
+
+<p>
+The size of the output array can be specified as a
+certain
+<i>width</i> 
+and
+<i>length.</i> 
+The default size is 79 by 22.
+
+<p>
+Variables can be set explicitly with
+<i>+variable</i> <i>value</i> 
+options.
+See bgraph(1) for details.
+
+</ul><H2>EXAMPLE </H2><ul>
+
+To get a quick glimpse of the sine function from 0 to 4.
+<pre>
+	dgraph
+<br>	A(x)=sin(x)
+<br>	Anpoints=100
+<br>	xmin=0
+<br>	xmax=4
+<br>	^D
+<br></pre>
+
+</ul><H2>AUTHOR </H2><ul>
+
+Greg Ward
+
+</ul><H2>BUGS </H2><ul>
+
+There is no mechanism provided for undefining a variable.
+
+</ul><H2>SEE ALSO </H2><ul>
+
+bgraph(1), gcomp(1), icalc(1), igraph(1)
+</ul>
+<!--#exec cmd="trailer" -->

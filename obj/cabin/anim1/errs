@@ -1,0 +1,54 @@
+Starting job on floyd...
+Mon Feb  3 16:30:46 PST 1992
+csh PID == 1799
+if ( ! -d anim1/done ) then
+if ( ! -d /usr/tmp/anim1 ) then
+mkdir /usr/tmp/anim1
+endif
+set i=583
+while ( 583 < = 583 )
+set cur=583
+if ( 583 < 10 ) set cur=0583
+if ( 583 < 100 ) set cur=0583
+if ( -f anim1/done/583.tga.Z ) goto endloop
+@ l = 583 - ( 583 % 1 )
+set before=583
+@ n = 583 + 1
+set after=584
+if ( 583 < 10 ) set before=0583
+if ( 583 < 100 ) set before=0583
+if ( 584 < 10 ) set after=0584
+if ( 584 < 100 ) set after=0584
+if ( ! -f /usr/tmp/anim1/583.pic ) then
+if ( -f /usr/tmp/anim1/583.unf ) then
+set rpvw= ( -vtv -vh 60 -vv 49 -x 1024 -y 964 -pa 0 `$rccom -n -e "t=Ttot*$l/$nframes"` )
+rcalc -f anim1/spline.cal -f anim1/keys.cal -o anim1/view.fmt -n -e t=Ttot*583/825
+endif
+rpict -dr 1 -av .003 .003 .003 -t 3600 -pj .8 -vtv -vh 60 -vv 49 -x 1024 -y 964 -pa 0 -vp 14.5408 10.9788 4.2 -vd -0.851381 -0.56186 -0.145108 -vu 0 0 1 -z /usr/tmp/anim1/583.z oct/nightcabin
+rpict: 0 rays, 0.00% done after 0.0033 hours
+rpict: 743377 rays, 31.12% done after 1.0094 hours
+rpict: 1531740 rays, 61.00% done after 2.0108 hours
+rpict: 2270985 rays, 87.14% done after 3.0142 hours
+rpict: 2723188 rays, 100.00% done after 3.5822 hours
+7617.4u 90.6s 3:34:56 59%
+if ( 0 ) exit 1
+mv /usr/tmp/anim1/583.unf /usr/tmp/anim1/583.pic
+sync
+endif
+set exposure=`$expcom -n -e "t=Ttot*$i/$nframes"`
+rcalc -f anim1/spline.cal -f anim1/keys.cal -e $1=s(E) -n -e t=Ttot*583/825
+if ( 583 % 1 == 0 ) then
+if ( 583 > = 583 + 1 ) then
+pfilt -1 -x 512 -y 482 -e 120 /usr/tmp/anim1/583.pic
+pfilt: write error in pass2
+71.4u 3.2s 2:04 59%
+else
+ra_t16 /usr/tmp/anim1/583.fin /usr/tmp/anim1/583.tga
+ra_t16: error reading RADIANCE file
+if ( 1 ) exit 1
+exit 1
+**************
+*** PID  1928: rpict -vp 4.7 12 4 -vd -.924626 .380866 .00280397 -vh 60 -vv 49 -x 1024 -y 964 -pa 0 -pj .8 -av .003 .003 .003 -dr 1 -t 3600 -e anim1/errs oct/nightcabin 
+
+rpict: 0 rays, 0.00% done after 0.0028 hours
+rpict: 742716 rays, 100.00% done after 0.9631 hours

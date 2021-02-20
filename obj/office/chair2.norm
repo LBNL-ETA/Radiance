@@ -1,0 +1,68 @@
+#
+#  A straight chair
+#
+
+!genbox leg_material leg.right.rear .75 26 1.5
+!genbox leg_material leg.left.rear .75 26 1.5 | xform -t 24 0 0
+!genbox leg_material leg.right.front .75 26 1.5 | xform -t 0 0 20
+!genbox leg_material leg.left.front .75 26 1.5 | xform -t 24 0 20
+
+leg_material cylinder strut
+0
+0
+7
+	.75	15	20.75
+	24	15	20.75
+	0.375
+
+arm_material cylinder arm.right
+0
+0
+7
+	0	26	0
+	0	26	21.5
+	.75
+
+arm_material ring arm.cap.right.back
+0
+0
+8
+	0	26	0
+	0	0	-1
+	0	.75
+
+arm_material ring arm.cap.right.front
+0
+0
+8
+	0	26	21.5
+	0	0	1
+	0	.75
+
+arm_material cylinder arm.left
+0
+0
+7
+	24.75	26	0
+	24.75	26	21.5
+	.75
+
+arm_material ring arm.cap.left.front
+0
+0
+8
+	24.75	26	0
+	0	0	-1
+	0	.75
+
+arm_material ring arm.cap.left.front
+0
+0
+8
+	24.75	26	21.5
+	0	0	1
+	0	.75
+
+!genbox cushion_material seat 23.25 3 22 -r 1 | xform -t .75 18 0
+
+!genbox cushion_material back 23.25 3 10 -r 1 | xform -rx 80 -t .75 33 0

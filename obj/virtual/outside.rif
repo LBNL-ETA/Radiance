@@ -1,0 +1,16 @@
+#
+# Rad input file for outside view (no illums)
+#
+
+scene= plainoff.rad environ.rad
+ZONE= E -0.25      6.25      -1.5      8.25         0      3.45
+
+view= out -vf outside.vp
+
+EXPOSURE= .05
+PENUMBRAS= False
+DETAIL= Med
+VARIABILITY= Med
+render=-dr 2
+REPORT= 1800
+QUALITY= Medium

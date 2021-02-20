@@ -1,0 +1,103 @@
+#
+#  A daffodil with stem
+#
+
+void plastic daf_yellow
+0
+0
+5 .7 .7 .2 0 .1
+
+void plastic stem_green
+0
+0
+5 .1 .6 .1 0 .1
+
+!genrev daf_yellow trumpet 'hermite(0,3,0,-5,t)' 'hermite(0,1.5,4,3,t)' 16 | xform -rx -90
+
+daf_yellow ring petal1
+0
+0
+8
+                1.2                0.2                  0
+               -0.25                1.1                  0
+                  0                1.2
+
+daf_yellow ring petal2
+0
+0
+8
+                0.6                0.2     -1.03923048454
+               -0.15                1.3     0.2
+                  0                1.2
+
+daf_yellow ring petal3
+0
+0
+8
+    -0.563365875343                0.2     -1.05953711143
+    .1                1.25     0.1
+                  0                1.2
+
+daf_yellow ring petal4
+0
+0
+8
+     -1.19543363771                0.2     0.104586891297
+     .15                1.2   0
+                  0                1.2
+
+daf_yellow ring petal5
+0
+0
+8
+    -0.544788599687                0.2      1.06920782903
+    .11                1.15    -0.1
+                  0                1.2
+
+daf_yellow ring petal6
+0
+0
+8
+     0.688291723621                0.2     0.982982453147
+     -0.15                1.1    -0.18
+                  0                1.2
+
+daf_yellow cylinder stamen1
+0
+0
+7 0 0 0 .2 2.8 .05 .08
+
+daf_yellow cylinder stamen2
+0
+0
+7 0 0 0 -.1 2.9 -.15 .08
+
+daf_yellow cylinder stamen3
+0
+0
+7 0 0 0 -.04 2.8 .1 .08
+
+daf_yellow cylinder stamen4
+0
+0
+7 0 0 0 .05 2.75 .02 .08
+
+daf_yellow cylinder stamen5
+0
+0
+7 0 0 0 .1 2.8 -.11 .08
+
+stem_green cone base_top
+0
+0
+8
+	0	.2	0
+	0	-.5	0
+	.25	.1
+
+stem_green sphere base_bot
+0
+0
+4	0	-.5	0	.2
+
+!genworm stem_green stem 'hermite(0,10,5,15,t)' 'hermite(-.5,-15,-20,-10,t)' 'hermite(0,5,0,5,t)' .15 10

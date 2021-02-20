@@ -1,0 +1,18 @@
+# Rad Input File created by trad Fri Aug 22 16:32:58 PDT 1997
+AMBFILE= /usr/people/gregl/ray/pic/raw/sumcab.amb
+DETAIL= Medium
+EXPOSURE= +.5
+INDIRECT= 0
+OCTREE= summercabin.oct
+PENUMBRAS= False
+PICTURE= /usr/people/gregl/ray/pic/pan/sumcab
+QUALITY= High
+RAWFILE= /usr/people/gregl/ray/pic/raw/sumcab
+REPORT= 60
+RESOLUTION= 2496 768 0
+UP= Z
+VARIABILITY= High
+ZFILE= /usr/people/gregl/ray/pic/raw/sumcab
+ZONE= Interior 0 27 0 18 0 9
+render= -aE tree.mat
+view= pan -vtc -vp 22 9 3 -vd 1 0 0 -vh 360 -vv 88

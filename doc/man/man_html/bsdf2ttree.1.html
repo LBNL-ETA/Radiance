@@ -1,0 +1,184 @@
+<!--#exec cmd="header bsdf2ttree" -->
+<ul>
+</ul><H2>NAME </H2><ul>
+
+bsdf2ttree - generate XML tensor tree description of a BSDF
+
+</ul><H2>SYNOPSIS </H2><ul>
+
+<b>bsdf2ttree</b> 
+[
+<b>-pC</b> 
+][
+<b>{+|-}a</b> 
+][
+<b>-g Nlog2</b> 
+][
+<b>-t pctcull</b> 
+][
+<b>-l maxlobes</b> 
+]
+[
+<b>bsdf.sir ..</b> 
+]
+<br>
+or
+<br>
+<b>bsdf2ttree</b> 
+<b>-t{3|4}</b> 
+[
+<b>-pC</b> 
+][
+<b>{+|-}a</b> 
+][
+<b>-g Nlog2</b> 
+][
+<b>-t pctcull</b> 
+][
+<b>{+|-}forward</b> 
+][
+<b>{+|-}backward</b> 
+][
+<b>-e expr</b> 
+][
+<b>-f file</b> 
+]
+<b>bsdf_func</b> 
+
+</ul><H2>DESCRIPTION </H2><ul>
+
+<i>Bsdf2ttree</i> 
+produces a tensor tree representation of a
+bidirectional scattering distribution function (BSDF)
+based on an intermediate representation (in the first form) or
+a functional description (in the second form).
+A complete XML description is written to the standard output,
+which is normally redirected to a file.
+
+<p>
+The
+<i>-p</i> 
+option by itself turns off the progress bar, whose length may be set
+by an immediately following integer argument.
+(The default progress bar length is 79 characters.) 
+
+<p>
+The
+<i>-a</i> 
+option turns off reciprocity averaging for isotropic scattering or anisotropic reflection.
+Normally on (+a), this ensures that the tensor BRDF obeys Helmholtz reciprocity.
+However, in certain rare cases, reciprocity averaging can cause unwanted noise in the output.
+
+<p>
+The maximum resolution of the tensor tree may be controlled by the
+<i>-g</i> 
+option, which defaults to a value of 6.
+This corresponds to a peak resolution of 2^6 (64) in each dimension.
+Due to memory and time constraints, it is not recommended to set
+<i>-g</i> 
+higher than 7, which corresponds to a 128x128x128x128 initial sampling,
+or 268 million values.
+
+<p>
+The initial sampling is pared down by the percentage specified with the
+<i>-t</i> 
+option, which defaults to 90.
+Setting this parameter to -1 turns culling off entirely, which may be
+useful for comparisons.
+
+<p>
+The first invocation form takes a intermediate scattering representation
+as produced by
+<i>pabopto2bsdf(1)</i> 
+or similar, and produces a tensor tree representation with as many
+components as there are independent input distributions.
+Each intermediate scattering file contains one of
+the four components, and if the first component
+is isotropic, all components must be isotropic.
+A similar rule holds for anisotropic inputs.
+The
+<i>-l</i> 
+option may be used to specify the maximum number of lobes in any
+interpolated radial basis function.
+The default value is 15000, which generally keeps the interpolation tractable.
+Setting the value to 0 turns off this limit.
+
+<p>
+In the second invocation form,
+<i>bsdf2ttree</i> 
+takes a functional specification of a BSDF.
+The named function should accept 6 parameters corresponding to the
+normalized incident and exiting vectors, respectively.
+By convention, these vectors point away from the surface, and a positive
+Z-component corresponds to the front side.
+The Y-component corresponds to the "up" orientation of the surface,
+as specified in the eventual scene description that references the XML
+output.
+If the function only takes 3 parameters, then the variables "Dx", "Dy",
+and "Dz" will be assigned to the reverse of the outgoing direction at
+each evaluation.
+(I.e., the vector will point into the surface and
+Dz will be negative on the front side.) 
+This simplifies conversion of functional BSDF specifications using the
+legacy material primitives "plasfunc", "metfunc", and "transfunc".
+
+<p>
+The function is defined by one or more
+<i>-e</i> 
+and
+<i>-f</i> 
+options, and should obey both Helmholtz reciprocity and
+integrate to less than 1 over each projected incident hemisphere
+for energy conservation.
+The variable and function definitions in each
+<i>-f</i> <i>source</i> 
+file are read and compiled from the RADIANCE library where it is found.
+If the
+<i>-t3</i> 
+option is specified, the defined function is assumed to be isotropic.
+If the
+<i>-t4</i> 
+option is given, the function is assumed to be anisotropic.
+
+<p>
+Similar to the
+<i>genBSDF(1)</i> 
+command,
+the
+<i>+backward</i> 
+option (default) specifies that rays arriving from the front side of
+the surface will be tested for reflection and transmission.
+If both forward and backward (front and back) distributions are needed, the
+<i>+forward</i> 
+option may be given.
+To turn off the backward components, use the
+<i>-backward</i> 
+option.
+Computing both incident hemispheres takes about twice as long as one, but
+is recommended when rays will be impinging from either side.
+
+</ul><H2>EXAMPLE </H2><ul>
+
+To take two components of an intermediate BSDF representation and create
+a high-resolution tensor tree with 85% culling:
+<p><dl compact><dt><dd>bsdf2ttree -g 7 -t 85 transmitted.sir reflected.sir &gt; combined.xml
+</dl>
+<p>
+To create a low-res BSDF corresponding to a one-sided,
+isotropic Phong distribution:
+<p><dl compact><dt><dd>bsdf2ttree -g 5 -t3 -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+oy)^2+(iz+oz)^2))^50, 0)' phong &gt; phong.xml
+</dl>
+</ul><H2>ENVIRONMENT </H2><ul>
+
+RAYPATH		the directories to check for auxiliary files.
+
+</ul><H2>AUTHOR </H2><ul>
+
+Greg Ward
+
+</ul><H2>SEE ALSO </H2><ul>
+
+bsdf2klems(1), icalc(1), genBSDF(1), pkgBSDF(1), rcontrib(1),
+rfluxmtx(1), wrapBSDF(1)
+</ul>
+<!--#exec cmd="trailer" -->

@@ -1,0 +1,11 @@
+{
+    Rippled roofing iron
+    P.D.Bourke
+    September 1991
+
+    One parameter, A1 = number of cycles per unit distance
+}
+theta = 4 * PI * (frac(A1*2*PI*Px) - 0.5);
+zcor = 1 + cos(theta);
+xcor = zcor * sin(theta);
+ycor = 0;

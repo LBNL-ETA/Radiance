@@ -1,0 +1,19 @@
+# Rad Input File created by trad Sun Jul 29 12:08:56 PDT 2012
+AMBFILE= innight.amb
+DETAIL= Medium
+EXPOSURE= 70
+EYESEP= .2
+INDIRECT= 0
+OCTREE= nightcabin.oct
+PENUMBRAS= False
+PICTURE= nightcab
+QUALITY= High
+REPORT= 60
+RESOLUTION= 1024
+UP= Z
+VARIABILITY= Medium
+ZONE= Interior 0 27 0 18 0 9
+view= bed -vf vf/bed
+view= living -vp 15 9 5 -vd 0.986588 0.0507496 -0.155139 -vh 60 -vv 45
+view= dsr -vf vf/dresser
+view= lv2 -vf vf/living2

@@ -1,0 +1,14 @@
+{
+	tennis.cal - pattern and texture for a tennis ball.
+
+	For unit sphere at origin.
+}
+
+tns_pat = if (tns_inseam, .9, 1);
+
+tns_dx = tns_mag * rand(Py);
+tns_dy = tns_mag * rand(Pz);
+tns_dz = tns_mag * rand(Px);
+
+tns_mag = if (tns_inseam, 0, .4);
+tns_inseam = .04 - abs(.7071067812-abs(if(Pz,Px,Py)));

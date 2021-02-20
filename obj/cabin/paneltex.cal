@@ -1,0 +1,26 @@
+{
+	This file creates a wall texture, using panels that run vertical
+	(along the z-axis), with grooves that are 1/12 as wide as the
+	panel segments.  This texture is designed to work with all wall
+	orientations (xz and yz).  The panels have a width of one.
+
+
+}
+
+paneltex_dx = if(panel_isx, panel_pert(Px), 0);
+
+paneltex_dy = if(panel_isx, 0, panel_pert(Py));
+
+paneltex_dz = 0;
+
+			{ return true (>0) if wall is along x-axis }
+panel_isx = .5 - Nx*Nx;
+
+			{ compute perturbation for normal along v }
+panel_pert(v) =	if(	1/24-frac(v),
+			-1,				{ <- start groove }
+			if(	frac(v)-23/24,
+				1,			{ <- end groove }
+				0
+			)
+		);

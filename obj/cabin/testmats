@@ -1,0 +1,139 @@
+# These are the materials for the Cabin Tutorial Example.
+# This file contains patterns for chimney, porch, floor, roof, 
+# and pine furniture.
+
+
+# Cabin Foundation Material
+
+void plastic concrete
+0
+0
+5 .3 .3 .3 0 0
+
+
+# Cabin Wall Material
+
+void plastic wood_panel
+0
+0
+5 .5 .2 .1 0 .1
+
+
+# Cabin Window Pane Material
+
+void glass window_glass
+0
+0
+3  .96  .96  .96
+
+
+# Cabin Wood Floor Material
+
+void brightfunc dusty
+4 dirt dirt.cal -s 2
+0
+1 .15
+
+void plastic wood_floor
+0
+0
+5  .2  .1  .07  .02  .05
+
+
+# Cabin Fireplace and Porch Materials
+
+void plastic xzbrick 
+0
+0
+5  .4  .15  .08  0  0
+
+void alias yzbrick
+	xzbrick
+
+void alias yxbrick
+	xzbrick
+
+void alias xybrick
+	xzbrick
+
+void plastic cinderblock
+0
+0
+5  .06  .04  .04  0  0
+
+
+# Cabin Roof Materials
+
+void plastic white_enamel
+0
+0
+5 .5 .5 .5 .02 .05
+
+void plastic light_wood
+0
+0 
+5 .5 .3 .2 0 0
+
+void plastic north_shingle
+0
+0
+5  .15  .08  .05  0  0
+
+void alias south_shingle
+	north_shingle
+
+
+# Cabin Window Frame Material
+
+void alias window_paint
+	white_enamel
+
+
+# Cabin Door Materials
+
+void alias door_paint
+	white_enamel
+
+void metal brass
+0
+0
+5	0.68	0.27	0.002	0.95	0
+
+
+# Furniture Materials
+
+void plastic brown_tweed
+0
+0
+5 	.35	.2	.1	0	0
+
+void plastic xpine
+0
+0
+5	.7	.25	.08	0	0
+
+void alias ypine
+	xpine
+
+void alias zpine
+	xpine
+
+void plastic rose_spread
+0
+0
+5	.4	.03	.03	0	0
+
+void mirror mirror
+0
+0
+3	.8	.8	.8
+
+void plastic red_clay
+0
+0
+5	.4	.1	.03	0	0
+
+void plastic photo_paper
+0
+0
+5	.82	.82	.82	0	0

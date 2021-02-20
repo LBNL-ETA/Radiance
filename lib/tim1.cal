@@ -1,0 +1,29 @@
+{
+	Calculate BRTDF of Transparent Insulation Materials
+	made up of many small tubes packed tightly together.
+
+	29 Nov 1991	Greg Ward and Raphael Compagnon
+	06 Feb 1995	Updated for Radiance 2.4 by Greg Ward
+
+	Apply with following BRTDfunc:
+
+	mod BRTDfunc tim1
+	10	0	0	0
+		stran	stran	stran
+		brtdf	brtdf	brtdf
+		tim1.cal
+	0
+	12 0 0 0 0 0 0 0 0 0 R T K
+
+	where:
+		R = diffuse reflectance when Ktan_t is zero
+		T = total transmittance
+		K = ratio of tube length to diameter
+}
+
+Ktan_t = arg(12) * Sqrt(1-RdotP*RdotP)/RdotP;
+
+stran = if(1-Ktan_t, 2/PI*Acos(Ktan_t) - Ktan_t/PI*Sqrt(1-Ktan_t*Ktan_t), 0);
+
+brtdf(lx,ly,lz) = if(lx*NxP+ly*NyP+lz*NzP, arg(10), arg(11)/(1-arg(10)))
+			* (1-stran)/PI;

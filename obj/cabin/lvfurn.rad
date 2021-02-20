@@ -1,0 +1,52 @@
+#
+# Living Room Furniture
+# (scale in feet)
+#
+
+!xform -e -n livingrm_chair -rz 160 -s .08333 -t 25.5 12.5 0 chair.norm
+
+!xform -e -n south_sofa -s .08333 -t 17.5 1 0 sofa.norm
+
+!xform -e -n west_sofa -s .08333 -rz -90 -t 15 9.5 0 sofa.norm
+
+
+#
+# The Table.
+#
+
+!genbox ypine tabletop 2 2 .1667 | xform -t 15 1 2 
+
+!genbox zpine leg1 .1667 .1667 2 | xform -t 15 1 0
+
+!genbox zpine leg2 .1667 .1667 2 | xform -t 15 2.8333 0
+
+!genbox zpine leg3 .1667 .1667 2 | xform -t 16.8333 2.8333 0
+
+!genbox zpine leg4 .1667 .1667 2 | xform -t 16.8333 1 0   
+
+
+# The Coatrack in Livingroom
+
+!xform -e -n coatrack -s .08333 -rz 12 -t 25 16 0 coatrack.norm
+
+
+# Pictures
+
+void colorpict alberta_image
+17 clip_r clip_g clip_b alberta.pic picture.cal pic_u pic_v
+	-s 3 -rx 90 -rz 90 -t 12.251 2.5 3
+0
+0
+
+alberta_image alias alberta_photo
+	photo_paper
+
+alberta_photo polygon alberta_poster
+0
+0
+12
+	12.251	2.5	3
+	12.251	5.5	3
+	12.251	5.5	7.62
+	12.251	2.5	7.62
+

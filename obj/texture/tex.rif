@@ -1,0 +1,19 @@
+#
+# Make the picture
+#
+
+view= std -vp 52.5 6 58 -vd .05 -.6 -.8 -vh 35 -vv 35
+
+ZONE= E		48        58      0       2.4        47      54.5
+
+EXPOSURE= 1
+
+UP= Y
+
+OCTREE= scene.oct
+
+scene= room scene
+
+objects= paper orange ornament tennis4.Z fuzztile.oct
+
+QUALITY= medium
