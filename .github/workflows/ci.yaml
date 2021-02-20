@@ -906,6 +906,7 @@ jobs:
           path: Radiance_Linux_Failed2.zip
 
 
+
   check_if_release:
     needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
     name: check if release
@@ -920,6 +921,27 @@ jobs:
           if [[ $(date +%u) -gt 4 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
           if $IF_RELEASE; then echo "Release a new version today"; fi
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+  
+  zip_auxiliary:
+    name: zip auxiliary files
+    runs-on: ubuntu-latest
+    needs: check_if_release
+
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: auxiliary
+      
+      - name: The job has failed
+        run: |
+          zip -r Radiance_Auxiliary.zip ./*
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Auxiliary
+          path: Radiance_Auxiliary.zip
 
   release_installers:
     name: deploy installers
@@ -936,17 +958,10 @@ jobs:
       - name: Download all installers
         uses: actions/download-artifact@v2
 
-      - name: Display structure of downloaded files
-        run: ls -R
-
       - name: unzip artifacts
         run: |
-          unzip Radiance_Linux/Radiance_Linux.zip
           unzip Radiance_Windows_both/Radiance_Windows_both.zip
           unzip Radiance_OSX_both/Radiance_OSX_both.zip
-
-      - name: Display structure of downloaded files
-        run: ls -R
 
       - name: Get Git log
         id: get_release_note
@@ -1027,7 +1042,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: Radiance_Linux.zip
+          asset_path: Radiance_Linux/Radiance_Linux.zip
           asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_Linux.zip
           asset_content_type: application/zip
       
@@ -1049,4 +1064,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: OSXBuild/Radiance_OSX.zip
           asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
+          asset_content_type: application/zip
+
+      - name: Release Asset Radiance_Auxiliary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: Radiance_Auxiliary/Radiance_Auxiliary.zip
+          asset_name: Radiance_Auxiliary_${{steps.get_release_name.outputs.RELEASE_TAG}}.zip
           asset_content_type: application/zip
