@@ -1,4 +1,4 @@
-# RCSid $Id: trans2.rif,v 1.2 2021/02/19 06:01:47 greg Exp $
+# RCSid $Id: trans2.rif,v 1.3 2021/02/20 00:51:18 greg Exp $
 #
 # Simple version of space using trans2 illum for window - compare to tfunc.rif
 #
@@ -26,6 +26,8 @@ PEN = True
 mkillum = -ab 1
 
 render = @render.opt
+
+rpict = -ps 1
 
 pfilt = -m .3
 
