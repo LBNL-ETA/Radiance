@@ -1,7 +1,7 @@
-# RCSid $Id: illum_tfunc.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: illum_tfunc.rad,v 1.2 2021/02/20 07:56:29 greg Exp $
 # A transfunc window to turn into a light source with mkillum
 
-#@mkillum l+ f=tfunc_ill c=a d=100 s=128
+#@mkillum l+ f=tfunc_ill c=a d=100 s=128 i=void
 
 void transfunc tfunc_mat
 2 absdf aniso.cal
@@ -16,3 +16,12 @@ tfunc_mat polygon tfunc_window
 	-8.1	4	1
 	-8.1	4	2
 	-8.1	1	2
+
+void polygon tfunc_window
+0
+0
+12
+	-8	1	1
+	-8	4	1
+	-8	4	2
+	-8	1	2

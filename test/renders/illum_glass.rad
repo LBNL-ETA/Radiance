@@ -1,7 +1,7 @@
-# RCSid $Id: illum_glass.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: illum_glass.rad,v 1.2 2021/02/20 07:56:29 greg Exp $
 # A clear glazing used to create rectangular illum at window
 
-#@mkillum f=glass_ill c=d d=50 s=64
+#@mkillum f=glass_ill c=d d=50 s=64 i=void
 
 void glass glass_clear
 0
@@ -16,3 +16,12 @@ glass_clear polygon clear_glazing
 	-8.1	4	1
 	-8.1	4	2
 	-8.1	1	2
+
+void polygon tfunc_window
+0
+0
+12
+	-8	1	1
+	-8	4	1
+	-8	4	2
+	-8	1	2

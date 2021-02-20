@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.5 2019/03/22 18:35:01 greg Exp $
+# RCSid $Id: combined.rif,v 1.6 2021/02/20 07:56:29 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -11,7 +11,7 @@ objects = antimatter_portal.rad ball_in_cube.rad ballcompare.rad
 objects = blinds.rad bubble_in_cube.rad closed_end.rad combined_scene.rad
 objects = constellation.rad dielectric_pane.rad diorama_walls.rad
 objects = disks.rad front_cap.rad glass_ill.rad glass_pane.rad
-objects = gymbal.rad illum_glass.rad illum_tfunc.rad illum_trans2.rad
+objects = gymbal.rad illum_tfunc.rad illum_trans2.rad
 objects = mirror.rad mist.rad porsches.rad prism1.rad
 objects = prism2.rad rect_fixture.rad rect_opening.rad saucer.rad
 objects = spotcones.rad spotlights.rad sunset_sky.rad

@@ -1,4 +1,4 @@
-# RCSid $Id: glass_ill.rad,v 1.1 2018/11/20 17:12:41 greg Exp $
+# RCSid $Id: glass_ill.rad,v 1.2 2021/02/20 07:56:29 greg Exp $
 # A clear glazing used to create rectangular illum at window
 # mkillum -ab 0 !oconv -i glass.oct illum_glass.rad
 #@mkillum !
@@ -28,7 +28,7 @@ illum_mat polygon clear_glazing
 0
 0
 12
-               -8.1                  1                  1
-               -8.1                  4                  1
-               -8.1                  4                  2
-               -8.1                  1                  2
+               -8                  1                  1
+               -8                  4                  1
+               -8                  4                  2
+               -8                  1                  2
