@@ -1,3 +1,4 @@
+# RCSid $Id: combined.rad,v 1.13 2021/02/20 19:17:27 greg Exp $
 
 void plastic wall_mat
 0
@@ -987,10 +988,10 @@ illum_mat polygon glass.2.clear_glazing
 0
 0
 12
-               -8.1                6.2                  1
-               -8.1                9.2                  1
-               -8.1                9.2                  2
-               -8.1                6.2                  2
+                 -8                6.2                  1
+                 -8                9.2                  1
+                 -8                9.2                  2
+                 -8                6.2                  2
 
 black_outside polygon inst.3.wall.b
 0
@@ -2916,6 +2917,15 @@ tfunc_mat polygon tfunc.13.tfunc_window
                -8.1                  4                8.4
                -8.1                  1                8.4
 
+void polygon tfunc.13.tfunc_window
+0
+0
+12
+                 -8                  1                7.4
+                 -8                  4                7.4
+                 -8                  4                8.4
+                 -8                  1                8.4
+
 black_outside polygon trans.14.wall.b
 0
 0
@@ -3567,6 +3577,15 @@ trans2_mat polygon trans2.15.tfunc_window
                -8.1               14.4                7.4
                -8.1               14.4                8.4
                -8.1               11.4                8.4
+
+void polygon trans2.15.tfunc_window
+0
+0
+12
+                 -8               11.4                7.4
+                 -8               14.4                7.4
+                 -8               14.4                8.4
+                 -8               11.4                8.4
 
 void brightfunc noisepat
 8 "1 - .35*(1+fnoise3(3*Px,3*Py,3*Pz))" . -i 1 -t 0 15.6 6.4
