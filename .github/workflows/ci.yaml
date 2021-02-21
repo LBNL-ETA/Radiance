@@ -918,14 +918,14 @@ jobs:
         id: if_release
         run: |
           IF_RELEASE=false
-          if [[ $(date +%u) -gt 4 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
+          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
           if $IF_RELEASE; then echo "Release a new version today"; fi
           echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
   
   zip_auxiliary:
     name: zip auxiliary files
     runs-on: ubuntu-latest
-    needs: [build_Windows, build_OSX, build_Linux]
+    needs: check_if_release
 
     steps:
       - name: "Checkout Master Branch"
