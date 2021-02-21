@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.40 2021/02/16 20:06:06 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.41 2021/02/21 17:18:41 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -107,7 +107,7 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		error(USER, errmsg);
 	}
 	if (nmods >= modasiz) {		/* need bigger modifier array */
-		modasiz += modasiz/3 + 64;
+		modasiz += modasiz/2 + 64;
 		if (modname == NULL)
 			modname = (char **)malloc(modasiz*sizeof(char *));
 		else
@@ -164,12 +164,14 @@ addmodfile(char *fname, char *outf, char *prms, char *binv, int bincnt)
 	FILE	*fp;
 
 	if (path == NULL || (fp = fopen(path, "r")) == NULL) {
-		sprintf(errmsg, "cannot load modifier file '%s'",
-				path != NULL ? path : fname);
+		if (path == NULL)
+			sprintf(errmsg, "cannot find modifier file '%s'", fname);
+		else
+			sprintf(errmsg, "cannot load modifier file '%s'", path);
 		error(SYSTEM, errmsg);
 	}
 	while (fgetword(mod, sizeof(mod), fp) != NULL)
-		addmodifier(mod, outf, prms, binv, bincnt);
+		addmodifier(savqstr(mod), outf, prms, binv, bincnt);
 	fclose(fp);
 }
 
