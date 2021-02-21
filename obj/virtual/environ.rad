@@ -1,0 +1,109 @@
+#
+# The surrounding environment for our office
+#
+
+!gensky 12 3 13 -g .2
+#!gensky 10 10 12 -g .2 -c
+
+skyfunc glow sky_glow
+0
+0
+4 .9 .9 1.2 0
+
+sky_glow source sky
+0
+0
+4 0 0 1 180
+
+skyfunc glow ground_glow
+0
+0
+4 1.2 1 .7 0
+
+ground_glow source ground
+0
+0
+4 0 0 -1 180
+
+void plastic ground_mat
+0
+0
+5 .24 .2 .14 0 0
+
+ground_mat ring ground
+0
+0
+8
+	3	-5	-.0001
+	0	0	1
+	0	30
+
+void brightfunc xzhatch_pat
+10 xyhatch hatch.cal -rx 90 -s 1.5 -t 4 0 0
+0
+3 2 .05 .1
+
+void brightfunc yzhatch_pat
+10 xyhatch hatch.cal -ry -90 -s 3 -t 0 -20 0
+0
+3 .5 .05 .1
+
+xzhatch_pat mirror neigh1.xzwall_mat
+0
+0
+3 .25 .25 .25
+
+yzhatch_pat alias neigh1.yzwall_mat neigh1.xzwall_mat
+
+void plastic neigh1.roof_mat
+0
+0
+5 .08 .08 .08 0 0
+
+# xform -t 4 -20 0
+# genbox neigh1.wall_mat neigh1 15 15 10
+
+neigh1.xzwall_mat polygon neigh1.1540
+0
+0
+12
+                 19                -20                  0
+                 19                -20                 10
+                  4                -20                 10
+                  4                -20                  0
+
+neigh1.yzwall_mat polygon neigh1.4620
+0
+0
+12
+                  4                -20                 10
+                  4                 -5                 10
+                  4                 -5                  0
+                  4                -20                  0
+
+neigh1.xzwall_mat polygon neigh1.3267
+0
+0
+12
+                 19                 -5                  0
+                  4                 -5                  0
+                  4                 -5                 10
+                 19                 -5                 10
+
+neigh1.yzwall_mat polygon neigh1.5137
+0
+0
+12
+                 19                -20                 10
+                 19                -20                  0
+                 19                 -5                  0
+                 19                 -5                 10
+
+neigh1.roof_mat polygon neigh1.6457
+0
+0
+12
+                  4                 -5                 10
+                  4                -20                 10
+                 19                -20                 10
+                 19                 -5                 10

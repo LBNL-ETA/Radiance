@@ -1,0 +1,282 @@
+#
+#  An enclosed book shelf.
+#
+
+void brightfunc xgrain
+4 xgrain woodpat.cal -s .6
+0
+1                0.8
+
+void brightfunc ygrain
+4 ygrain woodpat.cal -s .6
+0
+1                0.8
+
+void brightfunc zgrain
+4 zgrain woodpat.cal -s .6
+0
+1                0.8
+
+xgrain plastic xpine
+0
+0
+5                0.6               0.25                0.1              0.005               0.08
+
+ygrain plastic ypine
+0
+0
+5                0.6               0.25                0.1              0.005               0.08
+
+zgrain plastic zpine
+0
+0
+5                0.6               0.25                0.1              0.005               0.08
+
+void plastic orange_plastic
+0
+0
+5                0.7                0.2                  0                  0               0.05
+
+xpine polygon base.0451
+0
+0
+12
+                 35                 -2                  0
+                 35                 -2                  9
+                  1                 -2                  9
+                  1                 -2                  0
+
+zpine polygon base.0264
+0
+0
+12
+                  1                 -2                  9
+                  1                  0                  9
+                  1                  0                  0
+                  1                 -2                  0
+
+xpine polygon base.0132
+0
+0
+12
+                  1                  0                  0
+                 35                  0                  0
+                 35                 -2                  0
+                  1                 -2                  0
+
+zpine polygon base.7315
+0
+0
+12
+                 35                 -2                  9
+                 35                 -2                  0
+                 35                  0                  0
+                 35                  0                  9
+
+xpine polygon base.7546
+0
+0
+12
+                  1                  0                  9
+                  1                 -2                  9
+                 35                 -2                  9
+                 35                  0                  9
+
+ypine polygon side.kmqo
+0
+0
+12
+                  0                  1                  9
+                  0                 11                  9
+                  0                 11                  1
+                  0                  1                  1
+
+xpine polygon side.MNPO
+0
+0
+12
+                  1                 11                  0
+                 35                 11                  0
+                 35                  1                  0
+                  1                  1                  0
+
+xpine polygon side.jief
+0
+0
+12
+                 35                 12                  1
+                  1                 12                  1
+                  1                 12                  9
+                 35                 12                  9
+
+ypine polygon side.rnlp
+0
+0
+12
+                 36                  1                  9
+                 36                  1                  1
+                 36                 11                  1
+                 36                 11                  9
+
+orange_plastic polygon front
+0
+0
+12
+                  1                 11                  9
+                  1                  3                  9
+                 35                  3                  9
+                 35                 11                  9
+
+orange_plastic polygon lip_upper
+0
+0
+12
+                  1                  3                  8
+                 35                  3                  8
+                 35                  3                  9
+                  1                  3                  9
+
+orange_plastic polygon lip_inner
+0
+0
+12
+                  1                  2                  8
+                 35                  2                  8
+                 35                  3                  8
+                  1                  3                  8
+
+xpine cylinder side.hi
+0
+0
+7
+                  1                  1                  1
+                 35                  1                  1
+                  1
+
+zpine cylinder side.hl
+0
+0
+7
+                  1                  1                  1
+                  1                  1                  9
+                  1
+
+ypine cylinder side.hj
+0
+0
+7
+                  1                  1                  1
+                  1                 11                  1
+                  1
+
+ypine cylinder side.ki
+0
+0
+7
+                 35                 11                  1
+                 35                  1                  1
+                  1
+
+xpine cylinder side.kj
+0
+0
+7
+                 35                 11                  1
+                  1                 11                  1
+                  1
+
+zpine cylinder side.ko
+0
+0
+7
+                 35                 11                  1
+                 35                 11                  9
+                  1
+
+zpine cylinder side.mi
+0
+0
+7
+                 35                  1                  9
+                 35                  1                  1
+                  1
+
+xpine cylinder side.ml
+0
+0
+7
+                 35                  1                  9
+                  1                  1                  9
+                  1
+
+ypine cylinder side.mo
+0
+0
+7
+                 35                  1                  9
+                 35                 11                  9
+                  1
+
+zpine cylinder side.nj
+0
+0
+7
+                  1                 11                  9
+                  1                 11                  1
+                  1
+
+ypine cylinder side.nl
+0
+0
+7
+                  1                 11                  9
+                  1                  1                  9
+                  1
+
+xpine cylinder side.no
+0
+0
+7
+                  1                 11                  9
+                 35                 11                  9
+                  1
+
+ypine sphere side.h
+0
+0
+4                  1                  1                  1                  1
+
+ypine sphere side.i
+0
+0
+4                 35                  1                  1                  1
+
+ypine sphere side.j
+0
+0
+4                  1                 11                  1                  1
+
+ypine sphere side.k
+0
+0
+4                 35                 11                  1                  1
+
+ypine sphere side.l
+0
+0
+4                  1                  1                  9                  1
+
+ypine sphere side.m
+0
+0
+4                 35                  1                  9                  1
+
+ypine sphere side.n
+0
+0
+4                  1                 11                  9                  1
+
+ypine sphere side.o
+0
+0
+4                 35                 11                  9                  1

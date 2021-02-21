@@ -1,0 +1,59 @@
+{
+	Approximate thin-film dichroic material
+	This formula is only correct at normal incidence
+
+	Feb 2004	G. Ward (funding provided by Visarc)
+
+Usage:
+
+	void BRTDfunc matname
+	10
+		rrefl grefl brefl
+		rtrns gtrns btrns
+		0 0 0
+		dichroic.cal
+	0
+	15	0 0 0
+		0 0 0
+		0 0 0
+		film_thick_m film_n
+		subs_n subs_tr subs_tg subs_tb
+}
+			{ Passed arguments }
+film_thick = arg(10);		{ film thickness in microns }
+film_n = arg(11);		{ index of refraction for thin film }
+subs_n = arg(12);		{ index of refraction for substrate }
+subs_tR = arg(13);		{ substrate transmission in red }
+subs_tG = arg(14);		{ substrate transmission in green }
+subs_tB = arg(15);		{ substrate transmission in blue }
+
+			{ Peak wavelengths for red, green, & blue (microns) }
+WL_R : 0.595;
+WL_G : 0.545;
+WL_B : 0.445;
+			{ Reflection at first interface }
+r1 = if(Rdot, (1 - film_n)/(1 + film_n),
+		(subs_n - film_n)/(subs_n + film_n));
+			{ Reflection at second interface }
+r2 = if(Rdot, (film_n - subs_n)/(film_n + subs_n),
+		(1 - subs_n)/(1 + subs_n));
+			{ Reflection magnitude at substrate-air interface }
+subs_r = sq((1 - subs_n)/(1 + subs_n));
+			{ Thin film penetration (approx.) }
+L = film_thick / RdotP;
+			{ gamma expressions }
+gammaR = 2*r1*r2*cos(4*PI/WL_R*film_n*L);
+gammaG = 2*r1*r2*cos(4*PI/WL_G*film_n*L);
+gammaB = 2*r1*r2*cos(4*PI/WL_B*film_n*L);
+			{ Reflection magnitude at film }
+filmR = (r1*r1 + r2*r2 + gammaR)/(1 + sq(r1*r2) + gammaR);
+filmG = (r1*r1 + r2*r2 + gammaG)/(1 + sq(r1*r2) + gammaG);
+filmB = (r1*r1 + r2*r2 + gammaB)/(1 + sq(r1*r2) + gammaB);
+			{ Approx. reflection from either side }
+rrefl = if(Rdot, filmR + subs_r*sq(subs_tR), subs_r + filmR*sq(subs_tR));
+grefl = if(Rdot, filmG + subs_r*sq(subs_tG), subs_r + filmG*sq(subs_tG));
+brefl = if(Rdot, filmB + subs_r*sq(subs_tB), subs_r + filmR*sq(subs_tB));
+			{ Approx. transmission }
+rtrns = (1 - rrefl)*subs_tR;
+gtrns = (1 - grefl)*subs_tG;
+btrns = (1 - brefl)*subs_tB;

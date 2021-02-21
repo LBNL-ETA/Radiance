@@ -1,0 +1,29 @@
+#
+#  A textured orange
+#
+
+void texfunc orange_texture
+6 otex_dx otex_dy otex_dz orange.cal -s 1.1
+0
+1 .03
+
+orange_texture colortext orange_color
+3 helvet.fnt . Sunkist
+0
+16
+	1	-.4	.095
+	0	.114	0
+	0	0	-.190
+	.1	.033	.4
+	.6	.2	.01
+	-.2
+
+orange_color plastic orange_peel
+0
+0
+5 1 1 1 .05 0
+
+orange_peel sphere orange
+0
+0
+4 0 0 0 1.1

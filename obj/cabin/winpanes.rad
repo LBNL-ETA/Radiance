@@ -1,0 +1,167 @@
+# Southwest Windows in Bedroom
+
+# xform -e -n southwest_winglass.0 -t 5 -.5 0 -i 0 -t 2 0 0
+
+window_glass polygon southwest_winglass.0.window
+0
+0
+12
+             6.8644         -0.1652375             2.7387
+             6.8644         -0.1652375             6.3999
+             5.1355         -0.1652375             6.3999
+             5.1355         -0.1652375             2.7387
+# xform -e -n southwest_winglass.1 -t 5 -.5 0 -i 1 -t 2 0 0
+
+window_glass polygon southwest_winglass.1.window
+0
+0
+12
+             8.8644         -0.1652375             2.7387
+             8.8644         -0.1652375             6.3999
+             7.1355         -0.1652375             6.3999
+             7.1355         -0.1652375             2.7387
+# xform -e -n southwest_winglass.2 -t 5 -.5 0 -i 2 -t 2 0 0
+
+window_glass polygon southwest_winglass.2.window
+0
+0
+12
+            10.8644         -0.1652375             2.7387
+            10.8644         -0.1652375             6.3999
+             9.1355         -0.1652375             6.3999
+             9.1355         -0.1652375             2.7387
+
+
+# Southeast Windows in Livingroom
+
+# xform -e -n southeast_winglass.0 -t 17 -.5 0 -i 0 -t 2 0 0
+
+window_glass polygon southeast_winglass.0.window
+0
+0
+12
+            18.8644         -0.1652375             2.7387
+            18.8644         -0.1652375             6.3999
+            17.1355         -0.1652375             6.3999
+            17.1355         -0.1652375             2.7387
+# xform -e -n southeast_winglass.1 -t 17 -.5 0 -i 1 -t 2 0 0
+
+window_glass polygon southeast_winglass.1.window
+0
+0
+12
+            20.8644         -0.1652375             2.7387
+            20.8644         -0.1652375             6.3999
+            19.1355         -0.1652375             6.3999
+            19.1355         -0.1652375             2.7387
+# xform -e -n southeast_winglass.2 -t 17 -.5 0 -i 2 -t 2 0 0
+
+window_glass polygon southeast_winglass.2.window
+0
+0
+12
+            22.8644         -0.1652375             2.7387
+            22.8644         -0.1652375             6.3999
+            21.1355         -0.1652375             6.3999
+            21.1355         -0.1652375             2.7387
+# xform -e -n southeast_winglass.3 -t 17 -.5 0 -i 3 -t 2 0 0
+
+window_glass polygon southeast_winglass.3.window
+0
+0
+12
+            24.8644         -0.1652375             2.7387
+            24.8644         -0.1652375             6.3999
+            23.1355         -0.1652375             6.3999
+            23.1355         -0.1652375             2.7387
+
+# Northeast Windows
+
+# xform -e -n northeast_winglass.0 -rz 90 -t 27.5 11 0 -i 0 -t 0 2 0
+
+window_glass polygon northeast_winglass.0.window
+0
+0
+12
+         27.1652375            12.8644             2.7387
+         27.1652375            12.8644             6.3999
+         27.1652375            11.1355             6.3999
+         27.1652375            11.1355             2.7387
+# xform -e -n northeast_winglass.1 -rz 90 -t 27.5 11 0 -i 1 -t 0 2 0
+
+window_glass polygon northeast_winglass.1.window
+0
+0
+12
+         27.1652375            14.8644             2.7387
+         27.1652375            14.8644             6.3999
+         27.1652375            13.1355             6.3999
+         27.1652375            13.1355             2.7387
+# xform -e -n northeast_winglass.2 -rz 90 -t 27.5 11 0 -i 2 -t 0 2 0
+
+window_glass polygon northeast_winglass.2.window
+0
+0
+12
+         27.1652375            16.8644             2.7387
+         27.1652375            16.8644             6.3999
+         27.1652375            15.1355             6.3999
+         27.1652375            15.1355             2.7387
+
+# North Windows
+
+# xform -e -n north_winglass.0 -rz 180 -t 2 .5 0 -t 13 18 0 -i 0 -t 2 0 0
+
+window_glass polygon north_winglass.0.window
+0
+0
+12
+            13.1356         18.1652375             2.7387
+            13.1356         18.1652375             6.3999
+            14.8645         18.1652375             6.3999
+            14.8645         18.1652375             2.7387
+# xform -e -n north_winglass.1 -rz 180 -t 2 .5 0 -t 13 18 0 -i 1 -t 2 0 0
+
+window_glass polygon north_winglass.1.window
+0
+0
+12
+            15.1356         18.1652375             2.7387
+            15.1356         18.1652375             6.3999
+            16.8645         18.1652375             6.3999
+            16.8645         18.1652375             2.7387
+
+# West Bedroom Window
+
+# xform -e -n westbed_winglass.0 -rz -90 -t -.5 2 0 -t 0 6 0 -i 0 -t 0 2 0
+
+window_glass polygon westbed_winglass.0.window
+0
+0
+12
+         -0.1652375             6.1356             2.7387
+         -0.1652375             6.1356             6.3999
+         -0.1652375             7.8645             6.3999
+         -0.1652375             7.8645             2.7387
+# xform -e -n westbed_winglass.1 -rz -90 -t -.5 2 0 -t 0 6 0 -i 1 -t 0 2 0
+
+window_glass polygon westbed_winglass.1.window
+0
+0
+12
+         -0.1652375             8.1356             2.7387
+         -0.1652375             8.1356             6.3999
+         -0.1652375             9.8645             6.3999
+         -0.1652375             9.8645             2.7387
+
+# The bathroom window
+
+glass_mat polygon bath.window_glass
+0
+0
+12
+	-0.09285	16.5501	3.3012
+	-0.09285	16.5501	6.5924
+	-0.09285	14.32854	6.5924
+	-0.09285	14.32854	3.3012
+

@@ -1,0 +1,60 @@
+From: "Gregory J. Ward" <gregoryjward@gmail.com>
+Subject: Re: Ranimate view file
+Date: October 19, 2017 9:50:58 AM PDT
+To: "Shakespeare, Robert A." <shakespe@indiana.edu>
+
+Hi Rob,
+
+Peter's chapter on animation, which follows your chapter on dramatic lighting in RwR, has some tips on how to interpolate animation views.  The file "spline.cal" in the ray/src/cal/cal/ directory is the one I use for this purpose.  There is an associated file, "view.fmt" in the same directory, which is handy for outputting the views needed by ranimate.  (Your views below would need a "VIEW= " string inserted at the start of each line to be valid.)
+
+Admittedly, creating a smooth view sequence is one of the most challenging parts, if not the only challenging part of creating a walk-through animation.  My usual process is to go into rvu and select keyframe positions, which I write out to a view file using one of the little-known features of the rvu "view" command:
+
+	: view myanim.vf -t seconds
+
+The "-t" is optional, but rvu not only appends the current view to the file "myanim.vf", but it tacks whatever follows the file name on at the end of the view line.  (Use "-t 0" or whatever for the first keyframe.)  So, the file will contain one line for each keyframe like this:
+
+	rvu -vtv -vp 12.9191 83.8 4.81579 -vd -0.248137 1.5194e-17 0.0304673 -vu 0 0 1 -vh 45 -vv 45 -vo 0 -va 0 -vs 0 -vl 0 -t seconds
+
+where seconds is a number you added indicating the approximate time you want between the previous keyframe and this one in your animation.  You then take the file "view.fmt" I mentioned earlier, which contains this:
+
+	VIEW= -vt$(vt) -vp ${vpx} ${vpy} ${vpz} -vd ${vdx} ${vdy} ${vdz} -vu ${vux} ${vuy} ${vuz} -vh ${vh} -vv ${vv} -vo ${vo} -va ${va} -vs ${vs} -vl ${vl}
+
+and modify it to work with your slightly different format in "myview.fmt":
+
+	rvu -vt$(vt) -vp ${vpx} ${vpy} ${vpz} -vd ${vdx} ${vdy} ${vdz} -vu ${vux} ${vuy} ${vuz} -vh ${vh} -vv ${vv} -vo ${vo} -va ${va} -vs ${vs} -vl ${vl} -t ${t}
+
+If all you are changing frame-to-frame is the view position and direction, you can create a file usable with "spline.cal" that contains just those parameters with the following command:
+
+	rcalc -i myview.fmt -e '$1=recno;$2=vpx;$3=vpy;$4=vpz;$5=vdx;$6=vdy;$7=vdz;$8=t' myanim.vf | tabfunc vpx vpy vpz vdx vdy vdz T > myanim.cal
+
+The length of your animation can be computed using "total myanim.vf", where the last number will be the total for "t".  Let's say it is 1000 seconds, and you want to generate something at 24 fps, so 24000 frames.  You then generate these 24000 views using:
+
+	head -1 < myanim.vf > myframes.vf
+	cnt 24000 | rcalc -f myanim.cal -f spline.cal -e 't=Ttot/24000*$1' -o 'VIEW= -vp ${s(vpx)} ${s(vpy)} ${s(vpz)} -vd ${s(vdx)} ${s(vdy)} ${s(vdz)}' >> myframes.vf
+
+The file "myframes.vf" will contain the first view from your sequence with all the parameters, followed by view "updates" with just those parameters that changed.  This is what ranimate expects -- not all of the views need to include all of the options.  (Also, the "-t" option at the end gets ignored, and it doesn't care if "rvu" is at the beginning of a line or "VIEW=".)
+
+I know it seems rather convoluted with a lot of steps, but I haven't found a simpler way to do it.  I hope I didn't miss any steps or screw anything up, as I'm going from memory, here.  Let me know if you get it to work, or come up with a simpler process.
+
+Cheers,
+-Greg
+
+------------
+From: "Shakespeare, Robert A." <shakespe@indiana.edu>
+Date: October 19, 2017 6:59:36 AM PDT
+
+Greg, when using ranimate, I want to confirm the contents of the VIEWFILE=   file…
+ 
+The anim1.vf  file, from the man page, contains a sequential listing which looks like this?
+ 
+-vtv -vp 12.9191 83.8 4.81579 -vd -0.248137 1.5194e-17 0.0304673 -vu 0 0 1 -vh 45 -vv 45 -vo 0 -va 0 -vs 0 -vl 0
+ 
+-vtv -vp 12.9191 83.9 4.81579 -vd -0.248137 1.5194e-17 0.0304673 -vu 0 0 1 -vh 45 -vv 45 -vo 0 -va 0 -vs 0 -vl 0
+ 
+-vtv -vp 12.9191 84.0 4.81579 -vd -0.248137 1.5194e-17 0.0304673 -vu 0 0 1 -vh 45 -vv 45 -vo 0 -va 0 -vs 0 -vl 0
+ 
+We would create a script that would generate the key frame vantage points, such as in this case, motion in the “y” direction?
+ 
+Thanks,
+ 
+Rob

@@ -1,0 +1,1 @@
+VIEW= -vtv -vp ${px} ${py} ${pz} -vd ${dx} ${dy} ${dz} -vh 71 -vv 30

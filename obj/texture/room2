@@ -1,0 +1,79 @@
+#
+#  A test room with track lighting
+#
+
+void plastic ivory
+0
+0
+5                0.5                0.4                0.4                  0                0.3
+
+void plastic brown
+0
+0
+5                0.2                0.1                0.1                  0                0.4
+
+void metal brass
+0
+0
+5	0.68	0.27	0.002	0.95	0
+
+!genbox brass track 70 2 3 | xform -t 35 94 88.5
+
+!xform -n flood1 -s 12 -rx -90 -rx 20 -t 40 84 90 flood
+!xform -n flood2 -s 12 -rx -90 -rx 25 -t 60 84 90 flood
+!xform -n flood3 -s 12 -rx -90 -rx 0 -t 80 84 90 flood
+!xform -n flood4 -s 12 -rx -90 -rx 10 -t 100 84 90 flood
+
+ivory polygon wall0
+0
+0
+12
+                  0                 96                  0
+                  0                 96                108
+                  0                  0                108
+                  0                  0                  0
+
+ivory polygon wall1
+0
+0
+12
+                144                  0                108
+                144                 96                108
+                144                 96                  0
+                144                  0                  0
+
+ivory polygon wall2
+0
+0
+12
+                  0                  0                108
+                  0                 96                108
+                144                 96                108
+                144                  0                108
+
+ivory polygon wall3
+0
+0
+12
+                144                  0                  0
+                144                 96                  0
+                  0                 96                  0
+                  0                  0                  0
+
+ivory polygon ceiling
+0
+0
+12
+                144                 96                  0
+                144                 96                108
+                  0                 96                108
+                  0                 96                  0
+
+brown polygon floor
+0
+0
+12
+                  0                  0                108
+                144                  0                108
+                144                  0                  0
+                  0                  0                  0

@@ -1,0 +1,20 @@
+{
+	cyl.cal - 2d coordinate mapping onto cylinder.
+
+	Unit radius cylinder with axis along z.
+
+	A1 = picture height/width
+	A2 = unit scale for pattern
+}
+
+cyl_u = (atan2(Py,Px)+PI)/A2;
+cyl_v = Pz/A2;
+
+cyl_tile_u = mod(cyl_u,pic_width);
+cyl_tile_v = mod(cyl_v,pic_height);
+
+cyl_match_u = tri(cyl_u,pic_width);
+cyl_match_v = tri(cyl_v,pic_height);
+
+pic_width = max(1,1/A1);
+pic_height = max(1,A1);

@@ -1,0 +1,17 @@
+#
+#  A plain old glass window
+#
+
+void glass window_glass
+0
+0
+3	.96	.96	.96
+
+window_glass polygon window
+0
+0
+12
+               23.5                 43                 30
+               23.5                 26                 30
+              -23.5                 26                 30
+              -23.5                 43                 30

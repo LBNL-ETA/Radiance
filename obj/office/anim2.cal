@@ -1,0 +1,11 @@
+vp(i,t) = origin(i) + sin(t)*x(i) + cos(t)*y(i);
+
+vd(i,t) = (center(i) - vp(i,t))/12;
+
+origin(i) = select(i,-17,32,-3);
+center(i) = select(i,-22.8,24.7,1.7);
+x(i) = select(i,3.13,-.78,.42);
+y(i) = select(i,.06,1.72,2.76);
+
+$1=vp(1,$1); $2=vp(2,$1); $3=vp(3,$1);
+$4=vd(1,$1); $5=vd(2,$1); $6=vd(3,$1);

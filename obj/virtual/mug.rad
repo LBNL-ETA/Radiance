@@ -1,0 +1,196 @@
+################################
+# Created in 1992 by Greg Ward #
+# Windows and Lighting Program #
+# Lawrence Berkeley Laboratory #
+# Berkeley, CA	94720	       #
+################################
+#
+# Coffee mug from office model
+#
+#	Units = centimeters
+#	(0,0,0) at middle of bottom
+#	Y-axis points towards handle
+#	Z-axis points up
+#
+# Overall dimensions are 8.25 by 11.4 by 9.4 centimeters
+#
+################################
+# xform -rx 90 -rz 90 -s 2.54
+
+void plastic light_ceramic
+0
+0
+5		0.65		    0.4		       0.5		  0.1		       0
+
+light_ceramic ring butt
+0
+0
+8
+		  0		     0			0
+  0 -0		    -2.54
+		  0		  3.81
+
+light_ceramic cone bottom_rim
+0
+0
+8
+		  0		     0			0
+ -0  0		   0.3175
+	       3.81		4.1275
+
+light_ceramic cylinder outside
+0
+0
+7
+ -0  0		   0.3175
+ -0  0		   9.2075
+	     4.1275
+
+light_ceramic cone rim_outside
+0
+0
+8
+ -0  0		   9.2075
+ -0  0		  9.36625
+	     4.1275	       3.96875
+
+light_ceramic ring rim
+0
+0
+8
+ -0  0		  9.36625
+ -0  0		     2.54
+	    3.96875		  3.81
+
+light_ceramic cup rim_inside
+0
+0
+8
+ -0  0		  9.36625
+ -0  0		   9.2075
+	       3.81	       3.65125
+
+light_ceramic tube inside
+0
+0
+7
+ -0  0		   9.2075
+ -0  0		  0.47625
+	    3.65125
+
+light_ceramic ring bottom
+0
+0
+8
+ -0  0		  0.47625
+ -0  0		     2.54
+	    3.65125		     0
+
+light_ceramic sphere handle.s0
+0
+0
+4  0		   3.81		      2.54		0.508
+
+light_ceramic cylinder handle.c1
+0
+0
+7
+  0		  3.81		     2.54
+  0	    5.37269436	       3.52598736
+	      0.508
+
+light_ceramic sphere handle.s1
+0
+0
+4  0	     5.37269436		3.52598736		0.508
+
+light_ceramic cylinder handle.c2
+0
+0
+7
+  0	    5.37269436	       3.52598736
+  0	     6.3103125	       4.53429624
+	      0.508
+
+light_ceramic sphere handle.s2
+0
+0
+4  0	      6.3103125		4.53429624		0.508
+
+light_ceramic cylinder handle.c3
+0
+0
+7
+  0	     6.3103125	       4.53429624
+  0	    6.71214812	       5.49795954
+	      0.508
+
+light_ceramic sphere handle.s3
+0
+0
+4  0	     6.71214812		5.49795954		0.508
+
+light_ceramic cylinder handle.c4
+0
+0
+7
+  0	    6.71214812	       5.49795954
+  0		6.6675		     6.35
+	      0.508
+
+light_ceramic sphere handle.s4
+0
+0
+4  0		 6.6675		      6.35		0.508
+
+light_ceramic cylinder handle.c5
+0
+0
+7
+  0		6.6675		     6.35
+ -0	    6.26566438	       7.02344798
+	      0.508
+
+light_ceramic sphere handle.s5
+0
+0
+4 -0	     6.26566438		7.02344798		0.508
+
+light_ceramic cylinder handle.c6
+0
+0
+7
+ -0	    6.26566438	       7.02344798
+ -0	     5.5959375	       7.45132876
+	      0.508
+
+light_ceramic sphere handle.s6
+0
+0
+4 -0	      5.5959375		7.45132876		0.508
+
+light_ceramic cylinder handle.c7
+0
+0
+7
+ -0	     5.5959375	       7.45132876
+ -0	    4.74761814	       7.56667016
+	      0.508
+
+light_ceramic sphere handle.s7
+0
+0
+4 -0	     4.74761814		7.56667016		0.508
+
+light_ceramic cylinder handle.c8
+0
+0
+7
+ -0	    4.74761814	       7.56667016
+ -0		  3.81		   7.3025
+	      0.508
+
+light_ceramic sphere handle.s8
+0
+0
+4 -0		   3.81		    7.3025		0.508

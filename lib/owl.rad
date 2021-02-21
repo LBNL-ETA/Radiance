@@ -1,0 +1,24 @@
+#
+# Owl model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; faces +X; Z-axis is up.
+# Owl is approx. 26cm tall
+#
+
+void colorpict owl_pat
+7 lim_r lim_g lim_b owl.hdr climit.cal Lu Lv
+0
+3 0.285629779	0.155994847	0.0731877171
+
+owl_pat plastic owl_clay
+0
+0
+5 1 1 1 0 0
+
+owl_clay mesh owl
+9 owl.rtm -t 9.42 -3 128 -rz -60 -s 0.1
+0
+0

@@ -1,0 +1,39 @@
+{
+	Specular transmission through a metal grating aligned with x-y plane.
+
+		Greg Ward for Visarc	8/25/2004
+
+	Use in a BRTDfunc material as follows:
+
+		void BRTDfunc grating
+		10
+			0	0	0
+			spectrans spectrans spectrans
+			0	0	0
+			grating.cal
+		0
+		13
+			rrefl grefl brefl
+			rrefl grefl brefl
+			rtrns gtrns btrns
+			A10 A11 A12 A13
+
+	The additional BRTDfunc parameters are defined as follows:
+
+		A10 -	Grating bar vertical depth
+		A11 -	Grating bar thickness
+		A12 -	Grating spacing in x-direction (center-to-center)
+		A13 -	Grating spacing in y-direction (center-to-center)
+
+	The diffuse reflectance and transmittance can be approximated from
+	the diffuse reflectance Rd of the underlying material as follows:
+
+		refl = Rd*min(1, A11/A12 + A11/A13 + .5*PI*A10/(A12+A13))
+		trns = Rd*(1-A11/A12-A11/A13)*min(1, .5*PI*A10/(A12+A13))
+}
+
+aDx = abs(Dx); aDy = abs(Dy); aDz = abs(Dz);
+
+spectrans = if(1e-6 - aDz, 0,
+		max(0, (arg(12) - arg(11) - arg(10)*aDx/aDz)/arg(12)) *
+		max(0, (arg(13) - arg(11) - arg(10)*aDy/aDz)/arg(13)) );

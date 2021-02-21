@@ -1,0 +1,99 @@
+#
+# The Coatrack.
+# Height is 65 inches, base radius is 7 inches, and the 
+# hooks at the top protrude six inches on top and four inches
+# on the bottom.
+#
+
+# Coatrack Base
+
+!genrev brass base 'if(t-.7, z2((t-.7)/.3), z1(t/.7))'\
+	'if(t-.7, r2((t-.7)/.3), r1(t/.7))' 11 -s\
+	-e 'z1(t)=hermite(0,3,5,3,t); r1(t)=hermite(7,2,0,-1,t)'\
+	-e 'z2(t)=hermite(3,5,3,0,t); r2(t)=hermite(2,0.4,-1,-5,t)'
+
+brass ring base_bottom
+0
+0
+8
+	0 	0	0
+	0	0	-1
+	0	7
+
+
+# Coatrack Stem
+
+brass cylinder coat_stem
+0
+0
+7
+	0	0	1
+	0 	0	65
+	.5
+
+brass sphere top_ball
+0
+0
+4
+	0  	0	65
+	.75
+
+
+# Coatrack Hooks
+
+# xform -n hook.0 -i 0 -rz 90
+
+!genworm brass hook 'hermite(3.25,4.25,-12,12,t)' 0\
+	'hermite(58,62.5,-9,6,t)' .25 10 | xform -e -n hook.0 -i 0 -rz 90
+
+brass sphere hook.0.lball
+0
+0
+4               3.25                  0                 58                0.5
+
+brass sphere hook.0.uball
+0
+0
+4               4.25                  0               62.5                0.5
+# xform -n hook.1 -i 1 -rz 90
+
+!genworm brass hook 'hermite(3.25,4.25,-12,12,t)' 0\
+	'hermite(58,62.5,-9,6,t)' .25 10 | xform -e -n hook.1 -i 1 -rz 90
+
+brass sphere hook.1.lball
+0
+0
+4  1.98998532496e-16               3.25                 58                0.5
+
+brass sphere hook.1.uball
+0
+0
+4  2.60228850187e-16               4.25               62.5                0.5
+# xform -n hook.2 -i 2 -rz 90
+
+!genworm brass hook 'hermite(3.25,4.25,-12,12,t)' 0\
+	'hermite(58,62.5,-9,6,t)' .25 10 | xform -e -n hook.2 -i 2 -rz 90
+
+brass sphere hook.2.lball
+0
+0
+4              -3.25  3.97997064992e-16                 58                0.5
+
+brass sphere hook.2.uball
+0
+0
+4              -4.25  5.20457700375e-16               62.5                0.5
+# xform -n hook.3 -i 3 -rz 90
+
+!genworm brass hook 'hermite(3.25,4.25,-12,12,t)' 0\
+	'hermite(58,62.5,-9,6,t)' .25 10 | xform -e -n hook.3 -i 3 -rz 90
+
+brass sphere hook.3.lball
+0
+0
+4 -5.96995597488e-16              -3.25                 58                0.5
+
+brass sphere hook.3.uball
+0
+0
+4 -7.80686550562e-16              -4.25               62.5                0.5

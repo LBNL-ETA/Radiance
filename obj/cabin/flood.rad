@@ -1,0 +1,18 @@
+# ies2rad -m .25 -df -t default
+# Dimensions in feet
+#<IES #6, R-40 FLOOD WITH SPECULAR REFLECTOR SKIRT; 45 DEG CUTOFF
+#<LAMP=R-40 FLOOD
+# 0 watt luminaire, lamp*ballast factor = 1
+
+void spotlight flood_light
+0
+0
+7 60 60 60 30 0 0 -.2
+
+flood_light ring flood.d
+0
+0
+8
+	0 0 -0.00082021
+	0 0 -1
+	0 0.375

@@ -1,0 +1,107 @@
+#!/bin/csh -f
+
+set destdir=/s4/cindy/anim1
+set tempdir=anim1/tmp
+set octree=oct/nightcabin
+set view=(-vtv -vh 60 -vv 49 -vu 0 0 1 -x 1024 -y 964 -p 0)
+set pfcom=(pfilt -1 -x 512 -y 482)
+set rtargs=(-dr 1 -av .003 .003 .003)
+set rpcom=(rpict $rtargs -t 3600 -sj .8)
+set rccom=(rcalc -f anim1/spline.cal -f anim1/keys2.cal -o anim1/view2.fmt)
+set nframes=104
+set sample=8
+set start=0
+set finish=104
+
+if ($#argv >= 1) set start=$1
+if ($#argv >= 2) set finish=$2
+if ($#argv >= 3) set sample=$3
+
+umask 2
+set time=15
+echo Starting job on `hostname`...
+date
+echo csh PID == $$
+set echo
+# make $octree
+if ( ! -d $destdir ) then
+	mkdir $destdir
+endif
+if ( ! -d $tempdir ) then
+	mkdir $tempdir
+endif
+set i=$start
+while ($i <= $finish)
+	set cur=$i
+	if ( $i < 10 ) set cur=0$cur
+	if ( $i < 100 ) set cur=0$cur
+	if ( -f $destdir/L$cur.tga.Z ) goto endloop
+	@ l = $i - ( $i % $sample )
+	set before=$l
+	@ n = $before + $sample
+	set after=$n
+	if ( $l < 10 ) set before=0$before
+	if ( $l < 100 ) set before=0$before
+	if ( $n < 10 ) set after=0$after
+	if ( $n < 100 ) set after=0$after
+	if ( ! -f $tempdir/$before.pic ) then
+		if ( -f $tempdir/$before.unf ) then
+			mv $tempdir/$before.unf $tempdir/$before.rvr
+			set rpvw=(-r $tempdir/$before.rvr)
+		else
+			set rpvw=($view `$rccom -n -e "f=$l"`)
+		endif
+		$rpcom $rpvw -z $tempdir/$before.z $octree \
+			> $tempdir/$before.unf
+		if ( $status ) exit 1
+		mv $tempdir/$before.unf $tempdir/$before.pic
+		sync
+	endif
+	set exposure=120
+	if ( $i % $sample == 0 ) then
+		if ( $l >= $start + $sample ) then
+			@ l -= $sample
+			set before=$l
+			if ( $l < 10 ) set before=0$before
+			if ( $l < 100 ) set before=0$before
+			rm -f $tempdir/$before.pic $tempdir/$before.z
+		endif
+		$pfcom -e $exposure $tempdir/$cur.pic > $tempdir/$cur.fin
+	else
+		if ( ! -f $tempdir/$after.pic ) then
+			if ( -f $tempdir/$after.unf ) then
+				mv $tempdir/$after.unf $tempdir/$after.rvr
+				set rpvw=(-r $tempdir/$after.rvr)
+			else
+				set rpvw=($view `$rccom -n -e "f=$n"`)
+			endif
+			$rpcom $rpvw -z $tempdir/$after.z $octree \
+				> $tempdir/$after.unf
+			if ( $status ) exit 1
+			mv $tempdir/$after.unf $tempdir/$after.pic
+			sync
+		endif
+		if ( $i - $l <= $sample / 2 ) then
+			pinterp $view `$rccom -n -e "f=$i"` \
+				-fs 5 -fr "$rtargs $octree" \
+				$tempdir/$before.pic $tempdir/$before.z \
+				$tempdir/$after.pic $tempdir/$after.z \
+				| $pfcom -e $exposure > $tempdir/$cur.fin
+		else
+			pinterp $view `$rccom -n -e "f=$i"` \
+				-fs 5 -fr "$rtargs $octree" \
+				$tempdir/$after.pic $tempdir/$after.z \
+				$tempdir/$before.pic $tempdir/$before.z \
+				| $pfcom -e $exposure > $tempdir/$cur.fin
+		endif
+	endif
+	ra_t16 $tempdir/$cur.fin $tempdir/$cur.tga
+	if ($status) exit 1
+	compress -v < $tempdir/$cur.tga > $destdir/L$cur.tga.Z
+	if ($status) exit 1
+	chmod 444 $destdir/L$cur.tga.Z
+	rm -f $tempdir/$cur.fin $tempdir/$cur.tga
+	sync
+endloop:
+        @ i++
+end

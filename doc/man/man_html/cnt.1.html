@@ -1,0 +1,38 @@
+<!--#exec cmd="header cnt" -->
+<ul>
+</ul><H2>NAME </H2><ul>
+
+cnt - index counter
+
+</ul><H2>SYNOPSIS </H2><ul>
+
+<b>cnt</b> 
+N ..
+
+</ul><H2>DESCRIPTION </H2><ul>
+
+<i>Cnt</i> 
+counts from 0 to N-1, producing N lines of output.
+If multiple arguments are given,
+<i>cnt</i> 
+produces a nested array of values where the final counter
+rotates fastest through its range.
+<i>Cnt</i> 
+is most useful in conjunction with
+<i>rcalc(1)</i> 
+to produce array values.
+
+</ul><H2>EXAMPLE </H2><ul>
+
+To create a 3 by 5 array:
+<p><dl compact><dt><dd>cnt 3 5
+</dl>
+</ul><H2>AUTHOR </H2><ul>
+
+Greg Ward
+
+</ul><H2>SEE ALSO </H2><ul>
+
+neaten(1), rcalc(1), rlam(1), total(1)
+</ul>
+<!--#exec cmd="trailer" -->

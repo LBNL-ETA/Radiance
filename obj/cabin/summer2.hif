@@ -1,0 +1,11 @@
+EYESEP= .2
+geometry= living.oct
+geometry= bed.oct
+geometry= bath.oct
+section= 14 1 3 10 0 0 0 14 0 0 0 4
+section= 1 1 3 8 0 0 0 8 0 0 0 4
+section= .5 14 3 7 0 0 0 2 0 0 0 3
+portals= portals.rad mirrors.rad
+RIF= insummer.rif AMB=summer.amb QUA=Hi
+REPORT= 0
+VDIST= T

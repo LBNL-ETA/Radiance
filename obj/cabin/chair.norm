@@ -1,0 +1,16 @@
+# 
+# The cabin chairs measure 33" tall, 30" wide, and 22" deep.
+# The scale is in inches.
+# The origin is at the base of the chair, at the back left corner
+# (to the sitter's left, and back).
+#
+
+!genbox brown_tweed back 30 5 33 -r 1
+
+!genbox brown_tweed left_arm 5 17 25 -r 1 | xform -t 0 5 0
+
+!genbox brown_tweed right_arm 5 17 25 -r 1 | xform -t 25 5 0
+
+!genbox brown_tweed base 20 17 12 -r 1 | xform -t 5 5 0
+
+!genbox brown_tweed cushion 20 17 5 -r 1 | xform -t 5 5 12

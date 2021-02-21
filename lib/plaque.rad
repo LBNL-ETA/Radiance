@@ -1,0 +1,24 @@
+#
+# Plaque model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; faces +X; Z-axis is up.
+# Plaque is approx. 10cm tall by 20cm wide by 4cm thick
+#
+
+void colorpict plaque_pat
+7 lim_r lim_g lim_b plaque.hdr climit.cal Lu Lv
+0
+3 0.285629779	0.155994847	0.0731877171
+
+plaque_pat plastic plaque_clay
+0
+0
+5 1 1 1 0 0
+
+plaque_clay mesh plaque
+9 plaque.rtm -t -4.57 3.1 97.55 -rx 90 -s 0.1
+0
+0

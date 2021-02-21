@@ -1,0 +1,40 @@
+{
+	Definitions for PLINK-specific materials
+
+	This file assumes meters.
+
+	Created:	03Sept91	Greg Ward
+	Last modified:	03Sept91
+}
+
+{ pattern for criss-crossed wires in armored glass (armee) }
+	wire_width : .001;
+	wire_spacing : .011;
+	u_armor = wire_width - mod(U,wire_spacing);
+	v_armor = wire_width - mod(V,wire_spacing);
+arm_wire = if(or(u_armor,v_armor), .2, 1);
+
+{ texture for bathroom-style glass (granule) }
+	gran_scale : .002;
+	gran_mag = .3*Rdot;
+gran_dx = gran_mag * noise3a(Px/gran_scale,Py/gran_scale,Pz/gran_scale);
+gran_dy = gran_mag * noise3b(Px/gran_scale,Py/gran_scale,Pz/gran_scale);
+gran_dz = gran_mag * noise3c(Px/gran_scale,Py/gran_scale,Pz/gran_scale);
+
+{ texture for "hammered" glass (martele) }
+	mg_scale : .001;
+	mg_mag = .15*Rdot;
+	mb_scale : .01;
+	mb_cvr : .2;
+	mb_val = noise3(Px/mb_scale,Py/mb_scale,Pz/mb_scale);
+	mb_true = mb_cvr/2 - abs(mb_val);
+	mb_mag = mb_val/(mb_cvr/2)*Rdot;
+mar_dx = if(mb_true,
+		mb_mag*noise3a(Px/mb_scale,Py/mb_scale,Pz/mb_scale),
+		mg_mag*noise3a(Px/mg_scale,Py/mg_scale,Pz/mg_scale));
+mar_dy = if(mb_true,
+		mb_mag*noise3b(Px/mb_scale,Py/mb_scale,Pz/mb_scale),
+		mg_mag*noise3b(Px/mg_scale,Py/mg_scale,Pz/mg_scale));
+mar_dz = if(mb_true,
+		mb_mag*noise3c(Px/mb_scale,Py/mb_scale,Pz/mb_scale),
+		mg_mag*noise3c(Px/mg_scale,Py/mg_scale,Pz/mg_scale));

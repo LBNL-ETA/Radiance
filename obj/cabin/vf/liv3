@@ -1,0 +1,2 @@
+rview -vtv -vp 26 10 3.5 -vd -1 0 0 -vu 0 0 1 -vh 60 -vv 60 -vo 0 -va 0 -vs 0 -vl 0
+rview -vtv -vp 26 10 3.5 -vd -1 0 0 -vu 0 0 1 -vh 60 -vv 60 -vo 4 -va 0 -vs 0 -vl 0

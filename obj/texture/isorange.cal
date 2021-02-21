@@ -1,0 +1,36 @@
+{
+	Use z-buffer to determine pixels belonging to orange in picture.
+
+	5/24/01	GW
+
+	Usage:
+		rad tex1hi.rif
+		rad tex2hi.rif
+		pvalue -r -h -b -df `getinfo -d < tex2raw_std.pic` \
+			tex2raw_std.zbf \
+		| pcomb -f isorange.cal -e 'w=if(isorange,2,3)' \
+			-e 'ro=ri(w);go=gi(w);bo=bi(w)' \
+			- tex1raw_std.pic tex2raw_std.pic \
+		| pfilt -1 -e 1.5 -x /3 -y /3 -r .25 \
+		> tex1orange.pic
+}
+
+OCX : 52.7;			{ orange center }
+OCY : 1.2;
+OCZ : 49.8;
+ORAD : 1.1;			{ orange radius }
+
+close(a,b) : if(a-b+.05, b-a+.05, -1);
+
+OxD = Ox(2) - OCX;
+OyD = Oy(2) - OCY;
+OzD = Oz(2) - OCZ;
+qa : 1;				{ compute quadratic equation for intersect }
+qb = 2*(Dx(2)*OxD + Dy(2)*OyD + Dz(2)*OzD);
+qc = OxD*OxD + OyD*OyD + OzD*OzD - ORAD*ORAD;
+
+det = qb*qb - 4*qa*qc;
+
+odist = if(-det, 1e10, (-qb - sqrt(det))/(2*qa));
+
+isorange = close(gi(1), odist);

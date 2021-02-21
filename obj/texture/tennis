@@ -1,0 +1,23 @@
+#
+#  A tennis ball
+#
+
+void brightfunc tennis_pat
+4 tns_pat tennis.cal -s .95
+0
+0
+
+tennis_pat texfunc tennis_texture
+6 tns_dx tns_dy tns_dz tennis.cal -s .95
+0
+0
+
+tennis_texture plastic tennis_cover
+0
+0
+5 .7 .7 .7 .05 0
+
+tennis_cover sphere tennis_ball
+0
+0
+4 0 0 0 .95

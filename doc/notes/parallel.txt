@@ -1,0 +1,135 @@
+         Parallel Rendering on the ICSD SPARC-10's
+
+                         Greg Ward
+              Energy and Environment Division
+
+
+The Information and Computing  Services  Division  was  kind
+enough  to  make  10 Sun SPARC-10's available on the network
+for enterprising individuals who wished to  perform  experi-
+ments  in  distributed  parallel  processing.   This article
+describes the method we  developed  to  efficiently  run  an
+incompletely  parallelizable  rendering program in a distri-
+buted processing environment.
+
+The lighting  simulation  and  rendering  software  we  have
+developed over the past 8 years, Radiance, has only recently
+been made to work in parallel environments.  Although paral-
+lel ray tracing programs have been kicking around the graph-
+ics community for several years, Radiance  uses  a  modified
+ray  tracing  algorithm  that does not adapt as readily to a
+parallel implementation.  The main difference is that  Radi-
+ance  produces  illumination  information  that  is globally
+reused during the rendering of  an  image.   Thus,  spawning
+disjoint  processes  to  work  on disjoint parts of an image
+will  not  result  in  the  linear  speedup  desired.   Each
+independent  process  would  create its own set of "indirect
+irradiance" values for its section of the image, and many of
+these  values  would be redundant and would represent wasted
+CPU time.  It is therefore essential that  this  information
+be  shared  among  different  processes  working on the same
+scene.  The question is, how to do it?
+
+To minimize incompatibilities with different UNIX  implemen-
+tations,  we decided early on in our parallel rendering work
+to rely on the Network File System (NFS) only, imperfect  as
+it  is.   The  chief  feature that enables us to do parallel
+rendering is NFS file locking, which is  supported  by  most
+current UNIX implementations.  File locking allows a process
+on the same machine  or  a  different  machine  to  restrict
+access  on  any  section of an open file that resides either
+locally or on an NFS-mounted filesystem.  Thus, data-sharing
+is  handled  through  the  contents  of an ordinary file and
+coordinated by the network lock manager.  This method can be
+slow  in  states  of  high contention, therefore access fre-
+quency must be kept low.
+
+In this article, we will  refer  to  processes  rather  than
+machines because the methods presented work both in cases of
+multiple  processors  on  a  single  machine  and   multiple
+machines distributed over a network.
+
+The method we adopted for sharing  our  indirect  irradiance
+values  is  simple.   Each  process  caches together a small
+number of values (on the order of 16 --  enough  to  fill  a
+standard  UNIX buffer) before appending these to a file.  In
+preparation for writing out its buffer, the  process  places
+an  exclusive lock on the file, then checks to see if it has
+grown since the last time.  If it has, the process reads  in
+the  new information, assuming it has come from another pro-
+cess that is legitimately working on  this  file.   Finally,
+the  process flushes its buffer and releases the lock on the
+file.  The file thus contains the cumulative indirect  irra-
+diance  calculations of all the processes, and every process
+has this information stored also in  memory  (up  until  the
+last time it flushed its buffer).  Saving the information to
+a file has the further advantage of providing  a  convenient
+way to reuse the data for later renderings.
+
+The image to be rendered is divided into many small  pieces,
+more  pieces  than  there  are processors.  This way, if one
+piece takes longer than the others, the processors that  had
+easy  pieces  are not all waiting for the processor with the
+difficult piece to finish.  Coordination  between  processes
+is  again  handled by the network lock manager.  A file con-
+tains the position of the last piece being worked on, and as
+soon  as  a processor finishes its piece, it locks the file,
+finds out what to work on next, increments the position  and
+unlocks the file again.  Thus, there is no need for a single
+controlling process, and rendering  processes  may  be  ini-
+tiated and terminated at will.
+
+ICSD's offer to use their farm of SPARC-10's  was  an  ideal
+opportunity to test our programs under real conditions.  The
+problem at hand was producing  numerically  accurate,  high-
+resolution renderings of the lower deck of a ship under dif-
+ferent lighting conditions.  Three images were rendered  one
+at  a  time,  with  all 10 SPARC-10 machines working on each
+image simultaneously.  The wall time required to render  one
+image  was about 4.3 hours.  The first machine finished with
+all it could do shortly  after  the  last  image  piece  was
+assigned  at 2.8 hours.  Thus, many of the processors in our
+test run were done before the  entire  image  was  complete.
+This  is  a  problem  of  not  breaking the image into small
+enough pieces for efficient processor allocation.
+
+For the time that the processors were running, all  but  one
+had  98%  or 99% CPU utilization.  The one exception was the
+file server, which had 94% CPU utilization.  This means that
+the processors were well saturated while working on our job,
+not waiting for image piece assignments, disk  access,  etc.
+
+If  we  include the time at the end when some processors had
+finished while others were still going,  the  effective  CPU
+utilization  averaged  84%,  with the lowest at 75%.  Again,
+this low figure was due to the fact that the picture  should
+have been divided into more than the 49 pieces we specified.
+(The overall utilization was really better than this,  since
+we  set  the  jobs  up to run one after the other and once a
+processor finished its part on one image it went on to  work
+on the next image.)
+
+The real proof of a parallel implementation is not CPU util-
+ization,  however,  it  is  the  speedup factor.  To examine
+this, it was necessary to start the job over, running  on  a
+single processor.  Running alone, one SPARC-10 took about 35
+hours to finish an image, with 99% CPU utilization.  That is
+about  8.2  times  as  long as the total time required by 10
+processors to finish the image (due mostly to  idle  proces-
+sors  at the end).  This ratio, 8.2/10, is very close to the
+average effective CPU utilization value of  84%,  indicating
+that  parallel processing does not result in a lot of redun-
+dant calculation.
+
+Our experience showed that  an  incompletely  parallelizable
+problem  could  be solved efficiently on distributed proces-
+sors using NFS as a data sharing mechanism.   The  principle
+lesson  we  learned from this exercise is that good utiliza-
+tion of multiple processors requires that the job be  broken
+into  small  enough  chunks.  It is perhaps significant that
+the time spent idle, 16%, corresponds roughly to the percen-
+tage of the total time required by a processor to finish one
+piece (since there were about 5 chunks for each  processor).
+If  we  were to decrease the size of the pieces so that each
+processor got 20 pieces on average,  we  should  expect  the
+idle time to go down to around 5%.

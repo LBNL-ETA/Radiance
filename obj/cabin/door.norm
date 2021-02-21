@@ -1,0 +1,51 @@
+# 
+# Cabin Door
+# Scale is in inches;
+# Origin is at floor, 1" below bottom of door and .5" from hinge edge of door.
+# This door fits in a frame slightly less than 36" by 78".
+# The materials door_paint & brass need to be defined.
+#
+
+!genbox door_paint door 35 1.375 76 | xform -t .5 0 1
+
+brass sphere inner_doorknob
+0
+0
+4 33.125 -1.5 36 1
+
+brass cone inner_knobstem
+0
+0
+8
+	33.125	0	36
+	33.125	-.53	36
+	.8	.3
+
+brass ring inner_knobplate
+0
+0
+8
+	33.125	-.01	36
+	0	-1	0
+	1.5	.8
+
+brass sphere outer_doorknob
+0
+0
+4             33.125              2.875                 36                  1
+
+brass cone outer_knobstem
+0
+0
+8
+             33.125              1.375                 36
+             33.125              1.905                 36
+                0.8                0.3
+
+brass ring outer_knobplate
+0
+0
+8
+             33.125              1.385                 36
+                  0                  1                  0
+                1.5                0.8

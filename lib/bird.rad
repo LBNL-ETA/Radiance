@@ -1,0 +1,24 @@
+#
+# Bird model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; vaguely faces +X; Z-axis is up.
+# Bird is approx. 12cm tall by 16cm wide by 8cm deep
+#
+
+void colorpict bird_pat
+7 lim_r lim_g lim_b bird.hdr climit.cal Lu Lv
+0
+3 0.359257151	0.174700551	0.0668882395
+
+bird_pat plastic bird_clay
+0
+0
+5 1 1 1 0 0
+
+bird_clay mesh bird
+7 bird.rtm -t 0 -37 108.1 -s 0.1
+0
+0

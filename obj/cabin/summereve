@@ -1,0 +1,41 @@
+# The sky over our little cabin scene
+# in Jasper, Alberta Canada at 7 pm (standard time) on July 12th.
+
+!gensky 7 12 19 -a 52.53 -o 118.05 -m 105 -g .2
+
+skyfunc glow ground_glow
+0
+0
+4 1.6 .8 .25 0
+
+ground_glow source ground
+0
+0
+4 0 0 -1 180
+
+skyfunc glow sky_glow
+0
+0
+4 .8 .8 1 0
+
+sky_glow source sky
+0
+0
+4 0 0 1 180
+
+# Landscape material for summer days
+
+void brightfunc filthy
+4 dirt dirt.cal -s 2
+0
+1 .75
+
+filthy colorpict needlepat
+9 red green blue forestfl.pic jigglepic.cal fjiggletile_u fjiggletile_v -s 2
+0
+1 .2
+
+needlepat plastic groundmat
+0
+0
+5  .25  .2  .15  0  0

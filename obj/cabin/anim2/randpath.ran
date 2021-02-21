@@ -1,0 +1,10 @@
+DIR=/Scratch/Pictures/randp
+RIF=innight.rif
+VIEWF=randpath.vf
+host= localhost 2
+DISKSP = 1000
+INTERP = 0
+OVERS = 2
+MBLUR = .8 8
+RES = 1920 720 0
+render = -ps 1

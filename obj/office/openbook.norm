@@ -1,0 +1,46 @@
+#
+#  An open 9.5" X 6.5" book.
+#
+
+void plastic cover_mat
+0
+0
+5 .2 .2 .5 0 .1
+
+void brighttext page1_text
+2 helvet.fnt page1.txt
+0
+12
+	5.5	0	9
+	-.075	0	0
+	0	0	-.125
+	.05	1	.2
+
+void brighttext page2_text
+2 helvet.fnt page2.txt
+0
+12
+	-2	0	9
+	-.075	0	0
+	0	0	-.125
+	.05	1	.2
+
+page1_text plastic page1_mat
+0
+0
+5 .7 .7 .7 .05 .08
+
+page2_text plastic page2_mat
+0
+0
+5 .7 .7 .7 .05 .08
+
+!genbox cover_mat back_cover 6.5 .125 9.5 | xform -rz -1.1 -t 0 .125 0
+
+!genbox cover_mat front_cover 6.5 .125 9.5 | xform -t -6.5 0 0 -rz 1.1 -t -1.125 .125 0
+
+!genbox cover_mat bind_cover 1.125 .125 9.5 | xform -t -1.125 0 0
+
+!genprism page1_mat page1 pageverts -l 0 0 9.3 | xform -t 0 0 .1
+
+!genprism page2_mat page2 pageverts -l 0 0 9.3 | xform -mx -t -1.125 0 .1

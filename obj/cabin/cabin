@@ -1,0 +1,630 @@
+# This describes the cabin geometry.
+# All units are in feet; 
+# origin is at inside southwest corner of cabin, at floor level.
+# The y-axis points north.
+# The overall outside dimensions are 28 feet by 19 feet,
+# and the foundation extends to negative 3 feet.
+
+
+# Cabin Foundation
+
+!genbox concrete foundation 27.8 18.8 3 | xform -t -.4 -.4 -3.0001 
+
+
+# Cabin Porch
+
+!genbox xybrick porch 6 3 3 | xform -t 18 18.5 -3.3
+
+
+# Cabin Floor
+
+wood_floor polygon floor
+0
+0
+12  
+	0	0	0
+	27	0	0
+	27	18	0
+	0	18	0
+
+
+# South Wall
+
+!genprism wood_panel south_wall 16  0 0  5 0  5 6.5  11 6.5  11 2.5  5 2.5\
+	5 0  17 0  17 6.5  25 6.5  25 2.5  17 2.5  17 0  27 0  27 8  0 8\
+	-l 0 0 -.5 | xform -t 0 0 .5 -rx 90
+	
+
+# Southwest Windows in Bedroom
+
+!xform -e -n southwest_window -t 5 -.5 0 -a 3 -t 2 0 0 winframe.norm
+
+
+# Southeast Windows in Livingroom
+
+!xform -e -n southeast_window -t 17 -.5 0 -a 4 -t 2 0 0 winframe.norm
+
+
+# Southeast Wall
+
+!genprism wood_panel southeast_wall 4  -.5 0  -.5 7.5  5.5 13.5  5.5 0\
+	-l 0 0 .5 | xform -rx 90 -rz 90 -t 27 0 0
+
+
+# The Chimney
+
+# xform -t 26.25 5.5 -3
+# genbox fireplace_stone chimney 2 3 22
+
+xzbrick polygon south.chimney
+0
+0
+12
+              28.25                5.5                 -3
+              28.25                5.5                 19
+              26.25                5.5                 19
+              26.25                5.5                 -3
+
+# Add hole for fireplace
+yzbrick polygon west.chimney
+0
+0
+30
+              26.25                5.5                 19
+              26.25                8.5                 19
+              26.25                8.5                 -3
+              26.25                5.5                 -3
+		26.25	5.5	1.25
+		26.25	8 	1.25
+		26.25	8 	2.75
+		26.25	6	2.75
+		26.25	6	1.25
+		26.25	5.5	1.25
+
+
+yxbrick polygon bottom.chimney
+0
+0
+12
+              26.25                8.5                 -3
+              28.25                8.5                 -3
+              28.25                5.5                 -3
+              26.25                5.5                 -3
+
+xzbrick polygon north.chimney
+0
+0
+12
+              28.25                8.5                 -3
+              26.25                8.5                 -3
+              26.25                8.5                 19
+              28.25                8.5                 19
+
+yzbrick polygon east.chimney
+0
+0
+12
+              28.25                5.5                 19
+              28.25                5.5                 -3
+              28.25                8.5                 -3
+              28.25                8.5                 19
+
+yxbrick polygon top.chimney
+0
+0
+12
+              26.25                8.5                 19
+              26.25                5.5                 19
+              28.25                5.5                 19
+              28.25                8.5                 19
+
+
+
+# xform -t 26.25 6 1.25
+# genbox cinderblock fireplace 1.5 2 1.5 -i
+
+cinderblock polygon fireplace.1540
+0
+0
+12
+              26.25                  6               1.25
+              26.25                  6               2.75
+              27.75                  6               2.75
+              27.75                  6               1.25
+
+# The front face of the fireplace is commented out, so we can see in.
+#cinderblock polygon fireplace.4620
+#0
+#0
+#12
+#              26.25                  6               1.25
+#              26.25                  8               1.25
+#              26.25                  8               2.75
+#              26.25                  6               2.75
+
+cinderblock polygon fireplace.2310
+0
+0
+12
+              26.25                  6               1.2501
+              27.75                  6               1.2501
+              27.75                  8               1.2501
+              26.25                  8               1.2501
+
+cinderblock polygon fireplace.3267
+0
+0
+12
+              27.75                  8               2.75
+              26.25                  8               2.75
+              26.25                  8               1.25
+              27.75                  8               1.25
+
+cinderblock polygon fireplace.5137
+0
+0
+12
+              27.75                  8               2.75
+              27.75                  8               1.25
+              27.75                  6               1.25
+              27.75                  6               2.75
+
+cinderblock polygon fireplace.6457
+0
+0
+12
+              27.75                  8               2.75
+              27.75                  6               2.75
+              26.25                  6               2.75
+              26.25                  8               2.75
+
+# Chimney Stack
+
+# xform -s .08333 -t 26.75 6.25 19
+# genprism red_clay chimney_stack - -l 0 0 14
+
+red_clay polygon chimney_stack.e
+0
+0
+39
+           26.83333            7.66661           20.16662
+           27.66663            7.66661           20.16662
+           27.66663            6.33333           20.16662
+              26.75            6.33333           20.16662
+           26.83333               6.25           20.16662
+           27.66663               6.25           20.16662
+           27.74996            6.33333           20.16662
+           27.74996            7.66661           20.16662
+           27.66663            7.74994           20.16662
+           26.83333            7.74994           20.16662
+              26.75            7.66661           20.16662
+              26.75            6.33333           20.16662
+           26.83333            6.33333           20.16662
+
+red_clay polygon chimney_stack.1
+0
+0
+12
+           26.83333            6.33333                 19
+           26.83333            6.33333           20.16662
+              26.75            6.33333           20.16662
+              26.75            6.33333                 19
+
+red_clay polygon chimney_stack.2
+0
+0
+12
+              26.75            6.33333                 19
+              26.75            6.33333           20.16662
+              26.75            7.66661           20.16662
+              26.75            7.66661                 19
+
+red_clay polygon chimney_stack.3
+0
+0
+12
+              26.75            7.66661                 19
+              26.75            7.66661           20.16662
+           26.83333            7.74994           20.16662
+           26.83333            7.74994                 19
+
+red_clay polygon chimney_stack.4
+0
+0
+12
+           26.83333            7.74994                 19
+           26.83333            7.74994           20.16662
+           27.66663            7.74994           20.16662
+           27.66663            7.74994                 19
+
+red_clay polygon chimney_stack.5
+0
+0
+12
+           27.66663            7.74994                 19
+           27.66663            7.74994           20.16662
+           27.74996            7.66661           20.16662
+           27.74996            7.66661                 19
+
+red_clay polygon chimney_stack.6
+0
+0
+12
+           27.74996            7.66661                 19
+           27.74996            7.66661           20.16662
+           27.74996            6.33333           20.16662
+           27.74996            6.33333                 19
+
+red_clay polygon chimney_stack.7
+0
+0
+12
+           27.74996            6.33333                 19
+           27.74996            6.33333           20.16662
+           27.66663               6.25           20.16662
+           27.66663               6.25                 19
+
+red_clay polygon chimney_stack.8
+0
+0
+12
+           27.66663               6.25                 19
+           27.66663               6.25           20.16662
+           26.83333               6.25           20.16662
+           26.83333               6.25                 19
+
+red_clay polygon chimney_stack.9
+0
+0
+12
+           26.83333               6.25                 19
+           26.83333               6.25           20.16662
+              26.75            6.33333           20.16662
+              26.75            6.33333                 19
+
+cinderblock polygon chimney_stack.10
+0
+0
+12
+              26.75            6.33333                 19
+              26.75            6.33333           20.16662
+           27.66663            6.33333           20.16662
+           27.66663            6.33333                 19
+
+cinderblock polygon chimney_stack.11
+0
+0
+12
+           27.66663            6.33333                 19
+           27.66663            6.33333           20.16662
+           27.66663            7.66661           20.16662
+           27.66663            7.66661                 19
+
+cinderblock polygon chimney_stack.12
+0
+0
+12
+           27.66663            7.66661                 19
+           27.66663            7.66661           20.16662
+           26.83333            7.66661           20.16662
+           26.83333            7.66661                 19
+
+cinderblock polygon chimney_stack.13
+0
+0
+12
+           26.83333            7.66661                 19
+           26.83333            7.66661           20.16662
+           26.83333            6.33333           20.16662
+           26.83333            6.33333                 19
+
+# Hearth
+
+# xform -t 25 4 0
+# genbox fireplace_stone hearth 2 6 1.25
+
+xzbrick polygon hearth.south
+0
+0
+12
+                 27                  4                  0
+                 27                  4               1.25
+                 25                  4               1.25
+                 25                  4                  0
+
+yzbrick polygon hearth.west
+0
+0
+12
+                 25                  4               1.25
+                 25                 10               1.25
+                 25                 10                  0
+                 25                  4                  0
+
+xzbrick polygon hearth.north
+0
+0
+12
+                 27                 10                  0
+                 25                 10                  0
+                 25                 10               1.25
+                 27                 10               1.25
+
+yxbrick polygon hearth.top
+0
+0
+12
+                 25                 10               1.25
+                 25                  4               1.25
+                 27                  4               1.25
+                 27                 10               1.25
+
+
+# Northeast Wall
+
+!genprism wood_panel northeast_wall 11  8.5 0  8.5 16.5  9 17  18.5 7.5\
+	18.5 0  11 0  11 2.5  17 2.5  17 6.5  11 6.5  11 0 -l 0 0 .5\
+	| xform -rx 90 -rz 90 -t 27 0 0
+
+
+# Northeast Windows
+
+!xform -e -n northeast_window -rz 90 -t 27.5 11 0 -a 3 -t 0 2 0 winframe.norm
+
+
+# North Wall
+
+!genprism wood_panel north_wall 14  0 0  0 8  27 8  27 0  22.5 0  22.5 6.5\
+	19.5 6.5  19.5 0  17 0  17 6.5  13 6.5  13 2.5  17 2.5  17 0\
+	-l 0 0 .5 | xform -rx 90 -t 0 18.5 0
+
+
+# North Windows
+
+!xform -e -n north_window -rz 180 -t 2 .5 0 -t 13 18 0 \
+	-a 2 -t 2 0 0 winframe.norm
+
+
+# West Wall
+
+!genprism wood_panel west_wall 17  0 -.5  7.5 -.5  17 9  7.5 18.5  0 18.5\
+	0 16.9  6.8 16.9  6.8 14.12  3.1 14.12  3.1 16.9  0 16.9  0 10\
+	6.5 10  6.5 6  2.5 6  2.5 10  0 10 -l 0 0 -.5 | xform -t 0 0 .5 -ry -90
+
+
+# West Bedroom Window
+
+!xform -e -n westbed_window -rz -90 -t -.5 2 0 -t 0 6 0 \
+	-a 2 -t 0 2 0 winframe.norm
+
+
+# Interior Bedroom Wall on Bathroom side
+
+wood_panel polygon nbed_wall
+0
+0
+24
+	0	11	0
+	6	11	0
+	6	11	6.5
+	11	11	6.5
+	11	11	0
+	11.75	11	0
+	11.75	11	15
+	0	11	15
+
+
+# Bedroom Closet
+
+# xform -t 6 11 0
+# genbox wood_panel closet 5 2.75 6.5 -i
+
+# The opening to the closet created by genbox is commented out here,
+# to provide a closet door opening to the closet.
+#wood_panel polygon closet.1540
+#0
+#0
+#12
+#                  6                 11                  0
+#                  6                 11                6.5
+#                 11                 11                6.5
+#                 11                 11                  0
+
+wood_panel polygon closet.4620
+0
+0
+12
+                  6                 11                  0
+                  6              13.75                  0
+                  6              13.75                6.5
+                  6                 11                6.5
+
+# Change floor type
+wood_floor polygon closet.2310
+0
+0
+12
+                  6                 11                  0
+                 11                 11                  0
+                 11              13.75                  0
+                  6              13.75                  0
+
+wood_panel polygon closet.3267
+0
+0
+12
+                 11              13.75                6.5
+                  6              13.75                6.5
+                  6              13.75                  0
+                 11              13.75                  0
+
+wood_panel polygon closet.5137
+0
+0
+12
+                 11              13.75                6.5
+                 11              13.75                  0
+                 11                 11                  0
+                 11                 11                6.5
+
+wood_panel polygon closet.6457
+0
+0
+12
+                 11              13.75                6.5
+                 11                 11                6.5
+                  6                 11                6.5
+                  6              13.75                6.5
+
+# Closet Dowel
+
+light_wood cylinder closet_dowel
+0
+0
+7
+	6	12.25	5
+	11	12.25	5
+	.052
+
+
+# Closet Shelf
+
+!genbox light_wood closet_shelf 5 1.5 .08333 | xform -t 6 12.25 5.33
+
+# Interior Livingroom Wall
+
+!genprism wood_panel livingroom_wall 9  0 0  0 7  6.5 7  6.5 10  0 10\
+	0 14.24626  11.75374 14.24626  17 9  8 0 -l 0 0 .5\
+	| xform -ry -90 -t 12.25 0 0
+
+
+# Outer Bathroom Wall
+
+wood_panel polygon bath.cwall
+0
+0
+12
+	8.738	14.24626	0
+	8.738	14.24626	11.75374
+	11.75	14.24626	11.75374
+	11.75	14.24626	0
+
+wood_panel polygon bath.owall
+0
+0
+24
+	8.738	17.99	0
+	8.738	17.24948	0
+	8.738	17.24948	6.61297
+	8.738	14.94564	6.61297
+	8.738	14.94564	0
+	8.738	14.24626	0
+	8.738	14.24626	11.75374
+	8.738	18	8
+
+
+# Cabin Roof
+
+# xform -rz 90 -ry 90 -t -1 0 8
+# genprism white_enamel roof 6 -1.5 -1.5 -1.5 -.5 9 10 19.5 -.5 19.5 -1.5 9 9 -l 0 0 29
+
+white_enamel polygon west_trim
+0
+0
+18
+                 -1               -1.5                6.5
+                 -1               -1.5                7.5
+                 -1                  9                 18
+                 -1               19.5                7.5
+                 -1               19.5                6.5
+                 -1                  9                 17
+
+white_enamel polygon east_trim
+0
+0
+18
+                 28                  9                 17
+                 28               19.5                6.5
+                 28               19.5                7.5
+                 28                  9                 18
+                 28               -1.5                7.5
+                 28               -1.5                6.5
+
+white_enamel polygon south_trim
+0
+0
+12
+                 -1               -1.5                6.5
+                 28               -1.5                6.5
+                 28               -1.5                7.5
+                 -1               -1.5                7.5
+
+south_shingle polygon south_roof
+0
+0
+12
+                 -1               -1.5                7.5
+                 28               -1.5                7.5
+                 28                  9                 18
+                 -1                  9                 18
+
+north_shingle polygon north_roof
+0
+0
+12
+                 -1                  9                 18
+                 28                  9                 18
+                 28               19.5                7.5
+                 -1               19.5                7.5
+
+white_enamel polygon north_trim
+0
+0
+12
+                 -1               19.5                7.5
+                 28               19.5                7.5
+                 28               19.5                6.5
+                 -1               19.5                6.5
+
+light_wood polygon north_ceiling
+0
+0
+12
+                 -1               19.5                6.5
+                 28               19.5                6.5
+                 28                  9                 17
+                 -1                  9                 17
+
+light_wood polygon south_ceiling
+0
+0
+12
+                 -1                  9                 17
+                 28                  9                 17
+                 28               -1.5                6.5
+                 -1               -1.5                6.5
+
+
+# Bedroom Door
+
+!xform -e -n bedroom_door -s .08333 -rz -165 -t 11.9 10 0 door.norm
+
+
+# Bedroom Door Jamb
+
+!genprism door_paint beddoor_jamb 8 -1.8 0 .2 0 .2 77.5 35.8 77.5 35.8 0 \
+	37.8 0 37.8 79.5 -1.8 79.5 -l 0 0 -7 | xform -t 0 0 .5 -s .08333 \
+	-rx 90 -rz 90 -t 12.25 7 0
+
+
+# Front Door
+
+!xform -e -n front_door -s .08333 -mx -t 22.5 18 0 door.norm
+
+
+# Front Door Jamb
+
+!genprism door_paint frontdoor_jamb 8 -1.8 0 .2 0 .2 77.5 35.8 77.5 35.8 0 \
+	37.8 0 37.8 79.5 -1.8 79.5 -l 0 0 -7 | xform -t 0 0 .5 -s .08333 \
+	-rx 90 -t 19.5 18 0
+

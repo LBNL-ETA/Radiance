@@ -1,0 +1,34 @@
+{
+	Create a random view path around the living room.
+
+	Input is frame number ($1)
+	NFRAMES must be set on input.
+}
+XMIN : 15;
+XMAX : 25;
+YMIN : 2;
+YMAX : 15;
+HEIGHT : 5.5;
+TIME : 15;		{ animation time (seconds) }
+{
+FPS : 60;		{ frame rate }
+NFRAMES : TIME*FPS;
+}
+RPF : 2/NFRAMES;	{ rotations per frame }
+RRATE : 2*PI*RPF;	{ rotation rate in radians/frame }
+
+SRATE : 1/NFRAMES*2*PI;
+
+theta = $1*RRATE;
+sint = sin(theta);
+cost = cos(theta);
+
+px = (XMIN+XMAX)/2 + (XMAX-XMIN)/2*cost;
+py = (YMIN+YMAX)/2 + (YMAX-YMIN)/2*sint;
+pz : HEIGHT;
+
+theta2 = $1*SRATE;
+
+dx = sin(theta2);
+dy = cos(theta2);
+dz : -.2;

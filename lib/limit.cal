@@ -1,0 +1,4 @@
+{ Avoid zero pixel values }
+lim_r(r,g,b) = r;
+lim_g(r,g,b) = g;
+lim_b(r,g,b) = b;

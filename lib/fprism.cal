@@ -1,0 +1,49 @@
+{	New functions for calculating light transmission through prisms.
+
+	R. Compagnon and F. Di Pasquale			(Spring 1992)
+	LESO-PB
+	EPFL
+	CH-1015 LAUSANNE
+
+	G. Ward modified for new fprism.c 6/30/93
+}
+
+{	function fprism(A1..A10) performs the calculations
+	A1: length a of the prism panel
+	A2: length b	" 
+	A3: length c	"
+	A4: length d	"
+	A5: indice of refraction of the prism material 
+	A6: fraction of the incident ray under which the ray propagation inside
+	    the prism is aborted (0<A6<1)
+	A7: indicates which face of the prism is covered by a metallic layer
+	    1: face beta
+	    2: face gamma
+	    4: no face
+	A8: reflection factor of the metallic layer (0<=A8<=1)
+	A9: angle tolerance (in radians) for combining rays travelling nearly
+	    in the same direction
+	A10: angle tolerance (in radians) for assuming that a ray is directed
+	     toward a source
+
+	function fprism_val(a,b,c,d) is used to pick the necessary output values
+	calculated by fprism
+	a: selector for choosing which value we ask for:
+			0: X direction of the ray
+			1: Y     "
+			2: Z     "
+			3: transmission or reflection factor of the ray
+	b: selector for choosing which kind of ray we ask for:
+		       -1: a reflected ray is expected
+			0: any ray (reflected or transmitted) is expected
+			1: a transmitted ray is expected
+	c: rank of the expected ray (1<=c)
+}
+tau1 = fprism_val(3,1,1);
+dx1 = fprism_val(0,1,1);
+dy1 = fprism_val(1,1,1);
+dz1 = fprism_val(2,1,1);
+tau2 = fprism_val(3,1,2);
+dx2 = fprism_val(0,1,2);
+dy2 = fprism_val(1,1,2);
+dz2 = fprism_val(2,1,2);

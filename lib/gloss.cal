@@ -1,0 +1,11 @@
+{
+	Rough surface texture for anisotropic materials.
+
+	A1 - RMS facet slope (roughness) in x.
+	A2 - roughness in y.
+	A3 - roughness in z.
+}
+
+gloss_dx = A1*nrand(Px*.9113+Py*.3697+Pz*.4468);
+gloss_dy = A2*nrand(Px*.85875+Py*.1521+Pz*.1782);
+gloss_dz = A3*nrand(Px*.5992+Py*.7961+Pz*.3213);

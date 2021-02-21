@@ -1,0 +1,34 @@
+
+# Adding illumination sources to cabin windows
+# to provide sky light for cabin scene interior.
+
+skyfunc brightfunc winbright
+2 winxmit winxmit.cal
+0
+0
+
+winbright illum window_illum
+0
+0
+3 .88 .88 .88
+
+
+# Polygons for window illumination surfaces.
+
+!gensurf window_illum southeast_window '5.5+t*(10.5-5.5)' '0' \
+	'3+s*(6-3)' 1 1
+
+!gensurf window_illum southwest_window '17.5+t*(24.5-17.5)' '0' \
+	'3+s*(6-3)' 1 1
+
+!gensurf window_illum northeast_window '27' '11.5+t*(16.5-11.5)' \
+	'3+s*(6-3)' 1 1
+
+!gensurf window_illum north_window '13.5+s*(16.5-13.5)' '18' \
+	'3+t*(6-3)' 1 1
+
+!gensurf window_illum bath_window '0' '14.5+s*(16.5-14.5)' \
+	'3.5+t*(6-3.5)' 1 1
+
+!gensurf window_illum westbed_window '0' '6.5+s*(9.5-6.5)' \
+	'3.5+t*(6-3)' 1 1

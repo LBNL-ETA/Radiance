@@ -1,0 +1,42 @@
+#
+#  A 9.5" X 6.5" book.
+#  The cover material must be defined as cover_mat
+#
+
+!genbox cover_mat back_cover 6.5 .125 9.5
+
+!genbox cover_mat front_cover 6.5 .125 9.5 | xform -t 0 1.25 0
+
+!genbox cover_mat bind_cover .125 1.125 9.5 | xform -t -.125 .125 0
+
+void plastic page_mat
+0
+0
+5                0.7                0.7                0.7                  0                0.1
+
+page_mat polygon top_pages
+0
+0
+12
+                  0               1.25              0.125
+              6.375               1.25              0.125
+              6.375              0.125              0.125
+                  0              0.125              0.125
+
+page_mat polygon side_pages
+0
+0
+12
+              6.375               1.25              0.125
+              6.375               1.25              9.375
+              6.375              0.125              9.375
+              6.375              0.125              0.125
+
+page_mat polygon bot_pages
+0
+0
+12
+              6.375               1.25              9.375
+                  0               1.25              9.375
+                  0              0.125              9.375
+              6.375              0.125              9.375

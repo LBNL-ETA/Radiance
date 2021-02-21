@@ -1,0 +1,54 @@
+desired; this data can  then    Multi-band   Solar   Optical
+be  saved  as  a new glazing    Properties:
+type and assigned a  library
+number.  The default however         The    second    option
+is to  use the properties as    available at this point, the
+they  appear  on  the screen    F4 option, allows  the  user
+and to use the enter key  to    to override the default cal-
+go  on  to  the next glazing    culated one band  values  of
+layer.   This   process   is    the   glazing  system  solar
+repeated for as many glazing    transmittance and individual
+layers as  were  defined  on    layer   solar   absorptances
+the first screen.  Note that    (Figure 5).   The  procedure
+the glazing material  thick-    used   to   calculate  these
+ness is now a required input    values is  based  on  a  one
+since the  glazing  material    (total solar) band approach.
+resistances  are used in the    In cases where two  or  more
+calculation procedure.          spectrally selective (within
+                                the solar spectrum)  glazing
+Frame and Edge Effects:         products are used, such as a
+                                double  glazed  system  with
+     Once  all  layers  have    green tinted glass and glaz-
+been   defined,  two  window    ing with a low-e coating,  a
+system  options  are  avail-    multi-band  model  should be
+able.  F3, the first option,    used.  We are in the process
+allows the user to choose  a    of  revising SPECTRUM 1.1 to
+frame   option  (Figure  4).    be  able  to  generate  this
+This screen can  be  ignored    data.
+if   the  user  only  wishes
+center-of-glass     results.    Gaps and Gas Fills:
+WINDOW  3.0  will  calculate
+center of glass U-values, IG         After  the  above   two
+U-values  which  include  an    options  (  F3 and F4 ) have
+edge effect, and  window  U-    been used or  skipped  over,
+values   which  include  the    the   gap   width/gas   type
+frame effect.   At  present,    screen will  appear  (Figure
+we  are  using  edge  effect    6).   For each gap, the user
+data  submitted  to   ASHRAE    must define a gap thickness,
+TC4.5   (Fenestration)   for    and choose a gas or gas mix-
+glazing systems  with  metal    ture.  Choosing a  gas  mix-
+spacers  and  the  frame  U-    ture will prompt the user to
+value  data  shown  on   the    specify the appropriate per-
+frame  screen.   This  is an    centages   of   the   gasses
+extension of  the  data  and    chosen.  Data for  gas  mix-
+methodology reported in [2].    tures  is  based  on regres-
+We hope to  include  similar    sions to  gas  mixture  data
+data for alternative spacers    calculated analytically [3].
+(i.e.   butyl,   fiberglass,    Gas type 16 allows the  user
+glassedge).   Note  that the    to temporarily enter the gas
+edge area is defined as  the    library in order to define a
+perimeter    glazing    area    new  gas  and enter its pro-
+within 2.5" of the IG unit's    perties or to see  the  pro-
+sight line and that the pro-    perties   of   the  existing
+jected frame width is 1.5".     gasses (Figure 7).   If  one
+                                of  gas  types 5-8 (gas mix-

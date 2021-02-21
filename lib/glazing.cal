@@ -1,0 +1,55 @@
+{
+	The following calculation uses the BRTDfunc type to reproduce the
+	calculation used by LBL's Window 4 program for the transmittance
+	and reflectance of coated glazings.  This calculation is based
+	on fits for the angular dependence for clear and bronze-coated
+	glazing, and is not terribly accurate.
+
+	5/20/93	Greg Ward
+
+	Arguments used for this material should look like:
+
+	mod BRTDfunc my_glazing
+	10	rrho	grho	brho
+		rtau	gtau	btau
+		0	0	0
+		glazing.cal
+	0
+	18	0	0	0
+		0	0	0
+		0	0	0
+		FRRHO	FGRHO	FBRHO
+		BRRHO	BGRHO	BBRHO
+		RTAU	GTAU	BTAU
+
+	where:
+		FRRHO	FGRHO	FBRHO	is front normal spectral reflectance
+		BRRHO	BGRHO	BBRHO	is back normal spectral reflectance
+		RTAU	GTAU	BTAU	is normal spectral transmittance
+}
+				{ get normal reflectance }
+rbase = if(Rdot,10,13);			{ different front and back }
+Rred = arg(rbase)*CrP;
+Rgrn = arg(rbase+1)*CgP;
+Rblu = arg(rbase+2)*CbP;
+				{ get normal transmittance }
+Tred = arg(16)*CrP;
+Tgrn = arg(17)*CgP;
+Tblu = arg(18)*CbP;
+				{ reflectance coefficients }
+Rclear = .999 + RdotP*(-.563 + RdotP*(2.043 + RdotP*(-2.532 + RdotP*1.054)));
+Rbronze = .997 + RdotP*(-1.868 + RdotP*(6.513 + RdotP*(-7.862 + RdotP*3.225)));
+
+				{ transmittance coefficients }
+Tclear = -.0015 + RdotP*(3.355 + RdotP*(-3.840 + RdotP*(1.460 + RdotP*.0288)));
+Tbronze = -.002 + RdotP*(2.813 + RdotP*(-2.341 + RdotP*(-.05725 + RdotP*.599)));
+
+Tcutoff : .645;		{ transmittance cutoff constant }
+				{ returned spectral reflectance }
+rrho = Rred*if(Tred-Tcutoff, Rclear, Rbronze);
+grho = Rgrn*if(Tgrn-Tcutoff, Rclear, Rbronze);
+brho = Rblu*if(Tblu-Tcutoff, Rclear, Rbronze);
+				{ returned spectral transmittance }
+rtau = Tred*if(Tred-Tcutoff, Tclear, Tbronze);
+gtau = Tgrn*if(Tgrn-Tcutoff, Tclear, Tbronze);
+btau = Tblu*if(Tblu-Tcutoff, Tclear, Tbronze);

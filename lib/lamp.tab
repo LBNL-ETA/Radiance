@@ -1,0 +1,63 @@
+#
+# SCCSid "@(#)lamp.tab 2.2 7/5/94 LBL"
+#
+#	Created by Greg Ward	05Dec90
+#
+# This is a table of light sources used by ies2rad and pfilt to obtain
+# lamp colors and lumen depreciation factors.
+#
+# It is often best to customize this file for individual applications
+# and manufacturers.
+#
+# The following list of lamp types should be ordered in decreasing
+# specificity, since the first match will be the one used.
+# Regular expressions can be enclosed by any character except #.
+# Upper and lower case is ignored in expressions.
+# Aliases should follow their correspondants as closely as
+# possible, unless the specification is so short that there might
+# be many accidental matches -- such a code should be put near the end.
+# Aliases must be enclosed in parenthesis.  A lamp specification
+# is three real numbers between 0 and 1:  x y and m, where x and y are
+# the CIE chromaticity coordinates and m is the lumen depreciation
+# factor (multiplier to get mean lumen output from initial lumens).
+#
+/deluxe warm white/			.440 .403 .85
+/warm white deluxe/			(deluxe warm white)
+/deluxe cool white/			.376 .368 .85
+/cool white deluxe/			(deluxe cool white)
+/warm[- ]white/				.436 .406 .85
+/cool[- ]white/				.373 .385 .85
+/white\>.*\<fluor/			.41 .398 .85
+/daylight\>.*\<fluor/			.316 .345 .85
+/clear mercury/				.326 .39 .8
+/phosphor\>.*\<mercury/			.373 .415 .8
+/mercury\>.*\<phosphor/			(phosphor mercury)
+/mercury/				(clear mercury)
+/clear metal halide/			.396 .390 .8
+/metal halide/				(clear metal halide)
+/xenon/					.324 .324 1
+/high[- ]pressure\>.*\<sodium/		.519 .418 .9
+/low[- ]pressure\>.*\<sodium/		.569 .421 .93
+/sodium/				(low pressure sodium)
+/halogen/				.424 .399 1
+/quartz/				(halogen)
+/incandescent/				.453 .405 .95
+/\<incand/				(incandescent)
+/fluorescent/				(cool white)
+/\<fluor/				(fluorescent)
+/\<spot\>/				(incandescent)
+/\<flood\>/				(incandescent)
+/headlamp/				(incandescent)
+/headlight/				(headlamp)
+/phosphor[- ]coated HID\>/		(phosphor mercury)
+/diffuse\>.*\<HID\>/			(high pressure sodium)
+/frosted\>.*\<HID\>/			(diffuse HID)
+/HPS/					(high pressure sodium)
+/\<LPS/					(low pressure sodium)
+/\<[EP]AR\>/				(incandescent)
+/ER30/					(incandescent)
+/\<D65WHITE\>/				.313 .329 1
+/\<WHITE\>/				.3333 .3333 1
+/\<MH\>/				(metal halide)
+/\<clear HID\>/				(high pressure sodium)
+/\<HID\>/				(clear HID)

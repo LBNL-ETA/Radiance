@@ -1,0 +1,31 @@
+# The sky over our little cabin scene
+# in Jasper, Alberta Canada at 10 am (standard time) on January 11th
+
+!gensky 1 11 10 -a 52.53 -o 118.05 -m 105 -g .7
+
+skyfunc glow ground_glow
+0
+0
+4 1 1 1 0
+
+ground_glow source ground
+0
+0
+4 0 0 -1 180
+
+skyfunc glow sky_glow
+0
+0
+4 .8 .8 1 0
+
+sky_glow source sky
+0
+0
+4 0 0 1 180
+
+# Landscape material for winter days
+
+void plastic groundmat
+0
+0
+5  .7 .7 .7 .02 .1

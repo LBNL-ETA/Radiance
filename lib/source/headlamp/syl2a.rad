@@ -1,0 +1,27 @@
+# ies2rad -l /lumen/lumen/ray/lib -p source/ies -di -t default
+# Dimensions in inches
+#<TYPE 2E1
+#<SYLVANIA H4666
+#<FOR 2 LAMP SYSTEM 160 MM RECT.
+#<FROM HONDA DEALER
+#<DATA FROM NHTSA -- M. PEREL
+# 50 watt luminaire, lamp*ballast factor = 1
+
+void brightdata syl2a_dist
+5 flatcorr source/ies/syl2a.dat source.cal srcB_horiz srcB_vert 
+0
+1 10
+
+syl2a_dist light syl2a_light
+0
+0
+3 43.0556 43.0556 43.0556
+
+syl2a_light polygon syl2a.d
+0
+0
+12
+	-3	-3	-3
+	-3	3	-3
+	3	3	-3
+	3	-3	-3

@@ -1,0 +1,114 @@
+.\" SCCSid "@(#)ra_tiff.1 2.3 8/29/97 LBL"
+.TH RA_TIFF 1 8/29/97 RADIANCE
+.SH NAME
+ra_tiff - convert RADIANCE picture to/from a TIFF color or greyscale image
+.SH SYNOPSIS
+.B ra_tiff
+[
+.B "-z|-L|-l|-f|-w"
+][
+.B -b
+][
+.B "-e +/-stops"
+][
+.B "-g gamma"
+]
+{
+.B "in.hdr|-"
+}
+.B out.tif
+.br
+.B "ra_tiff -r"
+[
+.B \-x
+][
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+.B in.tif
+[
+.B "out.hdr|-"
+]
+.SH DESCRIPTION
+.I Ra_tiff
+converts between RADIANCE and TIFF image formats.
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.2, which is the recommended value
+for TIFF images.
+.PP
+The
+.I \-b
+option can be used to specify an 8-bit greyscale TIFF output file.
+The type of input file is determined automatically.
+.PP
+The
+.I \-z
+option will result in LZW compression of the TIFF output file.
+The
+.I \-L
+option specifies SGILOG compression, which is recommended
+to capture the full dynamic range of the Radiance picture.
+However, since many TIFF readers do not yet support this format,
+use this option under advisement.
+The
+.I \-l
+option specifies SGILOG24 compressed output, which has
+less dynamic range than SGILOG, but may be smaller in some cases.
+(It is usually larger.)\0
+The
+.I \-f
+option specifies 32-bit IEEE floating-point/primary output, which
+is the highest resolution format but results in very large files, since
+each RGB pixel takes 96 bits (12 bytes) and does not compress well.
+The
+.I \-w
+option specifies 16-bit/primary output, which is understood by
+some photo editing software, such as Adobe Photoshop.
+Decompression is automatically determined for TIFF input.
+.PP
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+.PP
+The
+.I \-r
+option invokes a reverse conversion, from a TIFF image to
+a RADIANCE picture.
+The RADIANCE picture file can be taken from the standard input
+or sent to the standard output by using a hyphen ('-') in place
+of the file name, but the TIFF image must be to or from a file.
+The
+.I \-x
+option can be used to specify an XYZE Radiance output file, rather
+than the default RGBE.
+.SH EXAMPLES
+To convert a Radiance picture to SGILOG-compressed TIFF format:
+.IP "" .2i
+ra_tiff \-L scene1.hdr scene1.tif
+.PP
+To later convert this image back into Radiance and display using
+human visibility tone-mapping:
+.IP "" .2i
+ra_tiff \-r scene1.tif scene1.hdr
+.br
+ximage \-e human scene1.hdr
+.SH AUTHOR
+Greg Ward Larson
+.br
+Sam Leffler
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+Additions for the SGILOG data encoding were sponsored by Silicon Graphics, Inc.
+.SH BUGS
+Many TIFF file subtypes are not supported.
+.br
+A gamma value other than 2.2 is not properly recorded or understood if
+recorded in the TIFF file.
+.SH "SEE ALSO"
+pfilt(1), ra_bmp(1), ra_bn(1), ra_ppm(1), ra_pr(1), ra_pr24(1), ra_t8(1),
+ra_t16(1), ximage(1)

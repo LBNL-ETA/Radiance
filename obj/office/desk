@@ -1,0 +1,17 @@
+#
+#  A desk in the corner
+#
+
+!xform -e -s 4 -ry 90 -t -28 15.5 28 cornerdesk.norm
+
+#
+#  Coffee mug.
+#
+
+!xform -e -n mug -s .3333 -t -17 24.5 3.25 mug.norm
+
+#
+#  A blue covered book.
+#
+
+!xform -e -n book -s .3333 -ry 15 -t -23 24.5 0 openbook.norm

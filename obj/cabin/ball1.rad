@@ -1,0 +1,18 @@
+#
+# A ball to throw around
+#
+
+void brightfunc checkered
+2 if(xor(.5-frac(Px),xor(.5-frac(Py),.5-frac(Pz))),1,.01) .
+0
+0
+
+checkered plastic bwcheck
+0
+0
+5 .8 .8 .8 .03 .08
+
+bwcheck sphere checkball
+0
+0
+4 0 0 0 1

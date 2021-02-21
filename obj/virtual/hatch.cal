@@ -1,0 +1,13 @@
+{
+	A hatch pattern in xy plane.
+
+	A1 gives aspect ratio of hatch (y/x).
+	A2 gives width of hatch line.
+	A3 gives brightness of hatch line.
+	X hatch width is 1.
+}
+
+xyhatch = if(or(xhatch,yhatch), A3, 1);
+
+xhatch = A2 - frac(Px+A2/2);
+yhatch = A2 - frac(Py/A1+A2/2);

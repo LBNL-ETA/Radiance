@@ -1,0 +1,90 @@
+#
+#  A test room with two lights
+#
+
+void light fluorescent
+0
+0
+3                 16                 16                 16
+
+void plastic ivory
+0
+0
+5                0.5                0.4                0.4                  0                0.3
+
+void plastic brown
+0
+0
+5                0.2                0.1                0.1                  0                0.4
+
+fluorescent polygon fluor1
+0
+0
+12
+                 51              95.75                 30
+                 51              95.75                 78
+                 30              95.75                 78
+                 30              95.75                 30
+
+fluorescent polygon fluor2
+0
+0
+12
+                114              95.75                 30
+                114              95.75                 78
+                 93              95.75                 78
+                 93              95.75                 30
+
+ivory polygon wall0
+0
+0
+12
+                  0                 96                  0
+                  0                 96                108
+                  0                  0                108
+                  0                  0                  0
+
+ivory polygon wall1
+0
+0
+12
+                144                  0                108
+                144                 96                108
+                144                 96                  0
+                144                  0                  0
+
+ivory polygon wall2
+0
+0
+12
+                  0                  0                108
+                  0                 96                108
+                144                 96                108
+                144                  0                108
+
+ivory polygon wall3
+0
+0
+12
+                144                  0                  0
+                144                 96                  0
+                  0                 96                  0
+                  0                  0                  0
+
+ivory polygon ceiling
+0
+0
+12
+                144                 96                  0
+                144                 96                108
+                  0                 96                108
+                  0                 96                  0
+
+brown polygon floor
+0
+0
+12
+                  0                  0                108
+                144                  0                108
+                144                  0                  0
+                  0                  0                  0

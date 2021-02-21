@@ -1,0 +1,42 @@
+#
+#  An illuminating window with sky and ground outside.
+#
+
+void glass window_glass
+0
+0
+3	.96	.96	.96
+
+skyfunc illum window_illum
+1 window_glass
+0
+3 .96 .96 .96
+
+skyfunc glow skyglow
+0
+0
+4 .73 .96 1 0
+
+skyglow source sky
+0
+0
+4 0 1 0 180
+
+skyfunc glow groundglow
+0
+0
+4 .96 1 .69 0
+
+groundglow source ground
+0
+0
+4 0 -1 0 180
+
+window_illum polygon window
+0
+0
+12
+               23.5                 43                 30
+               23.5                 26                 30
+              -23.5                 26                 30
+              -23.5                 43                 30

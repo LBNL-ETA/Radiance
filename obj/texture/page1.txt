@@ -1,0 +1,54 @@
+     This document serves as    tions  about the window sys-
+a brief introduction to WIN-    tem (Figure 1).  The program
+DOW 3.0, which is a  general    is  being modified to handle
+purpose  thermal  model of a    inclined   glazing   (heated
+window  system.   Like   its    surface down).
+predecessor,   WINDOW   2.0,
+this   program    calculates    Glazing Properties:
+solar   optical  properties,
+heat   fluxes,   temperature         The next screens  allow
+gradients,    U-values   and    the  user  to define glazing
+shading        coefficients.    layers (Figure 2).  For each
+Several  modifications  have    glazing  layer  (layers num-
+been  made  to   the   heat-    bered from the outside  in),
+transfer  model  that do not    the user must choose a glaz-
+outwardly affect the appear-    ing layer  number  from  the
+ance  of  the  program.   In    glazing  library.  The glaz-
+addition, WINDOW 3.0  has  a    ing   library   is    easily
+new   format  that  is  com-    accessed  with  the  F1  key
+pletely   interactive    and    (Figure  3).    Inside   the
+highly flexible (see Figures    glazing library appear glaz-
+at end of text).   Libraries    ing library numbers,  names,
+of  glazing/coating and gas-    and     properties    (solar
+fill   properties   can   be    transmittance  and   reflec-
+accessed  and  extended from    tances,   visible  transmit-
+within the program.  After a    tance   and    reflectances,
+test   period   of  about  2    infrared  transmittance  and
+months, WINDOW  3.1,  incor-    emissivities).  The user may
+porating   the  comments  of    choose to look at the entire
+industry reviewers, will  be    library,   to   search   for
+released to the full mailing    entries  by  the first three
+list.                           characters of  their  names,
+                                to  search for glazings with
+Running the Program:            a given thickness (_10%), to
+                                search for glazings with one
+     As  with  WINDOW   2.0,    surface's emissivity under a
+WINDOW  3.0  is  expected to    certain value, to define new
+run on all IBM  PC  compati-    glazing layers, or  to  exit
+bles.  If a color monitor is    from the library back to the
+available, the program  will    glazing layer screen.  Glaz-
+make  use  of  this feature.    ing  layers  can  be deleted
+To start the  program,  type    from the library by deleting
+WINDOW3.                        the  appropriate information
+                                from the  glass.dat  on  the
+Window Configuration:           WINDOW  3.0  disk.   Once  a
+                                glazing  number   has   been
+     The input to WINDOW 3.0    chosen, the layer's name and
+is   divided  into  separate    above properties will appear
+screens  with  each   screen    schematically on the screen.
+focusing  on  a component of    The user now has the  option
+the window system.  To start    of changing any one of these
+the  program,  type  WINDOW3    properties by  skipping  the
+and then press  the  "enter"    cursor through each block on
+key.   The first screen con-    the screen  with  the  enter
+tains  several  basic  ques-    key  and  making  changes as

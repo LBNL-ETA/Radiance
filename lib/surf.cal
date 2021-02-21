@@ -1,0 +1,18 @@
+{ SCCSid "@(#)surf.cal 2.2 7/9/98 LBL" }
+
+{
+	surf.cal - calculation of interpolated surface normal
+
+	A1		- dominant axis (we use the other two)
+	A2  A3  A4	\
+	A5  A6  A7	 \ normal perturbation vector matrix
+	A8  A9  A10	 / multiplied by [u*v u v 1] for perturbation
+	A11 A12 A13	/
+}
+
+surf_u = select(arg(1)+1, Py, Pz, Px);
+surf_v = select(arg(1)+1, Pz, Px, Py);
+
+surf_dx = surf_u*surf_v*arg(2) + surf_u*arg(5) + surf_v*arg(8) + arg(11);
+surf_dy = surf_u*surf_v*arg(3) + surf_u*arg(6) + surf_v*arg(9) + arg(12);
+surf_dz = surf_u*surf_v*arg(4) + surf_u*arg(7) + surf_v*arg(10) + arg(13);

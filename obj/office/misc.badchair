@@ -1,0 +1,61 @@
+#
+#  Miscellaneous materials and objects
+#
+
+void brightfunc weaved
+2 weave weave.cal
+0
+1 4
+
+weaved plastic rug_weave
+0
+0
+5                0.35                0.2                0.2                  0                0.4
+
+#
+#  Carpet the floor
+#
+
+rug_weave polygon carpet
+0
+0
+12
+                -30               15.51                 30
+                 30               15.51                 30
+                 30               15.51                -30
+                -30               15.51                -30
+
+#
+#  Book Cases
+#
+
+!xform -e -n left_bookcase -s .3333 -ry 90 -t -30 33 24 bookbox.norm
+
+!xform -e -n right_bookcase -s .3333 -ry 90 -t -30 33 12 bookbox.norm
+
+#
+#  Chair 1
+#
+
+!xform -e -n chair1 -s .3333 -ry 118 -t -17 15.5 18 chair1.norm
+
+#
+#  Chair 2
+#
+
+void plastic arm_material
+0
+0
+5 .4 .3 .2 0 .1
+
+void plastic leg_material
+0
+0
+5 .4 .3 .2 0 .1
+
+void plastic cushion_material
+0
+0
+5 .1 .2 .5 0 .1
+
+!xform -e -n chair2 -s .3 -ry 15 -rz 20 -t -28 17.5 -10 chair2.norm

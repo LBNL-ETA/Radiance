@@ -1,0 +1,315 @@
+#
+# The Dresser.
+# The origin is located at the dresser's base,
+# in the rear right corner (when viewed from front).
+# Scale is in inches.
+# Overall height is 70", depth is 20", and width is 30".
+#
+
+
+xpine polygon base.back
+0
+0
+12
+               29.5                  0                  0
+               29.5                  0                  2
+                0.5                  0                  2
+                0.5                  0                  0
+
+ypine polygon base.right
+0
+0
+12
+                0.5                  0                  2
+                0.5                 19                  2
+                0.5                 19                  0
+                0.5                  0                  0
+
+xpine polygon base.bottom
+0
+0
+12
+                0.5                 19                  0
+               29.5                 19                  0
+               29.5                  0                  0
+                0.5                  0                  0
+
+xpine polygon base.front
+0
+0
+12
+               29.5                 19                  0
+                0.5                 19                  0
+                0.5                 19                  2
+               29.5                 19                  2
+
+ypine polygon base.left
+0
+0
+12
+               29.5                  0                  2
+               29.5                  0                  0
+               29.5                 19                  0
+               29.5                 19                  2
+
+
+xpine polygon cabinet.back
+0
+0
+12
+                 30                  0                  2
+                 30                  0                 34
+                  0                  0                 34
+                  0                  0                  2
+
+zpine polygon cabinet.right
+0
+0
+12
+                  0                  0                 34
+                  0                 20                 34
+                  0                 20                  2
+                  0                  0                  2
+
+xpine polygon cabinet.bottom
+0
+0
+12
+                  0                 20                  2
+                 30                 20                  2
+                 30                  0                  2
+                  0                  0                  2
+
+xpine polygon cabinet.front
+0
+0
+12
+                 30                 20                  2
+                  0                 20                  2
+                  0                 20                 34
+                 30                 20                 34
+
+zpine polygon cabinet.left
+0
+0
+12
+                 30                  0                 34
+                 30                  0                  2
+                 30                 20                  2
+                 30                 20                 34
+
+xpine polygon cabinet.top
+0
+0
+12
+                  0                 20                 34
+                  0                  0                 34
+                 30                  0                 34
+                 30                 20                 34
+
+
+!genbox zpine mirror_back 30 1 36 -r .25 | xform -t 0 0 34
+
+# mirror polygon dresser_mirror 
+# 0
+# 0
+# 24
+# 	28	1.001	69
+# 	29	1.001	68
+# 	29	1.001	36
+# 	28	1.001	35
+# 	2	1.001	35
+# 	1	1.001	36
+# 	1	1.001	68
+# 	2	1.001	69
+
+# The three dresser drawers.
+# xform -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+
+!genbox xpine drawer_front 28 .75 10 -r .25  | xform -e -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+# xform -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0
+
+brass cylinder drawer.0.handle.0.right_stem
+0
+0
+7
+                  5              20.75                7.5
+                  5              21.75                7.5
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+
+brass cylinder drawer.0.handle.0.center
+0
+0
+7
+                  6              22.75                7.5
+                  9              22.75                7.5
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+
+brass cylinder drawer.0.handle.0.left_stem
+0
+0
+7
+                 10              20.75                7.5
+                 10              21.75                7.5
+               0.25
+# xform -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0
+
+brass cylinder drawer.0.handle.1.right_stem
+0
+0
+7
+                 20              20.75                7.5
+                 20              21.75                7.5
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+
+brass cylinder drawer.0.handle.1.center
+0
+0
+7
+                 21              22.75                7.5
+                 24              22.75                7.5
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.0 -t 1 20 2.5 -i 0 -t 0 0 10.5
+
+brass cylinder drawer.0.handle.1.left_stem
+0
+0
+7
+                 25              20.75                7.5
+                 25              21.75                7.5
+               0.25
+# xform -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+
+!genbox xpine drawer_front 28 .75 10 -r .25  | xform -e -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+# xform -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0
+
+brass cylinder drawer.1.handle.0.right_stem
+0
+0
+7
+                  5              20.75                 18
+                  5              21.75                 18
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+
+brass cylinder drawer.1.handle.0.center
+0
+0
+7
+                  6              22.75                 18
+                  9              22.75                 18
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+
+brass cylinder drawer.1.handle.0.left_stem
+0
+0
+7
+                 10              20.75                 18
+                 10              21.75                 18
+               0.25
+# xform -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0
+
+brass cylinder drawer.1.handle.1.right_stem
+0
+0
+7
+                 20              20.75                 18
+                 20              21.75                 18
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+
+brass cylinder drawer.1.handle.1.center
+0
+0
+7
+                 21              22.75                 18
+                 24              22.75                 18
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.1 -t 1 20 2.5 -i 1 -t 0 0 10.5
+
+brass cylinder drawer.1.handle.1.left_stem
+0
+0
+7
+                 25              20.75                 18
+                 25              21.75                 18
+               0.25
+# xform -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+
+!genbox xpine drawer_front 28 .75 10 -r .25  | xform -e -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+# xform -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0
+
+brass cylinder drawer.2.handle.0.right_stem
+0
+0
+7
+                  5              20.75               28.5
+                  5              21.75               28.5
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+
+brass cylinder drawer.2.handle.0.center
+0
+0
+7
+                  6              22.75               28.5
+                  9              22.75               28.5
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.0 -t 4 .75 5 -i 0 -t 15 0 0 | xform -e -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+
+brass cylinder drawer.2.handle.0.left_stem
+0
+0
+7
+                 10              20.75               28.5
+                 10              21.75               28.5
+               0.25
+# xform -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0
+
+brass cylinder drawer.2.handle.1.right_stem
+0
+0
+7
+                 20              20.75               28.5
+                 20              21.75               28.5
+               0.25
+
+!genworm brass right_bend 'cos(t*PI/2 + PI/2)+1' 'sin(t*PI/2 + PI/2)+1'\
+	'0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+
+brass cylinder drawer.2.handle.1.center
+0
+0
+7
+                 21              22.75               28.5
+                 24              22.75               28.5
+               0.25
+
+!genworm brass left_bend 'cos(t*PI/2)+4' 'sin(t*PI/2)+1' '0' .25  5 | xform -e -n handle.1 -t 4 .75 5 -i 1 -t 15 0 0 | xform -e -n drawer.2 -t 1 20 2.5 -i 2 -t 0 0 10.5
+
+brass cylinder drawer.2.handle.1.left_stem
+0
+0
+7
+                 25              20.75               28.5
+                 25              21.75               28.5
+               0.25

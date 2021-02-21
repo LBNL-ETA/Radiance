@@ -1,0 +1,18 @@
+{
+	Calculate coordinates for a 180 degree fisheye lens onto local geom.
+	Assume view direction is (0,1,0), view up (0,0,1), (1,0,0) right.
+	View origin is (0,0,0).
+
+	11/21/2006	G. Ward
+}
+
+Fnorm = 1/sqrt(Px*Px + Py*Py + Pz*Pz);
+FDx = Px*Fnorm;
+FDy = Py*Fnorm;
+FDz = Pz*Fnorm;
+
+fish_Rxz = sqrt(FDx*FDx + FDz*FDz);
+fish_Ry = acos(FDy) / PI;
+
+fish_u = .5 + FDx/fish_Rxz * fish_Ry;
+fish_v = .5 + FDz/fish_Rxz * fish_Ry;

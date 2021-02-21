@@ -1,0 +1,68 @@
+{
+	Serraglaze (Double-Dog SG Design - 2000/2001)
+
+	(Derived from model for laser-cut panels by
+		P.J.Greenup, I.R.Edmunds and R.Compagnon,
+		Lighting Res. Technol. 32(2) 49-54 (2000))
+	
+	The effects of multiple internal reflections and
+	reflection losses are considered.
+
+	The two strongest components (of undeflected, deflected and reflected
+	components) are displayed.
+
+	Example material definition, transmitted vectors only:
+	(Glazing turned with outward normal in y-direction)
+
+	void prism2 sglaze0
+	11 fu Dx Dy Dz fd Dx Dy -Dz sierraglazing.cal -rz 90
+	0
+	0
+
+	Same material, taking two strongest components
+	with 0.92 normal transmissivity:
+
+	void prism2 sglaze1
+	11 f1 dx1 dy1 dz1 f2 dx2 dy2 dz2 sierraglazing.cal -rz 90
+	0
+	1 .92
+
+	Phillip Greenup		3/9/98
+	Gregory Ward		May 20, 2003
+
+}
+
+DWR : .5*.6256 / .473;		{ ratio of gap spacing / depth }
+SIR : 1.5;			{ substrate index of refraciton }
+
+trans = if(AC-.5, A1^(1/cos_t), 1);	{ adjusted transmissivity }
+
+{ Fresnel calculations of transmission and reflection }
+cos_i = abs(Rdot);
+cos_t = Sqrt(SIR*SIR-1 + cos_i*cos_i);
+rte = (cos_i - cos_t)/(cos_i + cos_t);
+rtm = (SIR*SIR*cos_i - cos_t)/(SIR*SIR*cos_i + cos_t);
+R = .5*(rte*rte + rtm*rtm);
+T = 1 - R;
+
+{ Fractions deflected and undeflected }
+tan_rp = abs(Dz)/sqrt(SIR*SIR-1 + Dx*Dx);
+m = floor(tan_rp/DWR);
+fd0 = (tan_rp/DWR)*(-1)^m+2*floor((m+1)/2)*(-1)^(m+1);
+fu0 = 1-fd0;
+fd = trans*fd0*T*T;
+fu = trans*fu0*T*T;
+
+{ Selection of two strongest components }
+N1 = if(fu-fd,if(fu-R,1,3),if(fd-R,2,3));
+N2 = if(fu-fd,if(fu-R,if(fd-R,2,3),1),if(fd-R,if(fu-R,1,3),2));
+
+f1 = select(N1,fu,fd,R);
+dx1 = select(N1,Dx,Dx,-Dx);
+dy1 = Dy;
+dz1 = select(N1,Dz,-Dz,Dz);
+
+f2 = select(N2,fu,fd,R);
+dx2 = select(N2,Dx,Dx,-Dx);
+dy2 = Dy;
+dz2 = select(N2,Dz,-Dz,Dz);

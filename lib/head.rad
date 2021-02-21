@@ -1,0 +1,19 @@
+#
+# Head model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"3D model from the MIT CSAIL database"
+#
+# Origin is at center near bottom; bust faces +X; Z-axis is up.
+# Head is approx. 29cm tall by 23cm wide by 26cm deep
+#
+
+void plastic head_mat
+0
+0
+5 0.5 0.5 0.5 0.04 0
+
+head_mat mesh head
+11 head.rtm -t 0 0 99.23 -rz -20 -rx -1 -s 0.1
+0
+0

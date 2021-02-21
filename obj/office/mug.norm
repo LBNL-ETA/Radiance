@@ -1,0 +1,178 @@
+
+void plastic light_ceramic
+0
+0
+5               0.65                0.4                0.5                0.1               0.0
+
+light_ceramic ring butt
+0
+0
+8
+	                 0	                 0	                 0
+	                 0	                -1	                 0
+	                 0	               1.5
+
+light_ceramic cone bottom_rim
+0
+0
+8
+	                 0	                 0	                 0
+	                 0	             0.125	                 0
+	               1.5	             1.625
+
+light_ceramic cylinder outside
+0
+0
+7
+	                 0	             0.125	                 0
+	                 0	             3.625	                 0
+	             1.625
+
+light_ceramic cone rim_outside
+0
+0
+8
+	                 0	             3.625	                 0
+	                 0	            3.6875	                 0
+	             1.625	            1.5625
+
+light_ceramic ring rim
+0
+0
+8
+	                 0	            3.6875	                 0
+	                 0	                 1	                 0
+	            1.5625	               1.5
+
+light_ceramic cup rim_inside
+0
+0
+8
+	                 0	            3.6875	                 0
+	                 0	             3.625	                 0
+	               1.5	            1.4375
+
+light_ceramic tube inside
+0
+0
+7
+	                 0	             3.625	                 0
+	                 0	            0.1875	                 0
+	            1.4375
+
+light_ceramic ring bottom
+0
+0
+8
+	                 0	            0.1875	                 0
+	                 0	                 1	                 0
+	            1.4375	                 0
+
+light_ceramic sphere handle.s0
+0
+0
+4                1.5                  1                  0                0.2
+
+light_ceramic cylinder handle.c1
+0
+0
+7
+	               1.5	                 1	                 0
+	          2.115234	          1.388184	                 0
+	               0.2
+
+light_ceramic sphere handle.s1
+0
+0
+4           2.115234           1.388184                  0                0.2
+
+light_ceramic cylinder handle.c2
+0
+0
+7
+	          2.115234	          1.388184	                 0
+	          2.484375	          1.785156	                 0
+	               0.2
+
+light_ceramic sphere handle.s2
+0
+0
+4           2.484375           1.785156                  0                0.2
+
+light_ceramic cylinder handle.c3
+0
+0
+7
+	          2.484375	          1.785156	                 0
+	          2.642578	          2.164551	                 0
+	               0.2
+
+light_ceramic sphere handle.s3
+0
+0
+4           2.642578           2.164551                  0                0.2
+
+light_ceramic cylinder handle.c4
+0
+0
+7
+	          2.642578	          2.164551	                 0
+	             2.625	               2.5	                 0
+	               0.2
+
+light_ceramic sphere handle.s4
+0
+0
+4              2.625                2.5                  0                0.2
+
+light_ceramic cylinder handle.c5
+0
+0
+7
+	             2.625	               2.5	                 0
+	          2.466797	          2.765137	                 0
+	               0.2
+
+light_ceramic sphere handle.s5
+0
+0
+4           2.466797           2.765137                  0                0.2
+
+light_ceramic cylinder handle.c6
+0
+0
+7
+	          2.466797	          2.765137	                 0
+	          2.203125	          2.933594	                 0
+	               0.2
+
+light_ceramic sphere handle.s6
+0
+0
+4           2.203125           2.933594                  0                0.2
+
+light_ceramic cylinder handle.c7
+0
+0
+7
+	          2.203125	          2.933594	                 0
+	          1.869141	          2.979004	                 0
+	               0.2
+
+light_ceramic sphere handle.s7
+0
+0
+4           1.869141           2.979004                  0                0.2
+
+light_ceramic cylinder handle.c8
+0
+0
+7
+	          1.869141	          2.979004	                 0
+	               1.5	             2.875	                 0
+	               0.2
+
+light_ceramic sphere handle.s8
+0
+0
+4                1.5              2.875                  0                0.2
