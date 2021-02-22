@@ -1,15 +1,19 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.23 2021/01/20 19:44:15 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.24 2021/02/22 13:27:49 rschregle Exp $";
 #endif
 /* 
-   ==================================================================
+
+   ======================================================================
    Photon map support routines for scattering by materials. 
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme FARESYS")
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
+   ======================================================================
    
 */
 
@@ -1711,34 +1715,37 @@ int brdf2PhotonScatter (OBJREC *mat, RAY *rayIn)
 
 
 /* 
-   ==================================================================
+   ======================================================================
    The following code is
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
+   ======================================================================
 */
 
 static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 /* Generate new photon ray for BSDF modifier and recurse. */
 {
-   int      hasthick = (mat->otype == MAT_BSDF);
-   int      hitFront;
-   SDError  err;
-   SDValue  bsdfVal;
-   FVECT	   upvec;
-   MFUNC	   *mf;
-   BSDFDAT	nd;
-   RAY      rayOut;
-   COLOR    bsdfRGB;
-   int      transmitted;
-   double   prDiff, ptDiff, prDiffSD, ptDiffSD, prSpecSD, ptSpecSD, 
-            albedo, xi;
-   const double patAlb = bright(rayIn -> pcol);
+   int            hasthick = (mat->otype == MAT_BSDF);
+   int            hitFront;
+   SDError        err;
+   SDValue        bsdfVal;
+   FVECT          upvec;
+   MFUNC          *mf;
+   BSDFDAT        nd;
+   RAY            rayOut;
+   COLOR          bsdfRGB;
+   int            transmitted;
+   double         prDiff, ptDiff, prDiffSD, ptDiffSD, prSpecSD, ptSpecSD, 
+                  albedo, xi;
+   const double   patAlb = bright(rayIn -> pcol);
    
    /* Following code adapted from m_bsdf() */
    /* Check arguments */
-   if (mat -> oargs.nsargs < hasthick+5 || mat -> oargs.nfargs > 9 ||
-       mat -> oargs.nfargs % 3)
+   if (
+      mat -> oargs.nsargs < hasthick+5 || 
+      mat -> oargs.nfargs > 9 || mat -> oargs.nfargs % 3
+   )
       objerror(mat, USER, "bad # arguments");
       
    hitFront = (rayIn -> rod > 0);
@@ -1749,9 +1756,9 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* Get thickness */
    nd.thick = 0;
    if (hasthick) {
-   nd.thick = evalue(mf -> ep [0]);
-   if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
-      nd.thick = .0;
+      nd.thick = evalue(mf -> ep [0]);
+      if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
+         nd.thick = .0;
    }
 
    /* Get BSDF data */
@@ -1761,8 +1768,10 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    if (hitFront) {
       if (mat -> oargs.nfargs < 3)
          setcolor(nd.rdiff, .0, .0, .0);
-      else setcolor(nd.rdiff, mat -> oargs.farg [0], mat -> oargs.farg [1], 
-                    mat -> oargs.farg [2]);
+      else setcolor(
+         nd.rdiff, 
+         mat -> oargs.farg [0], mat -> oargs.farg [1], mat -> oargs.farg [2]
+      );
    }    
    else if (mat -> oargs.nfargs < 6) {
       /* Check for absorbing backside */
@@ -1773,14 +1782,18 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
       
       setcolor(nd.rdiff, .0, .0, .0);
    } 
-   else setcolor(nd.rdiff, mat -> oargs.farg [3], mat -> oargs.farg [4], 
-                 mat -> oargs.farg [5]);
+   else setcolor(
+      nd.rdiff, 
+      mat -> oargs.farg [3], mat -> oargs.farg [4], mat -> oargs.farg [5]
+   );
 
    /* Extra diffuse transmittance from material def */
    if (mat -> oargs.nfargs < 9)
       setcolor(nd.tdiff, .0, .0, .0);
-   else setcolor(nd.tdiff, mat -> oargs.farg [6], mat -> oargs.farg [7], 
-                 mat -> oargs.farg [8]);
+   else setcolor(
+      nd.tdiff, 
+      mat -> oargs.farg [6], mat -> oargs.farg [7], mat -> oargs.farg [8]
+   );
                
    nd.mp = mat;
    nd.pr = rayIn;
@@ -1829,8 +1842,9 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    }
    
    /* Determine BSDF resolution */
-   err = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL, 
-                    SDqueryMin + SDqueryMax, nd.sd);
+   err = SDsizeBSDF(
+      nd.sr_vpsa, nd.vray, NULL, SDqueryMin + SDqueryMax, nd.sd
+   );
    
    if (err)
       objerror(mat, USER, transSDError(err));
@@ -1891,8 +1905,10 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    else {   /* Sample SDF */
       if ((xi -= prDiffSD) <= 0) {
          /* Diffuse SDF reflection (constant component) */
-         if ((err = SDsampBSDF(&bsdfVal, nd.vray, pmapRandom(scatterState), 
-                               SDsampDf | SDsampR, nd.sd)))
+         if ((err = SDsampBSDF(
+            &bsdfVal, nd.vray, pmapRandom(scatterState), 
+            SDsampDf | SDsampR, nd.sd
+         )))
             objerror(mat, USER, transSDError(err));
          
          /* Apply pattern to spectral component */
@@ -1903,8 +1919,10 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 
       else if ((xi -= ptDiffSD) <= 0) {
          /* Diffuse SDF transmission (constant component) */
-         if ((err = SDsampBSDF(&bsdfVal, nd.vray, pmapRandom(scatterState), 
-                               SDsampDf | SDsampT, nd.sd)))
+         if ((err = SDsampBSDF(
+            &bsdfVal, nd.vray, pmapRandom(scatterState), 
+            SDsampDf | SDsampT, nd.sd
+         )))
             objerror(mat, USER, transSDError(err));
          
          /* Apply pattern to spectral component */
@@ -1917,8 +1935,10 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 
       else if ((xi -= prSpecSD) <= 0) {
          /* Non-diffuse ("specular") SDF reflection */
-         if ((err = SDsampBSDF(&bsdfVal, nd.vray, pmapRandom(scatterState), 
-                               SDsampSp | SDsampR, nd.sd)))
+         if ((err = SDsampBSDF(
+            &bsdfVal, nd.vray, pmapRandom(scatterState), 
+            SDsampSp | SDsampR, nd.sd
+         )))
             objerror(mat, USER, transSDError(err));
          
          ccy2rgb(&bsdfVal.spec, bsdfVal.cieY, bsdfRGB);
@@ -1927,8 +1947,10 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
       
       else {
          /* Non-diffuse ("specular") SDF transmission */
-         if ((err = SDsampBSDF(&bsdfVal, nd.vray, pmapRandom(scatterState), 
-                               SDsampSp | SDsampT, nd.sd)))
+         if ((err = SDsampBSDF(
+            &bsdfVal, nd.vray, pmapRandom(scatterState), 
+            SDsampSp | SDsampT, nd.sd
+         )))
             objerror(mat, USER, transSDError(err));
 
          /* Apply pattern to spectral component */

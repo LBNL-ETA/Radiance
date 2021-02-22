@@ -1,12 +1,15 @@
-/* RCSid $Id: pmapmat.h,v 2.13 2019/02/04 18:20:27 rschregle Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.14 2021/02/22 13:27:49 rschregle Exp $ */
 /* 
    ======================================================================
    Photon map support routines for scattering by materials. 
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme FARESYS")
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    ======================================================================
    
 */
