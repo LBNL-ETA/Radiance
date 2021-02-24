@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.43 2021/02/05 01:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.44 2021/02/24 03:48:52 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -460,7 +460,7 @@ double	Ldmax
 	float	*cumf;
 	int	brt0, histlen;
 	HIST_TYP	threshold, ceiling, trimmings, histot;
-	double	logLddyn, Ldmin, Ldavg, Lwavg, Tr, Lw, Ld;
+	double	logLddyn, Ldmin, Lwavg, Tr, Lw, Ld;
 	double	sum;
 	double	d;
 	int	i, j;
@@ -474,7 +474,6 @@ double	Ldmax
 					/* compute handy values */
 	Ldmin = Ldmax/Lddyn;
 	logLddyn = log(Lddyn);
-	Ldavg = sqrt(Ldmax*Ldmin);
 	i = HISTI(tms->hbrmin);
 	brt0 = HISTV(i);
 	histlen = HISTI(tms->hbrmax) + 1 - i;
@@ -548,9 +547,9 @@ double	Ldmax
 	returnOK;
 linearmap:				/* linear tone-mapping */
 	if (tms->flags & TM_F_HCONTR)
-		d = htcontrs(Ldavg) / htcontrs(Lwavg);
+		d = htcontrs(sqrt(Ldmax*Ldmin)) / htcontrs(Lwavg);
 	else
-		d = Ldavg / Lwavg;
+		d = Ldmax / tmLuminance(tms->hbrmax);
 	return(tmFixedMapping(tms, tms->inpsf*d/Ldmax, gamval));
 }
 
