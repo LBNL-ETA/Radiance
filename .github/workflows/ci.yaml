@@ -347,7 +347,7 @@ jobs:
           rtrace -version
           cd ./test/util/
           make clean
-          make -j8
+          make -j2
       
 
       - name: run tests -gen
@@ -359,7 +359,7 @@ jobs:
 
           cd ./test/gen/
           make clean
-          make -j8
+          make -j2
 
       - name: run tests -cal
         shell: pwsh
@@ -370,7 +370,7 @@ jobs:
 
           cd ./test/cal/
           make clean
-          make -j8
+          make -j2
 
       - name: run tests -px
         shell: cmd
@@ -381,7 +381,7 @@ jobs:
 
           cd ./test/px/
           make clean
-          make -j8
+          make -j2
   
       - name: run tests -renders 1
         shell: cmd
@@ -392,7 +392,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch1 -j8 
+          make batch1 -j2 
 
       - name: The job has failed
         if: ${{ failure() }}
@@ -443,7 +443,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch2 -j8 
+          make batch2 -j2 
 
       - name: The job has failed
         if: ${{ failure() }}
@@ -494,7 +494,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch3 -j8 
+          make batch3 -j2 
 
       - name: The job has failed
         if: ${{ failure() }}
@@ -546,7 +546,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch4 -j8 
+          make batch4 -j2
 
       - name: The job has failed
         if: ${{ failure() }}
@@ -601,7 +601,7 @@ jobs:
           cd ./test/util/
           
           make clean
-          make -j8
+          make -j3
       
       - name: run tests -gen
         run: |
@@ -611,7 +611,7 @@ jobs:
           cd ./test/gen/
           
           make clean
-          make -j8
+          make -j3
 
       - name: run tests -cal
         run: |
@@ -621,7 +621,7 @@ jobs:
           cd ./test/cal/
           
           make clean
-          make -j8
+          make -j3
 
       - name: run tests -px
         run: |
@@ -631,7 +631,7 @@ jobs:
           cd ./test/px/
           
           make clean
-          make -j8
+          make -j3
 
       - name: run tests -renders 1
         run: |
@@ -641,19 +641,9 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch1 -j8
+          make batch1 -j3
       
-          
-      - name: run tests -renders 3
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/radiance/bin
-          rtrace -version
 
-          cd ./test/renders/
-          make clean
-          make batch3 -j8
-      
       - name: The job has failed
         if: ${{ failure() }}
         run: |
@@ -706,17 +696,7 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch2 -j8
-
-      - name: run tests -renders 4
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/radiance/bin
-          rtrace -version
-
-          cd ./test/renders/
-          make clean
-          make batch4 -j8
+          make batch2 -j3
 
       - name: The job has failed
         if: ${{ failure() }}
@@ -729,6 +709,115 @@ jobs:
         with:
           name: Radiance_Mac_Failed2
           path: Radiance_Mac_Failed2.zip
+
+  Test_OSX_3:
+    needs: [build_OSX]
+    name: "Test for OSX 3"
+    runs-on: macos-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: get os version
+        run: |
+          uname -a
+          echo "=============================="
+          sw_vers -productVersion
+
+
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download OSX installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_OSX_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_OSX_both.zip
+          unzip OSXBuild/Radiance_OSX.zip
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+    
+      - name: run tests -renders 3
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j3
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Mac_Failed3.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Mac_Failed3
+          path: Radiance_Mac_Failed3.zip
+
+  Test_OSX_4:
+    needs: [build_OSX]
+    name: "Test for OSX 4"
+    runs-on: macos-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: get os version
+        run: |
+          uname -a
+          echo "=============================="
+          sw_vers -productVersion
+
+
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download OSX installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_OSX_both
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_OSX_both.zip
+          unzip OSXBuild/Radiance_OSX.zip
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+    
+      - name: run tests -renders 4
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch4 -j3
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Mac_Failed4.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Mac_Failed4
+          path: Radiance_Mac_Failed4.zip
+
 
   Test_Linux_1:
     needs: [build_Linux]
@@ -773,7 +862,7 @@ jobs:
           cd ./test/util/
           
           make clean
-          make -j8
+          make -j2
       
       - name: run tests -gen
         run: |
@@ -783,7 +872,7 @@ jobs:
           cd ./test/gen/
           
           make clean
-          make -j8
+          make -j2
 
       - name: run tests -cal
         run: |
@@ -793,7 +882,7 @@ jobs:
           cd ./test/cal/
           
           make clean
-          make -j8
+          make -j2
 
       - name: run tests -px
         run: |
@@ -803,7 +892,7 @@ jobs:
           cd ./test/px/
           
           make clean
-          make -j8
+          make -j2
 
       - name: run tests -renders 1
         run: |
@@ -813,18 +902,8 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch1 -j8
+          make batch1 -j2
       
-      - name: run tests -renders 3
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
-          rtrace -version
-
-          cd ./test/renders/
-          make clean
-          make batch3 -j8
-
       - name: The job has failed
         if: ${{ failure() }}
         run: |
@@ -881,18 +960,8 @@ jobs:
 
           cd ./test/renders/
           make clean
-          make batch2 -j8
+          make batch2 -j2
       
-      - name: run tests -renders 4
-        run: |
-          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
-          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
-          rtrace -version
-
-          cd ./test/renders/
-          make clean
-          make batch4 -j8
-
       - name: The job has failed
         if: ${{ failure() }}
         run: |
@@ -905,10 +974,125 @@ jobs:
           name: Radiance_Linux_Failed2
           path: Radiance_Linux_Failed2.zip
 
+  Test_Linux_3:
+    needs: [build_Linux]
+    name: "Test for Linux 3"
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download Linux installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Linux
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Linux.zip
+          ls
+          echo "========== Extracting tar.gz ==========="
+          tar -xvf radiance-*-Linux.tar.gz
+          ls
+          echo "========== Extracting tar ==========="
+          
+
+      - name: copy compiled folder
+        run: |
+          mkdir buildRad
+          sudo cp -avr ./radiance-*-Linux/usr/local/radiance ./buildRad
+
+      - name: Display structure of downloaded files
+        run: ls -R
+      
+
+      - name: run tests -renders 3
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch3 -j2
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Linux_Failed3.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Linux_Failed3
+          path: Radiance_Linux_Failed3.zip
+
+  Test_Linux_4:
+    needs: [build_Linux]
+    name: "Test for Linux 4"
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: "Checkout Master Branch"
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Download Linux installers
+        uses: actions/download-artifact@v2
+        with:
+          name: Radiance_Linux
+      
+      - name: unzip artifacts
+        run: |
+          unzip Radiance_Linux.zip
+          ls
+          echo "========== Extracting tar.gz ==========="
+          tar -xvf radiance-*-Linux.tar.gz
+          ls
+          echo "========== Extracting tar ==========="
+          
+
+      - name: copy compiled folder
+        run: |
+          mkdir buildRad
+          sudo cp -avr ./radiance-*-Linux/usr/local/radiance ./buildRad
+
+      - name: Display structure of downloaded files
+        run: ls -R
+      
+
+      - name: run tests -renders 4
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+
+          cd ./test/renders/
+          make clean
+          make batch4 -j2
+      
+      - name: The job has failed
+        if: ${{ failure() }}
+        run: |
+          zip -r Radiance_Linux_Failed4.zip ./test/*
+          
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_Linux_Failed4
+          path: Radiance_Linux_Failed4.zip
 
 
   check_if_release:
-    needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
+    needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_OSX_3, Test_OSX_4, Test_Linux_1, Test_Linux_2, Test_Linux_3, Test_Linux_4]
     name: check if release
     runs-on: ubuntu-latest
     outputs:
