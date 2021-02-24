@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.44 2021/02/24 03:48:52 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.45 2021/02/24 20:35:22 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -484,7 +484,7 @@ double	Ldmax
 		histot += tms->histo[i];
 		sum += (double)(j -= HISTEP) * tms->histo[i];
 	}
-	threshold = histot*0.005 + .5;
+	threshold = histot*0.002 + .5;
 	if (!histot)
 		returnErr(TM_E_TMFAIL);
 	Lwavg = tmLuminance( (double)sum / histot );
@@ -503,12 +503,12 @@ double	Ldmax
 	do {				/* iterate to solution */
 		sum = 0;		/* cumulative probability */
 		for (i = 0; i < histlen; i++) {
-			cumf[i] = (double)sum/histot;
-			sum += histo[i];
+			cumf[i] = sum/histot;
+			sum += (double)histo[i];
 		}
 		cumf[histlen] = 1.;
 		Tr = histot * (double)(tms->hbrmax - tms->hbrmin) /
-			((double)histlen*TM_BRTSCALE) / logLddyn;
+				((double)TM_BRTSCALE*histlen*logLddyn);
 		ceiling = Tr + 1.;
 		trimmings = 0;		/* clip to envelope */
 		for (i = histlen; i--; ) {
