@@ -1092,7 +1092,7 @@ jobs:
 
 
   check_if_release:
-    needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_Linux_1, Test_Linux_2]
+    needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_OSX_3, Test_OSX_4, Test_Linux_1, Test_Linux_2, Test_Linux_3, Test_Linux_4]
     name: check if release
     runs-on: ubuntu-latest
     outputs:
