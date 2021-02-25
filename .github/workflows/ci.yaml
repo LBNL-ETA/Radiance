@@ -1110,6 +1110,7 @@ jobs:
     name: zip auxiliary files
     runs-on: ubuntu-latest
     needs: check_if_release
+    if: needs.check_if_release.outputs.RELEASE_TODAY == 'true'
 
     steps:
       - name: "Checkout Master Branch"
