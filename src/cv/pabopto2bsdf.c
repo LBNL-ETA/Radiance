@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.38 2021/02/16 15:49:32 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.39 2021/02/25 02:13:15 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -227,11 +227,7 @@ main(int argc, char *argv[])
 	const char	*symmetry = "0";
 	int		ninpfiles, totinc;
 	int		a, i;
-						/* start header */
-	SET_FILE_BINARY(stdout);
-	newheader("RADIANCE", stdout);
-	printargs(argc, argv, stdout);
-	fputnow(stdout);
+
 	progname = argv[0];			/* get options */
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)
 		switch (argv[a][1]) {
@@ -305,7 +301,11 @@ main(int argc, char *argv[])
 				quadrant_sym[inp_coverage]);
 #endif
 	build_mesh();				/* create interpolation */
-	save_bsdf_rep(stdout);			/* write it out */
+	SET_FILE_BINARY(stdout);		/* start header */
+	newheader("RADIANCE", stdout);
+	printargs(argc, argv, stdout);
+	fputnow(stdout);
+	save_bsdf_rep(stdout);			/* complete header + data */
 	return(0);
 userr:
 	fprintf(stderr, "Usage: %s [-t][-n nproc][-s symmetry] meas1.dat meas2.dat .. > bsdf.sir\n",
