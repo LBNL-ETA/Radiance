@@ -1,7 +1,7 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.1 2021/02/25 04:48:19 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.2 2021/02/25 19:31:36 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
-pabopto2bsdf - convert pab-opto BSDF measurements to scattering interpolant representation
+pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
 .SH SYNOPSIS
 .B pabopto2bsdf
 [
@@ -36,10 +36,9 @@ At most, there will be 4 such hemisphere pairs for
 front reflection, back reflection, front transmission,
 and back transmission.
 Theoretically, only one transmission direction is required,
-but it is often safest to measure both if both directions
-will be used in a simulation.
-.PP
-See
+but it is often safest to measure both if they
+be used in a simulation.
+(See
 .I bsdf2klems(1)
 and
 .I bsdf2ttree(1)
@@ -48,7 +47,7 @@ The
 .I bsdf2rad(1)
 and
 .I bsdfview(1)
-tools are also useful for visualizaing SIR and XML files.
+tools are also useful for visualizaing SIR and XML files.)
 .PP
 The
 .I pabopto2bsdf
@@ -69,10 +68,9 @@ letter, and case is ignored.
 .PP
 Normally,
 .I pabopto2bsdf
-attempts to deduce BSDF symmetry from the incident phi angles
-provided.
+will assume a BSDF symmetry from the incident phi angles provided.
 If every input data file uses the same incident phi angle, the
-BSDF is assumed to be "isotropic", meaning rotationally symmetric.
+BSDF is assumed to be "isotropic", or rotationally symmetric.
 If input phi angles only cover one quarter of the incident hemisphere,
 then the sample is assumed to have quadrilateral symmetry.
 Similarly, half-hemisphere coverage implies "bilateral" symmetry,
@@ -83,12 +81,11 @@ Similar to quadrilateral symmetry, bilateral symmetry is "mirrored,"
 meaning that the sample material looks identical when viewed in a mirror.
 However, "up" symmetry means that the sample looks the same when
 rotated by 180-degree (upside-down), but does not look the same in a mirror.
-Although bilateral symmetry is a superset of "up" symmetry,
-we assume the former when provided only half of the input hemisphere.
 The "up" symmetry was a late addition, and involves rotating and copying the
 input data, treating the result as anisotropic.
 It is therefore less efficient, and should only be used when necessary.
-Finally, if the incident hemisphere is fully covered, the BSDF is also anisotropic.
+Finally, if the incident hemisphere is fully covered, the final BSDF
+is anisotropic.
 .PP
 If a
 .I \-s
@@ -97,13 +94,13 @@ data provided, an error message is issued and no output is produced.
 Note that only the "up" and "bilateral" symmetry options have
 identical input coverage, so this is the only time the
 .I \-s
-option must be specified if the default mirroring is inappropriate.
+option must be specified if the default mirroring is not appropriate.
 .PP
 The
 .I Mountain
 software operates the pg2 goniophotometer to
-capture BSDF scattering data in separate files for each incident
-angle in a text file beginning with a header
+capture BSDF scattering data in separate text files for each incident
+angle, beginning with a header
 whose lines each start with a pound sign ('#').
 Some header settings require colons and others do not, as indicated below.
 The
@@ -129,7 +126,7 @@ Theta values should be between 0 and 180, where values less than 90
 are considered incident to the "front" side of the sample, and
 theta values greater than 90 are incident to the "back" side in
 the standard coordinate system.
-Notions of sample "front" and "back" may be reversed using the
+Notions of "front" and "back" may be reversed using the
 .I -t
 option if desired.
 .TP
@@ -146,14 +143,14 @@ The interpretation is the same as above.
 .BR #upphi
 If present, this phi angle that corresponds to
 the sample "up" orientation.
-By default, it is assumed to be 0 degrees, meaning that "up"
+By default, it is assumed to be 0, meaning that "up"
 is phi=0.
 To get the standard RADIANCE coordinates for BSDFs, "#upphi" should
-be set to 90.
+be set to 90 (degrees).
 .TP
 .BR #colorimetry:
-Two colorimetry values are currently understood, "CIE-Y" and "CIE-XYZ".
-The default colorimetry of "CIE-Y", which may be left unspecified,
+Two colorimetry values are currently understood: "CIE-Y" and "CIE-XYZ".
+The default "CIE-Y" colorimetry
 takes each DSF or BSDF value as photometric.
 If "CIE-XYZ" is specified, then the DSF or BSDF values must be triplets
 corresponding to CIE XYZ values.
@@ -208,7 +205,59 @@ To combine this with front reflection measurements into a Klems BSDF file:
 pabopto2bsdf -n 4 -s up f*_Rvis.txt > front_refl.sir
 .br
 bsdf2klems front_trans.sir front_refl.sir > Klems_bsdf.xml
+.SH NOTES
+If the BSDF is being mirrored and there is no measured theta=0 incident
+angle data file, this part of the distribution is filled in
+by a special procedure.
+This is important because there is no way to extrapolate missing
+data at normal incidence.
+.PP
+The BSDF is extrapolated past the last measured theta angles towards
+grazing using a constant value plus a single Gaussian lobe if one can
+be reasonably fit to the near-grazing data.
+This lobe will always be in the mirror direction in the case of
+reflection, or the "through" direction in the case
+of transmission.
+The magnitude and width of this lobe is stored in the output header,
+along with the constant value.
+Both the lobe and the constant are neutral values, even with CIE-XYZ
+colorimetry.
+.PP
+While there is no explicit handling of infrared or solar radiometry,
+any single-channel BSDF will be created the same, and the final XML
+file generated by
+.I bsdf2klems
+or
+.I bsdf2ttree
+can be edited to specify a different radiometry.
+The interpolation process in
+.I pabopto2bsdf
+is not affected by this.
+.PP
+The standard BSDF coordinates in RADIANCE have the theta=0 direction
+corresponding to the front-side surface normal.
+The phi=0 direction points to the right as seen from the front, and
+phi=90 degrees corresponds to the "up" orientation for the sample.
+The same theta and phi are used for incoming and scattered angles,
+so theta=180 is the opposite side surface normal.
+This differs from the WINDOW, which use separate
+coordinate systems for the front and the back.
+To confusing things further, notions of "front" and "back" are
+opposite in WINDOW and RADIANCE.
+In RADIANCE, the normal of a window surface usually faces the
+interior of a space.
+.PP
+In the
+.I genBSDF(1)
+utility, the world coordinate system follows trigonometric
+conventions with theta=0 aligning to the Z-axis,
+the X-axis matches (theta,phi)=(90,0), and the Y-axis
+is has (theta,phi)=(90,90).
+The latter is thought of as the "up" direction for the sample.
+This usually needs to be rotated into position, since most
+RADIANCE models use the Z-axis as the world "up" direction.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-bsdf2klems(1), bsdf2rad(1), bsdf2ttree(1), bsdfview(1), pabopto2xyz(1)
+bsdf2klems(1), bsdf2rad(1), bsdf2ttree(1), bsdfview(1), genBSDF(1),
+pabopto2xyz(1)
