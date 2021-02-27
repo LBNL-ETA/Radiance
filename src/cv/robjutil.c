@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.2 2020/04/02 20:44:15 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.3 2021/02/27 00:15:55 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -194,8 +194,6 @@ main(int argc, char *argv[])
 			fprintf(stderr, "%s: transform error\n", argv[0]);
 			exit(1);
 		}
-		sprintf(cbuf, "Applied transform: %s", xfm);
-		addComment(myScene, cbuf);
 	}
 	if (verbose)
 		fputs("Writing out scene...\n", stderr);
