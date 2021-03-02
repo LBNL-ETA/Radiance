@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.29 2021/01/07 19:13:57 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.30 2021/03/02 20:09:14 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -191,7 +191,7 @@ tmAddHisto(TMstruct *tms, TMbright *ls, int len, int wt);
 */
 
 extern int
-tmFixedMapping(TMstruct *tms, double expmult, double gamval);
+tmFixedMapping(TMstruct *tms, double expmult, double gamval, double Lddyn);
 /*
 	Assign a fixed, linear tone-mapping using the given multiplier,
 	which is the ratio of maximum output to uncalibrated input.
@@ -202,6 +202,7 @@ tmFixedMapping(TMstruct *tms, double expmult, double gamval);
 	tms	-	tone mapping structure pointer.
 	expmult	-	the fixed exposure multiplier to use.
 	gamval	-	display gamma response (0. for default).
+	Ldmax	-	maximum display luminance in cd/m^2 (0. for default).
 
 	returns -	0 on success, TM_E_* on error.
 */

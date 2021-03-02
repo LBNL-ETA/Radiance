@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.45 2021/02/24 20:35:22 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.46 2021/03/02 20:09:14 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -123,15 +123,14 @@ MEM_PTR	dat
 			tms->clf[GRN] = tms->cmat[1][1];
 			tms->clf[BLU] = tms->cmat[1][2];
 		}
-		tms->cmat[0][0] = tms->cmat[1][1] = tms->cmat[2][2] =
-				tms->inpsf;
+		tms->cmat[0][0] = tms->cmat[1][1] = tms->cmat[2][2] = 1.;
 		tms->cmat[0][1] = tms->cmat[0][2] = tms->cmat[1][0] =
 		tms->cmat[1][2] = tms->cmat[2][0] = tms->cmat[2][1] = 0.;
 
-	} else if (tms->inppri == TM_XYZPRIM)	/* input is XYZ */
+	} else if (tms->inppri == TM_XYZPRIM) {		/* input is XYZ */
 		compxyz2rgbWBmat(tms->cmat, tms->monpri);
 
-	else {					/* input is RGB */
+	} else {					/* input is RGB */
 		if (tms->inppri != tms->monpri &&
 				PRIMEQ(tms->inppri, tms->monpri))
 			tms->inppri = tms->monpri;	/* no xform */
@@ -160,7 +159,7 @@ TMstruct	*tms
 {
 	if (tms == NULL || tms->histo == NULL)
 		return;
-	free((MEM_PTR)tms->histo);
+	free(tms->histo);
 	tms->histo = NULL;
 }
 
@@ -379,9 +378,9 @@ int	wt
 		if (newhist == NULL)
 			returnErr(TM_E_NOMEM);
 		if (oldlen) {			/* copy and free old */
-			memcpy((MEM_PTR)(newhist+(oldorig-horig)),
-				(MEM_PTR)tms->histo, oldlen*sizeof(HIST_TYP));
-			free((MEM_PTR)tms->histo);
+			memcpy(newhist+(oldorig-horig),
+					tms->histo, oldlen*sizeof(HIST_TYP));
+			free(tms->histo);
 		}
 		tms->histo = newhist;
 	}
@@ -421,27 +420,30 @@ int
 tmFixedMapping(			/* compute fixed, linear tone-mapping */
 TMstruct	*tms,
 double	expmult,
-double	gamval
+double	gamval,
+double  Lddyn
 )
 {
 	static const char funcName[] = "tmFixedMapping";
-	double		d;
+	int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
+	double	minD;
 	int	i;
 	
 	if (!tmNewMap(tms))
 		returnErr(TM_E_NOMEM);
-	if (expmult <= .0)
-		expmult = 1.;
-	if (gamval < MINGAM)
-		gamval = tms->mongam;
-	d = log(expmult/tms->inpsf);
+					/* check arguments */
+	if (expmult <= .0) expmult = 1.;
+	if (gamval < MINGAM) gamval = tms->mongam;
+	if (Lddyn < MINLDDYN) Lddyn = DEFLDDYN;
+	minD = 1./Lddyn;
 	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
-		double	val = TM_BRES * exp(
-			( d + (tms->mbrmin+i)*(1./TM_BRTSCALE) )
-			/ gamval);
-		tms->lumap[i] = val;
-		if (sizeof(TMAP_TYP) == 2 && val >= 0xffff)
-			tms->lumap[i] = 0xffff;
+		double	d;
+		d = expmult/tms->inpsf * tmLuminance(tms->mbrmin + i);
+		if (d <= minD)
+			break;		/* map initialized to zeroes */
+		d = (d - minD)/(1. - minD);
+		d = TM_BRES*pow(d, 1./gamval);
+		tms->lumap[i] = (d >= maxV) ? maxV : (int)d;
 	}
 	returnOK;
 }
@@ -499,7 +501,7 @@ double	Ldmax
 		returnErr(TM_E_NOMEM);
 	cumf[histlen+1] = 1.;		/* guard for assignment code */
 					/* make malleable copy */
-	memcpy((MEM_PTR)histo, (MEM_PTR)tms->histo, histlen*sizeof(HIST_TYP));
+	memcpy(histo, tms->histo, histlen*sizeof(HIST_TYP));
 	do {				/* iterate to solution */
 		sum = 0;		/* cumulative probability */
 		for (i = 0; i < histlen; i++) {
@@ -526,8 +528,8 @@ double	Ldmax
 		}
 					/* check if we're out of data */
 		if ((histot -= trimmings) <= threshold) {
-			free((MEM_PTR)histo);
-			free((MEM_PTR)cumf);
+			free(histo);
+			free(cumf);
 			goto linearmap;
 		}
 	} while (trimmings > threshold);
@@ -542,15 +544,15 @@ double	Ldmax
 		d = (Ld - Ldmin)/(Ldmax - Ldmin);
 		tms->lumap[i] = TM_BRES*pow(d, 1./gamval);
 	}
-	free((MEM_PTR)histo);		/* clean up and return */
-	free((MEM_PTR)cumf);
+	free(histo);			/* clean up and return */
+	free(cumf);
 	returnOK;
 linearmap:				/* linear tone-mapping */
 	if (tms->flags & TM_F_HCONTR)
 		d = htcontrs(sqrt(Ldmax*Ldmin)) / htcontrs(Lwavg);
 	else
 		d = Ldmax / tmLuminance(tms->hbrmax);
-	return(tmFixedMapping(tms, tms->inpsf*d/Ldmax, gamval));
+	return(tmFixedMapping(tms, tms->inpsf*d/Ldmax, gamval, Lddyn));
 }
 
 
@@ -618,15 +620,13 @@ TMstruct	*tms
 		len = HISTI(tmnew->hbrmax) + 1 - HISTI(tmnew->hbrmin);
 		tmnew->histo = (HIST_TYP *)malloc(len*sizeof(HIST_TYP));
 		if (tmnew->histo != NULL)
-			memcpy((MEM_PTR)tmnew->histo, (MEM_PTR)tms->histo,
-					len*sizeof(HIST_TYP));
+			memcpy(tmnew->histo, tms->histo, len*sizeof(HIST_TYP));
 	}
 	if (tmnew->lumap != NULL) {	/* duplicate luminance mapping */
 		len = tmnew->mbrmax-tmnew->mbrmin+1;
 		tmnew->lumap = (TMAP_TYP *)malloc(len*sizeof(TMAP_TYP));
 		if (tmnew->lumap != NULL)
-			memcpy((MEM_PTR)tmnew->lumap, (MEM_PTR)tms->lumap,
-					len*sizeof(TMAP_TYP));
+			memcpy(tmnew->lumap, tms->lumap, len*sizeof(TMAP_TYP));
 	}
 					/* clear package data */
 	for (i = tmNumPkgs; i--; )
@@ -646,14 +646,14 @@ TMstruct	*tms;
 		return;
 					/* free tables */
 	if (tms->histo != NULL)
-		free((MEM_PTR)tms->histo);
+		free(tms->histo);
 	if (tms->lumap != NULL)
-		free((MEM_PTR)tms->lumap);
+		free(tms->lumap);
 					/* free private data */
 	for (i = tmNumPkgs; i--; )
 		if (tms->pd[i] != NULL)
 			(*tmPkg[i]->Free)(tms->pd[i]);
-	free((MEM_PTR)tms);		/* free basic structure */
+	free(tms);			/* free basic structure */
 }
 
 /******************** Shared but Private library routines *********************/
@@ -682,7 +682,7 @@ TMstruct	*tms
 {
 	if (tms->lumap != NULL && (tms->mbrmax - tms->mbrmin) !=
 					(tms->hbrmax - tms->hbrmin)) {
-		free((MEM_PTR)tms->lumap);
+		free(tms->lumap);
 		tms->lumap = NULL;
 	}
 	tms->mbrmin = tms->hbrmin;
@@ -690,8 +690,11 @@ TMstruct	*tms
 	if (tms->mbrmin > tms->mbrmax)
 		return 0;
 	if (tms->lumap == NULL)
-		tms->lumap = (TMAP_TYP *)malloc(sizeof(TMAP_TYP)*
-					(tms->mbrmax-tms->mbrmin+1));
+		tms->lumap = (TMAP_TYP *)calloc(tms->mbrmax-tms->mbrmin+1,
+						sizeof(TMAP_TYP));
+	else
+		memset(tms->lumap, 0, (tms->mbrmax-tms->mbrmin+1)*sizeof(TMAP_TYP));
+
 	return(tms->lumap != NULL);
 }
 
