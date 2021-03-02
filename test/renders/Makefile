@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.34 2021/02/19 06:01:46 greg Exp $
+# RCSid $Id: Makefile,v 1.35 2021/03/02 17:51:56 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -18,14 +18,16 @@ IMG_CMP = radcompare -rel 0.007 -rms 0.1 -max 1.5
 
 # Default target is to test everything
 all:	test-xform test-oconv test-rad test-rfluxmtx test-rpiece \
-test-rpict test-mkpmap test-prism1-fish test-prism2-fish \
+test-rpict test-mkpmap \
+test-trans2-def test-trans2-fish test-trans2-win \
 test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
-test-trans2-def test-trans2-fish test-trans2-win test-dielectric-def \
-test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
-test-mesh-def test-mesh-cyl test-mesh-cyl2 test-mirror-fish test-mist-def \
-test-trans-def test-trans-fish test-patterns-def test-patterns-plan \
-test-rtrace test-obj2mesh
+test-mesh-def test-mesh-cyl test-mesh-cyl2 test-mist-def \
+test-dielectric-def test-dielectric-fish test-trans-def \
+test-glass-def test-glass-fish test-glass-up \
+test-trans-fish test-patterns-def test-patterns-plan \
+test-rtrace test-mirror-fish test-obj2mesh \
+test-prism1-fish test-prism2-fish
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
