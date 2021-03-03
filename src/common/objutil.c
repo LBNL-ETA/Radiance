@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.12 2021/02/12 20:44:04 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.13 2021/03/03 18:53:08 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -44,7 +44,7 @@ clearSelection(Scene *sc, int set)
 void
 selectGroup(Scene *sc, const char *gname, int invert)
 {
-	int     gid = findName(gname, (const char **)sc->grpname, sc->ngrps);
+	int     gid = getGroupID(sc, gname);
 	Face    *f;
 
 	if (gid < 0)
@@ -62,7 +62,7 @@ selectGroup(Scene *sc, const char *gname, int invert)
 void
 selectMaterial(Scene *sc, const char *mname, int invert)
 {
-	int     mid = findName(mname, (const char **)sc->matname, sc->nmats);
+	int     mid = getMaterialID(sc, mname);
 	Face    *f;
 	
 	if (mid < 0)
@@ -180,7 +180,7 @@ chngFaceGroup(Scene *sc, Face *f, void *ptr)
 int
 changeGroup(Scene *sc, const char *gname, int flreq, int flexc)
 {
-	int     grp = findName(gname, (const char **)sc->grpname, sc->ngrps);
+	int     grp = getGroupID(sc, gname);
 	if (grp < 0) {
 		sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
 		sc->grpname[grp=sc->ngrps++] = savqstr((char *)gname);
@@ -203,7 +203,7 @@ chngFaceMaterial(Scene *sc, Face *f, void *ptr)
 int
 changeMaterial(Scene *sc, const char *mname, int flreq, int flexc)
 {
-	int     mat = findName(mname, (const char **)sc->matname, sc->nmats);
+	int     mat = getMaterialID(sc, mname);
 	if (mat < 0) {
 		sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
 		sc->matname[mat=sc->nmats++] = savqstr((char *)mname);
@@ -654,7 +654,7 @@ addNormal(Scene *sc, double xn, double yn, double zn)
 void
 setGroup(Scene *sc, const char *nm)
 {
-	sc->lastgrp = findName(nm, (const char **)sc->grpname, sc->ngrps);
+	sc->lastgrp = getGroupID(sc, nm);
 	if (sc->lastgrp >= 0)
 		return;
 	sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
@@ -665,7 +665,7 @@ setGroup(Scene *sc, const char *nm)
 void
 setMaterial(Scene *sc, const char *nm)
 {
-	sc->lastmat = findName(nm, (const char **)sc->matname, sc->nmats);
+	sc->lastmat = getMaterialID(sc, nm);
 	if (sc->lastmat >= 0)
 		return;
 	sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);

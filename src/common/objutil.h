@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.11 2021/02/15 18:45:11 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.12 2021/03/03 18:53:08 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -192,7 +192,10 @@ extern int      verbose;
 extern char     *emalloc(unsigned int n);
 extern char     *ecalloc(unsigned int ne, unsigned int n);
 extern char     *erealloc(char *cp, unsigned int n);
-extern void     efree(char *cp); 
+extern void     efree(char *cp);
+
+#define getGroupID(sc,nm)	findName(nm, (const char **)(sc)->grpname, (sc)->ngrps)
+#define getMaterialID(sc,nm)	findName(nm, (const char **)(sc)->matname, (sc)->nmats)
 
 #define CHUNKSIZ	128	/* object allocation chunk size */
 
