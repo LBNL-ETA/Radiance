@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.16 2020/06/14 04:18:09 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.17 2021/03/11 17:00:58 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -279,17 +279,18 @@ putface(				/* put out an N-sided polygon */
 	char	**av
 )
 {
-	Vert2_list	*poly = polyAlloc(ac);
+	Vert2_list	*poly;
 	int		i, ax, ay;
 
-	if (poly == NULL)
-		return(0);
-	poly->p = (void *)av;
 	for (i = ac-3; i >= 0; i--)	/* identify dominant axis */
 		if ((ax = dominant_axis(av[i], av[i+1], av[i+2])) >= 0)
 			break;
 	if (ax < 0)
 		return(1);		/* ignore degenerate face */
+	poly = polyAlloc(ac);
+	if (poly == NULL)
+		return(0);
+	poly->p = (void *)av;
 	if (++ax >= 3) ax = 0;
 	ay = ax;
 	if (++ay >= 3) ay = 0;
