@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.3 2021/02/27 00:15:55 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.4 2021/03/12 18:32:33 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -28,6 +28,7 @@ main(int argc, char *argv[])
 	int		save_mats = 1;
 	int		do_tex = 0;
 	int		do_norm = 0;
+	int		do_triangulate = 0;
 	char		*xfm = NULL;
 	char		cbuf[256];
 	double		verteps = -1.;
@@ -85,6 +86,9 @@ main(int argc, char *argv[])
 			break;
 		case 'r':			/* output to Radiance file? */
 			radout = (argv[i][0] == '+');
+			break;
+		case 'T':			/* triangulate faces? */
+			do_triangulate = (argv[i][0] == '+');
 			break;
 		case 'x':			/* apply a transform */
 			if (xfm != NULL) {
@@ -187,6 +191,15 @@ main(int argc, char *argv[])
 		sprintf(cbuf, "Removed %d duplicate faces", n);
 		addComment(myScene, cbuf);
 	}
+	if (do_triangulate) {
+		if (verbose)
+			fputs("Making sure all faces are triangles...\n", stderr);
+		n = triangulateScene(myScene);
+		if (n > 0) {
+			sprintf(cbuf, "Added %d faces during triangulation", n);
+			addComment(myScene, cbuf);
+		}
+	}
 	if (xfm != NULL) {
 		if (verbose)
 			fputs("Applying transform...\n", stderr);
@@ -218,6 +231,7 @@ userr:
 	fprintf(stderr, "\t+/-t\t\t\t# keep/remove texture coordinates\n");
 	fprintf(stderr, "\t+/-n\t\t\t# keep/remove vertex normals\n");
 	fprintf(stderr, "\t-c epsilon\t\t# coalesce vertices within epsilon\n");
+	fprintf(stderr, "\t+T\t\t\t# turn all faces into triangles\n");
 	fprintf(stderr, "\t-x 'xf spec'\t# apply the quoted transform\n");
 	return(1);
 }

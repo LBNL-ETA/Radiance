@@ -2423,3 +2423,5 @@ Removed upper limit on number of modifiers in rcontrib.
 
 Put cap on maximum ambient gradient to avoid over-extrapolation of
 poorly computed irradiance cache values.
+
+Added robjutil +T option to triangulate all faces in .OBJ description.
