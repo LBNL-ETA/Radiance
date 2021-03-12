@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.12 2021/03/03 18:53:08 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.13 2021/03/12 03:59:25 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -9,6 +9,10 @@
 
 #ifndef _OBJUTIL_H_
 #define _OBJUTIL_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef DUP_CHECK_REVERSE
 #define DUP_CHECK_REVERSE       1       /* eliminate flipped duplicates */
@@ -21,6 +25,7 @@
 #define FACE_DUPLICATE		02
 #define FACE_SELECTED		04
 #define FACE_CUSTOM(n)		(FACE_SELECTED<<(n))
+#define FACE_RESERVED		(1<<15)
 
 struct Face;				/* forward declaration */
 
@@ -78,10 +83,6 @@ typedef struct {
 	Face		*flist;		/* linked face list */
 	int		nfaces;		/* count of faces */
 } Scene;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Allocate a new scene holder */
 Scene *		newScene(void);
@@ -176,6 +177,9 @@ void		setMaterial(Scene *sc, const char *nm);
 
 /* Add a new face to our scene, using current group and material */
 Face *		addFace(Scene *sc, VNDX vid[], int nv);
+
+/* Convert all faces with > 3 vertices to triangles */
+int		triangulateScene(Scene *sc);
 
 /* Delete unreferenced vertices, normals, texture coords */
 void		deleteUnreferenced(Scene *sc);

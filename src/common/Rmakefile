@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.85 2020/04/21 02:42:35 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.86 2021/03/12 03:59:25 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -38,7 +38,7 @@ SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
 MGFOBJ = mgf_parser.o mgf_object.o mgf_xf.o mgf_context.o
 
-WFOBJ = objutil.o readwfobj.o convertobj.o writewfobj.o
+WFOBJ = objutil.o objtriangulate.o readwfobj.o convertobj.o writewfobj.o
 
 REETZOBJ = g3affine.o g3flist.o g3sphere.o g3vector.o gbasic.o muc_randvar.o
 
@@ -230,6 +230,8 @@ idmap.o:	idmap.h resolu.h platform.h rtio.h
 rcode_ident.o:	lookup.h
 
 objutil.o:	objutil.h rterror.h rtio.h rtmath.h mat4.h fvect.h lookup.h
+
+objtriangulate.o:	objutil.h rterror.h triangulate.h
 
 readwfobj.o:	objutil.h rtio.h rterror.h fvect.h
 
