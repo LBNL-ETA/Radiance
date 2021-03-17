@@ -1,4 +1,4 @@
-{ RCSid $Id: pq.cal,v 1.1 2021/03/17 23:49:20 greg Exp $ }
+{ RCSid $Id: pq.cal,v 1.2 2021/03/17 23:51:19 greg Exp $ }
 {
 	Convert absolute luminance in cd/m^2 to/from Dolby's
 	Perceptual Quantization
@@ -10,7 +10,6 @@ c1`PQ : 3424.0/4096.0;
 c2`PQ : 2413.0/4096.0*32.0;
 c3`PQ : 2392.0/4096.0*32.0;
 
-max(a,b) : if(a-b, a, b);
 bound(a,x,b) : if(a-x, a, if(x-b, b, x));
 
 toPQ1(Yn) : ((c1`PQ + c2`PQ*Yn)/(1 + c3`PQ*Yn))^m`PQ;
