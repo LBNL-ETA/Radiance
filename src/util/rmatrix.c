@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.47 2021/01/22 16:19:15 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.48 2021/03/18 00:34:31 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -398,6 +398,23 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
+/* Check if CIE XYZ primaries were specified */
+static int
+findCIEprims(const char *info)
+{
+	RGBPRIMS	prims;
+
+	if (!info)
+		return(0);
+	info = strstr(info, PRIMARYSTR);
+	if (!info || !primsval(prims, info))
+		return(0);
+
+	return((prims[RED][CIEX] > .99) & (prims[RED][CIEY] < .01) &&
+			(prims[GRN][CIEX] < .01) & (prims[GRN][CIEY] > .99) &&
+			(prims[BLU][CIEX] < .01) & (prims[BLU][CIEY] < .01));
+}
+
 /* Write matrix to file type indicated by dtype */
 int
 rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
@@ -415,7 +432,8 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		fputs(rm->info, fp);
 	if (dtype == DTfromHeader)
 		dtype = rm->dtype;
-	else if ((dtype == DTrgbe) & (rm->dtype == DTxyze))
+	else if (dtype == DTrgbe && (rm->dtype == DTxyze ||
+					findCIEprims(rm->info)))
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
