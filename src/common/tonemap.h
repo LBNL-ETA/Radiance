@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.30 2021/03/02 20:09:14 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.31 2021/03/18 16:56:03 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -202,7 +202,7 @@ tmFixedMapping(TMstruct *tms, double expmult, double gamval, double Lddyn);
 	tms	-	tone mapping structure pointer.
 	expmult	-	the fixed exposure multiplier to use.
 	gamval	-	display gamma response (0. for default).
-	Ldmax	-	maximum display luminance in cd/m^2 (0. for default).
+	Lddyn	-	the display's dynamic range (0. for default).
 
 	returns -	0 on success, TM_E_* on error.
 */
