@@ -7,7 +7,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapooc.c,v 1.6 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmapooc.c,v 1.7 2021/03/22 23:00:00 rschregle Exp $
 */
 
 
@@ -152,7 +152,16 @@ int OOC_LoadPhotons (struct PhotonMap *pmap, FILE *nodeFile)
 
    if (OOC_LoadOctree(&pmap -> store, nodeFile, OOC_PhotonKey, leafFile))
       return -1;
-      
+
+#ifdef DEBUG_OOC
+   /* Check octree for consistency */
+   if (OOC_Check(
+      &pmap -> store, OOC_ROOT(&pmap -> store),
+      pmap -> store.org, pmap -> store.size, 0
+   ))
+      return -1;
+#endif
+
    return 0;
 }
 
