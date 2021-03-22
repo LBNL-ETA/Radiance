@@ -135,6 +135,7 @@ add_library(wfobj
   readwfobj.c
   convertobj.c
   writewfobj.c
+  objtriangulate.c
 )
 
 add_library(libreetz
