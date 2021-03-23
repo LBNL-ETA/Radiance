@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oocnn.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: oocnn.c,v 2.3 2021/03/23 00:16:38 rschregle Exp $";
 #endif
 
 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: oocnn.c,v 2.2 2017/08/14 21:12:10 rschregle Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: oocnn.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $
+   $Id: oocnn.c,v 2.3 2021/03/23 00:16:38 rschregle Exp $
 */
 
 
@@ -206,7 +206,7 @@ float OOC_FindNearest (OOC_Octree *oct, OOC_Node *node, OOC_DataIdx dataIdx,
    for (kid0 = 0, i = 0; i < 3; i++)
       kid0 |= (key [i] > org [i] + kidSize) << i;
       
-   for (i = 0; i < 7; i++) {
+   for (i = 0; i < 8; i++) {
       kid = kid0 ^ i;
       kidNode = node;
       kidDataIdx = dataIdx + OOC_GetKid(oct, &kidNode, kid);
@@ -279,7 +279,7 @@ float OOC_Find1Nearest (OOC_Octree *oct, OOC_Node *node, OOC_DataIdx dataIdx,
    for (kid0 = 0, i = 0; i < 3; i++)
       kid0 |= (key [i] > org [i] + kidSize) << i;
       
-   for (i = 0; i < 7; i++) {
+   for (i = 0; i < 8; i++) {
       kid = kid0 ^ i;
       kidNode = node;
       kidDataIdx = dataIdx + OOC_GetKid(oct, &kidNode, kid);
