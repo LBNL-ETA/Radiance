@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.13 2020/08/07 01:22:59 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2020/08/07 01:22:59 $ $Revision: 1.13 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.14 2021/03/23 21:31:56 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2021/03/23 21:31:56 $ $Revision: 1.14 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -147,11 +147,32 @@ halfspace facing away from the surface normal.
 Bidirectional emission; photons are emitted from both sides of the port.
 .RE
 .IP
-Situations that call for a reversed photon port include, for
-example, using fenestrations as ports that were (for whatever
-reason) defined with outward facing normals, or using a \fBmist\fR 
+Some typical situations that call for a reversed photon port include, for
+example:
+.RS
+.IP (a)
+Using fenestrations as ports that were (for whatever
+reason) defined with outward facing normals,
+.IP (b)
+Using a \fBmist\fR 
 primitive as a port, since this requires outward facing normals in order to 
-register the photons as having entered the volume.
+register the photons as having entered the volume,
+.IP (c)
+Reorienting a port associated with a \fBbsdf\fR modifier, since inverting
+its normal would also reorient the BSDF and alter its behaviour.
+.RE
+.IP
+Other oddball scenarios are conceivable. If in doubt, specify a
+bidirectional port orientation for a slight performance penalty,
+as photon emission is attempted from both sides. For well-defined
+port geometry with inward-facing normals, just use the default;
+doan' mess with da normalz.
+.IP
+Photon port geometry is discretised according to the 
+\fB\-dp\fR and \fB\-ds\fR options. These parameters aid in resolving
+spatially and directionally varying illuminance received by the port
+from distant light sources, e.g due to partial occlusion
+or when using climate-based sky models.
    
 .IP "\fB\-apO \fImodfile\fR"
 Read photon port modifiers from the file \fImodfile\fR as a more convenient
@@ -222,20 +243,22 @@ possibly scattered if they strike the back of a surface, otherwise they
 are unconditionally absorbed and discarded.
 
 .IP "\fB\-dp \fIsampleres\fR"
-Resolution for sampling the spatial emission distribution of a modified
-light source (e.g. via \fIbrightfunc\fR), in samples per steradian. This
-is required for numerically integrating the flux emitted by the light
-source and for constructing a probability density function for photon
-emission. The accuracy of photon emission from modified sources
-therefore depends on this parameter. This parameter may need increasing
+Angular resolution for sampling the spatial emission distribution of a 
+modified light source or photon port (e.g. via \fIbrightfunc\fR), in samples
+per steradian. 
+This is required to numerically integrate the flux emitted by the light
+source and construct a probability density function for photon emission. 
+The accuracy of photon emission from a modified source or port
+therefore depends on this parameter. The resolution may need to be increased
 with complex emission distributions in combination with caustics.
 
 .IP "\fB\-ds \fIpartsize\fR"
-Light source partition size ratio; a light source object is spatially 
-partitioned to distribute the photon emission over its surface. This
-parameter specifies the ratio of the size (per dimension) of each
-partition to the scene cube, and may need increasing for modified light 
-sources (e.g. via \fIbrightfunc\fR) with high spatial variation.
+Light source partition size ratio; a local light source object (or photon 
+port in case of a distant source) is spatially partitioned to distribute the
+photon emission over its surface. This parameter specifies the ratio of the 
+size (per dimension) of each partition to the scene cube, and may need 
+to be increased for modified light sources (e.g. via \fIbrightfunc\fR) with 
+high spatial variance, or for partially occluded photon ports.
 
 .IP "\fB\-e \fIfile\fR"
 Redirect diagnostics and progress reports to \fIfile\fR instead of the
@@ -283,8 +306,9 @@ with the \fB\-apv\fR option. See \fIrpict(1)\fR for details.
 
 .IP "\fB\-n \fInproc\fR"
 Use \fInproc\fR processes for parallel photon distribution. There is no
-benefit in specifying more than the number of physical CPU cores available.
-This option is currently not available on Windows.
+benefit in specifying more than the number of physical CPU cores available
+(so doan' even try). This option is currently not available on Windows -- 
+so there, tuff luck.
 
 .IP "\fB\-t \fIinterval\fR"
 Output a progress report every \fIinterval\fR seconds. This includes 
@@ -389,7 +413,7 @@ Development of the RADIANCE photon mapping extension was supported by:
 
 .RS
 \fIFraunhofer Institute for Solar Energy Systems\fR funded by
-the German Research Foundation (\fIDFG LU204/10-2\fR, "Fassadenintegrierte 
+the German Research Foundation (\fIDFG LU-204/10-2\fR, "Fassadenintegrierte 
 Regelsysteme (FARESYS)"), 
 
 \fILucerne University of Applied Sciences and Arts\fR funded by
