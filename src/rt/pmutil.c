@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.5 2020/04/08 15:14:21 rschregle Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.6 2021/03/23 00:07:13 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.5 2020/04/08 15:14:21 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.5 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmutil.c,v 2.6 2021/03/23 00:07:13 rschregle Exp $
 */
 
 #include "pmap.h"
@@ -56,9 +56,9 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
    struct stat octstat, pmstat;
    PhotonMap *pm;
    PhotonMapType type;
-   
+
    for (t = 0; t < NUM_PMAP_TYPES; t++)
-      if (setPmapParam(&pm, parm + t)) {         
+      if (setPmapParam(&pm, parm + t)) {
          /* Check if photon map newer than octree */
          if (pm -> fileName && octname &&
              !stat(pm -> fileName, &pmstat) && !stat(octname, &octstat) && 
@@ -67,7 +67,7 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
                     pm -> fileName);
             error(USER, errmsg);
          }
-         
+
          /* Load photon map from file and get its type */
          if ((type = loadPhotonMap(pm, pm -> fileName)) == PMAP_TYPE_NONE)
             error(USER, "failed loading photon map");
@@ -82,7 +82,7 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
             free(pmaps [type]);
          }
          pmaps [type] = pm;
-         
+
          /* Check for valid density estimate bandwidths */
          if ((pm -> minGather > 1 || pm -> maxGather > 1) &&
              (type == PMAP_TYPE_PRECOMP)) {
@@ -90,7 +90,7 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
             error(WARNING, "ignoring bandwidth for precomp photon map");
             pm -> minGather = pm -> maxGather = 1;
          }
-                     
+
          if ((pm -> maxGather > pm -> minGather) && 
              (type == PMAP_TYPE_VOLUME)) {            
             /* Biascomp for volume pmaps (see volumePhotonDensity() below) 
@@ -102,11 +102,18 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
                     pmapName [type]);
             error(USER, errmsg);
          }
-         
+
          if (pm -> maxGather > pm -> numPhotons) {
-            error(WARNING, "adjusting density estimate bandwidth");
-            pm -> minGather = pm -> maxGather = pm -> numPhotons;
-         }            
+            /* Clamp lookup bandwidth to total number of photons (minus one,
+               since density estimate gets extra photon to obtain averaged 
+               radius) */
+            sprintf(
+               errmsg, "clamping density estimate bandwidth to %ld",
+               pm -> numPhotons
+            );
+            error(WARNING, errmsg);
+            pm -> minGather = pm -> maxGather = pm -> numPhotons - 1;
+         }
       }
 }
 
