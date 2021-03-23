@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.14 2021/03/23 21:31:56 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2021/03/23 21:31:56 $ $Revision: 1.14 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.15 2021/03/23 21:42:47 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2021/03/23 21:42:47 $ $Revision: 1.15 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -257,7 +257,7 @@ Light source partition size ratio; a local light source object (or photon
 port in case of a distant source) is spatially partitioned to distribute the
 photon emission over its surface. This parameter specifies the ratio of the 
 size (per dimension) of each partition to the scene cube, and may need 
-to be increased for modified light sources (e.g. via \fIbrightfunc\fR) with 
+to be reduced for modified light sources (e.g. via \fIbrightfunc\fR) with 
 high spatial variance, or for partially occluded photon ports.
 
 .IP "\fB\-e \fIfile\fR"
