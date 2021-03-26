@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.11 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.12 2021/03/26 22:01:44 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -69,7 +69,7 @@ main(int argc, char *argv[])
 	progname = argv[0];
 	while (argc > 2 && argv[1][0] == '-') {
 		switch (argv[1][1]) {
-		case 'u':			/* unbuffered output */\
+		case 'u':			/* unbuffered output */
 			unbuffered = 1;
 			break;
 		case 'c':			/* color output */
