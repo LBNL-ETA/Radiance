@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdiag.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdiag.c,v 2.8 2021/03/26 23:47:03 rschregle Exp $";
 #endif
 
 /* 
@@ -12,11 +12,12 @@ static const char RCSid[] = "$Id: pmapdiag.c,v 2.7 2016/05/17 17:39:47 rschregle
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdiag.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapdiag.c,v 2.8 2021/03/26 23:47:03 rschregle Exp $
 */
 
 
 
+#include "pmap.h"
 #include "pmapdiag.h"
 #include "pmapdata.h"
 #include "standard.h"
@@ -123,7 +124,7 @@ void pmapBiasCompReport (char *stats)
    /* Report global photon precomputation progress */
    {
       extern char *myhostname();
-      float u, s;
+      float u, s, rtime, eta, progress;
       char tmp [512];
       
       #ifdef BSD
@@ -160,10 +161,15 @@ void pmapBiasCompReport (char *stats)
       /* Append bias compensation stats */      
       biasCompStats(preCompPmap, PMAP_TYPE_PRECOMP, tmp);
       strcat(errmsg, tmp);
-      
-      sprintf(tmp, "%4.2f%% after %.3fu %.3fs %.3fr hours on %s\n",
-              100.0 * repProgress / repComplete, u / 3600, s / 3600, 
-              (repLastTime - repStartTime) / 3600.0, myhostname());
+
+      rtime = (repLastTime - repStartTime) / 3600.0;
+      progress = (float)repProgress / repComplete;
+      eta = max(0, rtime * (progress > FTINY ? 1 / progress - 1 : 0));
+
+      sprintf(
+         tmp, "%4.2f%% after %.3fu %.3fs %.3fr hours on %s, ETA=%.3fh\n",
+         100 * progress, u / 3600, s / 3600, rtime, myhostname(), eta
+      );
       strcat(errmsg, tmp);
       
       eputs(errmsg);
@@ -180,7 +186,7 @@ void pmapBiasCompReport (char *stats)
    /* Report photon distribution progress */
    {
       extern char *myhostname();
-      float u, s;
+      float u, s, rtime, eta, progress;
       unsigned t;
       char tmp [512];
       
@@ -222,10 +228,15 @@ void pmapBiasCompReport (char *stats)
             strcat(errmsg, tmp);
          }
       
-      sprintf(tmp, "%4.2f%% after %.3fu %.3fs %.3fr hours on %s\n", 
-              100.0 * repProgress / repComplete, u / 3600, s / 3600, 
-              (repLastTime - repStartTime) / 3600.0, myhostname());
-              
+      rtime = (repLastTime - repStartTime) / 3600.0;
+      progress = (float)repProgress / repComplete;
+      eta = max(0, rtime * (progress > FTINY ? 1 / progress - 1 : 0));
+      
+      sprintf(
+         tmp, "%4.2f%% after %.3fu %.3fs %.3fr hours on %s, ETA=%.3fh\n", 
+         100 * progress, u / 3600, s / 3600, rtime, myhostname(), eta
+      );
+
       strcat(errmsg, tmp);
       eputs(errmsg);
       fflush(stderr);
@@ -240,7 +251,8 @@ void pmapBiasCompReport (char *stats)
    void pmapPreCompReport()
    /* Report global photon precomputation progress */
    {
-      char tmp [512];
+      char  tmp [512];
+      float rtime, progress, eta;
       
       repLastTime = time(NULL);
       sprintf(errmsg, "%lu precomputed, ", repProgress);
@@ -249,9 +261,14 @@ void pmapBiasCompReport (char *stats)
       biasCompStats(preCompPmap, PMAP_TYPE_PRECOMP, tmp);
       strcat(errmsg, tmp);      
 
-      sprintf(tmp, "%4.2f%% after %5.4f hours\n", 
-              100.0 * repProgress / repComplete, 
-              (repLastTime - repStartTime) / 3600.0);
+      rtime = (repLastTime - repStartTime) / 3600.0;
+      progress = (float)repProgress / repComplete;
+      eta = max(0, rtime * (progress > FTINY ? 1 / progress - 1 : 0));
+
+      sprintf(
+         tmp, "%4.2f%% after %5.4f hours, ETA=%.3fh\n", 
+         100 * progress, rtime, eta
+      );
       strcat(errmsg, tmp);
       
       eputs(errmsg);
@@ -263,8 +280,9 @@ void pmapBiasCompReport (char *stats)
    void pmapDistribReport()
    /* Report photon distribution progress */
    {
-      char tmp [512];
+      char     tmp [512];
       unsigned t;
+      float    rtime, progress, eta;
       
       repLastTime = time(NULL);
       sprintf(errmsg, "%lu emitted, ", repEmitted);
@@ -275,10 +293,15 @@ void pmapBiasCompReport (char *stats)
                     pmapName [t]);
             strcat(errmsg, tmp);
          }      
-      
-      sprintf(tmp, "%4.2f%% after %5.4f hours\n", 
-              100.0 * repProgress / repComplete, 
-              (repLastTime - repStartTime) / 3600.0);
+
+      rtime = (repLastTime - repStartTime) / 3600.0;
+      progress = (float)repProgress / repComplete;
+      eta = max(0, rtime * (progress > FTINY ? 1 / progress - 1 : 0));
+
+      sprintf(
+         tmp, "%4.2f%% after %5.4f hours, ETA=%.3fh\n", 
+         100 * progress, rtime, eta
+      );
       strcat(errmsg, tmp);
       
       eputs(errmsg);
