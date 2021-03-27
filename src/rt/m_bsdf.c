@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.62 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.63 2021/03/27 20:08:58 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -683,7 +683,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		SDfreeCache(nd.sd);
 		return(1);
 	}
-						/* diffuse reflectance */
+						/* diffuse components */
 	if (hitfront) {
 		cvt_sdcolor(nd.rdiff, &nd.sd->rLambFront);
 		if (m->oargs.nfargs >= 3) {
@@ -692,6 +692,7 @@ m_bsdf(OBJREC *m, RAY *r)
 					m->oargs.farg[2]);
 			addcolor(nd.rdiff, ctmp);
 		}
+		cvt_sdcolor(nd.tdiff, &nd.sd->tLambFront);
 	} else {
 		cvt_sdcolor(nd.rdiff, &nd.sd->rLambBack);
 		if (m->oargs.nfargs >= 6) {
@@ -700,10 +701,9 @@ m_bsdf(OBJREC *m, RAY *r)
 					m->oargs.farg[5]);
 			addcolor(nd.rdiff, ctmp);
 		}
+		cvt_sdcolor(nd.tdiff, &nd.sd->tLambBack);
 	}
-						/* diffuse transmittance */
-	cvt_sdcolor(nd.tdiff, hitfront ? &nd.sd->tLambFront : &nd.sd->tLambBack);
-	if (m->oargs.nfargs >= 9) {
+	if (m->oargs.nfargs >= 9) {		/* add diffuse transmittance? */
 		setcolor(ctmp, m->oargs.farg[6],
 				m->oargs.farg[7],
 				m->oargs.farg[8]);
