@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.9 2021/01/19 23:32:00 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.10 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -157,8 +157,11 @@ cm_loadBTDF(const char *fname)
 	ec = SDloadFile(&myBSDF, fname);
 	if (ec)
 		error(USER, transSDError(ec));
-	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, diffBTDF);
 	recip = (myBSDF.tb == NULL);
+	if (recip)
+		ccy2rgb(&myBSDF.tLambFront.spec, myBSDF.tLambFront.cieY/PI, diffBTDF);
+	else
+		ccy2rgb(&myBSDF.tLambBack.spec, myBSDF.tLambBack.cieY/PI, diffBTDF);
 	tdf = recip ? myBSDF.tf : myBSDF.tb;
 	if (tdf == NULL) {		/* no non-Lambertian transmission? */
 		SDfreeBSDF(&myBSDF);

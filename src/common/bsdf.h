@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.27 2020/05/14 19:20:13 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.28 2021/03/27 17:50:18 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -126,7 +126,8 @@ typedef struct {
 	double		dim[3];		/* width, height, thickness (meters) */
 	SDValue		rLambFront;	/* diffuse front reflectance */
 	SDValue		rLambBack;	/* diffuse rear reflectance */
-	SDValue		tLamb;		/* diffuse transmission */
+	SDValue		tLambFront;	/* diffuse front transmittance */
+	SDValue		tLambBack;	/* diffuse back transmittance */
 	SDSpectralDF	*rf, *rb;	/* non-diffuse BRDF components */
 	SDSpectralDF	*tf, *tb;	/* non-diffuse BTDF components */
 } SDData;

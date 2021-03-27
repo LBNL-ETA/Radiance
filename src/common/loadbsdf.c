@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.12 2020/05/14 19:20:13 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.13 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -58,8 +58,8 @@ loadBSDF(char *fname)
 						/* simple checks */
 	checkDF(sd->name, sd->rLambFront.cieY, sd->rf, "front reflection");
 	checkDF(sd->name, sd->rLambBack.cieY, sd->rb, "rear reflection");
-	checkDF(sd->name, sd->tLamb.cieY, sd->tf, "front transmission");
-	checkDF(sd->name, sd->tLamb.cieY, sd->tb, "back transmission");
+	checkDF(sd->name, sd->tLambFront.cieY, sd->tf, "front transmission");
+	checkDF(sd->name, sd->tLambBack.cieY, sd->tb, "back transmission");
 #ifdef DEBUG
 {
 float	rgb[3];
@@ -68,8 +68,10 @@ ccy2rgb(&sd->rLambFront.spec, sd->rLambFront.cieY, rgb);
 fprintf(stderr, "Front diffuse RGB: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
 ccy2rgb(&sd->rLambBack.spec, sd->rLambBack.cieY, rgb);
 fprintf(stderr, "Back diffuse RGB: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
-ccy2rgb(&sd->tLamb.spec, sd->tLamb.cieY, rgb);
-fprintf(stderr, "Diffuse RGB transmittance: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
+ccy2rgb(&sd->tLambFront.spec, sd->tLamb.cieY, rgb);
+fprintf(stderr, "Front diffuse RGB transmittance: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
+ccy2rgb(&sd->tLambBack.spec, sd->tLamb.cieY, rgb);
+fprintf(stderr, "Back diffuse RGB transmittance: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
 if (sd->rf)
 fprintf(stderr, "Maximum direct hemispherical front reflection: %.3f%%\n",
 sd->rf->maxHemi*100.);

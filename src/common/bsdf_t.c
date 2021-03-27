@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.49 2021/03/27 15:53:01 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.50 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1430,10 +1430,8 @@ SDloadTre(SDData *sd, ezxml_t wtl)
 					/* separate diffuse components */
 	extract_diffuse(&sd->rLambFront, sd->rf);
 	extract_diffuse(&sd->rLambBack, sd->rb);
-	if (sd->tb != NULL)
-		extract_diffuse(&sd->tLamb, sd->tb);
-	if (sd->tf != NULL)
-		extract_diffuse(&sd->tLamb, sd->tf);
+	extract_diffuse(&sd->tLambFront, sd->tf);
+	extract_diffuse(&sd->tLambBack, sd->tb);
 					/* return success */
 	return SDEnone;
 }

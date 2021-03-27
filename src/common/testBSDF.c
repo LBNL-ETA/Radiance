@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.15 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.16 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -126,13 +126,14 @@ main(int argc, char *argv[])
 						bsdf->rb->maxHemi);
 			if (bsdf->tf)
 				printf("Peak front hemispherical transmittance: %.3e\n",
-						bsdf->tLamb.cieY + bsdf->tf->maxHemi);
+						bsdf->tLambFront.cieY + bsdf->tf->maxHemi);
 			if (bsdf->tb)
 				printf("Peak back hemispherical transmittance: %.3e\n",
-						bsdf->tLamb.cieY + bsdf->tb->maxHemi);
+						bsdf->tLambBack.cieY + bsdf->tb->maxHemi);
 			printXYZ("Diffuse Front Reflectance: ", &bsdf->rLambFront);
 			printXYZ("Diffuse Back Reflectance: ", &bsdf->rLambBack);
-			printXYZ("Diffuse Transmittance: ", &bsdf->tLamb);
+			printXYZ("Diffuse Front Transmittance: ", &bsdf->tLambFront);
+			printXYZ("Diffuse Back Transmittance: ", &bsdf->tLambBack);
 			break;
 		case 'Q':			/* query BSDF value */
 			if (!bsdf)

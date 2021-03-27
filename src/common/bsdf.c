@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.58 2020/05/14 19:20:13 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.59 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -381,8 +381,10 @@ SDfreeBSDF(SDData *sd)
 	sd->rLambFront.spec.flags = 0;
 	sd->rLambBack.cieY = .0;
 	sd->rLambBack.spec.flags = 0;
-	sd->tLamb.cieY = .0;
-	sd->tLamb.spec.flags = 0;
+	sd->tLambFront.cieY = .0;
+	sd->tLambFront.spec.flags = 0;
+	sd->tLambBack.cieY = .0;
+	sd->tLambBack.spec.flags = 0;
 }
 
 /* Find writeable BSDF by name, or allocate new cache entry if absent */
@@ -649,10 +651,10 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 		*sv = sd->rLambBack;
 		sdf = sd->rb;
 	} else if (inFront) {
-		*sv = sd->tLamb;
+		*sv = sd->tLambFront;
 		sdf = (sd->tf != NULL) ? sd->tf : sd->tb;
 	} else /* outFront & !inFront */ {
-		*sv = sd->tLamb;
+		*sv = sd->tLambBack;
 		sdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
 	sv->cieY *= 1./M_PI;
@@ -695,7 +697,8 @@ SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
 	if ((sflags & SDsampDf+SDsampR) != SDsampDf+SDsampR)
 		hsum = .0;
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
-		hsum += sd->tLamb.cieY;
+		hsum += (inVec[2] > 0) ?
+				sd->tLambFront.cieY : sd->tLambBack.cieY;
 					/* gather non-diffuse components */
 	i = (((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR) &
 			(rdf != NULL)) ? rdf->ncomp : 0;
@@ -748,7 +751,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 		sv->cieY = .0;
 	rdiff = sv->cieY;
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
-		sv->cieY += sd->tLamb.cieY;
+		sv->cieY += inFront ? sd->tLambFront.cieY : sd->tLambBack.cieY;
 					/* gather non-diffuse components */
 	i = nr = (((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR) &
 			(rdf != NULL)) ? rdf->ncomp : 0;
@@ -784,12 +787,13 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	randX -= rdiff;
 					/* diffuse transmission? */
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT) {
-		if (randX < sd->tLamb.cieY) {
-			sv->spec = sd->tLamb.spec;
-			SDdiffuseSamp(ioVec, !inFront, randX/sd->tLamb.cieY);
+		const SDValue	*sdt = inFront ? &sd->tLambFront : &sd->tLambBack;
+		if (randX < sdt->cieY) {
+			sv->spec = sdt->spec;
+			SDdiffuseSamp(ioVec, !inFront, randX/sdt->cieY);
 			goto done;
 		}
-		randX -= sd->tLamb.cieY;
+		randX -= sdt->cieY;
 	}
 					/* else one of cumulative dist. */
 	for (i = 0; i < n && randX >= cdarr[i]->cTotal; i++)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.61 2020/07/09 17:32:31 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.62 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -195,7 +195,8 @@ compute_through(BSDFDAT *ndp)
 	}
 	if (vypeak*tomsurr < peak_over*bright(vsurr)*ns)
 		return;				/* peak not peaky enough */
-	if ((vypeak/ns - ndp->sd->tLamb.cieY*(1./PI))*tomsum <= .001)
+	if ((vypeak/ns - (ndp->vray[2] > 0 ? ndp->sd->tLambFront.cieY
+			: ndp->sd->tLambBack.cieY)*(1./PI))*tomsum <= .001)
 		return;				/* < 0.1% transmission */
 	copycolor(ndp->cthru, vpeak);		/* already scaled by omega */
 	multcolor(ndp->cthru, ndp->pr->pcol);	/* modify by pattern */
@@ -255,10 +256,15 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			return(0);	/* all diffuse */
 		sv = ndp->sd->rLambBack;
 		break;
-	default:
+	case 1:
 		if ((ndp->sd->tf == NULL) & (ndp->sd->tb == NULL))
 			return(0);	/* all diffuse */
-		sv = ndp->sd->tLamb;
+		sv = ndp->sd->tLambFront;
+		break;
+	case 2:
+		if ((ndp->sd->tf == NULL) & (ndp->sd->tb == NULL))
+			return(0);	/* all diffuse */
+		sv = ndp->sd->tLambBack;
 		break;
 	}
 	if (sv.cieY > FTINY) {
@@ -696,7 +702,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		}
 	}
 						/* diffuse transmittance */
-	cvt_sdcolor(nd.tdiff, &nd.sd->tLamb);
+	cvt_sdcolor(nd.tdiff, hitfront ? &nd.sd->tLambFront : &nd.sd->tLambBack);
 	if (m->oargs.nfargs >= 9) {
 		setcolor(ctmp, m->oargs.farg[6],
 				m->oargs.farg[7],

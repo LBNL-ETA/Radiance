@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.37 2021/02/12 00:53:56 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.38 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -752,9 +752,10 @@ main(int argc, char *argv[])
 				overall_min = myBSDF.rLambFront.cieY/PI;
 			if (back_comp & SDsampR && myBSDF.rLambBack.cieY < overall_min*PI)
 				overall_min = myBSDF.rLambBack.cieY/PI;
-			if ((front_comp|back_comp) & SDsampT &&
-					myBSDF.tLamb.cieY < overall_min*PI)
-				overall_min = myBSDF.tLamb.cieY/PI;
+			if (front_comp & SDsampT && myBSDF.tLambFront.cieY < overall_min*PI)
+				overall_min = myBSDF.tLambFront.cieY/PI;
+			if (back_comp & SDsampT && myBSDF.tLambBack.cieY < overall_min*PI)
+				overall_min = myBSDF.tLambBack.cieY/PI;
 		}
 		set_minlog();
 		if (!build_wBSDF(&myBSDF))

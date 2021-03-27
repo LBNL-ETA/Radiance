@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.32 2020/11/13 19:21:11 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.33 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -277,7 +277,7 @@ eval_bsdf(const char *fname)
 	    }
 	}
 						/* front transmission */
-	if (bsd.tf != NULL || bsd.tLamb.cieY > .002) {
+	if (bsd.tf != NULL || bsd.tLambFront.cieY > .002) {
 	    input_orient = 1; output_orient = -1;
 	    cfp[CIE_Y] = open_component_file(CIE_Y);
 	    if (bsd.tf != NULL && bsd.tf->comp[0].cspec[2].flags) {

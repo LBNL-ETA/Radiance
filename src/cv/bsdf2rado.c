@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rado.c,v 2.1 2018/06/07 15:39:36 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rado.c,v 2.2 2021/03/27 17:50:18 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -75,9 +75,10 @@ main(int argc, char *argv[])
 			bsdf_min = myBSDF.rLambFront.cieY/M_PI;
 		if (myBSDF.rb != NULL && myBSDF.rLambBack.cieY < bsdf_min*M_PI)
 			bsdf_min = myBSDF.rLambBack.cieY/M_PI;
-		if ((myBSDF.tf != NULL) | (myBSDF.tb != NULL) &&
-				myBSDF.tLamb.cieY < bsdf_min*M_PI)
-			bsdf_min = myBSDF.tLamb.cieY/M_PI;
+		if (myBSDF.tf != NULL && myBSDF.tLambFront.cieY < bsdf_min*M_PI)
+			bsdf_min = myBSDF.tLambFront.cieY/M_PI;
+		if (myBSDF.tb != NULL && myBSDF.tLambBack.cieY < bsdf_min*M_PI)
+			bsdf_min = myBSDF.tLambBack.cieY/M_PI;
 		if (doTrans && (myBSDF.tf == NULL) & (myBSDF.tb == NULL)) {
 			fprintf(stderr, "%s: no transmitted component in '%s'\n",
 					progname, argv[1]);
