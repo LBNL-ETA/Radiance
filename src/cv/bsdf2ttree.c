@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.56 2020/11/13 19:21:11 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.57 2021/03/29 17:40:21 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -268,8 +268,7 @@ eval_isotropic(char *funame)
 				    uv[0] = usum / (sum+FTINY);
 				    uv[1] = vsum / (sum+FTINY);
 				}
-			    } else
-			    if (rbf_colorimetry == RBCtristimulus) {
+			    } else if (rbf_colorimetry == RBCtristimulus) {
 				uv[0] = uv[1] = 1. /
 				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
 				uv[0] *= 4.*sdv.spec.cx;
@@ -537,8 +536,7 @@ eval_anisotropic(char *funame)
 				    uv[0] = usum / (sum+FTINY);
 				    uv[1] = vsum / (sum+FTINY);
 				}
-			    } else
-			    if (rbf_colorimetry == RBCtristimulus) {
+			    } else if (rbf_colorimetry == RBCtristimulus) {
 				uv[0] = uv[1] = 1. /
 				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
 				uv[0] *= 4.*sdv.spec.cx;
