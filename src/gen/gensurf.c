@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.28 2020/11/14 00:29:51 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.29 2021/04/01 14:52:55 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -58,7 +58,7 @@ double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
 
 typedef struct {
 	int  valid;	/* point is valid (vertex number) */
-	int  nvalid;	/* normal is valid */
+	int  nvalid;	/* normal is valid (normal number) */
 	FVECT  p;	/* vertex position */
 	FVECT  n;	/* average normal */
 	RREAL  uv[2];	/* (u,v) position */
@@ -308,19 +308,25 @@ putobjrow(			/* output vertex row to .OBJ */
 	int  n
 )
 {
+	static FVECT  prevNorm;
+
 	for ( ; n-- >= 0; rp++) {
 		if (!rp->valid)
 			continue;
 		fputs("v ", stdout);
 		pvect(rp->p);
-		if (smooth && !ZEROVECT(rp->n)) {
+		rp->valid = ++nverts;
+		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
+		if (!smooth || ZEROVECT(rp->n))
+			rp->nvalid = 0;
+		else if (VABSEQ(rp->n, prevNorm))
+			rp->nvalid = nnorms;
+		else {
 			printf("\tvn %.9g %.9g %.9g\n",
 					rp->n[0], rp->n[1], rp->n[2]);
 			rp->nvalid = ++nnorms;
-		} else
-			rp->nvalid = 0;
-		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
-		rp->valid = ++nverts;
+			VCOPY(prevNorm, rp->n);
+		}
 	}
 }
 
