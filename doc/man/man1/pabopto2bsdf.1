@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.4 2021/03/26 19:48:22 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.5 2021/04/05 19:56:18 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
 pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
@@ -10,6 +10,8 @@ pabopto2bsdf - convert BSDF measurements to a scattering interpolant representat
 .B "\-n nproc"
 ][
 .B "\-s symmetry"
+][
+.B "\-g angle|'A'"
 ]
 .B "meas1 meas2 .."
 .SH DESCRIPTION
@@ -95,6 +97,16 @@ Note that only the "up" and "bilateral" symmetry options have
 identical input coverage, so this is the only time the
 .I \-s
 option must be specified if the default mirroring is not appropriate.
+.PP
+If a
+.I \-g
+option is present, it will cull scattered measurements that are nearer
+to grazing than the given angle in degrees.
+If the word "auto" (which can be abbreviated as 'a' or 'A') is given
+instead of an angle, then the near-grazing angle will be determined
+by the lowest incident angle measurement present in the input data.
+This is sometimes necessary to eliminate noise and edge effects that
+some measurements exhibit near grazing.
 .PP
 The
 .I Mountain

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.39 2021/02/25 02:13:15 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.40 2021/04/05 19:56:18 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -31,6 +31,8 @@ typedef struct {
 PGINPUT		*inpfile;	/* input files sorted by incidence */
 
 int		rev_orient = 0;	/* shall we reverse surface orientation? */
+
+double		lim_graze = 0;	/* limit scattering near grazing (deg above) */
 
 /* Compare incident angles */
 static int
@@ -178,7 +180,10 @@ add_pabopto_inp(const int i)
 				fclose(fp);
 				return(1);
 			}
-		if (rev_orient) {	/* reverse Z-axis to face outside */
+					/* check if scatter angle is too low */
+		if (fabs(theta_out - 90.) < lim_graze-FTINY)
+			continue;
+		if (rev_orient) {	/* reverse Z-axis to face outside? */
 			theta_out = 180. - theta_out;
 			phi_out = 360. - phi_out;
 		}
@@ -224,6 +229,7 @@ int
 main(int argc, char *argv[])
 {
 	extern int	nprocs;
+	int		auto_grazing = 0;
 	const char	*symmetry = "0";
 	int		ninpfiles, totinc;
 	int		a, i;
@@ -240,6 +246,13 @@ main(int argc, char *argv[])
 		case 's':
 			symmetry = argv[++a];
 			break;
+		case 'g':
+			if (toupper(argv[a+1][0]) == 'A')
+				auto_grazing = 1;
+			else
+				lim_graze = atof(argv[a+1]);
+			++a;
+			break;
 		default:
 			goto userr;
 		}
@@ -251,10 +264,14 @@ main(int argc, char *argv[])
 	inpfile = (PGINPUT *)malloc(sizeof(PGINPUT)*totinc);
 	if (inpfile == NULL)
 		return(1);
-	for (i = 0; i < ninpfiles; i++)
+	if (auto_grazing)
+		lim_graze = 90.;
+	for (i = 0; i < ninpfiles; i++) {
 		if (!init_pabopto_inp(i, argv[a+i]))
 			return(1);
-
+		if (auto_grazing && fabs(inpfile[i].theta - 90.) < lim_graze)
+			lim_graze = fabs(inpfile[i].theta - 90.);
+	}
 	for (i = ninpfiles; i < totinc; i++) {	/* copy for "up" symmetry */
 		inpfile[i] = inpfile[i-ninpfiles];
 		inpfile[i].phi += 180.;		/* invert duplicate data */
@@ -308,7 +325,7 @@ main(int argc, char *argv[])
 	save_bsdf_rep(stdout);			/* complete header + data */
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-t][-n nproc][-s symmetry] meas1.dat meas2.dat .. > bsdf.sir\n",
+	fprintf(stderr, "Usage: %s [-t][-n nproc][-s symmetry][-g angle|'A'] meas1.dat meas2.dat .. > bsdf.sir\n",
 					progname);
 	return(1);
 }

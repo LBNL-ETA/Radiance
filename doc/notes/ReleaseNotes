@@ -2429,3 +2429,6 @@ Added robjutil +T option to triangulate all faces in .OBJ description.
 Altered BSDF library to have both front and back diffuse transmittance
 values, which can be different.  This was necessary to avoid issues
 caused by measurement and modeling discrepancies.
+
+Added pabopto2bsdf -g option to cull near-grazing scattering to avoid
+issues with noise and negative values.
