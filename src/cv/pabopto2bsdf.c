@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.40 2021/04/05 19:56:18 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.41 2021/04/05 21:06:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -229,7 +229,8 @@ int
 main(int argc, char *argv[])
 {
 	extern int	nprocs;
-	int		auto_grazing = 0;
+	static char	gval_buf[16];
+	char *		auto_grazing = NULL;
 	const char	*symmetry = "0";
 	int		ninpfiles, totinc;
 	int		a, i;
@@ -248,7 +249,7 @@ main(int argc, char *argv[])
 			break;
 		case 'g':
 			if (toupper(argv[a+1][0]) == 'A')
-				auto_grazing = 1;
+				auto_grazing = argv[a+1] = gval_buf;
 			else
 				lim_graze = atof(argv[a+1]);
 			++a;
@@ -272,6 +273,8 @@ main(int argc, char *argv[])
 		if (auto_grazing && fabs(inpfile[i].theta - 90.) < lim_graze)
 			lim_graze = fabs(inpfile[i].theta - 90.);
 	}
+	if (auto_grazing)
+		sprintf(auto_grazing, "%.2f", lim_graze);
 	for (i = ninpfiles; i < totinc; i++) {	/* copy for "up" symmetry */
 		inpfile[i] = inpfile[i-ninpfiles];
 		inpfile[i].phi += 180.;		/* invert duplicate data */
