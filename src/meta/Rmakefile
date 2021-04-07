@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.16 2018/07/03 22:29:01 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.17 2021/04/07 17:03:13 greg Exp $
 #
 #  Compiles:
 #
@@ -32,7 +32,7 @@ all: $(PROGS)
 
 install: $(PROGS) $(LIBS)
 	cp $(PROGS) $(INSTDIR)
-	cp $(LIBS) $(MLIBDIR)
+	cp -f $(LIBS) $(MLIBDIR)
 	./cv symbols.met > $(MLIBDIR)/symbols.mta
 	./cv vchars.met > $(MLIBDIR)/vchars.mta
 
