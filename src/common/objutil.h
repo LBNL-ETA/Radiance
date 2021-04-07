@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.13 2021/03/12 03:59:25 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.14 2021/04/07 03:02:00 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -92,6 +92,9 @@ Scene *		loadOBJ(Scene *sc, const char *fspec);
 
 /* Duplicate a scene, optionally selecting faces */
 Scene *		dupScene(const Scene *sc, int flreq, int flexc);
+
+/* Add one scene to another, not checking for redundancies */
+int		addScene(Scene *scdst, const Scene *scsrc);
 
 /* Transform entire scene */
 int		xfScene(Scene *sc, int xac, char *xav[]);

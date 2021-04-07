@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.13 2021/03/03 18:53:08 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.14 2021/04/07 03:02:00 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: objutil.c,v 2.13 2021/03/03 18:53:08 greg Exp 
 int
 findName(const char *nm, const char **nmlist, int n)
 {
-	int    i;
+	int	i;
 	
 	for (i = n; i-- > 0; )
 		if (!strcmp(nmlist[i], nm))
@@ -31,7 +31,7 @@ findName(const char *nm, const char **nmlist, int n)
 void
 clearSelection(Scene *sc, int set)
 {
-	Face    *f;
+	Face	*f;
 	
 	for (f = sc->flist; f != NULL; f = f->next)
 		if (set)
@@ -44,8 +44,8 @@ clearSelection(Scene *sc, int set)
 void
 selectGroup(Scene *sc, const char *gname, int invert)
 {
-	int     gid = getGroupID(sc, gname);
-	Face    *f;
+	int	gid = getGroupID(sc, gname);
+	Face	*f;
 
 	if (gid < 0)
 		return;
@@ -62,8 +62,8 @@ selectGroup(Scene *sc, const char *gname, int invert)
 void
 selectMaterial(Scene *sc, const char *mname, int invert)
 {
-	int     mid = getMaterialID(sc, mname);
-	Face    *f;
+	int	mid = getMaterialID(sc, mname);
+	Face	*f;
 	
 	if (mid < 0)
 		return;
@@ -80,7 +80,7 @@ selectMaterial(Scene *sc, const char *mname, int invert)
 void
 invertSelection(Scene *sc)
 {
-	Face    *f;
+	Face	*f;
 	
 	for (f = sc->flist; f != NULL; f = f->next)
 		f->flags ^= FACE_SELECTED;
@@ -90,8 +90,8 @@ invertSelection(Scene *sc)
 int
 numberSelected(Scene *sc)
 {
-	int     nsel = 0;
-	Face    *f;
+	int	nsel = 0;
+	Face	*f;
 	
 	for (f = sc->flist; f != NULL; f = f->next)
 		nsel += ((f->flags & FACE_SELECTED) != 0);
@@ -103,9 +103,9 @@ int
 foreachFace(Scene *sc, int (*cb)(Scene *, Face *, void *),
 			int flreq, int flexc, void *c_data)
 {
-	int     fltest = flreq | flexc;
-	int     sum = 0;
-	Face    *f;
+	const int	fltest = flreq | flexc;
+	int		sum = 0;
+	Face		*f;
 	
 	if ((sc == NULL) | (cb == NULL))
 		return(0);
@@ -123,8 +123,8 @@ foreachFace(Scene *sc, int (*cb)(Scene *, Face *, void *),
 static int
 remFaceTexture(Scene *sc, Face *f, void *dummy)
 {
-	int     hadTexture = 0;
-	int     i;
+	int	hadTexture = 0;
+	int	i;
 	
 	for (i = f->nv; i-- > 0; ) {
 		if (f->v[i].tid < 0)
@@ -146,8 +146,8 @@ removeTexture(Scene *sc, int flreq, int flexc)
 static int
 remFaceNormal(Scene *sc, Face *f, void *dummy)
 {
-	int     hadNormal = 0;
-	int     i;
+	int	hadNormal = 0;
+	int	i;
 	
 	for (i = f->nv; i-- > 0; ) {
 		if (f->v[i].nid < 0)
@@ -169,7 +169,8 @@ removeNormals(Scene *sc, int flreq, int flexc)
 static int
 chngFaceGroup(Scene *sc, Face *f, void *ptr)
 {
-	int     grp = *(int *)ptr;
+	int	grp = *(int *)ptr;
+
 	if (f->grp == grp)
 		return(0);
 	f->grp = grp;
@@ -180,7 +181,8 @@ chngFaceGroup(Scene *sc, Face *f, void *ptr)
 int
 changeGroup(Scene *sc, const char *gname, int flreq, int flexc)
 {
-	int     grp = getGroupID(sc, gname);
+	int	grp = getGroupID(sc, gname);
+
 	if (grp < 0) {
 		sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
 		sc->grpname[grp=sc->ngrps++] = savqstr((char *)gname);
@@ -192,7 +194,8 @@ changeGroup(Scene *sc, const char *gname, int flreq, int flexc)
 static int
 chngFaceMaterial(Scene *sc, Face *f, void *ptr)
 {
-	int     mat = *(int *)ptr;
+	int	mat = *(int *)ptr;
+
 	if (f->mat == mat)
 		return(0);
 	f->mat = mat;
@@ -203,7 +206,8 @@ chngFaceMaterial(Scene *sc, Face *f, void *ptr)
 int
 changeMaterial(Scene *sc, const char *mname, int flreq, int flexc)
 {
-	int     mat = getMaterialID(sc, mname);
+	int	mat = getMaterialID(sc, mname);
+
 	if (mat < 0) {
 		sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
 		sc->matname[mat=sc->nmats++] = savqstr((char *)mname);
@@ -248,10 +252,10 @@ norm_diff(const Normal n1, const Normal n2, double eps)
 static int
 replace_vertex(Scene *sc, int prev, int repl, double eps)
 {
-	int     repl_tex[10];
-	int     repl_norm[10];
-	Face    *f, *flast=NULL;
-	int     i, j=0;
+	int	repl_tex[10];
+	int	repl_norm[10];
+	Face	*f, *flast=NULL;
+	int	i, j=0;
 					/* check to see if it's even used */
 	if (sc->vert[prev].vflist == NULL)
 		return(0);
@@ -360,12 +364,12 @@ linkerr:
 int
 coalesceVertices(Scene *sc, double eps)
 {
-	int     nelim = 0;
-	LUTAB   myLookup;
-	LUENT   *le;
-	char    vertfmt[32], vertbuf[64];
-	double  d;
-	int     i;
+	int	nelim = 0;
+	LUTAB	myLookup;
+	LUENT	*le;
+	char	vertfmt[32], vertbuf[64];
+	double	d;
+	int	i;
 	
 	if (eps >= 1.)
 		return(0);
@@ -412,11 +416,11 @@ coalesceVertices(Scene *sc, double eps)
 int
 findDuplicateFaces(Scene *sc)
 {
-	int     nchecked = 0;
-	int     nfound = 0;
-	Face    *f, *f1;
-	int     vid;
-	int     i, j;
+	int	nchecked = 0;
+	int	nfound = 0;
+	Face	*f, *f1;
+	int	vid;
+	int	i, j;
 						/* start fresh */
 	for (f = sc->flist; f != NULL; f = f->next)
 		f->flags &= ~FACE_DUPLICATE;
@@ -469,10 +473,10 @@ findDuplicateFaces(Scene *sc)
 int
 deleteFaces(Scene *sc, int flreq, int flexc)
 {
-	int     fltest = flreq | flexc;
-	int     orig_nfaces = sc->nfaces;
-	Face    fhead;
-	Face    *f, *ftst;
+	const int	fltest = flreq | flexc;
+	int		orig_nfaces = sc->nfaces;
+	Face		fhead;
+	Face		*f, *ftst;
 	
 	fhead.next = sc->flist;
 	f = &fhead;
@@ -604,7 +608,7 @@ add2facelist(Scene *sc, Face *f, int i)
 Scene *
 newScene(void)
 {
-	Scene   *sc = (Scene *)ecalloc(1, sizeof(Scene));
+	Scene	*sc = (Scene *)ecalloc(1, sizeof(Scene));
 						/* default group & material */
 	sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
 	sc->grpname[sc->ngrps++] = savqstr("DEFAULT_GROUP");
@@ -640,7 +644,7 @@ addTexture(Scene *sc, double u, double v)
 int
 addNormal(Scene *sc, double xn, double yn, double zn)
 {
-	FVECT   nrm;
+	FVECT	nrm;
 
 	nrm[0] = xn; nrm[1] = yn; nrm[2] = zn;
 	if (normalize(nrm) == .0)
@@ -676,8 +680,8 @@ setMaterial(Scene *sc, const char *nm)
 Face *
 addFace(Scene *sc, VNDX vid[], int nv)
 {
-	Face    *f;
-	int     i;
+	Face	*f;
+	int	i;
 	
 	if (nv < 3)
 		return(NULL);
@@ -779,6 +783,82 @@ dupScene(const Scene *osc, int flreq, int flexc)
 	return(sc);
 }
 
+/* Add one scene to another, not checking for redundancies */
+int
+addScene(Scene *scdst, const Scene *scsrc)
+{
+	VNDX		my_vlist[4];
+	int		*vert_map = NULL;
+	int		*norm_map = NULL;
+	int		*tex_map = NULL;
+	VNDX		*vlist = my_vlist;
+	int		vllen = sizeof(my_vlist)/sizeof(VNDX);
+	int		cur_mat = 0;
+	int		cur_grp = 0;
+	int		fcnt = 0;
+	const Face	*f;
+	int		i;
+
+	if ((scdst == NULL) | (scsrc == NULL))
+		return(-1);
+	if (scsrc->nfaces <= 0)
+		return(0);
+					/* map vertices */
+	vert_map = (int *)emalloc(sizeof(int *)*scsrc->nverts);
+	for (i = 0; i < scsrc->nverts; i++) {
+		const Vertex	*v = scsrc->vert + i;
+		if (v->vflist == NULL) {
+			vert_map[i] = -1;
+			continue;
+		}
+		vert_map[i] = addVertex(scdst, v->p[0], v->p[1], v->p[2]);
+	}
+	if (scsrc->ntex > 0)		/* map texture coords */
+		tex_map = (int *)emalloc(sizeof(int *)*scsrc->ntex);
+	for (i = 0; i < scsrc->ntex; i++) {
+		const TexCoord	*t = scsrc->tex + i;
+		tex_map[i] = addTexture(scdst, t->u, t->v);
+	}
+	if (scsrc->nnorms > 0)		/* map normals */
+		norm_map = (int *)emalloc(sizeof(int *)*scsrc->nnorms);
+	for (i = 0; i < scsrc->nnorms; i++) {
+		const float	*n = scsrc->norm[i];
+		norm_map[i] = addNormal(scdst, n[0], n[1], n[2]);
+	}
+					/* add faces */
+	scdst->lastgrp = scdst->lastmat = 0;
+	for (f = scsrc->flist; f != NULL; f = f->next) {
+		if (f->grp != cur_grp)
+			setGroup(scdst, scsrc->grpname[cur_grp = f->grp]);
+		if (f->mat != cur_mat)
+			setMaterial(scdst, scsrc->matname[cur_mat = f->mat]);
+		if (f->nv > vllen) {
+			if (vlist == my_vlist)
+				vlist = (VNDX *)emalloc(
+						sizeof(VNDX)*(vllen = f->nv));
+			else
+				vlist = (VNDX *)erealloc((char *)vlist,
+						sizeof(VNDX)*(vllen = f->nv));
+		}
+		memset(vlist, 0xff, sizeof(VNDX)*f->nv);
+		for (i = f->nv; i-- > 0; ) {
+			if (f->v[i].vid >= 0)
+				vlist[i][0] = vert_map[f->v[i].vid];
+			if (f->v[i].tid >= 0)
+				vlist[i][1] = tex_map[f->v[i].tid];
+			if (f->v[i].nid >= 0)
+				vlist[i][2] = norm_map[f->v[i].nid];
+		}
+		fcnt += (addFace(scdst, vlist, f->nv) != NULL);
+	}
+					/* clean up */
+	if (vlist != my_vlist) efree((char *)vlist);
+	if (norm_map != NULL) efree((char *)norm_map);
+	if (tex_map != NULL) efree((char *)tex_map);
+	efree((char *)vert_map);
+	return(fcnt);
+}
+
 #define MAXAC	100
 
 /* Transform entire scene */
@@ -835,7 +915,7 @@ xfmScene(Scene *sc, const char *xfm)
 	if (!*xfm)
 		return(0);
 					/* parse string into words */
-	xav[0] = strcpy((char *)malloc(strlen(xfm)+1), xfm);
+	xav[0] = strcpy((char *)emalloc(strlen(xfm)+1), xfm);
 	xac = 1; i = 0;
 	for ( ; ; ) {
 		while (!isspace(xfm[++i]))
@@ -853,7 +933,7 @@ xfmScene(Scene *sc, const char *xfm)
 	}
 	xav[xac] = NULL;
 	i = xfScene(sc, xac, xav);
-	free(xav[0]);
+	efree((char *)xav[0]);
 	return(i);
 }
 #undef MAXAC
