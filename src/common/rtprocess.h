@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.22 2021/01/19 18:15:32 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.23 2021/04/07 01:15:53 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -54,7 +54,7 @@ extern "C" {
    attached to the standard output of the child, and subsequent writes
    to that descriptor in the parent send data to the standard input
    of the child. The returned r descriptor is set to -1, since
-   there is no output to read from any longer in the child.  The
+   there is no longer any output to read from the child.  The
    default w descriptor of 1 will cause the child to act as a filter
    on the output of the parent.  Make sure to call fflush(stdout) first
    if any data was buffered.  It is illegal to set both PF_FILT_INP and
