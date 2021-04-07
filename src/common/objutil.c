@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.16 2021/04/07 16:40:28 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.17 2021/04/07 16:46:58 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -799,7 +799,7 @@ addScene(Scene *scdst, const Scene *scsrc)
 	if (scsrc->nfaces <= 0)
 		return(0);
 					/* map vertices */
-	vert_map = (int *)emalloc(sizeof(int *)*scsrc->nverts);
+	vert_map = (int *)emalloc(sizeof(int)*scsrc->nverts);
 	for (i = 0; i < scsrc->nverts; i++) {
 		const Vertex	*v = scsrc->vert + i;
 		if (v->vflist == NULL) {
@@ -830,12 +830,10 @@ addScene(Scene *scdst, const Scene *scsrc)
 		if (f->mat != cur_mat)
 			setMaterial(scdst, scsrc->matname[cur_mat = f->mat]);
 		if (f->nv > vllen) {
-			if (vlist == my_vlist)
-				vlist = (VNDX *)emalloc(
-						sizeof(VNDX)*(vllen = f->nv));
-			else
-				vlist = (VNDX *)erealloc((char *)vlist,
-						sizeof(VNDX)*(vllen = f->nv));
+			vlist = (VNDX *)( vlist == my_vlist ?
+				emalloc(sizeof(VNDX)*f->nv) :
+				erealloc((char *)vlist, sizeof(VNDX)*f->nv) );
+			vllen = f->nv;
 		}
 		memset(vlist, 0xff, sizeof(VNDX)*f->nv);
 		for (i = f->nv; i-- > 0; ) {
