@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.47 2021/04/07 21:13:52 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.48 2021/04/07 23:12:19 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -439,9 +439,11 @@ double  Lddyn
 	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
 		double	d;
 		d = expmult/tms->inpsf * tmLuminance(tms->mbrmin + i);
-		if (d <= minD)
-			break;		/* map initialized to zeroes */
-		d = (d - minD)/(1. - minD);
+		if (d >= 2.*minD)
+			d -= minD;
+		else			/* soft black crushing */
+			d *= d/(4.*minD);
+		d /= 1. - minD;
 		d = TM_BRES*pow(d, 1./gamval);
 		tms->lumap[i] = (d > maxV) ? maxV : (int)d;
 	}
