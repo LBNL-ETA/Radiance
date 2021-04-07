@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.14 2021/04/07 03:02:00 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.15 2021/04/07 14:37:57 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -604,20 +604,6 @@ add2facelist(Scene *sc, Face *f, int i)
 	fp->v[j].fnext = f;			/* append new face */
 }
 
-/* Allocate an empty scene */
-Scene *
-newScene(void)
-{
-	Scene	*sc = (Scene *)ecalloc(1, sizeof(Scene));
-						/* default group & material */
-	sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
-	sc->grpname[sc->ngrps++] = savqstr("DEFAULT_GROUP");
-	sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
-	sc->matname[sc->nmats++] = savqstr("DEFAULT_MATERIAL");
-
-	return(sc);
-}
-
 /* Add a vertex to a scene */
 int
 addVertex(Scene *sc, double x, double y, double z)
@@ -714,6 +700,20 @@ addFace(Scene *sc, VNDX vid[], int nv)
 	return(f);
 }
 
+/* Allocate an empty scene */
+Scene *
+newScene(void)
+{
+	Scene	*sc = (Scene *)ecalloc(1, sizeof(Scene));
+						/* default group & material */
+	sc->grpname = chunk_alloc(char *, sc->grpname, sc->ngrps);
+	sc->grpname[sc->ngrps++] = savqstr("DEFAULT_GROUP");
+	sc->matname = chunk_alloc(char *, sc->matname, sc->nmats);
+	sc->matname[sc->nmats++] = savqstr("DEFAULT_MATERIAL");
+
+	return(sc);
+}
+
 /* Duplicate a scene, optionally selecting faces */
 Scene *
 dupScene(const Scene *osc, int flreq, int flexc)
@@ -729,25 +729,24 @@ dupScene(const Scene *osc, int flreq, int flexc)
 	sc = newScene();
 	for (i = 0; i < osc->ndescr; i++)
 		addComment(sc, osc->descr[i]);
-	if (osc->ngrps) {
-		sc->grpname = (char **)emalloc(sizeof(char *) *
-						(osc->ngrps+(CHUNKSIZ-1)));
-		for (i = 0; i < osc->ngrps; i++)
+	if (osc->ngrps > 1) {
+		sc->grpname = (char **)erealloc((char *)sc->grpname,
+				sizeof(char *) * (osc->ngrps+(CHUNKSIZ-1)));
+		for (i = 1; i < osc->ngrps; i++)
 			sc->grpname[i] = savqstr(osc->grpname[i]);
 		sc->ngrps = osc->ngrps;
 	}
-	if (osc->nmats) {
-		sc->matname = (char **)emalloc(sizeof(char *) *
-						(osc->nmats+(CHUNKSIZ-1)));
-		for (i = 0; i < osc->nmats; i++)
+	if (osc->nmats > 1) {
+		sc->matname = (char **)erealloc((char *)sc->matname,
+				sizeof(char *) * (osc->nmats+(CHUNKSIZ-1)));
+		for (i = 1; i < osc->nmats; i++)
 			sc->matname[i] = savqstr(osc->matname[i]);
 		sc->nmats = osc->nmats;
 	}
 	if (osc->nverts) {
 		sc->vert = (Vertex *)emalloc(sizeof(Vertex) *
 						(osc->nverts+(CHUNKSIZ-1)));
-		memcpy((void *)sc->vert, (const void *)osc->vert,
-				sizeof(Vertex)*osc->nverts);
+		memcpy(sc->vert, osc->vert, sizeof(Vertex)*osc->nverts);
 		sc->nverts = osc->nverts;
 		for (i = 0; i < sc->nverts; i++)
 			sc->vert[i].vflist = NULL;
@@ -755,24 +754,20 @@ dupScene(const Scene *osc, int flreq, int flexc)
 	if (osc->ntex) {
 		sc->tex = (TexCoord *)emalloc(sizeof(TexCoord) *
 						(osc->ntex+(CHUNKSIZ-1)));
-		memcpy((void *)sc->tex, (const void *)osc->tex,
-				sizeof(TexCoord)*osc->ntex);
+		memcpy(sc->tex, osc->tex, sizeof(TexCoord)*osc->ntex);
 		sc->ntex = osc->ntex;
 	}
 	if (osc->nnorms) {
 		sc->norm = (Normal *)emalloc(sizeof(Normal) *
 						(osc->nnorms+CHUNKSIZ));
-		memcpy((void *)sc->norm, (const void *)osc->norm,
-				sizeof(Normal)*osc->nnorms);
+		memcpy(sc->norm, osc->norm, sizeof(Normal)*osc->nnorms);
 		sc->nnorms = osc->nnorms;
 	}
 	for (fo = osc->flist; fo != NULL; fo = fo->next) {
 		if ((fo->flags & fltest) != flreq)
 			continue;
-		f = (Face *)emalloc(sizeof(Face) +
-				sizeof(VertEnt)*(fo->nv-3));
-		memcpy((void *)f, (const void *)fo, sizeof(Face) +
-				sizeof(VertEnt)*(fo->nv-3));
+		f = (Face *)emalloc(sizeof(Face) + sizeof(VertEnt)*(fo->nv-3));
+		memcpy(f, fo, sizeof(Face) + sizeof(VertEnt)*(fo->nv-3));
 		for (i = 0; i < f->nv; i++)
 			add2facelist(sc, f, i);
 		f->next = sc->flist;
@@ -1012,9 +1007,7 @@ skip_tex:
 		if (!vmap[i])
 			continue;
 		if (nused != i)
-			memcpy((void *)sc->norm[nused],
-					(void *)sc->norm[i],
-					sizeof(Normal));
+			memcpy(sc->norm[nused], sc->norm[i], sizeof(Normal));
 		vmap[i] = nused++;
 	}
 	if (nused == sc->nnorms)
