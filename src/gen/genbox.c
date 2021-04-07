@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.8 2020/07/25 19:18:01 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.9 2021/04/07 21:13:52 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -22,7 +22,7 @@ double  size[3];	/* ppd size */
 
 double  bevel = 0.0;	/* bevel amount */
 
-int  rounde = 0;		/* boolean true for rounde edges */
+int  rounde = 0;	/* boolean true for round edges */
 
 int  reverse = 0;	/* boolean true for reversed normals */
 
@@ -31,7 +31,7 @@ int  reverse = 0;	/* boolean true for reversed normals */
 static void
 vertex(int v)
 {
-	register int  i;
+	int  i;
 
 	for (i = 0; i < 3; i++) {
 		if (v & 010)
@@ -40,7 +40,7 @@ vertex(int v)
 			printf("\t%18.12g", v & 01 ? size[i] : 0.0);
 		v >>= 1;
 	}
-	printf("\n");
+	fputc('\n', stdout);
 }
 
 
@@ -104,7 +104,7 @@ sphere(int v0)			/* generate a sphere */
 
 
 int
-main(int argc, char **argv)
+main(int argc, char *argv[])
 {
 	int  i;
 	
@@ -116,24 +116,31 @@ main(int argc, char **argv)
 	size[0] = atof(argv[3]);
 	size[1] = atof(argv[4]);
 	size[2] = atof(argv[5]);
+	if ((size[0] <= 0.0) | (size[1] <= 0.0) | (size[2] <= 0.0))
+		goto userr;
 
 	for (i = 6; i < argc; i++) {
 		if (argv[i][0] != '-')
 			goto userr;
 		switch (argv[i][1]) {
+		case 'i':
+			reverse = 1;
+			break;
 		case 'r':
 			rounde = 1;
 			/* fall through */
 		case 'b':
 			bevel = atof(argv[++i]);
-			break;
-		case 'i':
-			reverse = 1;
-			break;
+			if (bevel > 0.0)
+				break;
+			/* fall through on error */
 		default:
 			goto userr;
 		}
 	}
+	if (rounde & reverse)
+		fprintf(stderr, "%s: warning - option -i ignored with -r\n",
+				argv[0]);
 
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
@@ -172,7 +179,7 @@ main(int argc, char **argv)
 		corner(037, 067, 057);
 	}
 	if (bevel > 0.0 && rounde) {
-					/* rounde edges */
+					/* round edges */
 		cylinder(070, 071);
 		cylinder(070, 074);
 		cylinder(070, 072);
@@ -185,7 +192,7 @@ main(int argc, char **argv)
 		cylinder(076, 072);
 		cylinder(076, 074);
 		cylinder(076, 077);
-					/* rounde corners */
+					/* round corners */
 		sphere(070);
 		sphere(071);
 		sphere(072);
@@ -195,7 +202,7 @@ main(int argc, char **argv)
 		sphere(076);
 		sphere(077);
 	}
-	if (bevel == 0.0 ) {
+	if (bevel == 0.0) {
 					/* only need major faces */
 		side(1, 5, 4, 0);
 		side(4, 6, 2, 0);
@@ -208,7 +215,6 @@ main(int argc, char **argv)
 userr:
 	fprintf(stderr, "Usage: %s ", argv[0]);
 	fprintf(stderr, "material name xsize ysize zsize ");
-	fprintf(stderr, "[-i] [-b bevel | -r rounde]\n");
+	fprintf(stderr, "[-i] [-b bevel | -r round]\n");
 	return(1);
 }
-

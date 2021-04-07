@@ -2432,3 +2432,5 @@ caused by measurement and modeling discrepancies.
 
 Added pabopto2bsdf -g option to cull near-grazing scattering to avoid
 issues with noise and negative values.
+
+Increased default dynamic range from 32 to 100 in pcond and normtiff.

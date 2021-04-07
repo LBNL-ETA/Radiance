@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.46 2021/03/02 20:09:14 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.47 2021/04/07 21:13:52 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -425,9 +425,9 @@ double  Lddyn
 )
 {
 	static const char funcName[] = "tmFixedMapping";
-	int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
-	double	minD;
-	int	i;
+	const int	maxV = (1L<<(8*sizeof(TMAP_TYP))) - 1;
+	double		minD;
+	int		i;
 	
 	if (!tmNewMap(tms))
 		returnErr(TM_E_NOMEM);
@@ -443,7 +443,7 @@ double  Lddyn
 			break;		/* map initialized to zeroes */
 		d = (d - minD)/(1. - minD);
 		d = TM_BRES*pow(d, 1./gamval);
-		tms->lumap[i] = (d >= maxV) ? maxV : (int)d;
+		tms->lumap[i] = (d > maxV) ? maxV : (int)d;
 	}
 	returnOK;
 }
@@ -688,7 +688,7 @@ TMstruct	*tms
 	tms->mbrmin = tms->hbrmin;
 	tms->mbrmax = tms->hbrmax;
 	if (tms->mbrmin > tms->mbrmax)
-		return 0;
+		return(0);
 	if (tms->lumap == NULL)
 		tms->lumap = (TMAP_TYP *)calloc(tms->mbrmax-tms->mbrmin+1,
 						sizeof(TMAP_TYP));

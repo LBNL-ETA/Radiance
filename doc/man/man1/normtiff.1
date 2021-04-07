@@ -1,4 +1,4 @@
-.\" RCSid $Id: normtiff.1,v 1.6 2011/06/23 18:05:18 greg Exp $
+.\" RCSid $Id: normtiff.1,v 1.7 2021/04/07 21:13:52 greg Exp $
 .TH NORMTIFF 1 2/25/99 RADIANCE
 .SH NAME
 normtiff - tone-map and convert RADIANCE picture or HDR TIFF to standard TIFF
@@ -92,7 +92,7 @@ The default value is 100 cd/m^2.
 .BI -d \ Lddyn
 Specifies the dynamic range for the target output device, which is
 the ratio of the maximum and minimum usable display luminances.
-The default value is 32, which is typical for CRT monitors.
+The default value is 100, which is typical for LCD monitors.
 .TP
 .BI -p " xr yr xg yg xb yb xw yw"
 Specifies the RGB primaries for the target output device.

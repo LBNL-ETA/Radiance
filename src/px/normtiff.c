@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.15 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.16 2021/04/07 21:13:52 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -21,7 +21,7 @@ int	flags = TM_F_CAMERA;		/* tone-mapping flags */
 RGBPRIMP	rgbp = stdprims;	/* display primaries */
 RGBPRIMS	myprims;		/* overriding display primaries */
 double	ldmax = 100.;			/* maximum display luminance */
-double	lddyn = 32.;			/* display dynamic range */
+double	lddyn = 100.;			/* display dynamic range */
 double	gamv = 2.2;			/* display gamma value */
 
 short	ortab[8] = {		/* orientation conversion table */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.30 2019/11/11 21:19:41 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.31 2021/04/07 21:13:52 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: pcond.c,v 3.30 2019/11/11 21:19:41 greg Exp $"
 
 
 #define	LDMAX		100		/* default max. display luminance */
-#define LDDYN		32		/* default dynamic range */
+#define LDDYN		100		/* default dynamic range */
 
 int	what2do = 0;			/* desired adjustments */
 
