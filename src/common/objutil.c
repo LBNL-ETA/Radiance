@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.15 2021/04/07 14:37:57 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.16 2021/04/07 16:40:28 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -784,8 +784,8 @@ addScene(Scene *scdst, const Scene *scsrc)
 {
 	VNDX		my_vlist[4];
 	int		*vert_map = NULL;
-	int		*norm_map = NULL;
-	int		*tex_map = NULL;
+	int		tex_off = 0;
+	int		norm_off = 0;
 	VNDX		*vlist = my_vlist;
 	int		vllen = sizeof(my_vlist)/sizeof(VNDX);
 	int		cur_mat = 0;
@@ -808,17 +808,19 @@ addScene(Scene *scdst, const Scene *scsrc)
 		}
 		vert_map[i] = addVertex(scdst, v->p[0], v->p[1], v->p[2]);
 	}
-	if (scsrc->ntex > 0)		/* map texture coords */
-		tex_map = (int *)emalloc(sizeof(int *)*scsrc->ntex);
-	for (i = 0; i < scsrc->ntex; i++) {
-		const TexCoord	*t = scsrc->tex + i;
-		tex_map[i] = addTexture(scdst, t->u, t->v);
+	tex_off = scdst->ntex;		/* append texture coords */
+	if (scsrc->ntex > 0) {
+		scdst->tex = (TexCoord *)erealloc((char *)scdst->tex,
+			sizeof(TexCoord)*(tex_off+scsrc->ntex+(CHUNKSIZ-1)));
+		memcpy(scdst->tex+tex_off, scsrc->tex,
+				sizeof(TexCoord)*scsrc->ntex);
 	}
-	if (scsrc->nnorms > 0)		/* map normals */
-		norm_map = (int *)emalloc(sizeof(int *)*scsrc->nnorms);
-	for (i = 0; i < scsrc->nnorms; i++) {
-		const float	*n = scsrc->norm[i];
-		norm_map[i] = addNormal(scdst, n[0], n[1], n[2]);
+	norm_off = scdst->nnorms;	/* append normals */
+	if (scsrc->nnorms > 0) {
+		scdst->norm = (Normal *)erealloc((char *)scdst->norm,
+			sizeof(Normal)*(norm_off+scsrc->nnorms+(CHUNKSIZ-1)));
+		memcpy(scdst->norm+norm_off, scsrc->norm,
+				sizeof(Normal)*scsrc->nnorms);
 	}
 					/* add faces */
 	scdst->lastgrp = scdst->lastmat = 0;
@@ -840,16 +842,14 @@ addScene(Scene *scdst, const Scene *scsrc)
 			if (f->v[i].vid >= 0)
 				vlist[i][0] = vert_map[f->v[i].vid];
 			if (f->v[i].tid >= 0)
-				vlist[i][1] = tex_map[f->v[i].tid];
+				vlist[i][1] = f->v[i].tid + tex_off;
 			if (f->v[i].nid >= 0)
-				vlist[i][2] = norm_map[f->v[i].nid];
+				vlist[i][2] = f->v[i].nid + norm_off;
 		}
 		fcnt += (addFace(scdst, vlist, f->nv) != NULL);
 	}
 					/* clean up */
 	if (vlist != my_vlist) efree((char *)vlist);
-	if (norm_map != NULL) efree((char *)norm_map);
-	if (tex_map != NULL) efree((char *)tex_map);
 	efree((char *)vert_map);
 	return(fcnt);
 }
