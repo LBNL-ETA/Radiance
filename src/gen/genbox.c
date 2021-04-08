@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.9 2021/04/07 21:13:52 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.10 2021/04/08 15:13:08 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -27,7 +27,6 @@ int  rounde = 0;	/* boolean true for round edges */
 int  reverse = 0;	/* boolean true for reversed normals */
 
 
-
 static void
 vertex(int v)
 {
@@ -35,9 +34,9 @@ vertex(int v)
 
 	for (i = 0; i < 3; i++) {
 		if (v & 010)
-			printf("\t%18.12g", v & 01 ? size[i]-bevel : bevel);
+			printf("\t%18.12g", (v&01)^reverse ? size[i]-bevel : bevel);
 		else
-			printf("\t%18.12g", v & 01 ? size[i] : 0.0);
+			printf("\t%18.12g", (v&01)^reverse ? size[i] : 0.0);
 		v >>= 1;
 	}
 	fputc('\n', stdout);
@@ -50,17 +49,10 @@ side(int a, int b, int c, int d)		/* generate a rectangular face */
 	printf("\n%s polygon %s.%c%c%c%c\n", cmtype, cname,
 			let[a], let[b], let[c], let[d]);
 	printf("0\n0\n12\n");
-	if (reverse) {
-		vertex(d);
-		vertex(c);
-		vertex(b);
-		vertex(a);
-	} else {
-		vertex(a);
-		vertex(b);
-		vertex(c);
-		vertex(d);
-	}
+	vertex(a);
+	vertex(b);
+	vertex(c);
+	vertex(d);
 }
 
 
@@ -70,15 +62,9 @@ corner(int a, int b, int c)			/* generate a triangular face */
 	printf("\n%s polygon %s.%c%c%c\n", cmtype, cname,
 			let[a], let[b], let[c]);
 	printf("0\n0\n9\n");
-	if (reverse) {
-		vertex(c);
-		vertex(b);
-		vertex(a);
-	} else {
-		vertex(a);
-		vertex(b);
-		vertex(c);
-	}
+	vertex(a);
+	vertex(b);
+	vertex(c);
 }
 
 
