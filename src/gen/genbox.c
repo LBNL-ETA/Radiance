@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.11 2021/04/09 01:48:20 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.12 2021/04/09 18:52:57 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -398,7 +398,8 @@ main(int argc, char *argv[])
 	}
 	if (obj != NULL) {			/* need to write output? */
 		if (objout) {
-			coalesceVertices(obj, 2.*FTINY);
+			if (rounde)		/* joins corners to edges */
+				coalesceVertices(obj, 2.*FTINY);
 			if (toOBJ(obj, stdout) <= 0)
 				return(1);
 		} else if (toRadiance(obj, stdout, 0, 0) <= 0)
