@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.19 2021/02/12 00:41:18 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.20 2021/04/09 17:37:47 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -41,6 +41,9 @@ typedef RREAL  FVECT[3];
 #define  VSUM(vr,v1,v2,f)	((vr)[0]=(v1)[0]+(f)*(v2)[0], \
 				(vr)[1]=(v1)[1]+(f)*(v2)[1], \
 				(vr)[2]=(v1)[2]+(f)*(v2)[2])
+#define  VLERP(vr,v1,a,v2)	((vr)[0]=(1.-(a))*(v1)[0]+(a)*(v2)[0], \
+				(vr)[1]=(1.-(a))*(v1)[1]+(a)*(v2)[1], \
+				(vr)[2]=(1.-(a))*(v1)[2]+(a)*(v2)[2])
 #define  VCROSS(vr,v1,v2) \
 			((vr)[0]=(v1)[1]*(v2)[2]-(v1)[2]*(v2)[1], \
 			(vr)[1]=(v1)[2]*(v2)[0]-(v1)[0]*(v2)[2], \
