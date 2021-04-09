@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.19 2020/08/10 19:51:20 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.20 2021/04/09 17:42:34 rschregle Exp $";
 #endif
 /* 
    ======================================================================
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: pmapsrc.c,v 2.19 2020/08/10 19:51:20 rschregle
        supported by the JSPS KAKENHI Grant Number JP19KK0115.
    ======================================================================
 
-   $Id: pmapsrc.c,v 2.19 2020/08/10 19:51:20 rschregle Exp $"
+   $Id: pmapsrc.c,v 2.20 2021/04/09 17:42:34 rschregle Exp $"
 */
 
 
@@ -764,7 +764,7 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
          sizeof(EmissionSample) * emap -> numTheta * emap -> numPhi
       );
       if (!emap -> samples) 
-         error(USER, "can't allocate emission PDF");     
+         error(USER, "can't allocate emission PDF");
          
       VCOPY(r.rorg, emap -> photonOrg);
       VCOPY(r.rop, emap -> photonOrg);
@@ -893,7 +893,11 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
          if (sample -> cdf < du) 
             lo = i + 1;
       }
-      
+
+      /* Finalise found sample */
+      i = (lo + hi) >> 1;
+      sample = emap -> samples + i - 1;
+
       /* This is a uniform mapping, mon */
       cosTheta = (1 - 
          (sample -> theta + pmapRandom(emitState)) *
