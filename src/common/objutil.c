@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.17 2021/04/07 16:46:58 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.18 2021/04/09 15:26:41 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -698,6 +698,39 @@ addFace(Scene *sc, VNDX vid[], int nv)
 	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY*FTINY)
 		f->flags |= FACE_DEGENERATE;
 	return(f);
+}
+
+/* Callback for growBoundingBox() */
+static int
+addBBox(Scene *sc, Face *f, void *p)
+{
+	double	(*bbox)[3] = (double (*)[3])p;
+	int	i, j;
+
+	for (i = f->nv; i-- > 0; ) {
+		double	*p3 = sc->vert[f->v[i].vid].p;
+		for (j = 3; j--; ) {
+			if (p3[j] < bbox[0][j])
+				bbox[0][j] = p3[j];
+			if (p3[j] > bbox[1][j])
+				bbox[1][j] = p3[j];
+		}
+	}
+	return(1);
+}
+
+/* Expand bounding box min & max (initialize bbox to all zeroes) */
+int
+growBoundingBox(Scene *sc, double bbox[2][3], int flreq, int flexc)
+{
+	if (sc == NULL || sc->nfaces <= 0 || bbox == NULL)
+		return(0);
+
+	if (VABSEQ(bbox[0], bbox[1])) {		/* first run */
+		bbox[0][0] = bbox[0][1] = bbox[0][2] = FHUGE;
+		bbox[1][0] = bbox[1][1] = bbox[1][2] = -FHUGE;
+	}
+	return(foreachFace(sc, addBBox, flreq, flexc, bbox));
 }
 
 /* Allocate an empty scene */

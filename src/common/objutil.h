@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.14 2021/04/07 03:02:00 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.15 2021/04/09 15:26:41 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -85,113 +85,117 @@ typedef struct {
 } Scene;
 
 /* Allocate a new scene holder */
-Scene *		newScene(void);
+extern Scene *	newScene(void);
 
 /* Add a .OBJ file to a scene */
-Scene *		loadOBJ(Scene *sc, const char *fspec);
+extern Scene *	loadOBJ(Scene *sc, const char *fspec);
 
 /* Duplicate a scene, optionally selecting faces */
-Scene *		dupScene(const Scene *sc, int flreq, int flexc);
+extern Scene *	dupScene(const Scene *sc, int flreq, int flexc);
 
 /* Add one scene to another, not checking for redundancies */
-int		addScene(Scene *scdst, const Scene *scsrc);
+extern int	addScene(Scene *scdst, const Scene *scsrc);
 
 /* Transform entire scene */
-int		xfScene(Scene *sc, int xac, char *xav[]);
-int		xfmScene(Scene *sc, const char *xfm);
+extern int	xfScene(Scene *sc, int xac, char *xav[]);
+extern int	xfmScene(Scene *sc, const char *xfm);
 
 /* Add a descriptive comment */
-void		addComment(Scene *sc, const char *comment);
+extern void	addComment(Scene *sc, const char *comment);
 
 /* Find index for comment containing the given string (starting from n) */
-int		findComment(Scene *sc, const char *match, int n);
+extern int	findComment(Scene *sc, const char *match, int n);
 
 /* Clear comments */
-void		clearComments(Scene *sc);
+extern void	clearComments(Scene *sc);
 
 /* Write a .OBJ file, return # faces written or -1 on error */
-int		toOBJ(Scene *sc, FILE *fp);
-int		writeOBJ(Scene *sc, const char *fspec);
+extern int	toOBJ(Scene *sc, FILE *fp);
+extern int	writeOBJ(Scene *sc, const char *fspec);
 
 /* Convert indicated faces to Radiance, return # written or -1 on error */
-int		toRadiance(Scene *sc, FILE *fp, int flreq, int flexc);
-int		writeRadiance(Scene *sc, const char *fspec,
+extern int	toRadiance(Scene *sc, FILE *fp, int flreq, int flexc);
+extern int	writeRadiance(Scene *sc, const char *fspec,
 				int flreq, int flexc);
 
 /* Compute face area (and normal) */
-double		faceArea(const Scene *sc, const Face *f, Normal nrm);
+extern double	faceArea(const Scene *sc, const Face *f, Normal nrm);
 
 /* Eliminate duplicate vertices, return # joined */
-int		coalesceVertices(Scene *sc, double eps);
+extern int	coalesceVertices(Scene *sc, double eps);
 
 /* Identify duplicate faces */
-int		findDuplicateFaces(Scene *sc);
+extern int	findDuplicateFaces(Scene *sc);
 
 /* Delete indicated faces, return # deleted */
-int		deleteFaces(Scene *sc, int flreq, int flexc);
+extern int	deleteFaces(Scene *sc, int flreq, int flexc);
 
 /* Clear face selection */
-void		clearSelection(Scene *sc, int set);
+extern void	clearSelection(Scene *sc, int set);
 
 /* Invert face selection */
-void		invertSelection(Scene *sc);
+extern void	invertSelection(Scene *sc);
 
 /* Count number of faces selected */
-int		numberSelected(Scene *sc);
+extern int	numberSelected(Scene *sc);
 
 /* Select faces by object name (modifies current) */
-void		selectGroup(Scene *sc, const char *gname, int invert);
+extern void	selectGroup(Scene *sc, const char *gname, int invert);
 
 /* Select faces by material name (modifies current) */
-void		selectMaterial(Scene *sc, const char *mname, int invert);
+extern void	selectMaterial(Scene *sc, const char *mname, int invert);
 
 /* Execute callback on indicated faces */
-int		foreachFace(Scene *sc, int (*cb)(Scene *, Face *, void *),
+extern int	foreachFace(Scene *sc, int (*cb)(Scene *, Face *, void *),
 					int flreq, int flexc, void *c_data);
 
 /* Remove texture coordinates from the indicated faces */
-int		removeTexture(Scene *sc, int flreq, int flexc);
+extern int	removeTexture(Scene *sc, int flreq, int flexc);
 
 /* Remove surface normals from the indicated faces */
-int		removeNormals(Scene *sc, int flreq, int flexc);
+extern int	removeNormals(Scene *sc, int flreq, int flexc);
 
 /* Change group for the indicated faces */
-int		changeGroup(Scene *sc, const char *gname,
+extern int	changeGroup(Scene *sc, const char *gname,
 					int flreq, int flexc);
 
 /* Change material for the indicated faces */
-int		changeMaterial(Scene *sc, const char *mname,
+extern int	changeMaterial(Scene *sc, const char *mname,
 					int flreq, int flexc);
 
 /* Add a vertex to our scene, returning index */
-int		addVertex(Scene *sc, double x, double y, double z);
+extern int	addVertex(Scene *sc, double x, double y, double z);
 
 /* Add a texture coordinate to our scene, returning index */
-int		addTexture(Scene *sc, double u, double v);
+extern int	addTexture(Scene *sc, double u, double v);
 
 /* Add a surface normal to our scene, returning index */
-int		addNormal(Scene *sc, double xn, double yn, double zn);
+extern int	addNormal(Scene *sc, double xn, double yn, double zn);
 
 /* Set current group (sc->lastgrp) to given ID */
-void		setGroup(Scene *sc, const char *nm);
+extern void	setGroup(Scene *sc, const char *nm);
 
 /* Set current material (sc->lastmat) to given ID */
-void		setMaterial(Scene *sc, const char *nm);
+extern void	setMaterial(Scene *sc, const char *nm);
 
 /* Add a new face to our scene, using current group and material */
-Face *		addFace(Scene *sc, VNDX vid[], int nv);
+extern Face *	addFace(Scene *sc, VNDX vid[], int nv);
+
+/* Expand bounding box min & max (initialize bbox to all zeroes) */
+extern int	growBoundingBox(Scene *sc, double bbox[2][3],
+					int flreq, int flexc);
 
 /* Convert all faces with > 3 vertices to triangles */
-int		triangulateScene(Scene *sc);
+extern int	triangulateScene(Scene *sc);
 
 /* Delete unreferenced vertices, normals, texture coords */
-void		deleteUnreferenced(Scene *sc);
+extern void	deleteUnreferenced(Scene *sc);
 
 /* Free a scene */
-void		freeScene(Scene *sc);
+extern void	freeScene(Scene *sc);
 
 /* Find an existing name in a list of names */
-int		findName(const char *nm, const char **nmlist, int n);
+extern int	findName(const char *nm, const char **nmlist, int n);
 
 /* Verbose mode global */
 extern int      verbose;

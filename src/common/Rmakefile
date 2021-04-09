@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.86 2021/03/12 03:59:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.87 2021/04/09 15:26:41 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -228,6 +228,8 @@ normcodec.o:	normcodec.h rtmath.h mat4.h fvect.h resolu.h rtio.h
 idmap.o:	idmap.h resolu.h platform.h rtio.h
 
 rcode_ident.o:	lookup.h
+
+convertobj.o:	paths.h rterror.h objutil.h
 
 objutil.o:	objutil.h rterror.h rtio.h rtmath.h mat4.h fvect.h lookup.h
 
