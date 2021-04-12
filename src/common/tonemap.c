@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.48 2021/04/07 23:12:19 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.49 2021/04/12 22:16:02 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -488,9 +488,9 @@ double	Ldmax
 		histot += tms->histo[i];
 		sum += (double)(j -= HISTEP) * tms->histo[i];
 	}
-	threshold = histot*0.002 + .5;
 	if (!histot)
 		returnErr(TM_E_TMFAIL);
+	threshold = histot*0.025 + 1.;
 	Lwavg = tmLuminance( (double)sum / histot );
 					/* use linear tone mapping? */
 	if (tms->flags & TM_F_LINEAR || threshold < 4 ||
@@ -534,7 +534,9 @@ double	Ldmax
 			free(cumf);
 			goto linearmap;
 		}
-	} while (trimmings > threshold);
+		threshold = 0.025*histot + 1.;
+
+	} while ((threshold > 4) & (trimmings > threshold));
 					/* allocate space for mapping */
 	if (!tmNewMap(tms))
 		returnErr(TM_E_NOMEM);
