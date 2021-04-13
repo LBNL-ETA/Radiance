@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.18 2020/06/27 03:37:24 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.19 2021/04/13 02:56:42 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -459,7 +459,7 @@ mkbrmap(void)			/* make dynamic range map */
 				modhist[i] = ceiling;
 			}
 		}
-	} while (trimmings > histot*CVRATIO);
+	} while (trimmings > mhistot*CVRATIO);
 
 #if ADJ_VEIL
 	mkcrfimage();			/* contrast reduction image */
