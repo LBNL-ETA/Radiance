@@ -1,4 +1,4 @@
-/* RCSid $Id: tmesh.h,v 2.5 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: tmesh.h,v 2.6 2021/04/13 15:13:20 greg Exp $ */
 /*
  * Header file for triangle mesh routines using barycentric coordinates
  */
@@ -28,12 +28,12 @@ typedef struct {
 #define DEGEN		-1		/* degenerate (zero area) */
 
 
-int		flat_tri(FVECT v1, FVECT v2, FVECT v3,
+extern int	flat_tri(FVECT v1, FVECT v2, FVECT v3,
 				FVECT n1, FVECT n2, FVECT n3);
-int		comp_baryc(BARYCCM *bcm,  FVECT v1, FVECT v2, FVECT v3);
-void		eval_baryc(RREAL wt[3], FVECT p, BARYCCM *bcm);
-int		get_baryc(RREAL wt[3], FVECT p, FVECT v1, FVECT v2, FVECT v3);
-void		put_baryc(BARYCCM *bcm, RREAL com[][3], int n);
+extern int	comp_baryc(BARYCCM *bcm,  FVECT v1, FVECT v2, FVECT v3);
+extern void	eval_baryc(RREAL wt[3], FVECT p, BARYCCM *bcm);
+extern int	get_baryc(RREAL wt[3], FVECT p, FVECT v1, FVECT v2, FVECT v3);
+extern void	put_baryc(BARYCCM *bcm, RREAL com[][3], int n);
 
 
 #ifdef __cplusplus
