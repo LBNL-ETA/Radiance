@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapparm.h,v 2.9 2018/02/02 19:47:55 rschregle Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.10 2021/04/14 11:26:25 rschregle Exp $ */
 
 /* 
    ======================================================================
@@ -7,11 +7,14 @@
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com}
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme" (FARESYS)) 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    ======================================================================
    
-   $Id: pmapparm.h,v 2.9 2018/02/02 19:47:55 rschregle Exp $
+   $Id: pmapparm.h,v 2.10 2021/04/14 11:26:25 rschregle Exp $
 */
 
 
@@ -28,10 +31,14 @@
       unsigned long distribTarget;   /* Num photons to store */
    } PhotonMapParams;
    
-   /* Bounding box for region of interest */
-      typedef struct {
-      float min [3], max [3];
+   /* Region of interest */
+   typedef struct {
+      /* siz [1], siz [2] <= 0 --> sphere, else rectangle */
+      float pos [3], siz [3];
    } PhotonMapROI;
+   
+   #define PMAP_ROI_ISSPHERE(roi) ((roi)->siz[1] <= 0 && (roi)->siz[2] <= 0)
+   #define PMAP_ROI_SETSPHERE(roi) ((roi)->siz[1] = (roi)->siz[2] = -1)
 
 
    extern PhotonMapParams pmapParams [NUM_PMAP_TYPES];

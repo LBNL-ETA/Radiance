@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.22 2020/04/08 15:14:21 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.23 2021/04/14 11:26:25 rschregle Exp $";
 #endif
 
 /* 
@@ -13,11 +13,14 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.22 2020/04/08 15:14:21 rschregl
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme" (FARESYS)) 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.22 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmapdata.c,v 2.23 2021/04/14 11:26:25 rschregle Exp $
 */
 
 
@@ -222,17 +225,23 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
        ambincl != inset(ambset, ray -> ro -> omod))
       return -1;
 
-   if (pmapNumROI && pmapROI) {      
+   if (pmapNumROI && pmapROI) {
       unsigned inROI = 0;
+      FVECT    photonDist;
       
-      /* Store photon if within a region of interest (for ze Ecksperts!) */
-      for (i = 0; !inROI && i < pmapNumROI; i++)
-         inROI = (ray -> rop [0] >= pmapROI [i].min [0] && 
-                  ray -> rop [0] <= pmapROI [i].max [0] &&
-                  ray -> rop [1] >= pmapROI [i].min [1] && 
-                  ray -> rop [1] <= pmapROI [i].max [1] &&
-                  ray -> rop [2] >= pmapROI [i].min [2] && 
-                  ray -> rop [2] <= pmapROI [i].max [2]);
+      /* Store photon if within a region of interest (for ze Ecksperts!) 
+         Note size of spherical ROI is squared. */
+      for (i = 0; !inROI && i < pmapNumROI; i++) {
+         VSUB(photonDist, ray -> rop, pmapROI [i].pos);
+         
+         inROI = (
+            PMAP_ROI_ISSPHERE(pmapROI + i) 
+            ?  DOT(photonDist, photonDist) <= pmapROI [i].siz [0] 
+            :  fabs(photonDist [0]) <= pmapROI [i].siz [0] &&
+               fabs(photonDist [1]) <= pmapROI [i].siz [1] && 
+               fabs(photonDist [2]) <= pmapROI [i].siz [2]
+         );
+      }
       if (!inROI)
          return -1;
    }

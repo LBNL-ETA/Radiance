@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.11 2021/04/14 11:26:25 rschregle Exp $";
 #endif
 
 
@@ -9,15 +9,17 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle 
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       supported by the German Research Foundation (DFG) 
-       under the FARESYS project.
+       supported by the German Research Foundation 
+       (DFG LU-204/10-2, "Fassadenintegrierte Regelsysteme" (FARESYS)) 
    (c) Lucerne University of Applied Sciences and Arts,
-       supported by the Swiss National Science Foundation (SNSF #147053).
+       supported by the Swiss National Science Foundation 
+       (SNSF #147053, "Daylight Redirecting Components")
    (c) Tokyo University of Science,
-       supported by the JSPS KAKENHI Grant Number JP19KK0115.
+       supported by the JSPS Grants-in-Aid for Scientific Research 
+       (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")
    ======================================================================
    
-   $Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle Exp $    
+   $Id: mkpmap.c,v 2.11 2021/04/14 11:26:25 rschregle Exp $    
 */
 
 
@@ -30,6 +32,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.10 2020/08/07 01:21:13 rschregle 
 #include "ambient.h"
 #include "resolu.h"
 #include "source.h"
+#include <ctype.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -66,20 +69,19 @@ unsigned nproc = 1;                 /* number of parallel processes */
 /* Dummies for linkage */
 
 COLOR ambval = BLKCOLOR;
-double shadthresh = .05, ambacc = 0.2, shadcert = .5, minweight = 5e-3, 
-       ssampdist = 0, dstrsrc = 0.0, specthresh = 0.15, specjitter = 1.0,
-       avgrefl = 0.5;    
-int ambvwt = 0, ambssamp = 0, ambres = 32, ambounce = 0, directrelay = 1,
-    directvis = 1, samplendx, do_irrad = 0, ambdiv = 128, vspretest = 512,
-    maxdepth = 6, contrib = 0;
-char *shm_boundary = NULL, *ambfile = NULL, *RCCONTEXT = NULL;
-void (*trace)() = NULL, (*addobjnotify [])() = {ambnotify, NULL};
+double   shadthresh = .05, ambacc = 0.2, shadcert = .5, minweight = 5e-3, 
+         ssampdist = 0, dstrsrc = 0.0, specthresh = 0.15, specjitter = 1.0,
+         avgrefl = 0.5;
+int      ambvwt = 0, ambssamp = 0, ambres = 32, ambounce = 0, 
+         directrelay = 1, directvis = 1, samplendx, do_irrad = 0, 
+         ambdiv = 128, vspretest = 512, maxdepth = 6, contrib = 0;
+char     *shm_boundary = NULL, *ambfile = NULL, *RCCONTEXT = NULL;
+void     (*trace)() = NULL, (*addobjnotify [])() = {ambnotify, NULL};
 
   
 void printdefaults()
 /* print default values to stdout */
 {
-
 #ifdef EVALDRC_HACK
    /* EvalDRC support */
    puts("-A\t\t\t\t# angular source file");
@@ -89,10 +91,11 @@ void printdefaults()
    puts("-ai  mod\t\t\t\t# include modifier");
    puts("-aI  file\t\t\t\t# include modifiers from file");
 #ifdef PMAP_EKSPERTZ
-   puts("-api xmin ymin zmin xmax ymax zmax\t# region of interest");
+   puts("-api xmin ymin zmin xmax ymax zmax\t# rectangular region of interest");
+   puts("-apI xpos ypos zpos radius\t\t# spherical region of interest");
 #endif
    puts("-apg file nPhotons\t\t\t# global photon map");
-   puts("-apc file nPhotons\t\t\t# caustic photon map");          
+   puts("-apc file nPhotons\t\t\t# caustic photon map");
    puts("-apd file nPhotons\t\t\t# direct photon map");
    puts("-app file nPhotons bwidth\t\t# precomputed global photon map");
    puts("-apv file nPhotons\t\t\t# volume photon map");
@@ -110,31 +113,41 @@ void printdefaults()
    puts("-aps mod\t\t\t\t# antimatter sensor modifier");
    puts("-apS file\t\t\t\t# antimatter sensors from file");
 
-   printf(backvis ? "-bv+\t\t\t\t\t# back face visibility on\n"
-                  : "-bv-\t\t\t\t\t# back face visibility off\n");
+   printf(backvis 
+      ? "-bv+\t\t\t\t\t# back face visibility on\n"
+      : "-bv-\t\t\t\t\t# back face visibility off\n"
+   );
    printf("-dp  %.1f\t\t\t\t# PDF samples / sr\n", pdfSamples);
    printf("-ds  %f\t\t\t\t# source partition size ratio\n", srcsizerat);
    printf("-e   %s\t\t\t\t# diagnostics output file\n", diagFile);
-   printf(clobber ? "-fo+\t\t\t\t\t# force overwrite\n"
-                  : "-fo-\t\t\t\t\t# do not overwrite\n");
+   printf(clobber 
+      ?  "-fo+\t\t\t\t\t# force overwrite\n" 
+      :  "-fo-\t\t\t\t\t# do not overwrite\n"
+   );
 #ifdef PMAP_EKSPERTZ
    /* (Formerly) NU STUFF for Ze Exspertz! */      
    printf("-ld %.1f\t\t\t\t\t# limit photon distance\n", photonMaxDist);
    printf("-lr %ld\t\t\t\t# limit photon bounces\n", photonMaxBounce);   
 #endif   
-   printf("-ma  %.2f %.2f %.2f\t\t\t# scattering albedo\n", 
-          colval(salbedo,RED), colval(salbedo,GRN), colval(salbedo,BLU));
-   printf("-me  %.2e %.2e %.2e\t\t# extinction coefficient\n", 
-          colval(cextinction,RED), colval(cextinction,GRN), 
-          colval(cextinction,BLU));          
+   printf(
+      "-ma  %.2f %.2f %.2f\t\t\t# scattering albedo\n", 
+      colval(salbedo,RED), colval(salbedo,GRN), colval(salbedo,BLU)
+   );
+   printf(
+      "-me  %.2e %.2e %.2e\t\t# extinction coefficient\n", 
+      colval(cextinction,RED), colval(cextinction,GRN), 
+      colval(cextinction,BLU)
+   );
    printf("-mg  %.2f\t\t\t\t# scattering eccentricity\n", seccg);
 #if NIX   
    /* Multiprocessing on NIX only; so tuff luck, Windoze Weenies! */
    printf("-n   %d\t\t\t\t\t# number of parallel processes\n", nproc);
 #endif   
    printf("-t   %-9d\t\t\t\t# time between reports\n", photonRepTime);
-   printf(verbose ? "-v+\t\t\t\t\t# verbose console output\n"
-                  : "-v-\t\t\t\t\t# terse console output\n");
+   printf(verbose 
+      ?  "-v+\t\t\t\t\t# verbose console output\n"
+      :  "-v-\t\t\t\t\t# terse console output\n"
+   );
 }
 
 
@@ -217,15 +230,17 @@ int main (int argc, char* argv [])
                      ambincl = 1;
                      amblp = amblist;
                   }
-                  if (argv [i][2] == 'I') {	
+                  if (isupper(argv [i][2])) {
                      /* Add modifiers from file */
-                     rval = wordfile(amblp, AMBLLEN - (amblp - amblist),
-                                     getpath(argv [++i], 
-                                     getrlibpath(), R_OK));
+                     rval = wordfile(
+                        amblp, AMBLLEN - (amblp - amblist),
+                        getpath(argv [++i], getrlibpath(), R_OK)
+                     );
                      if (rval < 0) {
-                        sprintf(errmsg, 
-                                "cannot open ambient include file \"%s\"",
-                                argv [i]);
+                        sprintf(
+                           errmsg, "cannot open ambient include file \"%s\"",
+                           argv [i]
+                        );
                         error(SYSTEM, errmsg);
                      }
                      amblp += rval;
@@ -244,15 +259,17 @@ int main (int argc, char* argv [])
                      ambincl = 0;
                      amblp = amblist;
                   }
-                  if (argv [i][2] == 'E') { 
+                  if (isupper(argv [i][2])) { 
                      /* Add modifiers from file */
-                     rval = wordfile(amblp, AMBLLEN - (amblp - amblist),
-                                     getpath(argv [++i], 
-                                     getrlibpath(), R_OK));
+                     rval = wordfile(
+                        amblp, AMBLLEN - (amblp - amblist),
+                        getpath(argv [++i], getrlibpath(), R_OK)
+                     );
                      if (rval < 0) {
-                        sprintf(errmsg,
-                                "cannot open ambient exclude file \"%s\"", 
-                                argv [i]);
+                        sprintf(
+                           errmsg, "cannot open ambient exclude file \"%s\"", 
+                           argv [i]
+                        );
                         error(SYSTEM, errmsg);
                      }
                      amblp += rval;
@@ -265,14 +282,14 @@ int main (int argc, char* argv [])
                   break;
             
                case 'p': /* Pmap-specific */
-                  switch (argv [i][3]) {			
+                  switch (argv [i][3]) {
                      case 'g': /* Global photon map */
                         check(4, "ss");
                         globalPmapParams.fileName = argv [++i];
                         globalPmapParams.distribTarget = 
                            parseMultiplier(argv [++i]);
                         if (!globalPmapParams.distribTarget) 
-                           goto badopt;                         
+                           goto badopt;
                         globalPmapParams.minGather = 
                            globalPmapParams.maxGather = 0;
                         break;
@@ -305,7 +322,7 @@ int main (int argc, char* argv [])
                         volumePmapParams.distribTarget = 
                            parseMultiplier(argv [++i]);
                         if (!volumePmapParams.distribTarget) 
-                           goto badopt;                      
+                           goto badopt;
                         break;
                      
                      case 'd': /* Direct photon map */
@@ -350,33 +367,64 @@ int main (int argc, char* argv [])
                         break;
 #endif
 
-#ifdef PMAP_EKSPERTZ                     
-                     case 'i': /* Add region of interest */
-                        check(4, "ffffff");                        
+#ifdef PMAP_EKSPERTZ
+                     case 'i': /* Add rectangular region of interest */
+                     case 'I': /* Add spherical region of interest */
+                        check(4, isupper(argv [j=i][3]) ? "ffff" : "ffffff");
                         n = pmapNumROI;
-                        pmapROI = realloc(pmapROI,
-                                          ++pmapNumROI * sizeof(PhotonMapROI));
+                        
+                        pmapROI = realloc(
+                           pmapROI, ++pmapNumROI * sizeof(PhotonMapROI)
+                        );
                         if (!pmapROI)
                            error(SYSTEM, "failed to allocate ROI");
-                        pmapROI [n].min [0] = atof(argv [++i]);
-                        pmapROI [n].min [1] = atof(argv [++i]);
-                        pmapROI [n].min [2] = atof(argv [++i]);
-                        pmapROI [n].max [0] = atof(argv [++i]);
-                        pmapROI [n].max [1] = atof(argv [++i]);
-                        pmapROI [n].max [2] = atof(argv [++i]);                        
-                        for (j = 0; j < 3; j++)
-                           if (pmapROI [n].min [j] >= pmapROI [n].max [j])
-                              error(USER, "invalid region of interest "
-                                    "(swapped min/max?)");
+                        
+                        pmapROI [n].pos [0] = atof(argv [++i]);
+                        pmapROI [n].pos [1] = atof(argv [++i]);
+                        pmapROI [n].pos [2] = atof(argv [++i]);
+                        pmapROI [n].siz [0] = atof(argv [++i]);
+
+                        if (isupper(argv [j][3])) {
+                           /* Spherical ROI; radius^2 */
+                           pmapROI [n].siz [0] *= pmapROI [n].siz [0];
+                           PMAP_ROI_SETSPHERE(pmapROI + n);
+                           if (pmapROI [n].siz [0] <= FTINY)
+                              error(
+                                 USER, 
+                                 "region of interest has invalid radius"
+                              );
+                        }
+                        else {
+                           /* Rectangular ROI */
+                           pmapROI [n].siz [1] = atof(argv [++i]);
+                           pmapROI [n].siz [2] = atof(argv [++i]);
+
+                           for (j = 0; j < 3; j++) {
+                              /* Pos at rectangle centre, siz symmetric */
+                              pmapROI [n].pos [j] = 0.5 * (
+                                 pmapROI [n].pos [j] + pmapROI [n].siz [j]
+                              );
+                              pmapROI [n].siz [j] = fabs(
+                                 pmapROI [n].siz [j] - pmapROI [n].pos [j]
+                              );
+                              if (pmapROI [n].siz [j] <= FTINY)
+                                 error(
+                                    USER, 
+                                    "region of interest has invalid size"
+                                 );
+                           }
+                        }
                         break;
-#endif             
+#endif
 
                      case 'P': /* Global photon precomp ratio */
                         check(4, "f");
                         finalGather = atof(argv [++i]);
                         if (finalGather <= 0 || finalGather > 1)
-                           error(USER, "global photon precomputation ratio "
-                                 "must be in range ]0, 1]");
+                           error(
+                              USER, "global photon precomputation ratio "
+                              "must be in range ]0, 1]"
+                           );
                         break;
                      
                      case 'o': /* Photon port */ 
@@ -390,7 +438,7 @@ int main (int argc, char* argv [])
                            4, PMAP_PORTFWD, PMAP_PORTBWD, portFlags [0]
                         );
                         
-                        if (argv [i][3] == 'O') {	
+                        if (isupper(argv [i][3])) {
                            /* Add port modifiers from file */
                            rval = wordfile(
                               portLp, MAXSET - (portLp - photonPortList),
@@ -436,17 +484,19 @@ int main (int argc, char* argv [])
                      case 's': /* Antimatter sensor */ 
                      case 'S':
                         check(4, "s");
-                        if (argv[i][3] == 'S') {	
+                        if (isupper(argv[i][3])) {
                            /* Add sensor modifiers from file */
-                           rval = wordfile(sensLp, 
-                                           MAXSET - (sensLp - photonSensorList),
-                                           getpath(argv [++i], 
-                                           getrlibpath(), R_OK));
+                           rval = wordfile(
+                              sensLp, MAXSET - (sensLp - photonSensorList),
+                              getpath(argv [++i], getrlibpath(), R_OK)
+                           );
                            if (rval < 0) {
-                               sprintf(errmsg, 
-                                       "cannot open antimatter sensor file %s",
-                                       argv [i]);
-                               error(SYSTEM, errmsg);
+                               sprintf(
+                                 errmsg, 
+                                 "cannot open antimatter sensor file %s",
+                                 argv [i]
+                              );
+                              error(SYSTEM, errmsg);
                            }
                            sensLp += rval;
                         } 
@@ -525,17 +575,21 @@ int main (int argc, char* argv [])
 
          case 'm': /* Medium */
             switch (argv[i][2]) {
-               case 'e':	/* Eggs-tinction coefficient */
+               case 'e': /* Eggs-tinction coefficient */
                   check(3, "fff");
-                  setcolor(cextinction, atof(argv [i + 1]),
-                           atof(argv [i + 2]), atof(argv [i + 3]));
+                  setcolor(
+                     cextinction, atof(argv [i + 1]),
+                     atof(argv [i + 2]), atof(argv [i + 3])
+                  );
                   i += 3;
                   break;
                                 
                case 'a':	/* Albedo */
                   check(3, "fff");
-                  setcolor(salbedo, atof(argv [i + 1]), 
-                           atof(argv [i + 2]), atof(argv [i + 3]));
+                  setcolor(
+                     salbedo, atof(argv [i + 1]), 
+                     atof(argv [i + 2]), atof(argv [i + 3])
+                  );
                   i += 3;
                   break;
                                 
@@ -555,11 +609,13 @@ int main (int argc, char* argv [])
             
             if (nproc > PMAP_MAXPROC) {
                nproc = PMAP_MAXPROC;
-               sprintf(errmsg, "too many parallel processes, clamping to "
-                       "%d\n", nproc);
+               sprintf(
+                  errmsg, "too many parallel processes, clamping to %d\n", 
+                  nproc
+               );
                error(WARNING, errmsg);
-            }            
-            break;                   
+            }
+            break;
 #endif
 
          case 't': /* Timer */
@@ -575,7 +631,7 @@ int main (int argc, char* argv [])
          case 'A':   /* Angular source file */
             check(2,"s");
             angsrcfile = argv[++i];
-            break;                   
+            break;
 #endif
 
         default: goto badopt;
@@ -584,7 +640,8 @@ int main (int argc, char* argv [])
    
    /* Open diagnostics file */
    if (diagFile) {
-      if (!freopen(diagFile, "a", stderr)) quit(2);
+      if (!freopen(diagFile, "a", stderr)) 
+         quit(2);
       fprintf(stderr, "**************\n*** PID %5d: ", getpid());
       printargs(argc, argv, stderr);
       putc('\n', stderr);
@@ -604,15 +661,19 @@ int main (int argc, char* argv [])
       setPmapParam(photonMaps + i, pmapParams + i);
       
       /* Don't overwrite existing photon map unless clobbering enabled */
-      if (photonMaps [i] && !stat(photonMaps [i] -> fileName, &pmstat) &&
-          !clobber) {
-         sprintf(errmsg, "photon map file %s exists, not overwritten",
-                 photonMaps [i] -> fileName);
+      if (
+         photonMaps [i] && !stat(photonMaps [i] -> fileName, &pmstat) &&
+         !clobber
+      ) {
+         sprintf(
+            errmsg, "photon map file %s exists, not overwritten",
+           photonMaps [i] -> fileName
+         );
          error(USER, errmsg);
       }
    }
        
-   for (i = 0; i < NUM_PMAP_TYPES && !photonMaps [i]; i++);   
+   for (i = 0; i < NUM_PMAP_TYPES && !photonMaps [i]; i++);
    if (i >= NUM_PMAP_TYPES)
       error(USER, "no photon maps specified");
    
@@ -647,3 +708,4 @@ badopt:
    #undef check_bool
    return 0;
 }
+
