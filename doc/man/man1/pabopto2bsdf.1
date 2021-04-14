@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.6 2021/04/05 20:08:41 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.7 2021/04/14 15:23:12 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
 pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
@@ -122,8 +122,8 @@ the rest:
 .TP
 .BR #sample_name
 A double-quoted string containing the name associated with this sample.
-If input files contain different sample names, the one read
-will be the sample name passed to the SIR output.
+If input files contain different sample names, the final sample name read
+will be the one passed to the SIR output.
 .TP
 .BR #format:
 The data format, typically one of "theta phi DSF" or "theta phi BSDF".
