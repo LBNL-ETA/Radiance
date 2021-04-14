@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.15 2021/03/23 21:42:47 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2021/03/23 21:42:47 $ $Revision: 1.15 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.16 2021/04/14 11:28:36 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2021/04/14 11:28:36 $ $Revision: 1.16 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -100,17 +100,21 @@ with highly reflective geometry.  Note that this value may exceed 1, which
 may be useful if the resulting photon map size greatly deviates from
 \fInphotons\fR with a very low average reflectance.
 
-.IP "\fB\-api \fIxmin ymin zmin xmax ymax zmax\fR"
-Define a region of interest within which to store photons exclusively;
-photons will only be stored within the volume bounded by the given minimum
-and maximum coordinates.  Multiple instances of this option may be specified
-with cumulative effect to define compound regions of interest.  This is
-useful for constraining photons to only the relevant regions of a scene, but
-may increase the photon distribution time.
+.IP "\fB\-api \fImin_x min_y min_z max_x max_y max_z\fR"
+Define a rectangular region of interest within which to store photons
+exclusively; photons will only be stored within the volume bounded by the 
+given minimum and maximum coordinates. Multiple instances of this option may 
+be specified with cumulative effect to define compound regions of interest.
+This is useful for constraining photons to only the relevant regions of a
+scene, but may increase the photon distribution time.
 .IP
 \fBWARNING: this is an optimisation option for advanced users (an elite
 group collectively known as \fIZe Ekspertz\fB) and may yield biased results. 
 Use with caution!\fR
+
+.IP "\fB-apI \fIpos_x pos_y pos_z rad\fR"
+Similar to \fB\-api\fR, but with a spherical region of interest of given
+radius, centred at the given coordinates.
 
 .IP "\fB\-apm \fImaxbounce\fR"
 Synonymous with \fB\-lr\fR for backwards compatibility. May be removed in
