@@ -1,6 +1,7 @@
-/* RCSid $Id: tmesh.h,v 2.6 2021/04/13 15:13:20 greg Exp $ */
+/* RCSid $Id: tmesh.h,v 2.7 2021/04/15 23:51:04 greg Exp $ */
 /*
  * Header file for triangle mesh routines using barycentric coordinates
+ * Include after "fvect.h"
  */
 #ifndef _RAD_TMESH_H_
 #define _RAD_TMESH_H_
@@ -33,7 +34,7 @@ extern int	flat_tri(FVECT v1, FVECT v2, FVECT v3,
 extern int	comp_baryc(BARYCCM *bcm,  FVECT v1, FVECT v2, FVECT v3);
 extern void	eval_baryc(RREAL wt[3], FVECT p, BARYCCM *bcm);
 extern int	get_baryc(RREAL wt[3], FVECT p, FVECT v1, FVECT v2, FVECT v3);
-extern void	put_baryc(BARYCCM *bcm, RREAL com[][3], int n);
+extern void	fput_baryc(BARYCCM *bcm, RREAL com[][3], int n, FILE *fp);
 
 
 #ifdef __cplusplus

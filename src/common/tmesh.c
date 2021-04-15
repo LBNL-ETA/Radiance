@@ -1,22 +1,24 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmesh.c,v 2.5 2006/03/02 17:16:56 greg Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.6 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
  */
 
 #include <stdio.h>
-
 #include "fvect.h"
-
 #include "tmesh.h"
-
-#define ABS(x)		((x) >= 0 ? (x) : -(x))
 
 
 int
-flat_tri(v1, v2, v3, n1, n2, n3)	/* determine if triangle is flat */
-FVECT	v1, v2, v3, n1, n2, n3;
+flat_tri(			/* determine if triangle is flat */
+	FVECT	v1,
+	FVECT	v2,
+	FVECT	v3,
+	FVECT	n1,
+	FVECT	n2,
+	FVECT	n3
+)
 {
 	double	d1, d2, d3;
 	FVECT	vt1, vt2, vn;
@@ -40,23 +42,26 @@ FVECT	v1, v2, v3, n1, n2, n3;
 
 
 int
-comp_baryc(bcm, v1, v2, v3)		/* compute barycentric vectors */
-register BARYCCM	*bcm;
-RREAL			*v1, *v2, *v3;
+comp_baryc(			/* compute barycentric vectors */
+	BARYCCM	*bcm,
+	RREAL	*v1,
+	RREAL	*v2,
+	RREAL	*v3
+)
 {
 	RREAL	*vt;
 	FVECT	va, vab, vcb;
 	double	d;
 	int	ax0, ax1;
-	register int	i;
+	int	i;
 					/* compute major axis */
 	VSUB(vab, v1, v2);
 	VSUB(vcb, v3, v2);
 	VCROSS(va, vab, vcb);
-	bcm->ax = ABS(va[0]) > ABS(va[1]) ? 0 : 1;
-	bcm->ax = ABS(va[bcm->ax]) > ABS(va[2]) ? bcm->ax : 2;
-	if ((ax0 = bcm->ax + 1) >= 3) ax0 -= 3;
-	if ((ax1 = ax0 + 1) >= 3) ax1 -= 3;
+	bcm->ax = (va[1]*va[1] > va[0]*va[0]);
+	if (va[2]*va[2] > va[bcm->ax]*va[bcm->ax]) bcm->ax = 2;
+	ax0 = (bcm->ax + 1)%3;
+	ax1 = (bcm->ax + 2)%3;
 	for (i = 0; i < 2; i++) {
 		vab[0] = v1[ax0] - v2[ax0];
 		vcb[0] = v3[ax0] - v2[ax0];
@@ -65,7 +70,7 @@ RREAL			*v1, *v2, *v3;
 		d = vcb[0]*vcb[0] + vcb[1]*vcb[1];
 		if (d <= FTINY*FTINY)
 			return(-1);
-		d = (vcb[0]*vab[0]+vcb[1]*vab[1])/d;
+		d = (vcb[0]*vab[0] + vcb[1]*vab[1])/d;
 		va[0] = vab[0] - vcb[0]*d;
 		va[1] = vab[1] - vcb[1]*d;
 		d = va[0]*va[0] + va[1]*va[1];
@@ -74,7 +79,7 @@ RREAL			*v1, *v2, *v3;
 		d = 1.0/d;
 		bcm->tm[i][0] = va[0] *= d;
 		bcm->tm[i][1] = va[1] *= d;
-		bcm->tm[i][2] = -(v2[ax0]*va[0]+v2[ax1]*va[1]);
+		bcm->tm[i][2] = -(v2[ax0]*va[0] + v2[ax1]*va[1]);
 					/* rotate vertices */
 		vt = v1;
 		v1 = v2;
@@ -86,10 +91,11 @@ RREAL			*v1, *v2, *v3;
 
 
 void
-eval_baryc(wt, p, bcm)		/* evaluate barycentric weights at p */
-RREAL	wt[3];
-FVECT	p;
-register BARYCCM	*bcm;
+eval_baryc(			/* evaluate barycentric weights at p */
+	RREAL	wt[3],
+	FVECT	p,
+	BARYCCM	*bcm
+)
 {
 	double	u, v;
 	int	i;
@@ -105,10 +111,13 @@ register BARYCCM	*bcm;
 
 
 int
-get_baryc(wt, p, v1, v2, v3)	/* compute barycentric weights at p */
-RREAL	wt[3];
-FVECT	p;
-FVECT	v1, v2, v3;
+get_baryc(		/* compute barycentric weights at p */
+	RREAL	wt[3],
+	FVECT	p,
+	FVECT	v1,
+	FVECT	v2,
+	FVECT	v3
+)
 {
 	BARYCCM	bcm;
 	
@@ -148,19 +157,21 @@ FVECT	v1, v2, v3;
 
 
 void
-put_baryc(bcm, com, n)		/* put barycentric coord. vectors */
-register BARYCCM	*bcm;
-register RREAL		com[][3];
-int			n;
+fput_baryc(			/* put barycentric coord. vectors */
+	BARYCCM	*bcm,
+	RREAL	com[][3],
+	int	n,
+	FILE	*fp
+)
 {
 	double	a, b;
-	register int	i;
+	int	i;
 
-	printf("%d\t%d\n", 1+3*n, bcm->ax);
+	fprintf(fp, "%d\t%d\n", 1+3*n, bcm->ax);
 	for (i = 0; i < n; i++) {
 		a = com[i][0] - com[i][2];
 		b = com[i][1] - com[i][2];
-		printf("%14.8f %14.8f %14.8f\n",
+		fprintf(fp, "%14.8f %14.8f %14.8f\n",
 			bcm->tm[0][0]*a + bcm->tm[1][0]*b,
 			bcm->tm[0][1]*a + bcm->tm[1][1]*b,
 			bcm->tm[0][2]*a + bcm->tm[1][2]*b + com[i][2]);

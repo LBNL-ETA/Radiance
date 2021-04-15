@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.12 2021/04/09 18:52:57 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.13 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -274,6 +274,7 @@ sphere(int v0)					/* generate a rounded corner */
 int
 main(int argc, char *argv[])
 {
+	int  smooth = 0;
 	int  nsegs = 1;
 	int  objout = 0;
 	int  i;
@@ -300,6 +301,9 @@ main(int argc, char *argv[])
 			break;
 		case 'i':			/* invert surface normals */
 			rev = 1;
+			break;
+		case 's':			/* normal smoothing? */
+			smooth = 1;
 			break;
 		case 'r':			/* rounded edges/corners */
 			rounde = 1;
@@ -397,6 +401,8 @@ main(int argc, char *argv[])
 		side(6, 4, 5, 7);
 	}
 	if (obj != NULL) {			/* need to write output? */
+		if (!smooth)
+			removeNormals(obj, 0, 0);
 		if (objout) {
 			if (rounde)		/* joins corners to edges */
 				coalesceVertices(obj, 2.*FTINY);
@@ -410,6 +416,6 @@ main(int argc, char *argv[])
 userr:
 	fprintf(stderr, "Usage: %s ", argv[0]);
 	fprintf(stderr, "material name xsize ysize zsize ");
-	fprintf(stderr, "[-i] [-b bevel | -r round [-n nsegs]] [-o]\n");
+	fprintf(stderr, "[-i] [-b bevel | -r round [-n nsegs][-s]] [-o]\n");
 	return(1);
 }

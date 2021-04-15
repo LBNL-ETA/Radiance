@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.3 2020/04/23 22:35:27 greg Exp $";
+static const char RCSid[] = "$Id: convertobj.c,v 2.4 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  *  convertobj.c
@@ -10,19 +10,103 @@ static const char RCSid[] = "$Id: convertobj.c,v 2.3 2020/04/23 22:35:27 greg Ex
  */
 
 #include "paths.h"
+#include "fvect.h"
+#include "tmesh.h"
 #include "rterror.h"
 #include "objutil.h"
+
+#define TEXNAME		"T-nor"
+
+static int      fcnt = 0;			/* face output counter */
+
+/* Callback for face smoothing detection */
+static int
+checksmooth(Scene *sc, Face *f, void *ptr)
+{
+	int	nrev = 0;
+	Normal	fnrm;
+	int	i;
+
+	f->flags &= ~FACE_RESERVED;		/* using reserved flag */
+
+	for (i = f->nv; i--; )
+		if (f->v[i].nid < 0)
+			return(0);		/* missing normal */
+
+	if (faceArea(sc, f, fnrm) == 0)		/* degenerate?? */
+		return(0);
+						/* check each normal */
+	for (i = f->nv; i--; ) {
+		float	*tnrm = sc->norm[f->v[i].nid];
+		double	dprod = DOT(tnrm, fnrm);
+		if (dprod >= COSTOL)		/* this one agrees? */
+			continue;
+		if (dprod > -COSTOL)		/* active smoothing? */
+			break;
+		++nrev;				/* count opposite face normal */
+	}
+	if ((i < 0) & !nrev)			/* all normals agree w/ face? */
+		return(0);
+	if (nrev == f->nv) {			/* all reversed? */
+		for (i = f->nv; i--; )		/* remove normal indices */
+			f->v[i].nid = -1;
+		for (i = f->nv/2; i--; ) {	/* and swap others around */
+			int	j = f->nv-1 - i;
+			int	vi = f->v[i].vid;
+			int	ti = f->v[i].tid;
+			f->v[i].vid = f->v[j].vid;
+			f->v[i].tid = f->v[j].tid;
+			f->v[j].vid = vi;
+			f->v[j].tid = ti;
+		}
+		return(0);
+	}
+	f->flags |= FACE_RESERVED;		/* else we got one to smooth */
+	return(1);
+}
+
+/* Callback to write out smoothed Radiance triangle */
+static int
+trismooth(Scene *sc, Face *f, void *ptr)
+{
+	FILE		*fp = (FILE *)ptr;
+	BARYCCM		bcm;
+	RREAL		ncoor[3][3];
+	int		i;
+
+	if (f->nv != 3)
+		return(0);			/* should never happen */
+	if (sizeof(sc->vert[0].p) != sizeof(FVECT))
+		error(INTERNAL, "Code error in trismooth()");
+	if (comp_baryc(&bcm, sc->vert[f->v[0].vid].p, sc->vert[f->v[1].vid].p,
+			sc->vert[f->v[2].vid].p) < 0)
+		return(0);			/* degenerate?? */
+
+	for (i = 3; i--; ) {			/* assign BC normals */
+		float	*tnrm = sc->norm[f->v[i].nid];
+		ncoor[0][i] = tnrm[0];
+		ncoor[1][i] = tnrm[1];
+		ncoor[2][i] = tnrm[2];
+	}					/* print texture */
+	fprintf(fp, "\n%s texfunc %s\n4 dx dy dz %s\n0\n",
+			sc->matname[f->mat], TEXNAME, TCALNAME);
+	fput_baryc(&bcm, ncoor, 3, fp);		/* with BC normals */
+	fprintf(fp, "\n%s polygon %s.%d\n0\n0\n9\n",
+			TEXNAME, sc->grpname[f->grp], ++fcnt);
+	for (i = 0; i < 3; i++) {		/* then triangle */
+		double	*v = sc->vert[f->v[i].vid].p;
+		fprintf(fp, "\t%18.12g %18.12g %18.12g\n", v[0], v[1], v[2]);
+	}
+	return(1);
+}
 
 /* Callback to convert face to Radiance */
 static int
 radface(Scene *sc, Face *f, void *ptr)
 {
-	static int      fcnt = 0;
 	FILE		*fp = (FILE *)ptr;
 	int		i;
 	
-	if (f->flags & FACE_DEGENERATE)
-		return(0);
 	fprintf(fp, "\n%s polygon %s.%d\n0\n0\n%d\n", sc->matname[f->mat],
 				sc->grpname[f->grp], ++fcnt, 3*f->nv);
 	for (i = 0; i < f->nv; i++) {
@@ -41,11 +125,29 @@ toRadiance(Scene *sc, FILE *fp, int flreq, int flexc)
 
 	if (sc == NULL || sc->nfaces <= 0 || fp == NULL)
 		return(0);
+						/* not passing empties */
+	flexc |= FACE_DEGENERATE;
+						/* reset counter if not stdout */
+	fcnt *= (fp == stdout);
 						/* write comments */
 	for (n = 0; n < sc->ndescr; n++)
 		fprintf(fp, "# %s\n", sc->descr[n]);
-						/* write faces */
-	n = foreachFace(sc, radface, flreq, flexc, (void *)fp);
+						/* flag faces to smooth */
+	n = foreachFace(sc, checksmooth, flreq, flexc, NULL);
+	if (n > 0) {				/* write smooth faces */
+		Scene	*smoothies = dupScene(sc, flreq|FACE_RESERVED, flexc);
+		if (!smoothies)
+			return(-1);
+		n = triangulateScene(smoothies);
+		if (n >= 0)
+			n = foreachFace(smoothies, trismooth, 0, 0, fp);
+		freeScene(smoothies);
+	}
+	if (n < 0)
+		return(-1);
+						/* write flat faces */
+	n += foreachFace(sc, radface, flreq, flexc|FACE_RESERVED, fp);
+
 	if (fflush(fp) < 0) {
 		error(SYSTEM, "Error writing Radiance scene data");
 		return(-1);

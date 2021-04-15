@@ -1,4 +1,4 @@
-.\" RCSid "$Id: genbox.1,v 1.5 2021/04/09 01:48:20 greg Exp $"
+.\" RCSid "$Id: genbox.1,v 1.6 2021/04/15 23:51:04 greg Exp $"
 .TH GENBOX 1 11/15/93 RADIANCE
 .SH NAME
 genbox - generate a RADIANCE or Wavefront description of a box
@@ -12,6 +12,8 @@ genbox - generate a RADIANCE or Wavefront description of a box
 .B "\-r rad"
 [
 .B "\-n nseg
+][
+.B \-s
 ]
 ][
 .B \-o
@@ -40,7 +42,8 @@ option can be used to specify the indentation for beveled edges.
 The
 .I \-r
 option can be used to specify the radius for rounded edges, which
-are modeled as cylinders and spheres for non-inverted RADIANCE output.
+are normally
+modeled as cylinders and spheres for non-inverted RADIANCE output.
 However, this type of model only makes sense for external views of
 an opaque object.
 If a rounded box is inverted using
@@ -50,6 +53,9 @@ This option can also be forced by specifying a minum number of
 segments with the
 .I \-n
 option.
+The
+.I \-s
+option controls whether surface normal smoothing is applied as well.
 .PP
 The
 .I \-o
@@ -57,7 +63,9 @@ option specifies Wavefront .OBJ output, and
 also forces polygons to be used with the
 .I \-r
 option.
-In this case, vertex normals are also produced for smooth rendering.
+If the
+.I \-s
+option is present, vertex normals are also produced for smooth rendering.
 .SH EXAMPLE
 To produce a rectangular box made of wood with rounded edges:
 .IP "" .2i
@@ -66,18 +74,12 @@ genbox wood box1 5 8 3 \-r .5 > box1.rad
 To produce a box made of crystal with beveled edges:
 .IP "" .2i
 genbox crystal box2 3 7 1 \-b .1 > box2.rad
+.PP
+To produce a transparent box with smoothed, rounded edges:
+.IP "" .2i
+genbox glassy box3 2 4 3 -r .25 -n 16 -s > box3.rad
 .SH AUTHOR
 Greg Ward
-.SH BUGS
-Because spheres and cylinders are used to construct boxes with
-rounded edges, a transparent box of this type appears quite messy.
-The preferred alternative in this case is the
-.I \-n
-option, which produces polygons, instead.
-However, normal smoothing is only applied to the Wavefront .OBJ output,
-so this must be passed through
-.I obj2rad
-to get perfectly smooth results.
 .SH "SEE ALSO"
 genrev(1), gensurf(1), genworm(1), obj2mesh(1), obj2rad(1),
 robjutil(1), rpict(1), rvu(1), xform(1)

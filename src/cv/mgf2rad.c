@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.31 2016/10/03 18:16:45 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.32 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -475,7 +475,7 @@ do_tri(		/* put out smoothed triangle */
 		bcoor[i][1] = n2[i];
 		bcoor[i][2] = n3[i];
 	}
-	put_baryc(&bvecs, bcoor, 3);
+	fput_baryc(&bvecs, bcoor, 3, stdout);
 						/* put out triangle */
 	printf("\nT-nor polygon %st%d\n", object(), ++ntris);
 	printf("0\n0\n9\n");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.31 2020/01/28 21:18:02 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.32 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .OBJ file to Radiance format.
@@ -657,7 +657,7 @@ puttri(			/* put out a triangle */
 			bcoor[i][1] = vnlist[v2i[2]][i];
 			bcoor[i][2] = vnlist[v3i[2]][i];
 		}
-		put_baryc(&bvecs, bcoor, 3);
+		fput_baryc(&bvecs, bcoor, 3, stdout);
 	}
 #ifdef TEXMAPS
 					/* put out pattern (if any) */
@@ -671,7 +671,7 @@ puttri(			/* put out a triangle */
 			bcoor[i][1] = vtlist[v2i[1]][i];
 			bcoor[i][2] = vtlist[v3i[1]][i];
 		}
-		put_baryc(&bvecs, bcoor, 2);
+		fput_baryc(&bvecs, bcoor, 2, stdout);
 	}
 #endif
 					/* put out (reversed) triangle */

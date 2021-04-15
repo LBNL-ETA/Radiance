@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.17 2014/04/11 20:27:23 greg Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.18 2021/04/15 23:51:04 greg Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -245,7 +245,7 @@ triangle(	/* put out a triangle */
 			bvm[i][1] = v2->nor[i];
 			bvm[i][2] = v3->nor[i];
 		}
-		put_baryc(&bvecs, bvm, 3);
+		fput_baryc(&bvecs, bvm, 3, stdout);
 	}
 					/* put out pattern (if any) */
 	if (*pn && (v1->flags & v2->flags & v3->flags & V_HASINDX)) {
@@ -258,7 +258,7 @@ triangle(	/* put out a triangle */
 			bvm[i][1] = v2->ndx[i];
 			bvm[i][2] = v3->ndx[i];
 		}
-		put_baryc(&bvecs, bvm, 2);
+		fput_baryc(&bvecs, bvm, 2, stdout);
 	}
 					/* put out (reversed) triangle */
 	printf("\n%s polygon %s.%d\n", mod, obj, ++ntri);

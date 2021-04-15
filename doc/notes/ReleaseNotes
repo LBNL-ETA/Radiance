@@ -2436,4 +2436,8 @@ issues with noise and negative values.
 Increased default dynamic range from 32 to 100 in pcond and normtiff.
 
 Added -o and -n options to genbox to create .OBJ output and segment
-edges and corners for transparent materials.
+edges and corners for transparent materials.  Also added -s option
+to control smoothing for .OBJ and Radiance with segmented rounding.
+
+Made it so robjutil with the +r option for Radiance output now
+produces normal smoothing unless normals are removed with -n.
