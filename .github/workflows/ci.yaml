@@ -25,7 +25,10 @@ jobs:
       - name: Install cvsimport
         run: |
           sudo apt-get update
-          sudo apt-get install git-cvs
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt install git
+          sudo apt install git-cvs
+          apt show git-cvs
 
       - name: Run CVS Import
         run: |
