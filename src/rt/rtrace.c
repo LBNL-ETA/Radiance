@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.101 2021/02/16 22:06:00 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.102 2021/04/16 16:31:35 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -51,6 +51,8 @@ int  castonly = 0;			/* only doing ray-casting? */
 #define	 MAXTSET	8191		/* maximum number in trace set */
 #endif
 OBJECT	traset[MAXTSET+1]={0};		/* trace include/exclude set */
+
+static int  Tflag = 0;			/* source tracing enabled? */
 
 static RAY  thisray;			/* for our convenience */
 
@@ -119,6 +121,16 @@ formstr(				/* return format identifier */
 }
 
 
+static void
+trace_sources(void)			/* trace rays to light sources, also */
+{
+	int	sn;
+
+	for (sn = 0; sn < nsources; sn++)
+		source[sn].sflags |= SFOLLOW;
+}
+
+
 void
 rtrace(				/* trace rays from file */
 	char  *fname,
@@ -148,6 +160,8 @@ rtrace(				/* trace rays from file */
 					/* set up output */
 	if (castonly || every_out[0] != NULL)
 		nproc = 1;		/* don't bother multiprocessing */
+	if (Tflag && every_out[0] != NULL)
+		trace_sources();	/* asking to trace light sources */
 	if ((nextflush > 0) & (nproc > nextflush)) {
 		error(WARNING, "reducing number of processes to match flush interval");
 		nproc = nextflush;
@@ -217,16 +231,6 @@ rtrace(				/* trace rays from file */
 }
 
 
-static void
-trace_sources(void)			/* trace rays to light sources, also */
-{
-	int	sn;
-	
-	for (sn = 0; sn < nsources; sn++)
-		source[sn].sflags |= SFOLLOW;
-}
-
-
 int
 setrtoutput(void)			/* set up output tables, return #comp */
 {
@@ -241,8 +245,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	do
 		switch (*vs) {
 		case 'T':				/* trace sources */
-			if (!vs[1]) break;
-			trace_sources();
+			Tflag++;
 			/* fall through */
 		case 't':				/* trace */
 			if (!vs[1]) break;
