@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.4 2021/04/15 23:51:04 greg Exp $";
+static const char RCSid[] = "$Id: convertobj.c,v 2.5 2021/04/16 15:18:33 greg Exp $";
 #endif
 /*
  *  convertobj.c
@@ -71,26 +71,32 @@ trismooth(Scene *sc, Face *f, void *ptr)
 {
 	FILE		*fp = (FILE *)ptr;
 	BARYCCM		bcm;
-	RREAL		ncoor[3][3];
+	FVECT		coor[3];
 	int		i;
 
 	if (f->nv != 3)
 		return(0);			/* should never happen */
-	if (sizeof(sc->vert[0].p) != sizeof(FVECT))
-		error(INTERNAL, "Code error in trismooth()");
-	if (comp_baryc(&bcm, sc->vert[f->v[0].vid].p, sc->vert[f->v[1].vid].p,
-			sc->vert[f->v[2].vid].p) < 0)
+#ifdef  SMLFLT
+	for (i = 3; i--; ) {
+		double	*v = sc->vert[f->v[i].vid].p;
+		VCOPY(coor[i], v);
+	}
+	if (comp_baryc(&bcm, coor[0], coor[1], coor[2]) < 0)
 		return(0);			/* degenerate?? */
-
+#else
+	if (comp_baryc(&bcm, sc->vert[f->v[0].vid].p,
+			sc->vert[f->v[1].vid].p, sc->vert[f->v[2].vid].p) < 0)
+		return(0);			/* degenerate?? */
+#endif
 	for (i = 3; i--; ) {			/* assign BC normals */
 		float	*tnrm = sc->norm[f->v[i].nid];
-		ncoor[0][i] = tnrm[0];
-		ncoor[1][i] = tnrm[1];
-		ncoor[2][i] = tnrm[2];
+		coor[0][i] = tnrm[0];
+		coor[1][i] = tnrm[1];
+		coor[2][i] = tnrm[2];
 	}					/* print texture */
 	fprintf(fp, "\n%s texfunc %s\n4 dx dy dz %s\n0\n",
 			sc->matname[f->mat], TEXNAME, TCALNAME);
-	fput_baryc(&bcm, ncoor, 3, fp);		/* with BC normals */
+	fput_baryc(&bcm, coor, 3, fp);		/* with BC normals */
 	fprintf(fp, "\n%s polygon %s.%d\n0\n0\n9\n",
 			TEXNAME, sc->grpname[f->grp], ++fcnt);
 	for (i = 0; i < 3; i++) {		/* then triangle */
