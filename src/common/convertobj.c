@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.5 2021/04/16 15:18:33 greg Exp $";
+static const char RCSid[] = "$Id: convertobj.c,v 2.6 2021/04/17 14:51:33 greg Exp $";
 #endif
 /*
  *  convertobj.c
@@ -48,16 +48,11 @@ checksmooth(Scene *sc, Face *f, void *ptr)
 	if ((i < 0) & !nrev)			/* all normals agree w/ face? */
 		return(0);
 	if (nrev == f->nv) {			/* all reversed? */
-		for (i = f->nv; i--; )		/* remove normal indices */
-			f->v[i].nid = -1;
-		for (i = f->nv/2; i--; ) {	/* and swap others around */
+		for (i = f->nv/2; i--; ) {	/* swap vertices around */
 			int	j = f->nv-1 - i;
-			int	vi = f->v[i].vid;
-			int	ti = f->v[i].tid;
-			f->v[i].vid = f->v[j].vid;
-			f->v[i].tid = f->v[j].tid;
-			f->v[j].vid = vi;
-			f->v[j].tid = ti;
+			VertEnt	tve = f->v[i];
+			f->v[i] = f->v[j];
+			f->v[j] = tve;
 		}
 		return(0);
 	}
