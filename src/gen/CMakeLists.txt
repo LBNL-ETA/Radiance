@@ -4,7 +4,7 @@ add_executable(genbeads genbeads.c hermite3.c)
 target_link_libraries(genbeads ${LIB_M})
 
 add_executable(genbox genbox.c)
-target_link_libraries(genbox rtrad wfobj)
+target_link_libraries(genbox wfobj rtrad)
 
 add_executable(genmarble genmarble.c ../common/random.h)
 target_link_libraries(genmarble ${LIB_M})
