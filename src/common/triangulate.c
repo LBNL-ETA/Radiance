@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: triangulate.c,v 2.6 2021/04/19 19:40:03 greg Exp $";
+static const char RCSid[] = "$Id: triangulate.c,v 2.7 2021/04/19 20:37:04 greg Exp $";
 #endif
 /*
  *  triangulate.c
@@ -53,7 +53,7 @@ polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
 
   cross = ((Bx - Ax)*(Cy - Ay)) - ((By - Ay)*(Cx - Ax));
   if (cross < EPSILON)
-  	return cross < -EPSILON ? -1 : false; /* Negative if colinear points */
+  	return cross > -EPSILON ? -1 : false; /* Negative if colinear points */
 
   for (p=0;p<n;p++)
   {
