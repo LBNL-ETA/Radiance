@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: triangulate.c,v 2.5 2016/12/22 18:50:48 greg Exp $";
+static const char RCSid[] = "$Id: triangulate.c,v 2.6 2021/04/19 19:40:03 greg Exp $";
 #endif
 /*
  *  triangulate.c
@@ -34,7 +34,7 @@ static const char RCSid[] = "$Id: triangulate.c,v 2.5 2016/12/22 18:50:48 greg E
 #define false	0
 #endif
 
-static const double EPSILON = 0.0000000001;
+#define EPSILON		0.0000000001
 
 static int
 polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
@@ -52,15 +52,16 @@ polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
   Cy = contour->v[V[w]].mY;
 
   cross = ((Bx - Ax)*(Cy - Ay)) - ((By - Ay)*(Cx - Ax));
-  if (EPSILON > cross) return EPSILON > -cross ? -1 : false; /* Negative if colinear points */
+  if (cross < EPSILON)
+  	return cross < -EPSILON ? -1 : false; /* Negative if colinear points */
 
   for (p=0;p<n;p++)
   {
     if( (p == u) | (p == v) | (p == w) ) continue;
     Px = contour->v[V[p]].mX;
     Py = contour->v[V[p]].mY;
-    if ((Px == Ax && Py == Ay) || (Px == Bx && Py == By) ||
-		(Px == Cx && Py == Cy)) continue; /* Handle donuts */
+    if ((Px == Ax) & (Py == Ay) || (Px == Bx) & (Py == By) ||
+		(Px == Cx) & (Py == Cy)) continue; /* Handle donuts */
     if (insideTriangle(Ax,Ay,Bx,By,Cx,Cy,Px,Py)) return false;
   }
 
@@ -82,6 +83,9 @@ polyAlloc(int nv)
 	return pnew;
 }
 
+/*
+  Area is positive if vertices listed counter-clockwise, negative if clockwise
+ */
 double
 polyArea(const Vert2_list *contour)
 {
@@ -104,7 +108,6 @@ insideTriangle(double Ax, double Ay,
                       double Bx, double By,
                       double Cx, double Cy,
                       double Px, double Py)
-
 {
   double ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
   double cCROSSap, bCROSScp, aCROSSbp;
@@ -120,7 +123,7 @@ insideTriangle(double Ax, double Ay,
   cCROSSap = cx*apy - cy*apx;
   bCROSScp = bx*cpy - by*cpx;
 
-  return ((aCROSSbp >= 0.0) && (bCROSScp >= 0.0) && (cCROSSap >= 0.0));
+  return ((aCROSSbp >= 0.0) & (bCROSScp >= 0.0) & (cCROSSap >= 0.0));
 };
 
 int
@@ -128,7 +131,7 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
 {
   /* allocate and initialize list of Vertices in polygon */
 
-  int nv, m, u, v, w, count, result;
+  int nv, u, v, w, count, result;
   int *V;
 
   if ( contour->nv < 3 ) return false;
@@ -138,42 +141,40 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
 
   /* we want a counter-clockwise polygon in V */
 
-  if ( 0.0 < polyArea(contour) )
+  if ( polyArea(contour) > 0.0 )
     for (v=0; v<contour->nv; v++) V[v] = v;
   else
-    for(v=0; v<contour->nv; v++) V[v] = (contour->nv-1)-v;
+    for (v=0; v<contour->nv; v++) V[v] = (contour->nv-1)-v;
 
   nv = contour->nv;
 
   /*  remove nv-2 Vertices, creating 1 triangle every time */
   count = 2*nv;   /* error detection */
 
-  for(m=0, v=nv-1; nv>2; )
+  v = nv-1;
+  while (nv > 2)
   {
     /* if we loop, it is probably a non-simple polygon */
-    if (0 >= count--)
+    if (count-- <= 0)
     {
       /* Triangulate: ERROR - probable bad polygon */
+      free(V);
       return false;
     }
 
     /* three consecutive vertices in current polygon, <u,v,w> */
-    u = v  ; if (nv <= u) u = 0;     /* previous */
-    v = u+1; if (nv <= v) v = 0;     /* new v    */
-    w = v+1; if (nv <= w) w = 0;     /* next     */
+    u = v  ; u *= (nv > u);     /* previous */
+    v = u+1; v *= (nv > v);     /* new v    */
+    w = v+1; w *= (nv > w);     /* next     */
 
     result = polySnip(contour, u, v, w, nv, V);
     if (result > 0) /* successfully found a triangle */
     {
-      int a,b,c;
-
-      /* true names of the vertices */
-      a = V[u]; b = V[v]; c = V[w];
-
       /* output Triangle */
-      if (!(*cb)(contour, a, b, c)) return false;
- 
-      m++;
+      if (!(*cb)(contour, V[u], V[v], V[w])) {
+      	free(V);
+      	return false;
+      }
     }
     if (result) /* successfully found a triangle or three consecutive colinear points */
     {

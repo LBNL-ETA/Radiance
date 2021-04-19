@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objtriangulate.c,v 2.1 2021/03/12 03:59:25 greg Exp $";
+static const char RCSid[] = "$Id: objtriangulate.c,v 2.2 2021/04/19 19:40:03 greg Exp $";
 #endif
 /*
  * Turn all faces with > 3 sides to triangles in Wavefront .OBJ scene
@@ -16,6 +16,7 @@ static const char RCSid[] = "$Id: objtriangulate.c,v 2.1 2021/03/12 03:59:25 gre
 typedef struct {
 	Scene	*sc;
 	Face	*f;
+	int	rev;
 } SceneFace;
 
 /* Callback to create new triangle */
@@ -26,6 +27,11 @@ addtriangle(const Vert2_list *tp, int a, int b, int c)
 	Face		*f = sf->f;
 	VNDX		triv[3];
 
+	if (sf->rev) {			/* need to reverse triangle? */
+		int	t = a;
+		a = c;
+		c = t;
+	}
 	triv[0][0] = f->v[a].vid;
 	triv[0][1] = f->v[a].tid;
 	triv[0][2] = f->v[a].nid;
@@ -79,6 +85,7 @@ mktriangles(Scene *sc, Face *f, void *p)
 		poly->v[i].mX = pt[ax];
 		poly->v[i].mY = pt[ay];
 	}
+	mysf.rev = (polyArea(poly) < .0);
 	i = polyTriangulate(poly, addtriangle);
 	polyFree(poly);
 					/* flag face if replaced */
