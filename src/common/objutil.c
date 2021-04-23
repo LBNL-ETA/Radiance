@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.18 2021/04/09 15:26:41 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.19 2021/04/23 18:31:45 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -698,6 +698,56 @@ addFace(Scene *sc, VNDX vid[], int nv)
 	if (!(f->flags & FACE_DEGENERATE) && faceArea(sc, f, NULL) <= FTINY*FTINY)
 		f->flags |= FACE_DEGENERATE;
 	return(f);
+}
+
+/* Get neighbor vertices: malloc array with valence in index[0] */
+int *
+getVertexNeighbors(Scene *sc, int vid)
+{
+	int	*varr;
+	Face	*f;
+	int	j=0;
+
+	if (sc == NULL || (vid < 0) | (vid >= sc->nverts) ||
+			(f = sc->vert[vid].vflist) == NULL)
+		return(NULL);
+
+	varr = (int *)emalloc(sizeof(int)*CHUNKSIZ);
+	varr[0] = 0;				/* add unique neighbors */
+	for ( ; f != NULL; f = f->v[j].fnext) {
+		int	i, cvi;
+		for (j = f->nv; j--; )		/* find ourself in poly */
+			if (f->v[j].vid == vid)
+				break;
+		if (j < 0)			/* this is an error */
+			break;
+		if (f->nv < 3)			/* also never happens */
+			continue;
+						/* check previous neighbor */
+		cvi = f->v[ (j > 0) ? j-1 : f->nv-1 ].vid;
+		for (i = varr[0]+1; --i; )	/* making sure not in list */
+			if (varr[i] == cvi)
+				break;
+		if (!i) {			/* new neighbor? */
+			varr = chunk_alloc(int, varr, varr[0]+1);
+			varr[++varr[0]] = cvi;
+		}
+						/* check next neighbor */
+		cvi = f->v[ (j < f->nv-1) ? j+1 : 0 ].vid;
+		for (i = varr[0]+1; --i; )
+			if (varr[i] == cvi)
+				break;
+		if (!i) {
+			varr = chunk_alloc(int, varr, varr[0]+1);
+			varr[++varr[0]] = cvi;
+		}
+	}
+	if (!varr[0]) {
+		efree((char *)varr);		/* something went awry */
+		return(NULL);
+	}
+						/* tighten array & return */
+	return((int *)erealloc((char *)varr, sizeof(int)*(varr[0]+1)));
 }
 
 /* Callback for growBoundingBox() */
