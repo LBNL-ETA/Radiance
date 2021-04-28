@@ -1,5 +1,5 @@
 		RADIANCE UTILITY PROGRAMS
-		RCSid: $Id
+		RCSid: $Id: README,v 2.18 2021/04/28 17:20:57 greg Exp $
 
 This directory contains glare calculation programs and other utilites
 that combine functions and do not fit under the usual catagories.
