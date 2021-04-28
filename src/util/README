@@ -11,6 +11,9 @@ setscan.h	defines for programs using setscan()
 vars.h		header file for loadvars.c routines (used by rad and ranimate)
 Version.c	symbolic link to ../rt/Version.c (current Radiance version)
 compamb.csh	script to compute good ambient value and exposure setting
+dctimestep.c	tool to compute daylight coefficients, etc.
+eplus_adduvf.c	tool to compute User View Factors for EnergyPlus
+evalglare.c	program by Jan Wienold to evaluate glare
 findglare.c	find glare sources in a scene or image
 getinfo.c	program to read and manipulate binary file information headers
 glarendx.c	compute Glare Index given by program name or -t option
@@ -20,14 +23,23 @@ glrad.c		render Radiance scene in OpenGL
 loadvars.c	routines to read variables for rad and ranimate
 netproc.c	routines to control processes on local and remote hosts
 rad.c		executive program to run oconv, rpict and pfilt (and rview)
+radcompare.c	tool to compare Radiance output files
 ranimate.c	animation control program
 ranimove.c	main for ranimove program and control file handling
 ranimove1.c	basic frame rendering routines for ranimove
 ranimove2.c	frame refinement routines for ranimove
+rcode_depth.c	convert to/from encoded 16-bit depth maps
+rcode_norm.c	convert to/from encoded 32-bit normal maps
+rcode_ident.c	convert to/from indexed identifier maps
+rcollate.c	tool to collate (rearrange) data in file
+rmtxop.c	general matrix operations
 rpiece.c	program to control parallel generation of a picture
-rtcontrib.c	rtcontrib program main & support routines
+rsensor.c	tool to simulate sensors
+rttree_reduce.c	internal tool to prune tensor tree data
+rfluxmtx.c	tool to call rcontrib and generate flux transfer matrices
 setscan.c	convert angle ranges of the form a-b:s,c to discrete values
 vwright.c	short program to read in and modify views
+wrapBSDF.c	tool to wrap BSDF data in XML file
 x11findwind.c	find an X11 window from its name
 xglaresrc.c	circle glare sources in a displayed image
 dayfact.csh	compute and plot daylight factors on user-specified workplane
