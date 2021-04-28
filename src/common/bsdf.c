@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.59 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.60 2021/04/28 00:59:10 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -330,6 +330,8 @@ SDclipName(char *res, const char *fname)
 	for (cp = fname; *cp; cp++)
 		if (*cp == '.')
 			dot = cp;
+		else if (*cp == '/')
+			dot = NULL;
 	if ((dot == NULL) | (dot < fname+2))
 		dot = cp;
 	if (dot - fname >= SDnameLn)
