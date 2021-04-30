@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.17 2021/03/11 17:00:58 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.18 2021/04/30 16:40:10 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -264,13 +264,22 @@ dominant_axis(char *v1, char *v2, char *v3)
 	return(vn[imax]*vn[imax] > FTINY*FTINY*FTINY*FTINY ? imax : -1);
 }
 
+/* struct needed for triangulation callback */
+typedef struct {
+	char	**avl;
+	int	rev;
+} WFpoly;
+
 /* callback for triangle output from polygon */
 static int
 tri_out(const Vert2_list *tp, int a, int b, int c)
 {
-	return( puttri(	((char **)tp->p)[a],
-			((char **)tp->p)[b],
-			((char **)tp->p)[c] ) );
+	WFpoly *	wp = (WFpoly *)tp->p;
+
+	if (wp->rev)
+		return( puttri(wp->avl[c], wp->avl[b], wp->avl[a]) );
+
+	return( puttri(wp->avl[a], wp->avl[b], wp->avl[c]) );
 }
 
 static int
@@ -280,6 +289,7 @@ putface(				/* put out an N-sided polygon */
 )
 {
 	Vert2_list	*poly;
+	WFpoly		myps;
 	int		i, ax, ay;
 
 	for (i = ac-3; i >= 0; i--)	/* identify dominant axis */
@@ -290,7 +300,8 @@ putface(				/* put out an N-sided polygon */
 	poly = polyAlloc(ac);
 	if (poly == NULL)
 		return(0);
-	poly->p = (void *)av;
+	myps.avl = av;
+	poly->p = &myps;
 	if (++ax >= 3) ax = 0;
 	ay = ax;
 	if (++ay >= 3) ay = 0;
@@ -304,6 +315,8 @@ putface(				/* put out an N-sided polygon */
 		poly->v[i].mX = vlist[vi[0]][ax];
 		poly->v[i].mY = vlist[vi[0]][ay];
 	}
+					/* flag for order reversal */
+	myps.rev = (polyArea(poly) < .0);
 					/* break into triangles & output */
 	if (!polyTriangulate(poly, &tri_out)) {
 		sprintf(errmsg, "self-intersecting face with %d vertices", ac);
