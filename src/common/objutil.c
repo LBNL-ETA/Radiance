@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.19 2021/04/23 18:31:45 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.20 2021/05/01 00:58:18 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -991,7 +991,7 @@ xfmScene(Scene *sc, const char *xfm)
 	if (!*xfm)
 		return(0);
 					/* parse string into words */
-	xav[0] = strcpy((char *)emalloc(strlen(xfm)+1), xfm);
+	xav[0] = savqstr((char *)xfm);
 	xac = 1; i = 0;
 	for ( ; ; ) {
 		while (!isspace(xfm[++i]))
@@ -1002,14 +1002,14 @@ xfmScene(Scene *sc, const char *xfm)
 		if (!xfm[i])
 			break;
 		if (xac >= MAXAC-1) {
-			free(xav[0]);
+			freeqstr(xav[0]);
 			return(0);
 		}
 		xav[xac++] = xav[0] + i;
 	}
 	xav[xac] = NULL;
 	i = xfScene(sc, xac, xav);
-	efree((char *)xav[0]);
+	freeqstr(xav[0]);
 	return(i);
 }
 #undef MAXAC
