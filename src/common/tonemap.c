@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.50 2021/04/13 02:42:31 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.51 2021/05/04 21:50:54 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -160,6 +160,7 @@ TMstruct	*tms
 	if (tms == NULL || tms->histo == NULL)
 		return;
 	free(tms->histo);
+	tms->hbrmin = 10; tms->hbrmax = -10;
 	tms->histo = NULL;
 }
 
@@ -343,7 +344,7 @@ int	wt
 {
 	static const char funcName[] = "tmAddHisto";
 	int	oldorig=0, oldlen, horig, hlen;
-	int	i, j;
+	int	i;
 
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
@@ -364,12 +365,12 @@ int	wt
 		oldlen = HISTI(tms->hbrmax) + 1 - oldorig;
 	}
 	for (i = len; i--; ) {
-		if ((j = ls[i]) < MINBRT)
+		if (ls[i] < MINBRT)
 			continue;
-		if (j < tms->hbrmin)
-			tms->hbrmin = j;
-		else if (j > tms->hbrmax)
-			tms->hbrmax = j;
+		if (ls[i] < tms->hbrmin)
+			tms->hbrmin = ls[i];
+		else if (ls[i] > tms->hbrmax)
+			tms->hbrmax = ls[i];
 	}
 	horig = HISTI(tms->hbrmin);
 	hlen = HISTI(tms->hbrmax) + 1 - horig;
