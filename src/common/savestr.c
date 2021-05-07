@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.12 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.13 2021/05/07 03:09:45 greg Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -15,14 +15,13 @@ static const char	RCSid[] = "$Id: savestr.c,v 2.12 2019/12/28 18:05:14 greg Exp 
  *  frees memory associated with the string; it should
  *  never be referenced again.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
 #include <stdlib.h>
 
-#include "rtmisc.h"
 #include "rterror.h"
 #include "rtio.h"
 
