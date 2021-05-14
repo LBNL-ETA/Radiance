@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.7 2021/04/14 15:23:12 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.8 2021/05/14 17:57:59 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
 pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
@@ -18,13 +18,13 @@ pabopto2bsdf - convert BSDF measurements to a scattering interpolant representat
 .I Pabopto2bsdf
 takes two or more pab-opto
 .I Mountain
-files, each corresponding
-to a different incident beam angle, and produces a
-Scattering Interpolant Representation (SIR)
+files, each nominally containing
+different incident beam angles or sampling patterns,
+and produces a Scattering Interpolant Representation (SIR)
 on the standard output for further processing.
 The binary SIR contains a Radial Basis Function fitting
 each incident BSDF data file
-and a "transport plan" between neighboring RBF
+and a "transport plan" matrix for each pair of neighboring RBF
 directions in a spherical Delaunay mesh.
 .PP
 The SIR provides a complete 4-dimensional
