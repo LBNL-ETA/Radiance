@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.84 2021/01/31 20:55:04 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.85 2021/06/09 18:21:10 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -535,14 +535,19 @@ rayreject(		/* check if candidate hit is worse than current */
 		return(1);		/* shouldn't happen */
 	if (r->ro == NULL)
 		return(0);		/* ditto */
-	if ((mnew = findmaterial(o)) == NULL)
-		return(1);		/* new has no material */
-	if ((mray = findmaterial(r->ro)) == NULL)
+	mnew = findmaterial(o);
+	mray = findmaterial(r->ro);	/* check material transparencies */
+	if (mnew == NULL) {
+		if (mray != NULL)
+			return(1);	/* new has no material */
+	} else if (mray == NULL) {
 		return(0);		/* old has no material(!) */
-	if (istransp(mnew->otype))
-		return(1);		/* new is transparent */
-	if (istransp(mray->otype))
+	} else if (istransp(mnew->otype)) {
+		if (!istransp(mray->otype))
+			return(1);	/* new is transparent */
+	} else if (istransp(mray->otype)) {
 		return(0);		/* old is transparent */
+	}
 			/* weakest priority to later modifier definition */
 	return (r->ro->omod >= o->omod);
 }
