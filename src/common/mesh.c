@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.34 2020/07/14 23:13:50 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.35 2021/06/10 00:27:25 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -550,7 +550,7 @@ checkmesh(MESH *mp)			/* validate mesh data */
 {
 	static char	embuf[128];
 	int		nouvbounds = 1;
-	int		i;
+	int		i, j;
 					/* basic checks */
 	if (mp == NULL)
 		return("NULL mesh pointer");
@@ -572,8 +572,9 @@ checkmesh(MESH *mp)			/* validate mesh data */
 		if (isempty(mp->mcube.cutree))
 			error(WARNING, "empty mesh octree");
 	}
-					/* check scene data */
+					/* check patch data */
 	if (mp->ldflags & IO_SCENE) {
+		MESHVERT	mv;
 		if (!(mp->ldflags & IO_BOUNDS))
 			return("unbounded scene in mesh");
 		if (mp->mat0 < 0 || mp->mat0+mp->nmats > nobjects)
@@ -601,15 +602,58 @@ checkmesh(MESH *mp)			/* validate mesh data */
 				if (nouvbounds && pp->uv != NULL)
 					return("unreferenced uv coordinates");
 			}
-			if (pp->ntris > 0 && pp->tri == NULL)
-				return("missing patch triangle list");
-			if (pp->nj1tris > 0 && pp->j1tri == NULL)
-				return("missing patch joiner triangle list");
-			if (pp->nj2tris > 0 && pp->j2tri == NULL)
-				return("missing patch double-joiner list");
+			if (pp->ntris > 0) {
+				struct PTri	*tp = pp->tri;
+				if (tp == NULL)
+					return("missing patch triangle list");
+				if (mp->nmats <= 0)
+					j = -1;
+				else if (pp->trimat == NULL)
+					j = ((pp->solemat < 0) | (pp->solemat >= mp->nmats)) - 1;
+				else
+					for (j = pp->ntris; j--; )
+						if ((pp->trimat[j] < 0) |
+								(pp->trimat[j] >= mp->nmats))
+							break;
+				if (j >= 0)
+					return("bad local triangle material");
+				for (j = pp->ntris; j--; tp++)
+					if ((tp->v1 >= pp->nverts) | (tp->v2 >= pp->nverts) |
+							(tp->v3 >= pp->nverts))
+						return("bad local triangle index");
+			}
+			if (pp->nj1tris > 0) {
+				struct PJoin1	*j1p = pp->j1tri;
+				if (j1p == NULL)
+					return("missing patch joiner triangle list");
+				for (j = pp->nj1tris; j--; j1p++) {
+					if (mp->nmats > 0 &&
+							(j1p->mat < 0) | (j1p->mat >= mp->nmats))
+						return("bad j1 triangle material");
+					if (!getmeshvert(&mv, mp, j1p->v1j, MT_V))
+						return("bad j1 triangle joiner");
+					if ((j1p->v2 >= pp->nverts) | (j1p->v3 >= pp->nverts))
+						return("bad j1 triangle local index");
+				}
+			}
+			if (pp->nj2tris > 0) {
+				struct PJoin2	*j2p = pp->j2tri;
+				if (j2p == NULL)
+					return("missing patch double-joiner list");
+				for (j = pp->nj2tris; j--; j2p++) {
+					if (mp->nmats > 0 &&
+							(j2p->mat < 0) | (j2p->mat >= mp->nmats))
+						return("bad j2 triangle material");
+					if (!getmeshvert(&mv, mp, j2p->v1j, MT_V) |
+							!getmeshvert(&mv, mp, j2p->v2j, MT_V))
+						return("bad j2 triangle joiner");
+					if (j2p->v3 >= pp->nverts)
+						return("bad j2 triangle local index");
+				}
+			}
 		}
 	}
-	return(NULL);			/* seems OK */
+	return(NULL);			/* seems to be self-consistent */
 }
 
 
