@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2xyz.1,v 1.1 2021/03/01 22:16:12 greg Exp $"
+.\" RCSid "$Id: pabopto2xyz.1,v 1.2 2021/06/21 17:19:01 greg Exp $"
 .TH PABOPTO2XYZ 1 3/1/2021 RADIANCE
 .SH NAME
 pabopto2xyz - convert a collection of single-channel BSDF measurements to CIE-XYZ colorimetry
@@ -62,7 +62,7 @@ processing.
 To combine three sets of measurements in a REC709 color space and produce
 a CIE-XYZ file for pabopto2bsdf, which produces a color SIR file:
 .IP "" .2i
-pabopto2bsdf -m .412 .358 .180 .213 .715 .072 .019 .119 .951 -o blinds_xyz filesR.txt filesG.txt filesB.txt
+pabopto2xyz -m .412 .358 .180 .213 .715 .072 .019 .119 .951 -o blinds_xyz filesR.txt filesG.txt filesB.txt
 .br
 pabopto2bsdf blinds_xyz*.txt > blinds_xyz.sir
 .SH AUTHOR
