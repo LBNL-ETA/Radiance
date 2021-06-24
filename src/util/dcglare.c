@@ -300,7 +300,7 @@ main(int argc, char *argv[])
 	if ((argc-a < 2) | (argc-a > 5))
 		goto userr;
 	/* single bounce daylight coefficients file */
-	direct_path = argv[++a];
+	direct_path = argv[a++];
 #else
 	if ((argc-a < 1) | (argc-a > 4))
 		goto userr;
