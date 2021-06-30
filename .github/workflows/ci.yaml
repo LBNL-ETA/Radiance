@@ -9,7 +9,7 @@ on:
 jobs:
   cvs_import:
     name: "Run CVS Import"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
 
@@ -245,7 +245,7 @@ jobs:
 
   build_Linux:
     name: "Build for Linux"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
@@ -825,7 +825,7 @@ jobs:
   Test_Linux_1:
     needs: [build_Linux]
     name: "Test for Linux 1"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -922,7 +922,7 @@ jobs:
   Test_Linux_2:
     needs: [build_Linux]
     name: "Test for Linux 2"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -980,7 +980,7 @@ jobs:
   Test_Linux_3:
     needs: [build_Linux]
     name: "Test for Linux 3"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -1038,7 +1038,7 @@ jobs:
   Test_Linux_4:
     needs: [build_Linux]
     name: "Test for Linux 4"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -1097,7 +1097,7 @@ jobs:
   check_if_release:
     needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_OSX_3, Test_OSX_4, Test_Linux_1, Test_Linux_2, Test_Linux_3, Test_Linux_4]
     name: check if release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     outputs:
       RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
     steps:
@@ -1111,7 +1111,7 @@ jobs:
   
   zip_auxiliary:
     name: zip auxiliary files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: check_if_release
     if: needs.check_if_release.outputs.RELEASE_TODAY == 'true'
 
@@ -1133,7 +1133,7 @@ jobs:
 
   release_installers:
     name: deploy installers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: zip_auxiliary
 
     steps:
