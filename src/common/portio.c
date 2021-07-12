@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.26 2021/02/19 18:00:29 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.27 2021/07/12 17:42:51 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -147,7 +147,7 @@ getflt(				/* get a floating point number */
 		getc(fp);		/* exactly zero -- ignore exponent */
 		return(0.0);
 	}
-	d = (l + (l > 0 ? .5 : -.5)) * (1./0x7fffffff);
+	d = (l + .5 - (l<0)) * (1./0x7fffffff);
 	return(ldexp(d, (int)getint(1, fp)));
 }
 

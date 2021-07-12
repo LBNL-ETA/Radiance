@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.17 2019/05/04 00:36:58 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.18 2021/07/12 17:42:51 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -35,11 +35,11 @@ static long
 mgetint(siz)				/* get a siz-byte integer */
 int  siz;
 {
-	long  r;
+	long  r = getint(siz, meshfp);
 
-	r = getint(siz, meshfp);
-	if (feof(meshfp))
+	if (r == EOF && feof(meshfp))
 		mesherror(USER, "truncated mesh file");
+
 	return(r);
 }
 
@@ -47,11 +47,11 @@ int  siz;
 static double
 mgetflt()				/* get a floating point number */
 {
-	double	r;
+	double	r = getflt(meshfp);
 
-	r = getflt(meshfp);
-	if (feof(meshfp))
+	if (r == (double)EOF && feof(meshfp))
 		mesherror(USER, "truncated mesh file");
+
 	return(r);
 }
 	
