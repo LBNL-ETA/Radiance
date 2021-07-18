@@ -42,7 +42,7 @@ jobs:
           cd Radiance
           git checkout master
 
-          unset HAS_NEW_COMMITS
+          HAS_NEW_COMMITS=false
           if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
