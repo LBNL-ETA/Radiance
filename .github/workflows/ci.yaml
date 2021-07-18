@@ -66,7 +66,7 @@ jobs:
           if [[ "$HAS_NEW_COMMITS" == "false" && "$IF_RELEASE" == "true" ]];
           then
               echo ::set-output name=HAS_NEW_COMMITS::${IF_RELEASE}
-              echo "No commits, but release a new version today!";
+              echo "No commit, but release a new version today!";
           fi
 
 
