@@ -71,12 +71,13 @@ jobs:
 
 
       - name: Push updates to master branch
-        uses: ad-m/github-push-action@master
-        with:
-          directory: Radiance
-          github_token: ${{ secrets.GH_TOKEN }}
-          branch: master
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          cd Radiance
+          remote_repo="https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${remote_repo}" HEAD:master;
+
       
   
   build_Windows:
