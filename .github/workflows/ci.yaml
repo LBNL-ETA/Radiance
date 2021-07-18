@@ -9,9 +9,10 @@ on:
 jobs:
   cvs_import:
     name: "Run CVS Import"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
+      RELEASE_TODAY: ${{ steps.ifBuildTrigger.outputs.RELEASE_TODAY }}
 
     steps:
       - name: Clone this repo to machine
@@ -41,18 +42,56 @@ jobs:
           cd Radiance
           git checkout master
 
-          unset HAS_NEW_COMMITS
-          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          HAS_NEW_COMMITS=false
+          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS=true ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
+
+       
+          HAS_NEW_COMMITS_FROM_TAG=false
+
+          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
+          LAST_TAG=$(git describe --tags --abbrev=0)
+          echo LAST_COMMIT_ID = $LAST_COMMIT_ID
+          echo LAST_TAG = $LAST_TAG
+
+          if [[ "$LAST_COMMIT_ID" != "$LAST_TAG" ]]; then echo "Has new commits since last release"; HAS_NEW_COMMITS_FROM_TAG=true; fi
+
+      
+          LAST_RELEASE_SEVEN_DAYS_OLD=false
+          LATEST_DATE=$(git show -s --format=%ai refs/tags/$LAST_TAG)
+          echo $LATEST_DATE
+          if [[ $(($(date '+%s') - $(date -d "$LATEST_DATE" '+%s'))) -gt 7*86400 ]]; then echo "Last release was 7 days ago"; LAST_RELEASE_SEVEN_DAYS_OLD=true; fi
+     
+
+          TODAY_IS_SUNDAY=false
+          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; TODAY_IS_SUNDAY=true; fi
+
+          RELEASE_TODAY=false
+          if [[ "$TODAY_IS_SUNDAY" == "true" || "$LAST_RELEASE_SEVEN_DAYS_OLD" == "true" ]]; then echo "Last release was 7 days ago or today is sunday"; RELEASE_TODAY=true; fi
+          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
+
+          if [[ "$HAS_NEW_COMMITS_FROM_TAG" == "false" ]]; then echo "No new commit from last release, cancel the release"; RELEASE_TODAY=false; fi
+          if [[ "$RELEASE_TODAY" == "true" ]]; then echo "release today"; fi
+          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
+          
+          if [[ "$HAS_NEW_COMMITS" == "false" && "$RELEASE_TODAY" == "true" ]];
+          then
+              echo ::set-output name=HAS_NEW_COMMITS::${RELEASE_TODAY}
+              echo "No commit, but release a new version today!";
+          fi
+
+
+
       - name: Push updates to master branch
-        uses: ad-m/github-push-action@master
-        with:
-          directory: Radiance
-          github_token: ${{ secrets.GH_TOKEN }}
-          branch: master
-        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          cd Radiance
+          remote_repo="https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${remote_repo}" HEAD:master;
+
       
   
   build_Windows:
@@ -245,7 +284,7 @@ jobs:
 
   build_Linux:
     name: "Build for Linux"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
@@ -825,7 +864,7 @@ jobs:
   Test_Linux_1:
     needs: [build_Linux]
     name: "Test for Linux 1"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -922,7 +961,7 @@ jobs:
   Test_Linux_2:
     needs: [build_Linux]
     name: "Test for Linux 2"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -980,7 +1019,7 @@ jobs:
   Test_Linux_3:
     needs: [build_Linux]
     name: "Test for Linux 3"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -1038,7 +1077,7 @@ jobs:
   Test_Linux_4:
     needs: [build_Linux]
     name: "Test for Linux 4"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     timeout-minutes: 40
 
     steps:
@@ -1095,23 +1134,24 @@ jobs:
 
 
   check_if_release:
-    needs: [Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_OSX_3, Test_OSX_4, Test_Linux_1, Test_Linux_2, Test_Linux_3, Test_Linux_4]
+    needs: [cvs_import, Test_Windows_1,Test_Windows_2,Test_Windows_3,Test_Windows_4, Test_OSX_1, Test_OSX_2, Test_OSX_3, Test_OSX_4, Test_Linux_1, Test_Linux_2, Test_Linux_3, Test_Linux_4]
     name: check if release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
+    env:
+      READY_TO_RELEASE: ${{ needs.cvs_import.outputs.RELEASE_TODAY }}
     outputs:
       RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
     steps:
       - name: Check date if release
         id: if_release
         run: |
-          IF_RELEASE=false
-          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
-          if $IF_RELEASE; then echo "Release a new version today"; fi
-          echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+          echo ::set-output name=RELEASE_TODAY::${READY_TO_RELEASE}
   
+
+
   zip_auxiliary:
     name: zip auxiliary files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: check_if_release
     if: needs.check_if_release.outputs.RELEASE_TODAY == 'true'
 
@@ -1133,7 +1173,7 @@ jobs:
 
   release_installers:
     name: deploy installers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: zip_auxiliary
 
     steps:
