@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-18.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
-      LAST_RELEASE_SEVEN_DAYS_AGO: ${{ steps.ifBuildTrigger.outputs.LAST_RELEASE_SEVEN_DAYS_AGO }}
+      RELEASE_TODAY: ${{ steps.ifBuildTrigger.outputs.RELEASE_TODAY }}
 
     steps:
       - name: Clone this repo to machine
@@ -43,31 +43,45 @@ jobs:
           git checkout master
 
           HAS_NEW_COMMITS=false
-          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS='true' ; fi
+          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS=true ; fi
           echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
           echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
 
-          IF_RELEASE=false
-          LATESTDATE=$(curl \
-            -i \
-            -s https://api.github.com/repos/LBNL-ETA/Radiance/releases \
-            | grep -m1 published_at \
-            | cut -d '"' -f 4)
 
-          echo $LATESTDATE
+       
+          HAS_NEW_COMMITS_FROM_TAG=false
+
           LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
           LAST_TAG=$(git describe --tags --abbrev=0)
+          echo LAST_COMMIT_ID = $LAST_COMMIT_ID
+          echo LAST_TAG = $LAST_TAG
 
+          if [[ "$LAST_COMMIT_ID" != "$LAST_TAG" ]]; then echo "Has new commits since last release"; HAS_NEW_COMMITS_FROM_TAG=true; fi
 
-          if [[ $(($(date '+%s') - $(date -d "$LATESTDATE" '+%s'))) -gt 7*86400 ]]; then echo "Last release was 7 days ago"; IF_RELEASE=true; fi
-          echo set-output name=LAST_RELEASE_SEVEN_DAYS_AGO::${IF_RELEASE}
-          echo ::set-output name=LAST_RELEASE_SEVEN_DAYS_AGO::${IF_RELEASE}
+      
+          LAST_RELEASE_SEVEN_DAYS_OLD=false
+          LATEST_DATE=$(git show -s --format=%ai refs/tags/$LAST_TAG)
+          echo $LATEST_DATE
+          if [[ $(($(date '+%s') - $(date -d "$LATEST_DATE" '+%s'))) -gt 7*86400 ]]; then echo "Last release was 7 days ago"; LAST_RELEASE_SEVEN_DAYS_OLD=true; fi
+     
 
-          if [[ "$HAS_NEW_COMMITS" == "false" && "$IF_RELEASE" == "true" ]];
+          TODAY_IS_SUNDAY=false
+          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; TODAY_IS_SUNDAY=true; fi
+
+          RELEASE_TODAY=false
+          if [[ "$TODAY_IS_SUNDAY" == "true" || "$LAST_RELEASE_SEVEN_DAYS_OLD" == "true" ]]; then echo "Last release was 7 days ago or today is sunday"; RELEASE_TODAY=true; fi
+          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
+
+          if [[ "$HAS_NEW_COMMITS_FROM_TAG" == "false" ]]; then echo "No new commit from last release, cancel the release"; RELEASE_TODAY=false; fi
+          if [[ "$RELEASE_TODAY" == "true" ]]; then echo "release today"; fi
+          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
+          
+          if [[ "$HAS_NEW_COMMITS" == "false" && "$RELEASE_TODAY" == "true" ]];
           then
-              echo ::set-output name=HAS_NEW_COMMITS::${IF_RELEASE}
+              echo ::set-output name=HAS_NEW_COMMITS::${RELEASE_TODAY}
               echo "No commit, but release a new version today!";
           fi
+
 
 
       - name: Push updates to master branch
@@ -1124,18 +1138,14 @@ jobs:
     name: check if release
     runs-on: ubuntu-18.04
     env:
-      LAST_RELEASE_SEVEN_DAYS_AGO: ${{ needs.cvs_import.outputs.LAST_RELEASE_SEVEN_DAYS_AGO }}
+      READY_TO_RELEASE: ${{ needs.cvs_import.outputs.RELEASE_TODAY }}
     outputs:
       RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
     steps:
       - name: Check date if release
         id: if_release
         run: |
-          IF_RELEASE=false
-          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; IF_RELEASE=true; fi
-          if [[ "$LAST_RELEASE_SEVEN_DAYS_AGO" == "true" ]]; then echo "Last release was 7 days ago, so release today"; IF_RELEASE=true; fi
-          if $IF_RELEASE; then echo "Release a new version today"; fi
-          echo ::set-output name=RELEASE_TODAY::${IF_RELEASE}
+          echo ::set-output name=RELEASE_TODAY::${READY_TO_RELEASE}
   
 
 
