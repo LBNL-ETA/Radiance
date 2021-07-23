@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.20 2021/04/09 17:37:47 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.21 2021/07/23 17:54:47 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -19,8 +19,8 @@ extern "C" {
 #endif
 #define  FHUGE		(1e10)
 
-#define  FABSEQ(x1,x2)	((x1)+FTINY > (x2) && (x2)+FTINY > (x1))
-#define  FRELEQ(x1,x2)	((x1)*(1.+FTINY) >= (x2) && (x2)*(1.+FTINY) >= (x1))
+#define  FABSEQ(x1,x2)	(fabs((x1)-(x2)) <= FTINY)
+#define  FRELEQ(x1,x2)	(fabs((x1)-(x2)) <= FTINY*0.5*(fabs(x1)+fabs(x2)))
 
 #define  VABSEQ(v,w)	(FABSEQ((v)[0],(w)[0]) && FABSEQ((v)[1],(w)[1]) \
 				&& FABSEQ((v)[2],(w)[2]))
