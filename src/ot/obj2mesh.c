@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.15 2017/03/03 01:25:27 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.16 2021/07/28 22:16:43 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -39,11 +39,7 @@ main(		/* compile a .OBJ file into a mesh */
 	char  *argv[]
 )
 {
-	int  nmatf = 0;
 	int  verbose = 0;
-	char  pathnames[12800];
-	char  *pns = pathnames;
-	char  *matinp[128];
 	char  *cp;
 	int  i, j;
 
@@ -59,7 +55,7 @@ main(		/* compile a .OBJ file into a mesh */
 			resolu = atoi(argv[++i]);
 			break;
 		case 'a':				/* material file */
-			matinp[nmatf++] = argv[++i];
+			readobj(argv[++i]);
 			break;
 		case 'l':				/* library material */
 			cp = getpath(argv[++i], getrlibpath(), R_OK);
@@ -69,9 +65,7 @@ main(		/* compile a .OBJ file into a mesh */
 						argv[i]);
 				error(SYSTEM, errmsg);
 			}
-			matinp[nmatf++] = strcpy(pns, cp);
-			while (*pns++)
-				;
+			readobj(cp);
 			break;
 		case 'w':				/* supress warnings */
 			nowarn = 1;
@@ -89,9 +83,6 @@ main(		/* compile a .OBJ file into a mesh */
 		error(USER, "too many file arguments");
 					/* initialize mesh */
 	cvinit(i==argc-2 ? argv[i+1] : "<stdout>");
-					/* load material input */
-	for (j = 0; j < nmatf; j++)
-		readobj(matinp[j]);
 					/* read .OBJ file into triangles */
 	if (i == argc)
 		wfreadobj(NULL);
