@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calprnt.c,v 2.6 2012/10/24 00:39:09 greg Exp $";
+static const char	RCSid[] = "$Id: calprnt.c,v 2.7 2021/07/30 00:22:32 greg Exp $";
 #endif
 /*
  *  calprint.c - routines for printing calcomp expressions.
@@ -8,10 +8,32 @@ static const char	RCSid[] = "$Id: calprnt.c,v 2.6 2012/10/24 00:39:09 greg Exp $
 #include "copyright.h"
 
 #include  <stdio.h>
+#include  <string.h>
 
 #include  "rterror.h"
 #include  "calcomp.h"
 
+
+/* is child binary operation lower precedence than parent? */
+static int
+lower_precedent_binop(int typ, EPNODE *ekid)
+{
+    if (ekid == NULL)
+	return(0);
+    switch (typ) {
+	case '+':
+		return(0);
+	case '-':
+		return(ekid->type == '+');
+	case '*':
+		return(strchr("+-", ekid->type) != NULL);
+	case '/':
+		return(strchr("+-*", ekid->type) != NULL);
+	case '^':
+		return(strchr("+-*/^", ekid->type) != NULL);
+	}
+    return(0);			/* child not binary op */
+}
 
 void
 eprint(				/* print a parse tree */
@@ -22,7 +44,7 @@ eprint(				/* print a parse tree */
     static EPNODE  *curdef = NULL;
     EPNODE  *ep1 = NULL;
 
-    switch (ep->type) {
+    switch (ep==NULL ? -1 : ep->type) {
 
 	case VAR:
 	    fputs(ep->v.ln->name, fp);
@@ -57,11 +79,6 @@ eprint(				/* print a parse tree */
 	    fprintf(fp, "%.9g", ep->v.num);
 	    break;
 
-	case UMINUS:
-	    fputc('-', fp);
-	    eprint(ep->v.kid, fp);
-	    break;
-
 	case CHAN:
 	    fprintf(fp, "$%d", ep->v.chan);
 	    break;
@@ -77,19 +94,40 @@ eprint(				/* print a parse tree */
 	    eprint(ep->v.kid->sibling, fp);
 	    curdef = ep1;
 	    break;
-	    
+
+	case UMINUS:
+	    fputc('-', fp);
+	    if (ep->v.kid != NULL && strchr("+-*/^", ep->v.kid->type)) {
+		fputc('(', fp);
+		eprint(ep->v.kid, fp);
+		fputc(')', fp);
+	    } else
+		eprint(ep->v.kid, fp);
+	    break;
+
 	case '+':
 	case '-':
 	case '*':
 	case '/':
 	case '^':
-	    fputc('(', fp);
-	    eprint(ep->v.kid, fp);
-	    fputc(' ', fp);
-	    fputc(ep->type, fp);
-	    fputc(' ', fp);
-	    eprint(ep->v.kid->sibling, fp);
-	    fputc(')', fp);
+	    if (lower_precedent_binop(ep->type, ep->v.kid)) {
+		fputc('(', fp);
+		eprint(ep->v.kid, fp);
+		fputc(')', fp);
+	    } else
+		eprint(ep->v.kid, fp);
+	    if (ep->type != '^') {
+		fputc(' ', fp);
+		fputc(ep->type, fp);
+		fputc(' ', fp);
+	    } else
+		fputc(ep->type, fp);
+	    if (lower_precedent_binop(ep->type, ep->v.kid->sibling)) {
+		fputc('(', fp);
+		eprint(ep->v.kid->sibling, fp);
+		fputc(')', fp);
+	    } else
+		eprint(ep->v.kid->sibling, fp);
 	    break;
 
 	default:
@@ -97,7 +135,6 @@ eprint(				/* print a parse tree */
 	    quit(1);
 
     }
-
 }
 
 
