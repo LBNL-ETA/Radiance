@@ -1,4 +1,4 @@
-# RCSid $Id: UnitTests.txt,v 1.12 2020/07/01 20:11:07 greg Exp $
+# RCSid $Id: UnitTests.txt,v 1.13 2021/08/09 22:54:03 greg Exp $
 #
 # Remember to add binary files using "cvs add -kb file"
 #
@@ -71,19 +71,20 @@ Tools tested in "cv":
 ++++++++
 Missing:
 ++++++++
+bsdf2rad
+epq2wea
 ies2rad
 obj2rad
 optics2rad
 mgf2rad
-rad2mgf
 mgf2meta
 pabopto2xyz
 pabopto2bsdf
 bsdf2ttree
 bsdf2klems
 pkgBSDF
-epq2wea
-bsdf2rad
+rad2mgf
+robjutil
 ---------------------
 Tools tested in "px":
 =====================
