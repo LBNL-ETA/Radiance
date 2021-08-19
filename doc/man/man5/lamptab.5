@@ -1,0 +1,52 @@
+.\" RCSid $Id: lamptab.5,v 1.1 2021/08/19 06:35:01 greg Exp $
+.TH LAMP.TAB 5 2021-08-18 RADIANCE
+.SH NAME
+lamp.tab \- table of lamp colors and lumen depreciation factors 
+.SH DESCRIPTION
+Lamp.tab contains a table of lamp data. The lines are formatted thus:
+.IP
+.RI / "light source name re" /
+.I x y m
+.PP
+or 
+.IP
+.RI / "light source alias re" /
+.RI ( "light source name" )
+.PP
+The first form gives the color and depreciation of a lamp whose name
+matches the light source name regular expression. The second gives
+an alternate name for a light source. Comments beginning with '#'
+are supported.
+.SS Notes
+.IP \(bu
+Basic regular expressions (original grep) are used.
+.IP \(bu
+.I x
+and
+.I y
+are CIE x and y coordinates. These give the color of the light.  See
+.UR https://www.iso.org/standard/74165.html
+ISO/CIE 11664-3:2019
+.UE 
+\*(lqColorimetry \(em Part 3: Cie Tristimulus Values\*(rq for
+definitions.
+.IP \(bu
+.I m
+is a "coefficient of depreciation." This is a multiplier used to
+reduce the output of a lamp to the value it would have after it has
+been in operation for its expected life. It is used to predict the
+output of a lighting system comprised of many lamps. See the
+.I IES Lighting Handbook
+for more information.
+.IP \(bu
+Any character except '#' may be used to delimit the light source name
+regular expression; '/' is conventional, but not required.
+.IP \(bu
+Comments begin with '#' and may occur at the end of any line.
+.IP \(bu
+Blank lines are ignored.
+.SH AUTHOR
+Greg Ward 
+.SH SEE ALSO
+.BR ies2rad (1),
+.BR pfilt (1)
