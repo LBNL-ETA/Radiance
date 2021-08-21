@@ -1,4 +1,4 @@
-.\" RCSid $Id: lamptab.5,v 1.1 2021/08/19 06:35:01 greg Exp $
+.\" RCSid $Id: lamptab.5,v 1.2 2021/08/21 07:04:32 greg Exp $
 .TH LAMP.TAB 5 2021-08-18 RADIANCE
 .SH NAME
 lamp.tab \- table of lamp colors and lumen depreciation factors 
@@ -19,7 +19,8 @@ an alternate name for a light source. Comments beginning with '#'
 are supported.
 .SS Notes
 .IP \(bu
-Basic regular expressions (original grep) are used.
+Basic regular expressions (original grep) are used with the addition
+of "\\<" for beginning of word and "\\>" for end-of-word.
 .IP \(bu
 .I x
 and
@@ -42,6 +43,9 @@ for more information.
 Any character except '#' may be used to delimit the light source name
 regular expression; '/' is conventional, but not required.
 .IP \(bu
+Regular expressions may contain '\\' followed by the delimiter
+character; aliases may contain '\\' followed by ')'.
+.IP \(bu  
 Comments begin with '#' and may occur at the end of any line.
 .IP \(bu
 Blank lines are ignored.
