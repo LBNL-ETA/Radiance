@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.63 2021/03/27 20:08:58 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.64 2021/08/25 16:12:21 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -130,6 +130,9 @@ compute_through(BSDFDAT *ndp)
 					{1.8, -1.8}, {-2.4, 0}, {0, 2.4},
 					{0, -2.4}, {2.4, 0},
 				};
+#define neighbors(i,j)	\
+	((dir2check[i][0]-dir2check[j][0])*(dir2check[i][0]-dir2check[j][0]) + \
+	(dir2check[i][1]-dir2check[j][1])*(dir2check[i][1]-dir2check[j][1]) <= 0.73)
 	const double	peak_over = 1.5;
 	PEAKSAMP	psamp[NDIR2CHECK];
 	SDSpectralDF	*dfp;
@@ -138,7 +141,7 @@ compute_through(BSDFDAT *ndp)
 	double		tomsum, tomsurr;
 	COLOR		vpeak, vsurr;
 	double		vypeak;
-	int		i, ns;
+	int		i, j, ns;
 	SDError		ec;
 
 	if (ndp->pr->rod > 0)
@@ -171,8 +174,11 @@ compute_through(BSDFDAT *ndp)
 	vypeak = tomsum = tomsurr = 0;		/* combine top unique values */
 	ns = 0;
 	for (i = 0; i < NDIR2CHECK; i++) {
-		if (i && psamp[i].vy == psamp[i-1].vy)
-			continue;		/* assume duplicate sample */
+		for (j = i; j--; )		/* check for duplicate sample */
+			if (psamp[j].vy == psamp[i].vy && neighbors(i,j))
+				break;
+		if (j >= 0)
+			continue;		/* skip duplicate */
 
 		ec = SDsizeBSDF(&tomega, psamp[i].tdir, ndp->vray,
 						SDqueryMin, ndp->sd);
@@ -208,6 +214,7 @@ compute_through(BSDFDAT *ndp)
 	return;
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));
+#undef neighbors
 #undef NDIR2CHECK
 }
 
