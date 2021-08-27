@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.64 2021/08/25 16:12:21 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.65 2021/08/27 03:09:27 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.64 2021/08/25 16:12:21 greg Exp $
 #include  "pmapmat.h"
 
 /*
-  *	Arguments to this material include optional diffuse colors.
+ *	Arguments to this material include optional diffuse colors.
  *  String arguments include the BSDF and function files.
  *	For the MAT_BSDF type, a non-zero thickness causes the useful behavior
  *  of translating transmitted rays this distance beneath the surface
@@ -130,10 +130,6 @@ compute_through(BSDFDAT *ndp)
 					{1.8, -1.8}, {-2.4, 0}, {0, 2.4},
 					{0, -2.4}, {2.4, 0},
 				};
-#define neighbors(i,j)	\
-	((dir2check[i][0]-dir2check[j][0])*(dir2check[i][0]-dir2check[j][0]) + \
-	(dir2check[i][1]-dir2check[j][1])*(dir2check[i][1]-dir2check[j][1]) <= 0.73)
-	const double	peak_over = 1.5;
 	PEAKSAMP	psamp[NDIR2CHECK];
 	SDSpectralDF	*dfp;
 	FVECT		pdir;
@@ -141,7 +137,7 @@ compute_through(BSDFDAT *ndp)
 	double		tomsum, tomsurr;
 	COLOR		vpeak, vsurr;
 	double		vypeak;
-	int		i, j, ns;
+	int		i, ns;
 	SDError		ec;
 
 	if (ndp->pr->rod > 0)
@@ -168,53 +164,47 @@ compute_through(BSDFDAT *ndp)
 	}
 	qsort(psamp, NDIR2CHECK, sizeof(PEAKSAMP), cmp_psamp);
 	if (psamp[0].vy <= FTINY)
-		return;				/* zero area */
+		return;				/* zero BTDF here */
 	setcolor(vpeak, 0, 0, 0);
 	setcolor(vsurr, 0, 0, 0);
 	vypeak = tomsum = tomsurr = 0;		/* combine top unique values */
 	ns = 0;
 	for (i = 0; i < NDIR2CHECK; i++) {
-		for (j = i; j--; )		/* check for duplicate sample */
-			if (psamp[j].vy == psamp[i].vy && neighbors(i,j))
-				break;
-		if (j >= 0)
-			continue;		/* skip duplicate */
+		if (i && psamp[i].vy == psamp[i-1].vy)
+			continue;		/* assume duplicate sample */
 
 		ec = SDsizeBSDF(&tomega, psamp[i].tdir, ndp->vray,
 						SDqueryMin, ndp->sd);
 		if (ec)
 			goto baderror;
-						/* not really a peak? */
+
+		scalecolor(psamp[i].vcol, tomega);
+						/* not part of peak? */
 		if (tomega > 1.5*dfp->minProjSA ||
 					vypeak > 8.*psamp[i].vy*ns) {
 			if (!i) return;		/* abort */
-			scalecolor(psamp[i].vcol, tomega);
 			addcolor(vsurr, psamp[i].vcol);
 			tomsurr += tomega;
 			continue;
 		}
-		scalecolor(psamp[i].vcol, tomega);
 		addcolor(vpeak, psamp[i].vcol);
 		tomsum += tomega;
 		vypeak += psamp[i].vy;
 		++ns;
 	}
-	if (vypeak*tomsurr < peak_over*bright(vsurr)*ns)
-		return;				/* peak not peaky enough */
+	if (tomsurr <= FTINY)			/* no surround implies no peak */
+		return;
 	if ((vypeak/ns - (ndp->vray[2] > 0 ? ndp->sd->tLambFront.cieY
-			: ndp->sd->tLambBack.cieY)*(1./PI))*tomsum <= .001)
-		return;				/* < 0.1% transmission */
+			: ndp->sd->tLambBack.cieY)*(1./PI))*tomsum < .0005)
+		return;				/* < 0.05% transmission */
 	copycolor(ndp->cthru, vpeak);		/* already scaled by omega */
 	multcolor(ndp->cthru, ndp->pr->pcol);	/* modify by pattern */
-	if (tomsurr > FTINY) {			/* surround contribution? */
-		scalecolor(vsurr, 1./tomsurr);	/* this one is avg. BTDF */
-		copycolor(ndp->cthru_surr, vsurr);
-		multcolor(ndp->cthru_surr, ndp->pr->pcol);
-	}
+	scalecolor(vsurr, 1./tomsurr);		/* surround is avg. BTDF */
+	copycolor(ndp->cthru_surr, vsurr);
+	multcolor(ndp->cthru_surr, ndp->pr->pcol);
 	return;
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));
-#undef neighbors
 #undef NDIR2CHECK
 }
 
