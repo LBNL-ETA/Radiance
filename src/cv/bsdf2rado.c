@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rado.c,v 2.2 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rado.c,v 2.3 2021/08/31 01:09:24 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -96,9 +96,9 @@ main(int argc, char *argv[])
 		fclose(fp);
 	}
 #ifdef DEBUG
-	fprintf(stderr, "Minimum BSDF set to %.4f\n", bsdf_min);
+	fprintf(stderr, "Minimum BSDF set to %.4g\n", bsdf_min);
 #endif
-	min_log = log(bsdf_min*.5 + 1e-5);
+	min_log = log(bsdf_min*.5 + 1e-6);
 						/* output BSDF rep. */
 	for (n = 0; (n < 6) & (2*n+3 < argc); n++) {
 		double	theta = (M_PI/180.)*atof(argv[2*n+2]);
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
 			rbf = advect_rbf(idir, 15000);
 #ifdef DEBUG
 		if (inpXML)
-			fprintf(stderr, "Hemispherical %s: %.3f\n",
+			fprintf(stderr, "Hemispherical %s: %.4f\n",
 				(output_orient > 0 ^ input_orient > 0 ?
 					"transmission" : "reflection"),
 				SDdirectHemi(idir, SDsampSp|SDsampDf |
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
 		else if (rbf == NULL)
 			fputs("Empty RBF\n", stderr);
 		else
-			fprintf(stderr, "Hemispherical %s: %.3f\n",
+			fprintf(stderr, "Hemispherical %s: %.4f\n",
 				(output_orient > 0 ^ input_orient > 0 ?
 					"transmission" : "reflection"),
 				rbf->vtotal);
@@ -173,7 +173,7 @@ main(int argc, char *argv[])
 				bsdf = sval.cieY;
 			} else
 				bsdf = eval_rbfrep(rbf, odir);
-			bsdf = log(bsdf + 1e-5) - min_log;
+			bsdf = log(bsdf + 1e-6) - min_log;
 			fprintf(fp, "%.8e %.8e %.8e\n",
 					odir[0]*bsdf, odir[1]*bsdf, odir[2]*bsdf);
 		    }
