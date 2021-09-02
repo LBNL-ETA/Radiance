@@ -2441,3 +2441,6 @@ to control smoothing for .OBJ and Radiance with segmented rounding.
 
 Made it so robjutil with the +r option for Radiance output now
 produces normal smoothing unless normals are removed with -n.
+
+Added exposure preservation to pcompos when possible (i.e., when
+there is only one input or inputs agree on exposure).
