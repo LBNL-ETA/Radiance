@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.38 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.39 2021/09/02 16:10:01 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -63,7 +63,9 @@ int  nfile;			/* number of files */
 int  echoheader = 1;
 char  ourfmt[LPICFMT+1] = PICFMT;
 int  wrongformat = 0;
+double	common_expos = 1.;
 
+double	this_expos;
 
 static gethfunc headline;
 static void compos(void);
@@ -82,6 +84,8 @@ headline(			/* print line preceded by a tab */
 
 	if (isheadid(s))
 		return(0);
+	if (isexpos(s))
+		this_expos *= exposval(s);
 	if (formatval(fmt, s)) {
 		if (globmatch(ourfmt, fmt)) {
 			wrongformat = 0;
@@ -233,7 +237,13 @@ getfile:
 						/* get header */
 		if (echoheader)
 			printf("%s:\n", input[nfile].name);
+		this_expos = 1;
 		getheader(input[nfile].fp, headline, NULL);
+		if (!nfile)
+			common_expos = this_expos;
+		else if (common_expos > 0 &&
+				fabs(this_expos/common_expos - 1.) > 0.02)
+			common_expos = 0;
 		if (wrongformat) {
 			fprintf(stderr, "%s: incompatible input format\n",
 					input[nfile].name);
@@ -307,6 +317,8 @@ getfile:
 	}
 					/* add new header info. */
 	printargs(argc, argv, stdout);
+	if (common_expos > 0)		/* print exposure if shared */
+		fputexpos(common_expos, stdout);
 	if (strcmp(ourfmt, PICFMT))
 		fputformat(ourfmt, stdout);	/* print format if known */
 	putchar('\n');
