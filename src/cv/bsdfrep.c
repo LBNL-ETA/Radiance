@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.34 2020/10/26 21:12:20 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.35 2021/09/07 20:13:13 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -478,7 +478,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec, int lobe_lim)
 	double		t, full_dist;
 						/* get relative position */
 	t = Acos(DOT(invec, mig->rbfv[0]->invec));
-	if (t < M_PI/grid_res) {		/* near first DSF */
+	if (t <= .001) {			/* near first DSF */
 		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[0]->nrbf-1);
 		rbf = (RBFNODE *)malloc(n);
 		if (rbf == NULL)
@@ -488,7 +488,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec, int lobe_lim)
 		return(rbf);
 	}
 	full_dist = acos(DOT(mig->rbfv[0]->invec, mig->rbfv[1]->invec));
-	if (t > full_dist-M_PI/grid_res) {	/* near second DSF */
+	if (t >= full_dist-.001) {		/* near second DSF */
 		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[1]->nrbf-1);
 		rbf = (RBFNODE *)malloc(n);
 		if (rbf == NULL)
