@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rado.c,v 2.3 2021/08/31 01:09:24 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rado.c,v 2.4 2021/09/09 15:17:45 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -117,7 +117,7 @@ main(int argc, char *argv[])
 		idir[1] = idir[2] * sin(phi);
 		idir[2] = input_orient * sqrt(1. - idir[2]*idir[2]);
 #ifdef DEBUG
-		fprintf(stderr, "Computing BSDF for incident direction (%.1f,%.1f)\n",
+		fprintf(stderr, "Computing BSDF for incident direction (%.2f,%.2f)\n",
 				get_theta180(idir), get_phi360(idir));
 #endif
 		if (!inpXML)
@@ -156,14 +156,14 @@ main(int argc, char *argv[])
 		}
 		fflush(stdout);
 		sprintf(buf, "gensurf tmat bsdf%d - - - %d %d %s", n+1,
-						GRIDRES-1, GRIDRES-1, validf);
+						grid_res-1, grid_res-1, validf);
 		fp = popen(buf, "w");
 		if (fp == NULL) {
 			fprintf(stderr, "%s: cannot open '| %s'\n", progname, buf);
 			return(1);
 		}
-		for (i = 0; i < GRIDRES; i++)
-		    for (j = 0; j < GRIDRES; j++) {
+		for (i = 0; i < grid_res; i++)
+		    for (j = 0; j < grid_res; j++) {
 			ovec_from_pos(odir, i, j);
 			if (inpXML) {
 				SDValue	sval;
