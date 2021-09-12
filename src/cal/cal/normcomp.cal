@@ -1,4 +1,4 @@
-{ RCSid $Id: normcomp.cal,v 1.3 2019/06/10 13:56:52 greg Exp $ }
+{ RCSid $Id: normcomp.cal,v 1.4 2021/09/12 17:04:41 greg Exp $ }
 {
 	Compute overlap between two normal distribution functions,
 	defined by mean1, mean2, stdev1 and stdev2.
@@ -7,6 +7,7 @@
 
 	relies on gauss.cal and norm.cal
 }
+
 Z1(u) = Z((u - mean1)/stdev1) / stdev1;
 Z2(u) = Z((u - mean2)/stdev2) / stdev2;
 
@@ -14,3 +15,25 @@ f(u) = min(Z1(u),Z2(u));
 
 xmin = min(mean1-3*stdev1, mean2-3*stdev2);
 xmax = max(mean1+3*stdev1, mean2+3*stdev2);
+
+{
+	Following is an alternative calculation that doesn't
+  	require numerical integration, nor gauss.cal nor norm.cal
+
+(ref: stats.stackexchange.com/questions/103800 – wolfies Dec 24 '16 at 14:40)
+}
+
+abs(x) : if(x, x, -x);
+
+Finteg(c, m, s) : 0.5*erf((c-m)/(sqrt(2)*s));
+
+m1 = mean1; m2 = mean2;
+s1 = stdev1; s2 = stdev2;
+
+den = s1*s1 - s2*s2;
+c0 = (m2*s1*s1 - m1*s2*s2)/den;
+cr = s1*s2*sqrt((m1-m2)*(m1-m2) + 2*den*log(s1/s2))/den;
+
+NormOverlap = if(1e-7 - abs(s1-s2), 1 - erf(abs(m1-m2)/(s1+s2)/sqrt(2)),
+		1 - Finteg(c0-cr,m1,s1) + Finteg(c0-cr,m2,s2)
+			+ Finteg(c0+cr,m1,s1) - Finteg(c0+cr,m2,s2) );
