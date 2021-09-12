@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.40 2021/04/18 02:30:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.41 2021/09/12 16:41:32 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -35,7 +35,7 @@ genbeads:	genbeads.o hermite3.o
 	$(CC) $(CFLAGS) -o genbeads genbeads.o hermite3.o $(MLIB)
 
 genbox:	genbox.o
-	$(CC) $(CFLAGS) -o genbox genbox.o -lwfobj -lrtrad
+	$(CC) $(CFLAGS) -o genbox genbox.o -lwfobj -lrtrad $(MLIB)
 
 genmarble:	genmarble.o ../common/random.h
 	$(CC) $(CFLAGS) -o genmarble genmarble.o $(MLIB)
