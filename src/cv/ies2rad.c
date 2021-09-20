@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.32 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.33 2021/09/20 02:00:05 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -223,7 +223,7 @@ int	filerev = FIRSTREV;
 #define DISK		2
 #define SPHERE		3
 
-/* The diameter of a point source luminaire model. Also the minimum
+/* 1mm.  The diameter of a point source luminaire model. Also the minimum
  * size (in meters) that the luminous opening of a luminaire must have
  * to be treated as other than a point source. */
 #define MINDIM		.001
@@ -1249,8 +1249,22 @@ putsource(
 
 /* makeshape -- decide what shape will be used
  *
- * makeshape decides what Radiance geometry will be used to represent
+ * Makeshape decides what Radiance geometry will be used to represent
  * the light source and stores information about it in shp.
+ * 
+ * The various versions of the IES LM-63 standard give a "luminous
+ * opening" (really a crude shape) a width, a length (or depth), and a
+ * height.  If all three values are positive, they describe a box.  If
+ * they are all zero, they describe a point.  Various combinations of
+ * negative values are used to denote disks, circular or elliptical
+ * cylinders, spheres, and ellipsoids.  This encoding differs from
+ * version to version of LM-63.
+ *
+ * Ies2rad simplifies this, reducing the geometry of LM-63 files to
+ * three forms which can be easily represented by Radiance primitives:
+ * boxes (RECT), cylinders or disks (DISK), and spheres (SPHERE.)  A
+ * point is necessarily represented by a small sphere, since a point
+ * is not a Radiance object.
  */
 int
 makeshape(
@@ -1262,24 +1276,28 @@ makeshape(
 {
 	/* Categorize the shape */
 	if (illumrad/meters2out >= MINDIM/2.) {
-		/* If the -i command line option is used, and the
-		 * object is not a point source, output an "illum"
-		 * sphere */
+		/* If the -i command line option is used, output an
+		 * "illum" sphere whose radius is given by the
+		 * argument to -i. */
 		shp->isillum = 1;
 		shp->type = SPHERE;
 		shp->w = shp->l = shp->h = 2.*illumrad / meters2out;
+		/* Otherwise, use the dimensions in the IES file */
 	} else if (width < MINDIM) {
-		/* The width is either zero or negative. */
 		width = -width;
 		if (width < MINDIM) {
-			/* The width is zero. Use a tiny sphere to
-			 * represent a point source. */
+			/* If the LM-63 width is zero, assume a point
+			 * source is described.  Output a small
+			 * sphere. */
 			shp->type = SPHERE;
 			shp->w = shp->l = shp->h = MINDIM;
 		} else if (height < .5*width) {
 			/* The width is negative and the height is
-			 * modest; output either a disk or a thin
-			 * vertical cylinder. */
+			 * less than half the width.  Treat the
+			 * luminous opening as a disk or short
+			 * vertical cylinder. Disks will be
+			 * represented as nearly flat cylinders of
+			 * MINDIM/2 height. */
 			shp->type = DISK;
 			shp->w = shp->l = width;
 			if (height >= MINDIM)
@@ -1287,14 +1305,13 @@ makeshape(
 			else
 				shp->h = .5*MINDIM;
 		} else {
-			/* The width is negative and the object is
-			 * tall; output a sphere. */
+			/* Treat a tall cylinder as a sphere. */
 			shp->type = SPHERE;
 			shp->w = shp->l = shp->h = width;
 		}
 	} else {
-		/* The width is positive. Output a box, possibly very
-		 * thin. */
+		/* The width is positive. The luminous opening is a
+		   box or simple rectangle. */
 		shp->type = RECT;
 		shp->w = width;
 		if (length >= MINDIM)
