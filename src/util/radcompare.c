@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.27 2021/02/18 23:16:35 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.28 2021/09/27 19:00:04 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -373,7 +373,7 @@ setheadvar(char *val, void *p)
 		tep->key = strcpy(malloc(kln+1), key);
 	if (tep->data) {	/* check for special cases */
 		if (!strcmp(key, "EXPOSURE")) {
-			sprintf(newval, "%f", atof(tep->data)*atof(val));
+			sprintf(newval, "%.6e", atof(tep->data)*atof(val));
 			vln = strlen(val = newval);
 		}
 		free(tep->data);
