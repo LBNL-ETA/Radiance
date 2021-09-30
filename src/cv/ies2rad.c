@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.33 2021/09/20 02:00:05 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.34 2021/09/30 20:05:09 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -968,7 +968,7 @@ dotilt(
 		datin = in;
 		strcpy(tltname, dfltname);
 	} else {
-		/* If the line is "TILE=<filename>", use that file
+		/* If the line is "TILT=<filename>", use that file
 		 * name as the source of tilt data. */
 		if (ISDIRSEP(tltspec[0]))
 			strcpy(buf, tltspec);
@@ -1125,7 +1125,7 @@ dosource(
 	/* Output distribution "brightdata" primitive. Start handling
 	   the various cases of symmetry of the distribution. */
 	strcat(strcpy(id, filename(name)), "_dist");
-	fprintf(out, "\n%s brightdata %s\n", mod, id);
+	fprintf(out, "\n'%s' brightdata '%s'\n", mod, id);
 	if (nangles[1] < 2)
 		fprintf(out, "4 ");
 	else if (pmtype == PM_B)
@@ -1143,7 +1143,7 @@ dosource(
 	dosides = (doupper & dolower && sinf->h > MINDIM); /* Sides */
 
 	/* Select the appropriate function and parameters from source.cal */
-	fprintf(out, "%s %s source.cal ",
+	fprintf(out, "%s '%s' source.cal ",
 			sinf->type==SPHERE ? "corr" :
 			!dosides ? "flatcorr" :
 			sinf->type==DISK ? "cylcorr" : "boxcorr",
@@ -1213,7 +1213,7 @@ putsource(
 	/* First, describe the light. If a materials and geometry
 	 * file is given, generate an illum instead. */
 	strcat(strcpy(lname, name), "_light");
-	fprintf(fp, "\n%s %s %s\n", mod,
+	fprintf(fp, "\n'%s' %s '%s'\n", mod,
 			shp->isillum ? "illum" : "light", lname);
 	fprintf(fp, "0\n0\n3 %g %g %g\n",
 			lampcolor[0], lampcolor[1], lampcolor[2]);
@@ -1425,7 +1425,7 @@ putrect(
 	int d
 )
 {
-	fprintf(fp, "\n%s polygon %s%s\n0\n0\n12\n", mod, name, suffix);
+	fprintf(fp, "\n'%s' polygon '%s%s'\n0\n0\n12\n", mod, name, suffix);
 	putpoint(shp, fp, a);
 	putpoint(shp, fp, b);
 	putpoint(shp, fp, c);
@@ -1470,13 +1470,13 @@ putdisksrc(		/* put out a disk source */
 )
 {
 	if (up) {
-		fprintf(fp, "\n%s ring %s.u\n", mod, name);
+		fprintf(fp, "\n'%s' ring '%s.u'\n", mod, name);
 		fprintf(fp, "0\n0\n8\n");
 		fprintf(fp, "\t0 0 %g\n", .5*shp->h*meters2out);
 		fprintf(fp, "\t0 0 1\n");
 		fprintf(fp, "\t0 %g\n", .5*shp->w*meters2out);
 	} else {
-		fprintf(fp, "\n%s ring %s.d\n", mod, name);
+		fprintf(fp, "\n'%s' ring '%s.d'\n", mod, name);
 		fprintf(fp, "0\n0\n8\n");
 		fprintf(fp, "\t0 0 %g\n", -.5*shp->h*meters2out);
 		fprintf(fp, "\t0 0 -1\n");
@@ -1493,7 +1493,7 @@ putcyl(			/* put out a cylinder */
 	char	*name
 )
 {
-	fprintf(fp, "\n%s cylinder %s.c\n", mod, name);
+	fprintf(fp, "\n'%s' cylinder '%s.c'\n", mod, name);
 	fprintf(fp, "0\n0\n7\n");
 	fprintf(fp, "\t0 0 %g\n", .5*shp->h*meters2out);
 	fprintf(fp, "\t0 0 %g\n", -.5*shp->h*meters2out);
@@ -1510,7 +1510,7 @@ putspheresrc(		/* put out a sphere source */
 	char	*name
 )
 {
-	fprintf(fp, "\n%s sphere %s.s\n", mod, name);
+	fprintf(fp, "\n'%s' sphere '%s.s'\n", mod, name);
 	fprintf(fp, "0\n0\n4 0 0 0 %g\n", .5*shp->w*meters2out);
 }
 
