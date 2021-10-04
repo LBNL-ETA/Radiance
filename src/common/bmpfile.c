@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.20 2019/01/23 19:13:55 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.21 2021/10/04 23:04:59 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -151,6 +151,8 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 
 	if (cget == NULL)
 		return NULL;
+	if (cget == &stdio_getc && c_data == NULL)
+		return NULL;			/* stdio error condition */
 	magic[0] = (*cget)(c_data);
 	if (magic[0] != 'B')
 		return NULL;
@@ -628,6 +630,8 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 						/* check arguments */
 	if (cput == NULL)
 		return NULL;
+	if (cput == &stdio_putc && c_data == NULL)
+		return NULL;			/* stdio error condition */
 	if (!BMPheaderOK(hdr))
 		return NULL;
 	if ((hdr->bpp == 16) | (hdr->compr == BI_RLE4))
