@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.65 2021/08/27 03:09:27 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.66 2021/10/13 20:03:31 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -226,9 +226,9 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, double sr_psa)
 static int
 direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
-	int	nsamp;
-	double	wtot = 0;
-	FVECT	vsrc, vsmp, vjit;
+	int	nsamp = 1;
+	int	scnt = 0;
+	FVECT	vsrc, vjit;
 	double	tomega, tomega2;
 	double	sf, tsr, sd[2];
 	COLOR	csmp, cdiff;
@@ -271,8 +271,6 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		diffY = 0;
 		setcolor(cdiff,  0, 0, 0);
 	}
-					/* need projected solid angle */
-	omega *= fabs(vsrc[2]);
 					/* check indirect over-counting */
 	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
 		double		dx = vsrc[0] + ndp->vray[0];
@@ -281,8 +279,9 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			((ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb) :
 			((ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf) ;
 
-		if (dx*dx + dy*dy <= (2.5*4./PI)*(omega + dfp->minProjSA +
-						2.*sqrt(omega*dfp->minProjSA))) {
+		tomega = omega*fabs(vsrc[2]);
+		if (dx*dx + dy*dy <= (2.5*4./PI)*(tomega + dfp->minProjSA +
+						2.*sqrt(tomega*dfp->minProjSA))) {
 			if (bright(ndp->cthru_surr) <= FTINY)
 				return(0);
 			copycolor(cval, ndp->cthru_surr);
@@ -292,52 +291,34 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
 		goto baderror;
-					/* assign number of samples */
-	sf = specjitter * ndp->pr->rweight;
-	if (tomega <= 0)
-		nsamp = 1;
-	else if (25.*tomega <= omega)
-		nsamp = 100.*sf + .5;
-	else
-		nsamp = 4.*sf*omega/tomega + .5;
-	nsamp += !nsamp;
-	sf = sqrt(omega);		/* sample our source area */
-	tsr = sqrt(tomega);
+					/* check if sampling BSDF */
+	if ((tsr = sqrt(tomega)) > 0) {
+		nsamp = 4.*specjitter*ndp->pr->rweight + .5;
+		nsamp += !nsamp;
+	}
+					/* jitter to fuzz BSDF cells */
 	for (i = nsamp; i--; ) {
-		VCOPY(vsmp, vsrc);	/* jitter query directions */
-		if (nsamp > 1) {
-			multisamp(sd, 2, (i + frandom())/(double)nsamp);
-			vsmp[0] += (sd[0] - .5)*sf;
-			vsmp[1] += (sd[1] - .5)*sf;
-			normalize(vsmp);
-		}
 		bsdf_jitter(vjit, ndp, tsr);
 					/* compute BSDF */
-		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
+		ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
 		if (ec)
 			goto baderror;
 		if (sv.cieY - diffY <= FTINY)
 			continue;	/* no specular part */
 					/* check for variable resolution */
-		ec = SDsizeBSDF(&tomega2, vjit, vsmp, SDqueryMin, ndp->sd);
+		ec = SDsizeBSDF(&tomega2, vjit, vsrc, SDqueryMin, ndp->sd);
 		if (ec)
 			goto baderror;
 		if (tomega2 < .12*tomega)
 			continue;	/* not safe to include */
 		cvt_sdcolor(csmp, &sv);
-#if 0
-		if (sf < 2.5*tsr) {	/* weight by BSDF for small sources */
-			scalecolor(csmp, sv.cieY);
-			wtot += sv.cieY;
-		} else
-#endif
-		wtot += 1.;
 		addcolor(cval, csmp);
+		++scnt;
 	}
-	if (wtot <= FTINY)		/* no valid specular samples? */
+	if (!scnt)			/* no valid specular samples? */
 		return(0);
 
-	sf = 1./wtot;			/* weighted average BSDF */
+	sf = 1./scnt;			/* weighted average BSDF */
 	scalecolor(cval, sf);
 					/* subtract diffuse contribution */
 	for (i = 3*(diffY > FTINY); i--; )
@@ -383,7 +364,7 @@ dir_bsdf(
 		 *  Compute diffuse transmission
 		 */
 		copycolor(ctmp, np->tdiff);
-		dtmp = -ldot * omega * (1.0/PI);
+		dtmp = -ldot * omega * (1./PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -471,7 +452,7 @@ dir_btdf(
 		 *  Compute diffuse transmission
 		 */
 		copycolor(ctmp, np->tdiff);
-		dtmp = -ldot * omega * (1.0/PI);
+		dtmp = -ldot * omega * (1./PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
