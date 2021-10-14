@@ -1,0 +1,12 @@
+{ RCSid $Id: log3G10.cal,v 1.1 2021/10/14 19:35:06 greg Exp $ }
+{
+	Red Log3G10 mapping
+}
+a`L3 : 0.224282;
+b`L3 : 155.975327;
+c`L3 : 0.01;
+g`L3 : 15.1927;
+
+toLog3G10(x) : if(x + c`L3, a`L3*log10((x+c`L3)*b`L3 + 1), (x+c`L3)*g`L3);
+
+fromLog3G10(y) : if(y, (10^(y/a`L3) - 1)/b`L3 - c`L3, y/g`L3 - c`L3);
