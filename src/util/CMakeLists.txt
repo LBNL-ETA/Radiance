@@ -65,7 +65,7 @@ add_executable(rfluxmtx rfluxmtx.c)
 target_link_libraries(rfluxmtx rtrad)
 
 add_executable(evalglare evalglare.c pictool.c)
-target_link_libraries(evalglare rtrad libreetz)
+target_link_libraries(evalglare rtrad reetz)
 
 add_executable(radcompare radcompare.c)
 target_link_libraries(radcompare rtrad)

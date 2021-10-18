@@ -138,7 +138,7 @@ add_library(wfobj
   objtriangulate.c
 )
 
-add_library(libreetz
+add_library(reetz
   g3affine.c
   g3affine.h
   g3flist.c
