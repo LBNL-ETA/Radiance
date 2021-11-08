@@ -131,6 +131,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 if(MSVC)
   add_definitions(/MP)
+  # Suppress warnings about double-to-float assignments and initializations
+  add_compile_options(/wd"4244" /wd"4305")
 endif()
 if(WIN32 AND "${CMAKE_C_COMPILER_ID}" MATCHES "^(Intel)$")
   set(_INTEL_WINDOWS 1)
