@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.34 2015/03/26 15:40:32 greg Exp $ */
+/* RCSid $Id: color.h,v 2.35 2021/11/14 17:30:02 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -55,14 +55,23 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 
 #define  multcolor(c1,c2)	((c1)[0]*=(c2)[0],(c1)[1]*=(c2)[1],(c1)[2]*=(c2)[2])
 
-#ifdef  NTSC
+#if defined(NTSC_RGB)
 #define  CIE_x_r		0.670		/* standard NTSC primaries */
 #define  CIE_y_r		0.330
 #define  CIE_x_g		0.210
 #define  CIE_y_g		0.710
 #define  CIE_x_b		0.140
 #define  CIE_y_b		0.080
-#define  CIE_x_w		(1./3.)		/* use true white */
+#define  CIE_x_w		(1./3.)		/* use EE white */
+#define  CIE_y_w		(1./3.)
+#elif defined(SHARP_RGB)
+#define  CIE_x_r		0.6898		/* "sharp" RGB primaries */
+#define  CIE_y_r		0.3206
+#define  CIE_x_g		0.0736
+#define  CIE_y_g		0.9003
+#define  CIE_x_b		0.1166
+#define  CIE_y_b		0.0374
+#define  CIE_x_w		(1./3.)		/* use EE white */
 #define  CIE_y_w		(1./3.)
 #else
 #define  CIE_x_r		0.640		/* nominal CRT primaries */
@@ -71,7 +80,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  CIE_y_g		0.600
 #define  CIE_x_b		0.150
 #define  CIE_y_b		0.060
-#define  CIE_x_w		(1./3.)		/* use true white */
+#define  CIE_x_w		(1./3.)		/* use EE white */
 #define  CIE_y_w		(1./3.)
 #endif
 
@@ -98,7 +107,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define CIE_gf		(CIE_y_g*CIE_C_gD/CIE_D)
 #define CIE_bf		(CIE_y_b*CIE_C_bD/CIE_D)
 
-/* As of 9-94, CIE_rf=.265074126, CIE_gf=.670114631 and CIE_bf=.064811243 */
+/* Default CIE_rf=.265074126, CIE_gf=.670114631 and CIE_bf=.064811243 */
 
 /***** The following definitions are valid for RGB colors only... *****/
 

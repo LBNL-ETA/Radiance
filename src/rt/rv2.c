@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.72 2021/02/12 00:41:19 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.73 2021/11/14 17:30:02 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -870,6 +870,7 @@ writepict(				/* write the picture to a file */
 		fputexpos(exposure, fp);
 	if (dev->pixaspect != 1.0)
 		fputaspect(dev->pixaspect, fp);
+	fputprims(stdprims, fp);
 	fputformat(COLRFMT, fp);
 	putc('\n', fp);
 	fprtresolu(hresolu, vresolu, fp);
