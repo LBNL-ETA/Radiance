@@ -2444,3 +2444,12 @@ produces normal smoothing unless normals are removed with -n.
 
 Added exposure preservation to pcompos when possible (i.e., when
 there is only one input or inputs agree on exposure).
+
+Added -DSHARP_RGB compile-time option to use sharp RGB color space
+rather than historic default.  This can make for more accurate color
+calculations, but requires that materials be recalibrated.  The
+PRIMARIES= line is also produced on output from rpict or rvu with
+the correct set of primaries based on how the system was compiled.
+
+Added automatic flushing to the output of total, except when the -r
+(running subtotals) option is used.

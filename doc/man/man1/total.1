@@ -1,4 +1,4 @@
-.\" RCSid "$Id: total.1,v 1.11 2019/07/20 00:57:43 greg Exp $"
+.\" RCSid "$Id: total.1,v 1.12 2021/11/16 03:30:45 greg Exp $"
 .TH TOTAL 1 2/3/95 RADIANCE
 .SH NAME
 total - sum up columns
@@ -113,6 +113,7 @@ In addition, the
 .I \-r
 option can be specified to override reinitialization and thus
 give a running total every N lines (or every blank line).
+This option also turns off the usual output flushing at each total.
 If the end of file is reached, the current total is printed
 and the calculation is reset before the next file (with or without the
 .I \-r

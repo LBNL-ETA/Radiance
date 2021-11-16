@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.14 2019/12/28 18:05:13 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.15 2021/11/16 03:30:45 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -228,6 +228,8 @@ putrecord(			/* write out results record */
 		if (n) fputc(tabc, fp);
 	}
 	fputc('\n', fp);
+	if (!subtotal)
+		fflush(fp);			/* flush unless -r */
 }
 
 
@@ -331,5 +333,5 @@ char  *fname
 			break;
 	}
 							/* close input */
-	return(fclose(fp));
+	return(fclose(fp) == EOF ? 1 : 0);
 }
