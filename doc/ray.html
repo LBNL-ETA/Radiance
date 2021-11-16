@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.29 2020/09/03 15:46:32 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.30 2021/11/16 23:12:22 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 5.4 Synthetic Imaging System
@@ -83,7 +83,7 @@ The diagram in Figure 1 shows the flow between programs (boxes)  and  data
 (ovals).   
 The central program is <i>rpict</i>, which produces a picture from a scene
 description.
-<i>Rview</i> is a  variation  of  rpict  that  computes  and displays images 
+<i>Rvu</i> is a  variation  of  rpict  that  computes  and displays images 
 interactively, and rtrace computes single ray values.
 Other programs (not shown) connect many of these elements together, 
 such as the executive programs
@@ -1807,7 +1807,7 @@ The details of this process  are  not  important, but  the  octree will serve as
 directs the use of a scene description.
 <ul>
 <li>
-<a NAME="rvu" HREF="../man_html/rvu.1.html"><b>Rview</b></a>  is  ray-tracing  program  for  viewing  a  scene interactively.   
+<a NAME="rvu" HREF="../man_html/rvu.1.html"><b>Rvu</b></a>  is  ray-tracing  program  for  viewing  a  scene interactively.   
 When  the user specifies a new perspective, rvu quickly displays a rough image on the  terminal,  
 then progressively increases the resolution as the user looks on.
 He can select a particular section of the image to  improve, or  move  to  a different view and start over.  
@@ -1843,7 +1843,7 @@ Pictures may be displayed directly under X11 using the program
 or converted a standard image format using one of the following
 <b>translators</b>:
 	<ul>
-	<li> <a HREF="../man_html/ra_bmp.1.html"><b>Ra_bmp</b>
+	<li> <a HREF="../man_html/ra_bmp.1.html"><b>Ra_bmp</b></a>
 		converts to and from BMP image format.
 	<li> <a HREF="../man_html/ra_ppm.1.html"><b>Ra_ppm</b></a>
 		converts to and from Poskanzer Portable Pixmap formats.
@@ -1872,7 +1872,7 @@ or converted a standard image format using one of the following
 <pre>
 The Radiance Software License, Version 1.0
 
-Copyright (c) 1990 - 2014 The Regents of the University of California,
+Copyright (c) 1990 - 2021 The Regents of the University of California,
 through Lawrence Berkeley National Laboratory.   All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
