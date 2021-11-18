@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.110 2021/02/19 22:05:46 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.111 2021/11/18 19:38:21 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -272,6 +272,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 	FVECT  nrm
 )
 {
+	static double  logAvgAbsorp = 1;
 	static int  rdepth = 0;			/* ambient recursion */
 	COLOR	acol, caustic;
 	int	i, ok;
@@ -282,6 +283,9 @@ multambient(		/* compute ambient component & multiply by coef. */
 	 * continue. */
 	if (ambPmap(aval, r, rdepth))
 		return;
+
+	if (logAvgAbsorp > 0)			/* exclude in -aw to avoid growth */
+		logAvgAbsorp = log(1.-AVGREFL);
 
 	/* PMAP: Factor in specular-diffuse ambient (caustics) from photon
 	 * map, if enabled and ray is primary, else caustic is zero.  Continue
@@ -368,13 +372,13 @@ dumbamb:					/* return global value */
 	
 	l = bright(ambval);			/* average in computations */	
 	if (l > FTINY) {
-		d = (log(l)*(double)ambvwt + avsum) /
+		d = (log(l)*(double)ambvwt + avsum + logAvgAbsorp*navsum) /
 				(double)(ambvwt + navsum);
 		d = exp(d) / l;
 		scalecolor(aval, d);
 		multcolor(aval, ambval);	/* apply color of ambval */
 	} else {
-		d = exp( avsum / (double)navsum );
+		d = exp( avsum/(double)navsum + logAvgAbsorp );
 		scalecolor(aval, d);		/* neutral color */
 	}
 }

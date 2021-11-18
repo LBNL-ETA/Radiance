@@ -2453,3 +2453,9 @@ the correct set of primaries based on how the system was compiled.
 
 Added automatic flushing to the output of total, except when the -r
 (running subtotals) option is used.
+
+Improved behavior of little-used -aw option, so that it avoids sea-level
+rise caused by adding its own estimate back into the ambient level remainder.
+It ended up being simple enough to derate the final average by the factor
+corresponding to average surface absorpition, thus removing the average
+from the final bounce estimate.
