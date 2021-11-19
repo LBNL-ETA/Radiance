@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.21 2021/11/19 21:56:48 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.22 2021/11/19 22:51:31 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -11,11 +11,9 @@ static const char	RCSid[] = "$Id: font.c,v 2.21 2021/11/19 21:56:48 greg Exp $";
 
 #include "paths.h"
 #include "rtio.h"
-#include "rterror.h"
 #include "font.h"
 
 #define galloc(nv)	(GLYPH *)malloc(sizeof(GLYPH)+2*sizeof(GORD)*(nv))
-
 
 int	retainfonts = 0;		/* retain loaded fonts? */
 
@@ -42,19 +40,18 @@ getfont(			/* return font fname */
 		}
 						/* load the font file */
 	if ((pathname = getpath(fname, getrlibpath(), R_OK)) == NULL) {
-		sprintf(errmsg, "cannot find font file \"%s\"", fname);
-		error(SYSTEM, errmsg);
+		fprintf(stderr, "cannot find font file \"%s\"\n", fname);
+		return(NULL);
+	}
+	if ((fp = fopen(pathname, "r")) == NULL) {
+		fprintf(stderr, "cannot open font file \"%s\"\n", pathname);
+		return(NULL);
 	}
 	f = (FONT *)calloc(1, sizeof(FONT));
 	if (f == NULL)
 		goto memerr;
-	f->name = savestr(fname);
+	strcpy(f->name, fname);
 	f->nref = 1;
-	if ((fp = fopen(pathname, "r")) == NULL) {
-		sprintf(errmsg, "cannot open font file \"%s\"",
-				pathname);
-		error(SYSTEM, errmsg);
-	}
 	wsum = hsum = ngly = 0;			/* get each glyph */
 	while ((ngv = fgetval(fp, 'i', (char *)&gn)) != EOF) {
 		if (ngv == 0)
@@ -113,15 +110,18 @@ getfont(			/* return font fname */
 	f->next = fontlist;
 	return(fontlist = f);
 nonint:
-	sprintf(errmsg, "non-integer in font file \"%s\"", pathname);
-	error(USER, errmsg);
+	fprintf(stderr, "non-integer in font file \"%s\"\n", pathname);
+	fclose(fp);
+	return(NULL);
 fonterr:
-	sprintf(errmsg, "%s character (%d) in font file \"%s\"",
+	fprintf(stderr, "%s character (%d) in font file \"%s\"\n",
 			err, gn, pathname);
-	error(USER, errmsg);
+	fclose(fp);
+	return(NULL);
 memerr:
-	error(SYSTEM, "out of memory in fontglyph");
-	return NULL; /* pro forma return */
+	fprintf(stderr, "out of memory in getfont()\n");
+	fclose(fp);
+	return(NULL);
 }
 
 
@@ -144,7 +144,6 @@ freefont(			/* release a font (free all if NULL) */
 			for (i = 0; i < 256; i++)
 				if (f->fg[i] != NULL)
 					free((void *)f->fg[i]);
-			freestr(f->name);
 			free((void *)f);
 		} else
 			fl = f;

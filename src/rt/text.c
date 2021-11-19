@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.27 2016/03/22 03:56:17 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.28 2021/11/19 22:51:31 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -222,6 +222,8 @@ gettext(			/* get text structure for material */
 	tlp->next = NULL;
 						/* get the font */
 	t->f = getfont(tm->oargs.sarg[fndx(tm)]);
+	if (!t->f)
+		objerror(tm, USER, "font load error");
 						/* compute character spacing */
 	i = sndx(tm);
 	d = i < tm->oargs.nfargs ? tm->oargs.farg[i] : 0.0;

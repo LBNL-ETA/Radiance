@@ -1,9 +1,10 @@
-/* RCSid $Id: font.h,v 2.7 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: font.h,v 2.8 2021/11/19 22:51:31 greg Exp $ */
 /*
  * Header file for font handling routines
  */
 #ifndef _RAD_FONT_H_
 #define _RAD_FONT_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,7 +23,7 @@ typedef struct font {
 	int  nref;			/* number of references */
 	GLYPH  *fg[256];		/* font glyphs */
 	short  mwidth, mheight;		/* mean glyph width and height */
-	char  *name;			/* font file name */
+	char  name[64];			/* font file name */
 	struct font  *next;		/* next font in list */
 }  FONT;
 
