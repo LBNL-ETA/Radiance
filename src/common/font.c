@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.20 2016/03/22 03:56:17 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.21 2021/11/19 21:56:48 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -23,16 +23,17 @@ static FONT	*fontlist = NULL;	/* list of loaded fonts */
 
 
 FONT *
-getfont(fname)				/* return font fname */
-char  *fname;
+getfont(			/* return font fname */
+	char  *fname
+)
 {
 	FILE  *fp;
 	char  *pathname, *err = NULL;
 	unsigned  wsum, hsum, ngly;
 	int  gn, ngv, gv;
-	register GLYPH	*g;
+	GLYPH	*g;
 	GORD  *gp;
-	register FONT  *f;
+	FONT  *f;
 
 	for (f = fontlist; f != NULL; f = f->next)
 		if (!strcmp(f->name, fname)) {
@@ -125,12 +126,13 @@ memerr:
 
 
 void
-freefont(fnt)			/* release a font (free all if NULL) */
-FONT *fnt;
+freefont(			/* release a font (free all if NULL) */
+	FONT *fnt
+)
 {
 	FONT  head;
-	register FONT  *fl, *f;
-	register int  i;
+	FONT  *fl, *f;
+	int  i;
 					/* check reference count */
 	if (fnt != NULL && ((fnt->nref-- > 1) | retainfonts))
 		return;
@@ -151,10 +153,11 @@ FONT *fnt;
 
 
 int
-uniftext(sp, tp, f)			/* uniformly space text line */
-register short	*sp;		/* returned character spacing */
-register char  *tp;		/* text line */
-register FONT  *f;		/* font */
+uniftext(			/* uniformly space text line */
+	short	*sp,		/* returned character spacing */
+	char  *tp,		/* text line */
+	FONT  *f		/* font */
+)
 {
 	int  linelen;
 
@@ -169,14 +172,15 @@ register FONT  *f;		/* font */
 
 
 int
-squeeztext(sp, tp, f, cis)		/* squeeze text line */
-short  *sp;			/* returned character spacing */
-char  *tp;			/* text line */
-FONT  *f;			/* font */
-int  cis;			/* intercharacter spacing */
+squeeztext(		/* squeeze text line */
+	short  *sp,			/* returned character spacing */
+	char  *tp,			/* text line */
+	FONT  *f,			/* font */
+	int  cis			/* intercharacter spacing */
+)
 {
 	int  linelen;
-	register GLYPH	*gp;
+	GLYPH	*gp;
 
 	linelen = 0;
 	gp = NULL;
@@ -204,14 +208,15 @@ int  cis;			/* intercharacter spacing */
 
 
 int
-proptext(sp, tp, f, cis, nsi)		/* space line proportionally */
-short  *sp;			/* returned character spacing */
-char  *tp;			/* text line */
-FONT  *f;			/* font */
-int  cis;			/* target intercharacter spacing */
-int  nsi;			/* minimum number of spaces for indent */
+proptext(		/* space line proportionally */
+	short  *sp,			/* returned character spacing */
+	char  *tp,			/* text line */
+	FONT  *f,			/* font */
+	int  cis,			/* target intercharacter spacing */
+	int  nsi			/* minimum number of spaces for indent */
+)
 {
-	register char  *end, *tab = NULL;
+	char  *end, *tab = NULL;
 	GLYPH  *gp;
 	short  *nsp;
 	int  alen, len, width;
