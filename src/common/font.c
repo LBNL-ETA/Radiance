@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.23 2021/11/20 15:53:24 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.24 2021/11/20 22:39:01 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -26,6 +26,7 @@ getfont(			/* return font fname */
 	char  *fname
 )
 {
+	char  embuf[512];
 	FILE  *fp;
 	char  *pathname, *err = NULL;
 	unsigned  wsum, hsum, ngly;
@@ -41,13 +42,13 @@ getfont(			/* return font fname */
 		}
 						/* load the font file */
 	if ((pathname = getpath(fname, getrlibpath(), R_OK)) == NULL) {
-		sprintf(errmsg, "cannot find font file \"%s\"\n", fname);
-		eputs(errmsg);
+		sprintf(embuf, "cannot find font file \"%s\"\n", fname);
+		eputs(embuf);
 		return(NULL);
 	}
 	if ((fp = fopen(pathname, "r")) == NULL) {
-		sprintf(errmsg, "cannot open font file \"%s\"\n", pathname);
-		eputs(errmsg);
+		sprintf(embuf, "cannot open font file \"%s\"\n", pathname);
+		eputs(embuf);
 		return(NULL);
 	}
 	f = (FONT *)calloc(1, sizeof(FONT));
@@ -113,14 +114,14 @@ getfont(			/* return font fname */
 	f->next = fontlist;
 	return(fontlist = f);
 nonint:
-	sprintf(errmsg, "non-integer in font file \"%s\"\n", pathname);
-	eputs(errmsg);
+	sprintf(embuf, "non-integer in font file \"%s\"\n", pathname);
+	eputs(embuf);
 	fclose(fp);
 	return(NULL);
 fonterr:
-	sprintf(errmsg, "%s character (%d) in font file \"%s\"\n",
+	sprintf(embuf, "%s character (%d) in font file \"%s\"\n",
 			err, gn, pathname);
-	eputs(errmsg);
+	eputs(embuf);
 	fclose(fp);
 	return(NULL);
 memerr:
