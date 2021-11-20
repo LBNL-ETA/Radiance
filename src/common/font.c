@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.22 2021/11/19 22:51:31 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.23 2021/11/20 15:53:24 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: font.c,v 2.22 2021/11/19 22:51:31 greg Exp $";
 
 #include "paths.h"
 #include "rtio.h"
+#include "rterror.h"
 #include "font.h"
 
 #define galloc(nv)	(GLYPH *)malloc(sizeof(GLYPH)+2*sizeof(GORD)*(nv))
@@ -40,11 +41,13 @@ getfont(			/* return font fname */
 		}
 						/* load the font file */
 	if ((pathname = getpath(fname, getrlibpath(), R_OK)) == NULL) {
-		fprintf(stderr, "cannot find font file \"%s\"\n", fname);
+		sprintf(errmsg, "cannot find font file \"%s\"\n", fname);
+		eputs(errmsg);
 		return(NULL);
 	}
 	if ((fp = fopen(pathname, "r")) == NULL) {
-		fprintf(stderr, "cannot open font file \"%s\"\n", pathname);
+		sprintf(errmsg, "cannot open font file \"%s\"\n", pathname);
+		eputs(errmsg);
 		return(NULL);
 	}
 	f = (FONT *)calloc(1, sizeof(FONT));
@@ -110,16 +113,18 @@ getfont(			/* return font fname */
 	f->next = fontlist;
 	return(fontlist = f);
 nonint:
-	fprintf(stderr, "non-integer in font file \"%s\"\n", pathname);
+	sprintf(errmsg, "non-integer in font file \"%s\"\n", pathname);
+	eputs(errmsg);
 	fclose(fp);
 	return(NULL);
 fonterr:
-	fprintf(stderr, "%s character (%d) in font file \"%s\"\n",
+	sprintf(errmsg, "%s character (%d) in font file \"%s\"\n",
 			err, gn, pathname);
+	eputs(errmsg);
 	fclose(fp);
 	return(NULL);
 memerr:
-	fprintf(stderr, "out of memory in getfont()\n");
+	eputs("out of memory in getfont()\n");
 	fclose(fp);
 	return(NULL);
 }
