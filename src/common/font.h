@@ -1,4 +1,4 @@
-/* RCSid $Id: font.h,v 2.8 2021/11/19 22:51:31 greg Exp $ */
+/* RCSid $Id: font.h,v 2.9 2021/11/20 00:40:33 greg Exp $ */
 /*
  * Header file for font handling routines
  */
@@ -20,22 +20,20 @@ typedef struct {
 #define gvlist(g)	((GORD *)((g)+1))
 
 typedef struct font {
-	int  nref;			/* number of references */
-	GLYPH  *fg[256];		/* font glyphs */
-	short  mwidth, mheight;		/* mean glyph width and height */
 	char  name[64];			/* font file name */
 	struct font  *next;		/* next font in list */
+	int  nref;			/* number of references */
+	short  mwidth, mheight;		/* mean glyph width and height */
+	GLYPH  *fg[256];		/* font glyphs */
 }  FONT;
 
 extern int	retainfonts;		/* retain loaded fonts? */
-
 
 extern FONT  *getfont(char *fname);
 extern void  freefont(FONT *f);
 extern int  uniftext(short *sp, char *tp, FONT *f);
 extern int  squeeztext(short *sp, char *tp, FONT *f, int cis);
 extern int  proptext(short *sp, char *tp, FONT *f, int cis, int nsi);
-
 
 #ifdef __cplusplus
 }
