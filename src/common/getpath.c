@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.21 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.22 2021/11/22 18:23:56 greg Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -33,18 +33,19 @@ getpath	/* expand fname, return full path */
 	char  *cp;
 	int i;
 
-	if (fname == NULL) { return(NULL); }
+	if (!fname | (fname == pname))
+		return(fname);
 
 	pname[0] = '\0';		/* check for full specification */
 
-	if (ISABS(fname)) { /* absolute path */
+	if (ISABS(fname)) {		/* absolute path */
 		strlcpy(pname, fname, sizeof(pname));
 	} else {
 		switch (*fname) {
-			case '.':		/* relative to cwd */
+			case '.':	/* relative to cwd */
 				strlcpy(pname, fname, sizeof(pname));
 				break;
-			case '~':		/* relative to home directory */
+			case '~':	/* relative to home directory */
 				fname++;
 				cp = uname;
 				for (i = 0; i < sizeof(uname) && *fname
@@ -60,7 +61,7 @@ getpath	/* expand fname, return full path */
 	if (pname[0])		/* got it, check access if search requested */
 		return(!searchpath || access(pname,mode)==0 ? pname : NULL);
 
-	if (!searchpath) {			/* no search */
+	if (!searchpath) {		/* no search? */
 		strlcpy(pname, fname, sizeof(pname));
 		return(pname);
 	}
@@ -100,13 +101,13 @@ getpath(	/* expand fname, return full path */
 	char  *cp;
 	char fname[PATH_MAX];
 
-	if (ffname == NULL)
-		return(NULL);
+	if (!fname | (fname == pname))
+		return(fname);
 
 	/* if we have a dot in the string, we assume there is a file name
 	   extension present */
 	/* XXX We'd better test for .exe/.bat/.etc explicitly */
-	if (!(mode & X_OK) || (strrchr(ffname, '.') != NULL)) {
+	if (!(mode & X_OK) || strchr(ffname, '.') > ffname) {
 		return core_getpath(ffname, searchpath, mode);
 	}
 
