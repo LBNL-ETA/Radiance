@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.76 2021/02/01 16:19:49 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.77 2021/11/24 19:08:51 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -330,8 +330,8 @@ sourcehit(			/* check to see if ray hit distant source */
 		 */
 		if (2.*PI*(1. - DOT(source[i].sloc,r->rdir)) > source[i].ss2)
 			continue;
-					/* is it the only possibility? */
-		if (first == last) {
+					/* is it what we aimed for? */
+		if (i == r->rsrc) {
 			r->ro = source[i].so;
 			break;
 		}
