@@ -2459,3 +2459,33 @@ rise caused by adding its own estimate back into the ambient level remainder.
 It ended up being simple enough to derate the final average by the factor
 corresponding to average surface absorpition, thus removing the average
 from the final bounce estimate.
+
+Introduced ies2rad upgrades by Randolph Fritz.  Randolph says it
+fixes the following problems:
+
+	1. Generates correct Radiance geometry for spheres in 1995, 2002,
+	and 2019 IES files.
+
+	2. Generates correct Radiance geometry for vertical cylinders that
+	are taller than they are wide.
+
+	3. Ignores the file source ("File Generation Type") field in the
+	2019 version of the file, which would otherwise be incorrectly used
+	as an output multiplier.
+
+    It also offers the following enhancements:
+
+	1. Shape information is included in the .rad file comments.
+
+	2. 1995, 2002, and 2019-version luminous opening geometry is
+	accounted for.
+
+	3. The 2002 and 2019 IES file versions are recognized and
+	processed appropriately.
+
+	4. I have made an attempt to do something intelligent with less
+	common "luminous opening" shapes in the 1995, 2002, and 2019 versions
+	of the standard, though I have not implemented any support for new
+	geometry; approximations are substituted and warning messages issued.
+	Unfortunately, this code is not tested, since I don't have any IES
+	files that use these shapes.

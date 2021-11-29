@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.34 2021/09/30 20:05:09 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.35 2021/11/29 16:07:36 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -59,10 +59,86 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.34 2021/09/30 20:05:09 greg Exp 
  * sources, those must be given with glow, so that they do not
  * themselves illuminate the scene, providing incorrect results.
  *
+ * Overview of the LM-63 file format
+ * =================================
+ * Here we offer a summary of the IESNA LM-63 photometry file format
+ * for the perplexed reader.  Dear reader, do remember that this is
+ * our interpretation of the five different versions of the standard.
+ * When our interpretation of the standard conflicts with the official
+ * standard, the official document is to be respected.  In conflicts
+ * with practice, do take into account the robustness principle and be
+ * permissive, accepting reasonable deviations from the standard.
+ *
+ * LM-63 files are organized as a version tag, followed by a series of
+ * luminaire data sets.  The luminaire data sets, in turn, are
+ * organized into a label, a tilt data section, and a photometric data
+ * section.  Finally, the data sections are organized into records,
+ * which are made up of lines of numeric values delimited by spaces or
+ * commas.  Lines are delimited by CR LF sequences.  Records are made
+ * up of one or more lines, and every record must be made up of some
+ * number of complete lines, but there is no delimiter which makes the
+ * end of a record.  The first records of the tilt and photometric
+ * data sections have fixed numbers of numeric values; the initial
+ * records contain counts that describe the remaining records.
+ *
+ * Ies2rad allows only one luminaire data set per file.
+ *
+ * The tilt section is made up of exactly four records; the second gives
+ * the number of values in the third and fourth records.
+ *
+ * The photometric section begins with two records, which give both the
+ * number of records following and the number of values in each of the
+ * following records.
+ *
+ * The original 1986 version of LM-63 does not have a version tag.
+ * 
+ * The 1986, 1991, and 1995 versions allow 80 characters for the label
+ * lines and the "TILT=" line which begins the tilt data section, and
+ * 132 characters thereafter.  (Those counts do not include the CR LF
+ * line terminator.)  The 2002 version dispenses with those limits,
+ * allowing 256 characters per line, including the CR LF line
+ * terminator.  The 2019 version does not specify a line length at
+ * all.  Ies2rad allows lines of up to 256 characters and will accept
+ * CR LF or LF alone as line terminators.
+ *
+ * In the 1986 version, the label is a series of free-form lines of up
+ * to 80 characters.  In later versions, the label is a series of
+ * lines of beginning with keywords in brackets with interpretation
+ * rules which differ between versions.
+ *
+ * The tilt data section begins with a line beginning with "TILT=",
+ * optionally followed by either a file name or four records of
+ * numerical data.  The 2019 version no longer allows a file name to
+ * be given.
+ *
+ * The main photometric data section contains two header records
+ * followed by a record of vertical angles, a record of horizontal
+ * angles, and one record of candela values for each horizontal angle.
+ * Each record of candela values contains exactly one value for each
+ * vertical angle. Data values in records are separated by spaces or
+ * commas.  In keeping with the robustness principle, commas
+ * surrounded by spaces will also be accepted as separators.
+ *
+ * The first header record of the photometric data section contains
+ * exactly 10 values.  The second contains exactly 3 values.  Most of
+ * the data values are floating point numbers; the exceptions are
+ * various counts and enumerators, which are integers: the number of
+ * lamps, the numbers of vertical and horizontal angles, the
+ * photometric type identifier, and the units type identifier.  In the
+ * 2019 version, a field with information about how the file was
+ * generated has replaced a field unused since 1995; it is a textual
+ * representation of a bit string, but may - we hope! - safely be
+ * interpreted as a floating point number and decoded later.
+ *
+ * Style Note
+ * ==========
  * The ies2rad code uses the "bsd" style. For emacs, this is set up
  * automatically in the "Local Variables" section at the end of the
  * file. For vim, use ":set tabstop=8 shiftwidth=8".
  *
+ * History
+ * =======
+ * 
  *	07Apr90		Greg Ward
  *
  *  Fixed correction factor for flat sources 29Oct2001 GW
@@ -78,87 +154,16 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.34 2021/09/30 20:05:09 greg Exp 
 
 #define PI		3.14159265358979323846
 
-/* floating comparisons -- floating point numbers within FTINY of each
- * other are considered equal */
+#define FAIL            (-1)
+#define SUCCESS         0
+
+/* floating point comparisons -- floating point numbers within FTINY
+ * of each other are considered equal */
 #define FTINY		1e-6
 #define FEQ(a,b)	((a)<=(b)+FTINY&&(a)>=(b)-FTINY)
 
-
-/* IESNA LM-63 keywords and constants */
-/* Since 1991, LM-63 files have begun with the magic keyword IESNA */
-#define MAGICID		"IESNA"
-#define LMAGICID	5
-/* But newer files start with IESNA:LM-63- */
-#define MAGICID2	"IESNA:LM-63-"
-#define LMAGICID2	12
-/* ies2rad supports the 1986, 1991, and 1995 versions of
- * LM-63. FIRSTREV describes the first version; LASTREV describes the
- * 1995 version. */
-#define FIRSTREV	86
-#define LASTREV		95
-
-/* The following definitions support LM-63 file keyword reading and
- * analysis.
- *
- * This section defines two function-like macros: keymatch(i,s), which
- * checks to see if keyword i matches string s, and checklamp(s),
- * which checks to see if a string matches the keywords "LAMP" or
- * "LAMPCAT".
- *
- * LM-63-1986 files begin with a list of free-form label lines.
- * LM-63-1991 files begin with the identifying line "IESNA91" followed
- * by a list of formatted keywords.  LM-63-1995 files begin with the
- * identifying line "IESNA:LM-63-1995" followed by a list of formatted
- * keywords.
- *
- * The K_* #defines enumerate the keywords used in the different
- * versions of the file and give them symbolic names.
- *
- * The D86, D91, and D95 #defines validate the keywords in the 1986,
- * 1991, and 1995 versions of the standard, one bit per keyword.
- * Since the 1986 standard does not use keywords, D86 is zero.  The
- * 1991 standard has 13 keywords, and D91 has the lower 13 bits set.
- * The 1995 standard has 14 keywords, and D95 has the lower 14 bits
- * set.
- *
- */
-#define D86		0
-
-#define K_TST		0
-#define K_MAN		1
-#define K_LMC		2
-#define K_LMN		3
-#define K_LPC		4
-#define K_LMP		5
-#define K_BAL		6
-#define K_MTC		7
-#define K_OTH		8
-#define K_SCH		9
-#define K_MOR		10
-#define K_BLK		11
-#define K_EBK		12
-
-/* keywords defined in LM-63-1991 */
-#define D91		((1L<<13)-1)
-
-#define K_LMG		13
-
-/* keywords defined in LM-63-1995 */
-#define D95		((1L<<14)-1)
-
-char	k_kwd[][20] = {"TEST", "MANUFAC", "LUMCAT", "LUMINAIRE", "LAMPCAT",
-			"LAMP", "BALLAST", "MAINTCAT", "OTHER", "SEARCH",
-			"MORE", "BLOCK", "ENDBLOCK", "LUMINOUSGEOMETRY"};
-
-long k_defined[] = {D86, D86, D86, D86, D86, D91, D91, D91, D91, D95};
-
-int	filerev = FIRSTREV;
-
-#define keymatch(i,s)	(k_defined[filerev-FIRSTREV]&1L<<(i) &&\
-				k_match(k_kwd[i],s))
-
-#define checklamp(s)	(!(k_defined[filerev-FIRSTREV]&(1<<K_LMP|1<<K_LPC)) ||\
-				keymatch(K_LMP,s) || keymatch(K_LPC,s))
+#define IESFIRSTVER 1986
+#define IESLASTVER 2019
 
 /* tilt specs
  *
@@ -203,11 +208,43 @@ int	filerev = FIRSTREV;
 #define U_METERS	2
 
 /* string lengths */
-/* Maximum input line is 256 characters including CR LF at end. */
+/* Maximum length of a keyword, including brackets and NUL */
+#define MAXKW           21
+/* Maximum input line is 256 characters including CR LF and NUL at end. */
 #define MAXLINE		257
+#define MAXUNITNAME     64
 #define RMAXWORD	76
 
-/* End of LM-63-related #defines */
+/* Shapes defined in the IES LM-63 standards
+ *
+ * PH stands for photometric horizontal
+ * PPH stands for perpendicular to photometric horizontal
+ * Cylinders are vertical and circular unless otherwise stated
+ *
+ * The numbers assigned here are not part of any LM-63 standard; they
+ * are for programming convenience.
+ */
+/* Error and not-yet-assigned constants */
+#define IESERROR        -2
+#define IESNONE         -1
+/* Shapes */
+#define IESPT            0
+#define IESRECT          1
+#define IESBOX           2
+#define IESDISK          3
+#define IESELLIPSE       4
+#define IESVCYL          5
+#define IESVECYL         6
+#define IESSPHERE        7
+#define IESELLIPSOID     8
+#define IESHCYL_PH       9
+#define IESHECYL_PH     10
+#define IESHCYL_PPH     11
+#define IESHECYL_PPH    12
+#define IESVDISK_PH     13
+#define IESVEL_PH       14
+
+/* End of LM-63 related #defines */
 
 /* file extensions */
 #define T_RAD		".rad"
@@ -215,7 +252,7 @@ int	filerev = FIRSTREV;
 #define T_TLT		"%.dat"
 #define T_OCT		".oct"
 
-/* shape types
+/* Radiance shape types
  * These #defines enumerate the shapes of the Radiance objects which
  * emit the light.
  */
@@ -236,6 +273,34 @@ int	filerev = FIRSTREV;
  * or a '.' (current directory) */
 #define abspath(p)	(ISDIRSEP((p)[0]) || (p)[0] == '.')
 
+/* LM-63 related constants */
+typedef struct {
+	char *tag;
+	int yr; } IESversions;
+
+IESversions IESFILEVERSIONS[] = {
+	{ "IESNA91", 1991 },
+	{ "IESNA:LM-63-1995", 1995 },
+	{ "IESNA:LM-63-2002", 2002 },
+	{ "IES:LM-63-2019", 2019 },
+	{ NULL, 1986 }
+};
+
+char *IESHAPENAMES[] = {
+	"point", "rectangle", "box", "disk", "ellipse", "vertical cylinder",
+	"vertical elliptical cylinder", "sphere", "ellipsoid",
+	"horizontal cylinder along photometric horizontal",
+	"horizontal elliptical cylinder along photometric horizontal",
+	"horizontal cylinder perpendicular to photometric horizontal",
+	"horizontal elliptical cylinder perpendicular to photometric horizontal",
+	"vertical disk facing photometric horizontal",
+	"vertical ellipse facing photometric horizontal" };
+
+/* end of LM-63 related constants */
+
+/* Radiance shape names */
+char *RADSHAPENAMES[] = { "rectangle or box", "disk or cylinder", "sphere" };
+
 /* Global variables.
  *
  * Mostly, these are a way of communicating command line parameters to
@@ -253,7 +318,7 @@ char	*deflamp = NULL;		/* default lamp type */
 float	defcolor[3] = {1.,1.,1.};	/* default lamp color */
 float	*lampcolor = defcolor;		/* pointer to current lamp color */
 double	multiplier = 1.0;		/* multiplier for all light sources */
-char	units[64] = "meters";		/* output units */
+char	units[MAXUNITNAME] = "meters";	/* output units */
 int	out2stdout = 0;			/* put out to stdout r.t. file */
 int	instantiate = 0;		/* instantiate geometry */
 double	illumrad = 0.0;			/* radius for illum sphere */
@@ -265,6 +330,11 @@ typedef struct {
 	double	mult;				/* candela multiplier */
 	double	w, l, h;			/* width, length, height */
 	double	area;				/* max. projected area */
+	int	filerev;			/* IES file version */
+	int     havelamppos;	                /* Lamp position was given */
+	float   lamppos[2];	                /* Lamp position */
+	int     iesshape;			/* Shape number */
+	char   *warn;				/* Warning message */
 } SRCINFO;				/* a source shape (units=meters) */
 
 /* A count and pointer to the list of input file names */
@@ -287,7 +357,7 @@ char	**gargv;			/* global argv */
  * confusing define accommodates that.  */
 #define isint		isflt
 
-/* Function declarations */
+/* IES file conversion functions */
 static int ies2rad(char *inpname, char *outname);
 static void initlamps(void);
 static int dosource(SRCINFO *sinf, FILE *in, FILE *out, char *mod, char *name);
@@ -298,7 +368,15 @@ static int cvtint(int *ip, char *wrd);
 static int cvdata(FILE *in, FILE *out, int ndim, int npts[], double mult,
 		double lim[][2]);
 static int cvtflt(double *rp, char *wrd);
+static int makeiesshape(SRCINFO *shp, double length, double width, double height);
+static int makeillumsphere(SRCINFO *shp);
 static int makeshape(SRCINFO *shp, double width, double length, double height);
+static void makecylshape(SRCINFO *shp, double diam, double height);
+static void makeelshape(SRCINFO *shp, double width, double length, double height);
+static void makeecylshape(SRCINFO *shp, double width, double length, double height);
+static void makeelshape(SRCINFO *shp, double width, double length, double height);
+static void makeboxshape(SRCINFO *shp, double length, double width, double height);
+static int makepointshape(SRCINFO *shp);
 static int putsource(SRCINFO *shp, FILE *fp, char *mod, char *name,
 		int dolower, int doupper, int dosides);
 static void putrectsrc(SRCINFO *shp, FILE *fp, char *mod, char *name, int up);
@@ -309,11 +387,19 @@ static void putrect(SRCINFO *shp, FILE *fp, char *mod, char *name, char *suffix,
 		int a, int b, int c, int d);
 static void putpoint(SRCINFO *shp, FILE *fp, int p);
 static void putcyl(SRCINFO *shp, FILE *fp, char *mod, char *name);
+static void shapearea(SRCINFO *shp);
+
+/* string and filename functions */
+static int isprefix(char *p, char *s);
+static char * matchprefix(char *p, char *s);
 static char * tailtrunc(char *name);
 static char * filename(char *path);
 static char * libname(char *path, char *fname, char *suffix);
 static char * getword(FILE *fp);
 static char * fullnam(char *path, char *fname, char *suffix);
+
+/* output function */
+static void fpcomment(FILE *fp, char *prefix, char *s);
 
 /* main - process arguments and run the conversion
  *
@@ -537,6 +623,135 @@ initlamps(void)				/* set up lamps */
 }
 
 /*
+ * String functions
+ */
+
+/*
+ * isprefix - return 1 (true) if p is a prefix of s, 0 otherwise
+ * 
+ * For this to work properly, s must be as long or longer than p.
+ */
+int
+isprefix(char *p, char *s) {
+	return matchprefix(p,s) != NULL;
+}
+
+/*
+ * matchprefix - match p against s
+ *
+ * If p is a prefix of s, return a pointer to the character of s just
+ * past p.
+ *
+ * For this to work properly, s must be as long or longer than p.
+ */ 
+char *
+matchprefix(char *p, char *s) {
+	int c;
+	
+	while ((c = *p++)) {
+		if (c != *s++)
+			return NULL;
+	}
+	return s;
+}
+
+/*
+ * skipws - skip whitespace
+ */
+char *
+skipws(char *s) {
+	while (isspace(*s))
+		s++;
+	return s;
+}
+
+/*
+ * streq - test strings for equality
+ */
+int
+streq(char *s1, char *s2) {
+	return strcmp(s1,s2) == 0;
+}
+
+/*
+ * strneq - test strings for equality, with a length limit
+ */
+int
+strneq(char *s1, char *s2, int n) {
+	return strncmp(s1,s2,n) == 0;
+}
+
+/*
+ * IES (LM-63) file functions
+ */
+
+/*
+ * prockwd - process keywords on a label line
+ * 
+ * We're looking for four keywords: LAMP, LAMPCAT, LAMPPOSITION, and
+ * LUMINOUSGEOMETRY.  Any other keywords are ignored.
+ * 
+ * LAMP and LAMPCAT are searched for a known lamp type name.
+ * LAMPPOSITION is stored.
+ * LUMINOUSGEOMETRY contains the name of an MGF file, which is stored.
+ */
+void
+prockwd(char *bp, char *geomfile, char *inpname, SRCINFO *srcinfo) {
+	char *kwbegin;
+	int kwlen;
+	
+	bp = skipws(bp);	/* Skip leading whitespace. */
+	if (*bp != '[')
+		return;		/* If there's no keyword on this line,
+				 * do nothing */
+	kwbegin = bp;
+	while (*bp && *bp != ']')	/* Skip to the end of the keyword or
+				 * end of the buffer. */
+		bp++;
+	if (!(*bp))		/* If the keyword doesn't have a
+				 * terminating ']', return. */
+		return;
+	kwlen = bp - kwbegin + 1;
+	bp++;
+	if (lampcolor == NULL && strneq("[LAMP]", kwbegin, kwlen)) 
+		lampcolor = matchlamp(bp);
+	else if (lampcolor == NULL && strneq("[LAMPCAT]", kwbegin, kwlen))
+		lampcolor = matchlamp(bp);
+	else if (strneq("[LUMINOUSGEOMETRY]", kwbegin, kwlen)) {
+		bp = skipws(bp);	/* Skip leading whitespace. */
+		strcpy(geomfile, inpname); /* Copy the input file path */
+		/* Replace the filename in the input file path with
+		 * the name of the MGF file.  Trailing spaces were
+		 * trimmed before this routine was called. */
+		strcpy(filename(geomfile), bp); 
+		srcinfo->isillum = 1;
+	}
+	else if (strneq("[LAMPPOSITION]", kwbegin, kwlen)) {
+		srcinfo->havelamppos = 1;
+		sscanf(bp,"%f%f", &(srcinfo->lamppos[0]),
+		       &(srcinfo->lamppos[1]));
+	}
+}
+
+/*
+ * iesversion - examine the first line of an IES file and return the version
+ *
+ * Returns the year of the version.  If the version is unknown,
+ * returns 1986, since the first line of a 1986-format IES file can be
+ * anything.
+ */
+int
+iesversion(char *buf) {
+	IESversions *v;
+
+	for(v = IESFILEVERSIONS; v != NULL; v++)
+		if (streq(v->tag,buf))
+			return v->yr;
+	return v->yr;
+}
+
+
+/*
  * File path operations
  *
  * These provide file path operations that operate on both MS-Windows
@@ -631,20 +846,20 @@ libname(
 	return(path);
 }
 
-/* filename - find the base file name in a buffer containing a path
+/* filename - pointer to filename in buffer containing path 
  *
- * The pointer is to a character within the buffer, not a string in itself;
- * it will become invalid when the buffer is freed.
- *
+ * Scan the path, recording directory separators.  Return the location
+ * of the character past the last one.  If no directory separators are
+ * found, returns a pointer to beginning of the path.
  */
 char *
 filename(
 	char	*path
 )
 {
-	char	*cp;
+	char	*cp = path;
 
-	for (cp = path; *path; path++)
+	for (; *path; path++)
 		if (ISDIRSEP(*path))
 			cp = path+1;
 	return(cp);
@@ -717,47 +932,24 @@ blanktrunc(
 	*++cp = '\0';
 }
 
-/* k_match - return true if keyword matches header line */
-int
-k_match(
-	char	*kwd,		/* keyword */
-	char	*hdl		/* header line */
-)
-{
-	/* Skip leading spaces */
-	while (isspace(*hdl))
-		hdl++;
-	/* The line has to begin with '[' */
-	if (*hdl++ != '[')
-		return(0);
-	/* case-independent keyword match */
-	while (toupper(*hdl) == *kwd++)
-		if (!*hdl++)
-			return(0);
-	/* If we have come to the end of the keyword, and the keyword
-	 * at the beginning of the matched line is terminated with
-	 * ']', return 1 */
-	return(!kwd[-1] & (*hdl == ']'));
-}
-
-/* keyargs - return the argument of a keyword, without leading spaces
+/* fpcomment - output a multi-line comment 
  *
- * keyargs is passed a pointer to a buffer; it returns a pointer to
- * where the argument starts in the buffer
- *
+ * The comment may be multiple lines, with each line separated by a
+ * newline.  Each line is prefixed by prefix.  If the last line isn't
+ * terminated by a newline, no newline will be output.
  */
-char *
-keyargs(
-	char	*hdl /* header line */
-)
-{
-	while (*hdl && *hdl++ != ']')
-		;
-	while (isspace(*hdl))
-		hdl++;
-	return(hdl);
+void
+fpcomment(FILE *fp, char *prefix, char *s) {
+  while (*s) {			/* While there are characters left to output */
+    fprintf(fp, "%s", prefix);	/* Output the prefix */
+    for (; *s && *s != '\n'; s++) /* Output a line */
+      putc(*s, fp);
+    if (*s == '\n') {		/* Including the newline, if any */
+      putc(*s, fp);
+      s++;
+    }
+  }
 }
-
 
 /* putheader - output the header of the .rad file
  *
@@ -790,9 +982,6 @@ putheader(
  *
  * Return -1 in case of failure, 0 in case of success.
  *
- * The file version recognition is confused and will treat 1995 and
- * 2002 version files as 1986 version files.
- *
  */
 int
 ies2rad(		/* convert IES file */
@@ -802,13 +991,19 @@ ies2rad(		/* convert IES file */
 {
 	SRCINFO	srcinfo;
 	char	buf[MAXLINE], tltid[RMAXWORD];
-	char	geomfile[128];
+	char	geomfile[MAXLINE];
 	FILE	*inpfp, *outfp;
 	int	lineno = 0;
 
-	/* Open input and output files */
-	geomfile[0] = '\0';
+
+	/* Initialize srcinfo */
+	srcinfo.filerev = IESFIRSTVER;
+	srcinfo.iesshape = IESNONE;
+	srcinfo.warn = NULL;
 	srcinfo.isillum = 0;
+	srcinfo.havelamppos = 0;
+        /* Open input and output files */
+	geomfile[0] = '\0';
 	if (inpname == NULL) {
 		inpname = "<stdin>";
 		inpfp = stdin;
@@ -840,36 +1035,24 @@ ies2rad(		/* convert IES file */
 		blanktrunc(buf); /* Trim trailing spaces, CR, LF. */
 		if (!buf[0])	 /* Skip blank lines */
 			continue;
-		/* increment the header line count, and check for the
-		 * "TILT=" line that terminates the header */
-		if (!lineno++) {	/* first line may be magic */
-			if (!strncmp(buf, MAGICID2, LMAGICID2))
-				filerev = atoi(buf+LMAGICID2) - 1900;
-			else if (!strncmp(buf, MAGICID, LMAGICID))
-				filerev = atoi(buf+LMAGICID);
-			if (filerev < FIRSTREV)
-				filerev = FIRSTREV;
-			else if (filerev > LASTREV)
-				filerev = LASTREV;
-		}
+		/* increment the header line count. If we are on the
+		 * first line of the file, check for a version tag. If
+		 * one is not found, assume the first version of the
+		 * file. */
+		if (!lineno++)
+			srcinfo.filerev = iesversion(buf);
 		/* Output the header line as a comment in the .rad file. */
 		fputs("#<", outfp);
 		fputs(buf, outfp);
 		putc('\n', outfp);
 
-		/* If the header line is a keyword line (file version
-		 * later than 1986 and begins with '['), check a lamp
-		 * in the "[LAMP]" and "[LAMPCAT]" keyword lines;
-		 * otherwise check all lines.  */
-		if (lampcolor == NULL && checklamp(buf))
-			lampcolor = matchlamp(*sskip2(buf,0) == '[' ?
-						keyargs(buf) : buf );
-		/* Look for a materials and geometry file in the keywords. */
-		if (keymatch(K_LMG, buf)) {
-			strcpy(geomfile, inpname);
-			strcpy(filename(geomfile), keyargs(buf));
-			srcinfo.isillum = 1;
-		}
+		/* For post-1986 version files, process a keyword
+		 * line.  Otherwise, just scan the line for a lamp
+		 * name */
+		if (srcinfo.filerev != 1986)
+			prockwd(buf, geomfile, inpname, &srcinfo);
+		else if (lampcolor == NULL)
+			lampcolor = matchlamp(buf);
 	}
 
 	/* Done reading header information. If a lamp color still
@@ -1072,6 +1255,14 @@ dosource(
 		fprintf(stderr, "dosource: bad lamp specification\n");
 		return(-1);
 	}
+	
+	/* pfactor is only provided in 1986 and 1991 format files, and
+	 * is something completely different in 2019 files.  If the
+	 * file version is 1995 or later, set it to 1.0 to avoid
+	 * error. */
+	if (sinf->filerev >= 1995)
+		pfactor = 1.0;
+
 	/* Type A photometry is not supported */
 	if (pmtype != PM_C && pmtype != PM_B) {
 		fprintf(stderr, "dosource: unsupported photometric type (%d)\n",
@@ -1081,9 +1272,12 @@ dosource(
 
 	/* Multiplier = the multiplier from the -m option, times the
 	 * multiplier from the IES file, times the ballast factor,
-	 * times the "ballast lamp photometric factor," which was part
-	 * of the 1986 and 1991 standards. In the 1995 standard, it is
-	 * always supposed to be 1. */
+	 * times the "ballast lamp photometric factor," (pfactor)
+	 * which was part of the 1986 and 1991 standards. In the 1995
+	 * and 2002 standards, it is always supposed to be 1 and in
+	 * the 2019 standard it encodes information about the source
+	 * of the file.  For those files, pfactor is set to 1.0,
+	 * above.  */
 	sinf->mult = multiplier*mult*bfactor*pfactor;
 
 	/* If the count of angles is wrong, raise an error and quit. */
@@ -1102,9 +1296,12 @@ dosource(
 	/* Make decisions about the shape of the light source
 	 * geometry, and store them in sinf. */
 	if (makeshape(sinf, width, length, height) != 0) {
-		fprintf(stderr, "dosource: illegal source dimensions");
+		fprintf(stderr, "dosource: illegal source dimensions\n");
 		return(-1);
 	}
+	/* If any warning messages were generated by makeshape(), output them */
+	if ((sinf->warn) != NULL)
+		fputs(sinf->warn, stderr);
 
 	/* Copy the candela values into a Radiance data file. */
 	if ((datout = fopen(fullnam(buf,name,T_DST), "w")) == NULL) {
@@ -1120,26 +1317,43 @@ dosource(
 	fclose(datout);
 
 	/* Output explanatory comment */
-	fprintf(out, "# %g watt luminaire, lamp*ballast factor = %g\n",
+	fprintf(out, "\n# %g watt luminaire, lamp*ballast factor = %g\n",
 			wattage, bfactor*pfactor);
+	if (sinf->iesshape >= 0)
+		fprintf(out, "# IES file shape = %s\n",
+			IESHAPENAMES[sinf->iesshape]);
+	else
+		fprintf(out, "# IES file shape overridden\n");
+	fprintf(out, "# Radiance geometry shape = %s\n",
+		RADSHAPENAMES[sinf->type - 1]);
+	if (sinf->warn != NULL)
+		fpcomment(out, "# ", sinf->warn);
+
 	/* Output distribution "brightdata" primitive. Start handling
-	   the various cases of symmetry of the distribution. */
+	   the various cases of symmetry of the distribution.  This
+	   code reflects the complexity of the LM-63 format, as
+	   described under "<horizontal angles>" in the various
+	   versions of the standard. */
 	strcat(strcpy(id, filename(name)), "_dist");
 	fprintf(out, "\n'%s' brightdata '%s'\n", mod, id);
 	if (nangles[1] < 2)
+		 /* if it's a radially-symmetric type C distribution */
 		fprintf(out, "4 ");
 	else if (pmtype == PM_B)
+		/* Photometry type B */
 		fprintf(out, "5 ");
 	else if (FEQ(bounds[1][0],90.) && FEQ(bounds[1][1],270.))
+		/* Symmetric around the 90-270 degree plane */
 		fprintf(out, "7 ");
 	else
+		/* Just regular type C photometry */
 		fprintf(out, "5 ");
 
 	/* If the generated source geometry will be a box, a flat
 	 * rectangle, or a disk figure out if it needs a top, a
 	 * bottom, and/or sides. */
-	dolower = (bounds[0][0] < 90.-FTINY); /* Bottom */
-	doupper = (bounds[0][1] > 90.+FTINY); /* Top */
+	dolower = (bounds[0][0] < 90.-FTINY); /* Smallest vertical angle */
+	doupper = (bounds[0][1] > 90.+FTINY); /* Largest vertical angle */
 	dosides = (doupper & dolower && sinf->h > MINDIM); /* Sides */
 
 	/* Select the appropriate function and parameters from source.cal */
@@ -1149,27 +1363,33 @@ dosource(
 			sinf->type==DISK ? "cylcorr" : "boxcorr",
 			libname(buf,name,T_DST));
 	if (pmtype == PM_B) {
+		/* Type B photometry */
 		if (FEQ(bounds[1][0],0.))
+			/* laterally symmetric around a vertical plane */
 			fprintf(out, "srcB_horiz2 ");
 		else
 			fprintf(out, "srcB_horiz ");
 		fprintf(out, "srcB_vert ");
 	} else /* pmtype == PM_C */ {
 		if (nangles[1] >= 2) {
+			/* Not radially symmetric */
 			d1 = bounds[1][1] - bounds[1][0];
 			if (d1 <= 90.+FTINY)
+				/* Data for a quadrant */
 				fprintf(out, "src_phi4 ");
 			else if (d1 <= 180.+FTINY) {
+				/* Data for a hemisphere */
 				if (FEQ(bounds[1][0],90.))
 					fprintf(out, "src_phi2+90 ");
 				else
 					fprintf(out, "src_phi2 ");
-			} else
+			} else	/* Data for a whole sphere */
 				fprintf(out, "src_phi ");
 			fprintf(out, "src_theta ");
+			/* For the hemisphere around the 90-270 degree plane */
 			if (FEQ(bounds[1][0],90.) && FEQ(bounds[1][1],270.))
 				fprintf(out, "-rz -90 ");
-		} else
+		} else		/* Radially symmetric */
 			fprintf(out, "src_theta ");
 	}
 	/* finish the brightdata primitive with appropriate data */
@@ -1252,6 +1472,9 @@ putsource(
  * Makeshape decides what Radiance geometry will be used to represent
  * the light source and stores information about it in shp.
  * 
+ * The height, width, and length parameters are values from the
+ * IES file, given in meters.
+ *
  * The various versions of the IES LM-63 standard give a "luminous
  * opening" (really a crude shape) a width, a length (or depth), and a
  * height.  If all three values are positive, they describe a box.  If
@@ -1265,6 +1488,10 @@ putsource(
  * boxes (RECT), cylinders or disks (DISK), and spheres (SPHERE.)  A
  * point is necessarily represented by a small sphere, since a point
  * is not a Radiance object.
+ *
+ * Makeshape() returns 0 if it succeeds in choosing a shape, and -1 if
+ * it fails.
+ *
  */
 int
 makeshape(
@@ -1274,57 +1501,288 @@ makeshape(
 	double	height
 )
 {
-	/* Categorize the shape */
-	if (illumrad/meters2out >= MINDIM/2.) {
-		/* If the -i command line option is used, output an
-		 * "illum" sphere whose radius is given by the
-		 * argument to -i. */
-		shp->isillum = 1;
-		shp->type = SPHERE;
-		shp->w = shp->l = shp->h = 2.*illumrad / meters2out;
-		/* Otherwise, use the dimensions in the IES file */
-	} else if (width < MINDIM) {
-		width = -width;
-		if (width < MINDIM) {
-			/* If the LM-63 width is zero, assume a point
-			 * source is described.  Output a small
-			 * sphere. */
-			shp->type = SPHERE;
-			shp->w = shp->l = shp->h = MINDIM;
-		} else if (height < .5*width) {
-			/* The width is negative and the height is
-			 * less than half the width.  Treat the
-			 * luminous opening as a disk or short
-			 * vertical cylinder. Disks will be
-			 * represented as nearly flat cylinders of
-			 * MINDIM/2 height. */
-			shp->type = DISK;
-			shp->w = shp->l = width;
-			if (height >= MINDIM)
-				shp->h = height;
-			else
-				shp->h = .5*MINDIM;
-		} else {
-			/* Treat a tall cylinder as a sphere. */
-			shp->type = SPHERE;
-			shp->w = shp->l = shp->h = width;
-		}
-	} else {
-		/* The width is positive. The luminous opening is a
-		   box or simple rectangle. */
-		shp->type = RECT;
-		shp->w = width;
-		if (length >= MINDIM)
-			shp->l = length;
-		else
-			shp->l = MINDIM;
-		if (height >= MINDIM)
-			shp->h = height;
-		else
-			shp->h = .5*MINDIM;
-	}
+	int rc;
+	
+	if (illumrad != 0.0)
+		rc = makeillumsphere(shp);
+	else
+		rc = makeiesshape(shp, length, width, height);
+	if (rc == SUCCESS)
+		shapearea(shp);
+	return rc;
+}
 
-	/* Done choosing the shape; calculate its area in the x-y plane. */
+/* 
+ * Return 1 if d < 0, 2 if d == 0, 3 if d > 0.  This is used to encode
+ * the signs of IES file dimensions for quick lookup.  As usual with
+ * macros, don't use an expression with side effects as an argument.
+ */
+#define CONVSGN(d) ((d) < 0 ? 1 : ((d) == 0 ? 2 : 3))
+
+/* makeiesshape - convert IES shape to Radiance shape
+ * 
+ * Some 34 cases in the various versions of the IES LM-63 standard are
+ * handled, though some only by approximation.  For each case which is
+ * processed a Radiance box, cylinder, or sphere is selected.
+ *
+ * Shapes are categorized by version year of the standard and the
+ * signs of the LM-63 length, width (depth), and height fields.  These
+ * are combined and converted to an integer, which is then used as the
+ * argument to switch().  The last two digits of the IES file version
+ * year are used and the signs of length, width, and height are
+ * encoded, in that order, as 1 for negative, 2 for zero, and 3 for
+ * positive.  These are then combined into a numeric key by the
+ * following formula: 
+ *
+ *   version * 1000 + sgn(length) * 100 + sgn(width) * 10 + sgn(height).
+ *
+ * Since the 1991 version uses the same encoding as the 1986 version,
+ * and the 2019 version uses the same encoding as the 2002 version,
+ * these are collapsed into the earlier years.
+ *
+ * In the cases of the switch() statement, further processing takes
+ * place. Circles and ellipses are distinguished by comparisons.  Then
+ * routines are called to fill out the fields of the shp structure.
+ *
+ * As per the conventions of the rest of ies2rad, makeiesshape()
+ * returns 0 on success and -1 on failure.  -1 reflects an error in
+ * the IES file and is unusual.
+ *
+ * By convention, the shape generating routines are always given
+ * positive values for dimensions and always succeed; all errors are
+ * caught before they are called.  The absolute values of all three
+ * dimensions are calculated at the beginning of makeiesshape() and
+ * used throughout the function, this has a low cost and eliminates
+ * the chance of sign errors.
+ * 
+ * There is one extension to the ies standard here, devised to
+ * accomdate wall-mounted fixtures; vertical rectangles, not formally
+ * supported by any version of LM-63, are treated as boxes.
+ *
+ * The code is complicated by the way that earlier versions of the
+ * standard (1986 and 1991) prioritize width in their discussions, and
+ * later versions prioritize length.  It is not always clear which to
+ * write first and there is hesitation between the older code which
+ * invokes makeiesshape() and makeiesshape() itself.
+ */
+int
+makeiesshape(SRCINFO *shp, double l, double w, double h) {
+	int rc = SUCCESS;
+	int shape = IESNONE;
+        /* Get the last two digits of the standard year  */
+	int ver = shp->filerev % 100;
+	/* Make positive versions of all dimensions, for clarity in
+	 * function calls.  If you like, read this as l', w', and h'. */
+	double lp = fabs(l), wp = fabs(w), hp = fabs(h);
+	int thumbprint;
+
+	/* Change 1991 into 1986 and 2019 in 2002 */
+	switch (ver) {
+	case 91:
+		ver = 86;
+		break;
+	case 19:
+		ver = 02;
+		break;
+	}
+	
+	thumbprint =
+		ver * 1000 + CONVSGN(l) * 100 + CONVSGN(w) * 10 + CONVSGN(h);
+	switch(thumbprint) {
+	case 86222: case 95222: case 2222:
+		shp->iesshape = IESPT;
+		shp->type = SPHERE;
+		shp->w = shp->l = shp->h = MINDIM;
+		break;
+	case 86332: case 95332: case 2332:
+		shp->iesshape = IESRECT;
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 86333: case 86233: case 86323:
+	case 95333: case 95233: case 95323:
+	case 2333: case 2233: case 2323:
+		shp->iesshape = IESBOX;
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 86212: case 95212:
+		shp->iesshape = IESDISK;
+		makecylshape(shp, wp, hp);
+		break;
+	case 86213:
+		shp->iesshape = IESVCYL;
+		makecylshape(shp, wp, hp);
+		break;
+	case 86312:
+		shp->iesshape = IESELLIPSE;
+		makeecylshape(shp, lp, wp, 0);
+		break;
+	case 86313:
+		shp->iesshape = IESELLIPSOID;
+		makeelshape(shp, wp, lp, hp);
+		break;
+	case 95211:
+		shp->iesshape = FEQ(lp,hp) ? IESSPHERE : IESNONE;
+		if (shp->iesshape == IESNONE) {
+			shp->warn = "makeshape: cannot determine shape\n";
+			rc = FAIL;
+			break;
+		}
+		shp->type = SPHERE;
+		shp->w = shp->l = shp->h = wp;
+		break;
+	case 95213:
+		shp->iesshape = IESVCYL;
+		makecylshape(shp, wp, hp);
+		break;
+	case 95321:
+		shp->iesshape = IESHCYL_PH;
+		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 95231:
+		shp->iesshape = IESHCYL_PPH;
+		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 95133: case 95313:
+		shp->iesshape = IESVECYL;
+		makeecylshape(shp, lp, wp, hp);
+		break;
+	case 95131: case 95311:
+		shp->iesshape = IESELLIPSOID;
+		makeelshape(shp, lp, wp, hp);
+		break;
+	case 2112:
+		shp->iesshape = FEQ(l,w) ? IESDISK : IESELLIPSE;
+		if (shp->iesshape == IESDISK)
+			makecylshape(shp, wp, hp);
+		else
+			makeecylshape(shp, wp, lp, hp);
+		break;
+	case 2113:
+		shp->iesshape = FEQ(l,w) ? IESVCYL : IESVECYL;
+		if (shp->iesshape == IESVCYL)
+			makecylshape(shp, wp, hp);
+		else
+			makeecylshape(shp, wp, lp, hp);
+		break;
+	case 2111:
+		shp->iesshape = FEQ(l,w) && FEQ(l,h) ? IESSPHERE : IESELLIPSOID;
+		if (shp->iesshape == IESSPHERE) {
+			shp->type = SPHERE;
+			shp->w = shp->l = shp->h = wp;
+		}
+		else
+			makeelshape(shp, lp, wp, hp);
+		break;
+	case 2311:
+		shp->iesshape = FEQ(w,h) ? IESHCYL_PH : IESHECYL_PH;
+		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 2131:
+		shp->iesshape = FEQ(l,h) ? IESHCYL_PPH : IESHECYL_PPH;
+		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	case 2121:
+		shp->iesshape = FEQ(w,h) ? IESVDISK_PH : IESVEL_PH;
+		shp->warn = "makeshape: shape is a vertical ellipse, which is not supported.\nmakeshape: replaced with rectangle\n";
+		makeboxshape(shp, lp, wp, hp);
+		break;
+	default:
+		/* We don't recognize the shape - report an error. */
+		rc = FAIL;
+	}
+	return rc;
+}
+
+/* makeillumsphere - create an illum sphere */
+int
+makeillumsphere(SRCINFO *shp) {
+	/* If the size is too small or negative, error. */
+	if (illumrad/meters2out < MINDIM/2.) {
+		fprintf(stderr, "makeillumsphere: -i argument is too small or negative\n");
+		return FAIL;
+	}
+	shp->isillum = 1;
+	shp->type = SPHERE;
+	shp->w = shp->l = shp->h = 2.*illumrad / meters2out;
+	return SUCCESS;
+}
+
+/* makeboxshape - create a box */
+void
+makeboxshape(SRCINFO *shp, double l, double w, double h) {
+	shp->type = RECT;
+	shp->l = fmax(l, MINDIM);
+	shp->w = fmax(w, MINDIM);
+	shp->h = fmax(h, .5*MINDIM);
+}
+
+/* makecylshape - output a vertical cylinder or disk 
+ *
+ * If the shape has no height, make it a half-millimeter.
+ */
+void
+makecylshape(SRCINFO *shp, double diam, double height) {
+	shp->type = DISK;
+	shp->w = shp->l = diam;
+	shp->h = fmax(height, .5*MINDIM);
+}
+
+/* makeelshape - create a substitute for an ellipsoid
+ * 
+ * Because we don't actually support ellipsoids, and they don't seem
+ * to be common in actual IES files.
+ */
+void
+makeelshape(SRCINFO *shp, double w, double l, double h) {
+	float avg = (w + l + h) / 3;
+	float bot = .5 * avg;
+	float top = 1.5 * avg;
+
+	if (bot < w && w < top
+	    && bot < l && l < top
+	    && bot < h && h > top) {
+		/* it's sort of spherical, replace it with a sphere */
+		shp->warn = "makeshape: shape is an ellipsoid, which is not supported.\nmakeshape: replaced with sphere\n";
+		shp->type = SPHERE;
+		shp->w = shp->l = shp->h = avg;
+	} else if (bot < w && w < top
+		   && bot < l && l < top
+		   && h <= .5*MINDIM) {
+		/* It's flat and sort of circular, replace it
+		 * with a disk. */
+		shp->warn = "makeshape: shape is an ellipse, which is not supported.\nmakeshape: replaced with disk\n";
+		makecylshape(shp, w, 0);
+	} else {
+		shp->warn = "makeshape: shape is an ellipsoid, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, w, l, h);
+	}
+}
+
+/* makeecylshape - create a substitute for an elliptical cylinder or disk */
+void
+makeecylshape(SRCINFO *shp, double l, double w, double h) {
+	float avg = (w + l) / 2;
+	float bot = .5 * avg;
+	float top = 1.5 * avg;
+
+	if (bot < w && w < top
+		   && bot < l && l < top) {
+		/* It's sort of circular, replace it
+		 * with a circular cylinder. */
+		shp->warn = "makeshape: shape is a vertical elliptical cylinder, which is not supported.\nmakeshape: replaced with circular cylinder\n";
+		makecylshape(shp, w, h);
+	} else {
+		shp->warn = "makeshape: shape is a  vertical elliptical cylinder, which is not supported.\nmakeshape: replaced with box\n";
+		makeboxshape(shp, w, l, h);
+	}
+}
+
+void
+shapearea(SRCINFO *shp) {
 	switch (shp->type) {
 	case RECT:
 		shp->area = shp->w * shp->l;
@@ -1334,8 +1792,7 @@ makeshape(
 		shp->area = PI/4. * shp->w * shp->w;
 		break;
 	}
-	return(0);
-}
+}	
 
 /* Rectangular or box-shaped light source.
  *
