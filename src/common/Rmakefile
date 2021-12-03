@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.88 2021/11/19 22:51:31 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.89 2021/12/03 18:10:48 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -21,7 +21,7 @@ RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
 	tmap16bit.o bmpfile.o falsecolor.o depthcodec.o normcodec.o \
-	idmap.o fltdepth.o
+	idmap.o fltdepth.o jitteraperture.o
 
 UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o loadbsdf.o \
 	disk2square.o hilbert.o interp2d.o triangulate.o
@@ -124,12 +124,14 @@ readobj.o readoct.o sceneio.o:	otypes.h
 
 multisamp.o urand.o:	random.h
 
-cone.o face.o free_os.o image.o instance.o objset.o \
+cone.o face.o free_os.o instance.o objset.o \
 octree.o modobject.o readfargs.o otypes.o mesh.o \
 readmesh.o readobj.o readoct.o sceneio.o:	standard.h \
 rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h tiff.h
 
-image.o:	view.h
+image.o:	view.h rtio.h rtmath.h mat4.h fvect.h rtio.h paths.h
+
+jitteraperture.o:	view.h rtmath.h mat4.h fvect.h rtio.h
 
 caldefn.o calexpr.o calfunc.o calprnt.o:	calcomp.h
 

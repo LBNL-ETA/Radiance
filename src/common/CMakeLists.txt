@@ -52,6 +52,7 @@ set(rtrad_SOURCES
   instance.c
   interp2d.c
   invmat4.c
+  jitteraperture.c
   lamps.c
   linregr.c
   loadbsdf.c

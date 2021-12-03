@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.96 2021/12/03 16:50:05 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.97 2021/12/03 18:10:48 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -662,7 +662,7 @@ pixvalue(		/* compute pixel value */
 {
 	RAY  thisray;
 	FVECT	lorg, ldir;
-	double	hpos, vpos, vdist, lmax;
+	double	hpos, vpos, lmax;
 	int	i;
 						/* compute view ray */
 	setcolor(col, 0.0, 0.0, 0.0);
@@ -671,8 +671,6 @@ pixvalue(		/* compute pixel value */
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir,
 					&ourview, hpos, vpos)) < -FTINY)
 		return(0.0);
-
-	vdist = ourview.vdist;
 						/* set pixel index */
 	samplendx = pixnumber(x,y,hres,vres);
 						/* optional motion blur */
@@ -687,45 +685,10 @@ pixvalue(		/* compute pixel value */
 		}
 		if (normalize(thisray.rdir) == 0.0)
 			return(0.0);
-		vdist = (1.-d)*vdist + d*lastview.vdist;
 	}
-						/* optional depth-of-field */
-	if (dblur > FTINY) {
-		double  vc, df[2];
-						/* random point on disk */
-		SDsquare2disk(df, frandom(), frandom());
-		df[0] *= .5*dblur;
-		df[1] *= .5*dblur;
-		if ((ourview.type == VT_PER) | (ourview.type == VT_PAR)) {
-			double	adj = 1.0;
-			if (ourview.type == VT_PER)
-				adj /= DOT(thisray.rdir, ourview.vdir);
-			df[0] /= sqrt(ourview.hn2);
-			df[1] /= sqrt(ourview.vn2);
-			for (i = 3; i--; ) {
-				vc = ourview.vp[i] + adj*vdist*thisray.rdir[i];
-				thisray.rorg[i] += df[0]*ourview.hvec[i] +
-							df[1]*ourview.vvec[i] ;
-				thisray.rdir[i] = vc - thisray.rorg[i];
-			}
-		} else {			/* non-standard view case */
-			double	dfd = PI/4.*dblur*(.5 - frandom());
-			if ((ourview.type != VT_ANG) & (ourview.type != VT_PLS)) {
-				if (ourview.type != VT_CYL)
-					df[0] /= sqrt(ourview.hn2);
-				df[1] /= sqrt(ourview.vn2);
-			}
-			for (i = 3; i--; ) {
-				vc = ourview.vp[i] + vdist*thisray.rdir[i];
-				thisray.rorg[i] += df[0]*ourview.hvec[i] +
-							df[1]*ourview.vvec[i] +
-							dfd*ourview.vdir[i] ;
-				thisray.rdir[i] = vc - thisray.rorg[i];
-			}
-		}
-		if (normalize(thisray.rdir) == 0.0)
-			return(0.0);
-	}
+						/* depth-of-field */
+	if (!jitteraperture(thisray.rorg, thisray.rdir, &ourview, dblur))
+		return(0.0);
 
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 
