@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.21 2020/06/12 22:45:20 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.22 2021/12/03 17:22:28 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -186,7 +186,7 @@ pix2rays(
 	RREAL	loc[2];
 	int	pp[2];
 	double	d;
-	int	i;
+	int	i, c;
 
 	while (fscanf(fp, "%lf %lf", &px, &py) == 2) {
 		px += .5; py += .5;
@@ -209,20 +209,25 @@ pix2rays(
 				exit(1);
 			}
 		}
-		jitterloc(loc);
-		d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
-		if (d < -FTINY)
-			rorg[0] = rorg[1] = rorg[2] =
-			rdir[0] = rdir[1] = rdir[2] = 0.;
-		else if (zfd >= 0)
-			for (i = 0; i < 3; i++) {
-				rorg[i] += rdir[i]*zval;
-				rdir[i] = -rdir[i];
+		for (c = repeatcnt; c-- > 0; ) {
+			jitterloc(loc);
+			d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
+			if (d < -FTINY)
+				rorg[0] = rorg[1] = rorg[2] =
+				rdir[0] = rdir[1] = rdir[2] = 0.;
+			else if (zfd >= 0)
+				for (i = 0; i < 3; i++) {
+					rorg[i] += rdir[i]*zval;
+					rdir[i] = -rdir[i];
+				}
+			else if (d > FTINY) {
+				rdir[0] *= d; rdir[1] *= d; rdir[2] *= d;
 			}
-		else if (d > FTINY) {
-			rdir[0] *= d; rdir[1] *= d; rdir[2] *= d;
+			(*putr)(rorg, rdir);
+			if (c) {
+				loc[0] = px/rs.xr; loc[1] = py/rs.yr;
+			}
 		}
-		(*putr)(rorg, rdir);
 		if (unbuffered)
 			fflush(stdout);
 	}
