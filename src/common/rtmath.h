@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.13 2021/12/03 16:50:05 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.14 2021/12/03 16:51:44 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -41,15 +41,10 @@ extern double	atan2a(double y, double x);
 #define  tsin			sin
 #define  ttan			tan
 #else
-					/* table-based cosine approximation */
+					/* table-based approx in tcos.c */
 #define  tsin(x)		tcos((x)-(PI/2.))
 #define  ttan(x)		(tsin(x)/tcos(x))
 #endif
-
-					/* defined in disk2square.c */
-extern void	SDsquare2disk(double ds[2], double seedx, double seedy);
-extern void	SDdisk2square(double sq[2], double diskx, double disky);
-
 					/* defined in xf.c */
 extern int	xf(XF *ret, int ac, char *av[]);
 extern int	invxf(XF *ret, int ac, char *av[]);
@@ -61,6 +56,9 @@ extern int32	encodedir(FVECT dv);
 extern void	decodedir(FVECT dv, int32 dc);
 extern double	dir2diff(int32 dc1, int32 dc2);
 extern double	fdir2diff(int32 dc1, FVECT v2);
+					/* defined in disk2square.c */
+extern void	SDsquare2disk(double ds[2], double seedx, double seedy);
+extern void	SDdisk2square(double sq[2], double diskx, double disky);
 
 #ifdef __cplusplus
 }
