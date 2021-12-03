@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.12 2016/03/10 18:56:34 schorsch Exp $ */
+/* RCSid $Id: rtmath.h,v 3.13 2021/12/03 16:50:05 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -45,6 +45,10 @@ extern double	atan2a(double y, double x);
 #define  tsin(x)		tcos((x)-(PI/2.))
 #define  ttan(x)		(tsin(x)/tcos(x))
 #endif
+
+					/* defined in disk2square.c */
+extern void	SDsquare2disk(double ds[2], double seedx, double seedy);
+extern void	SDdisk2square(double sq[2], double diskx, double disky);
 
 					/* defined in xf.c */
 extern int	xf(XF *ret, int ac, char *av[]);

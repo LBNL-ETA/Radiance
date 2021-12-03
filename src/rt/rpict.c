@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.95 2021/11/14 17:30:02 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.96 2021/12/03 16:50:05 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -660,7 +660,6 @@ pixvalue(		/* compute pixel value */
 	int  y
 )
 {
-	extern void  SDsquare2disk(double ds[2], double seedx, double seedy);
 	RAY  thisray;
 	FVECT	lorg, ldir;
 	double	hpos, vpos, vdist, lmax;
