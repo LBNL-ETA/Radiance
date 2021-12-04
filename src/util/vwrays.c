@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.22 2021/12/03 17:22:28 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.23 2021/12/04 16:29:29 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -26,6 +26,8 @@ RESOLU	rs = {PIXSTANDARD, 512, 512};
 double	pa = 1.;
 
 double  pj = 0.;
+
+double  pd = 0.;
 
 int	zfd = -1;
 
@@ -113,6 +115,8 @@ main(
 				pa = atof(argv[++i]);
 			else if (argv[i][2] == 'j')
 				pj = atof(argv[++i]);
+			else if (argv[i][2] == 'd')
+				pd = atof(argv[++i]);
 			else
 				goto userr;
 			break;
@@ -212,7 +216,7 @@ pix2rays(
 		for (c = repeatcnt; c-- > 0; ) {
 			jitterloc(loc);
 			d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
-			if (d < -FTINY)
+			if (d < -FTINY || !jitteraperture(rorg, rdir, &vw, pd))
 				rorg[0] = rorg[1] = rorg[2] =
 				rdir[0] = rdir[1] = rdir[2] = 0.;
 			else if (zfd >= 0)
@@ -269,7 +273,7 @@ putrays(void)
 			pix2loc(loc, &rs, si, sc);
 			jitterloc(loc);
 			d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
-			if (d < -FTINY)
+			if (d < -FTINY || !jitteraperture(rorg, rdir, &vw, pd))
 				rorg[0] = rorg[1] = rorg[2] =
 				rdir[0] = rdir[1] = rdir[2] = 0.;
 			else if (zfd >= 0)

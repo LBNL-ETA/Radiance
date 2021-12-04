@@ -2489,3 +2489,8 @@ fixes the following problems:
 	geometry; approximations are substituted and warning messages issued.
 	Unfortunately, this code is not tested, since I don't have any IES
 	files that use these shapes.
+
+Added support for depth-of-field blurring in vwrays using -pd option.
+Also, made -c count work with vwrays -i, producing multiple samples
+per indicated pixel position.  At the same time, support for the -pd
+option was added to rtpict, which calls on vwrays for its samples.
