@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.22 2021/11/22 18:23:56 greg Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.23 2021/12/05 15:44:15 greg Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -101,8 +101,8 @@ getpath(	/* expand fname, return full path */
 	char  *cp;
 	char fname[PATH_MAX];
 
-	if (!fname | (fname == pname))
-		return(fname);
+	if (!ffname | (ffname == fname))
+		return(ffname);
 
 	/* if we have a dot in the string, we assume there is a file name
 	   extension present */
