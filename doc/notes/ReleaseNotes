@@ -2494,3 +2494,7 @@ Added support for depth-of-field blurring in vwrays using -pd option.
 Also, made -c count work with vwrays -i, producing multiple samples
 per indicated pixel position.  At the same time, support for the -pd
 option was added to rtpict, which calls on vwrays for its samples.
+
+Fixed issue with BSDFs that didn't obey reciprocity, where direct
+sampling wasn't following exactly with indirect sampling.  This was
+discovered and reported by Jon Sargent.

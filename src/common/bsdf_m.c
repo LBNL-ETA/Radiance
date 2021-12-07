@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.42 2021/03/27 20:08:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.43 2021/12/07 23:49:50 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -722,8 +722,8 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 
 /* Get Matrix BSDF value */
 static int
-SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
-				const FVECT inVec, SDComponent *sdc)
+SDgetMtxBSDF(float coef[SDmaxCh], const FVECT inVec,
+				const FVECT outVec, SDComponent *sdc)
 {
 	const SDMat	*dp;
 	int		i_ndx, o_ndx;

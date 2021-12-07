@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.51 2021/03/27 20:08:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.52 2021/12/07 23:49:50 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -518,7 +518,7 @@ SDyuv2rgb(double yval, double uprime, double vprime, float rgb[3])
 /* Query BSDF value and sample hypercube for the given vectors */
 static int
 SDqueryTre(const SDTre *sdt, float *coef,
-		const FVECT outVec, const FVECT inVec, double *hc)
+		const FVECT inVec, const FVECT outVec, double *hc)
 {
 	const RREAL	*vtmp;
 	float		yval;

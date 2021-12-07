@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.28 2021/03/27 17:50:18 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.29 2021/12/07 23:49:50 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -86,8 +86,8 @@ typedef struct SDComp_s	SDComponent;
 /* Methods needed to handle BSDF components (nothing is optional) */
 typedef struct {
 					/* return non-diffuse BSDF */
-	int		(*getBSDFs)(float coef[SDmaxCh], const FVECT outVec,
-				    const FVECT inVec, SDComponent *sdc);
+	int		(*getBSDFs)(float coef[SDmaxCh], const FVECT inVec,
+				    const FVECT outVec, SDComponent *sdc);
 					/* query non-diffuse PSA for vector */
 	SDError		(*queryProjSA)(double *psa, const FVECT v1,
 						const RREAL *v2, int qflags,
@@ -215,8 +215,8 @@ extern SDError		SDsizeBSDF(double *projSA, const FVECT v1,
 					const SDData *sd);
 
 /* Return BSDF for the given incident and scattered ray vectors */
-extern SDError		SDevalBSDF(SDValue *sv, const FVECT outVec,
-					const FVECT inVec, const SDData *sd);
+extern SDError		SDevalBSDF(SDValue *sv, const FVECT inVec,
+					const FVECT outVec, const SDData *sd);
 
 /* Compute directional hemispherical scattering at given incident angle */
 extern double		SDdirectHemi(const FVECT inVec,

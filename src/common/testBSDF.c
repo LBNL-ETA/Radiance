@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.16 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.17 2021/12/07 23:49:50 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -142,7 +142,7 @@ main(int argc, char *argv[])
 				break;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			vec_from_deg(vout, atof(sskip2(cp,3)), atof(sskip2(cp,4)));
-			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr))
+			if (!SDreportError(SDevalBSDF(&val, vin, vout, bsdf), stderr))
 				printXYZ("", &val);
 			break;
 		case 'S':			/* sample BSDF */

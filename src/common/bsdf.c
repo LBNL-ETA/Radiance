@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.60 2021/04/28 00:59:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.61 2021/12/07 23:49:50 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -511,7 +511,7 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 	if (ec)
 		return ec;
 					/* get BSDF color */
-	n = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc);
+	n = (*sdc->func->getBSDFs)(coef, inVec, ioVec, sdc);
 	if (n <= 0) {
 		strcpy(SDerrorDetail, "BSDF sample value error");
 		return SDEinternal;
@@ -560,15 +560,15 @@ SDmultiSamp(double t[], int n, double randX)
 
 /* Generate diffuse hemispherical sample */
 static void
-SDdiffuseSamp(FVECT outVec, int outFront, double randX)
+SDdiffuseSamp(FVECT ioVec, int outFront, double randX)
 {
 					/* convert to position on hemisphere */
-	SDmultiSamp(outVec, 2, randX);
-	SDsquare2disk(outVec, outVec[0], outVec[1]);
-	outVec[2] = 1. - outVec[0]*outVec[0] - outVec[1]*outVec[1];
-	outVec[2] = sqrt(outVec[2]*(outVec[2]>0));
+	SDmultiSamp(ioVec, 2, randX);
+	SDsquare2disk(ioVec, ioVec[0], ioVec[1]);
+	ioVec[2] = 1. - ioVec[0]*ioVec[0] - ioVec[1]*ioVec[1];
+	ioVec[2] = sqrt(ioVec[2]*(ioVec[2]>0));
 	if (!outFront)			/* going out back? */
-		outVec[2] = -outVec[2];
+		ioVec[2] = -ioVec[2];
 }
 
 /* Query projected solid angle coverage for non-diffuse BSDF direction */
@@ -633,7 +633,7 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 
 /* Return BSDF for the given incident and scattered ray vectors */
 SDError
-SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
+SDevalBSDF(SDValue *sv, const FVECT inVec, const FVECT outVec, const SDData *sd)
 {
 	int		inFront, outFront;
 	SDSpectralDF	*sdf;
@@ -663,7 +663,7 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 					/* add non-diffuse components */
 	i = (sdf != NULL) ? sdf->ncomp : 0;
 	while (i-- > 0) {
-		nch = (*sdf->comp[i].func->getBSDFs)(coef, outVec, inVec,
+		nch = (*sdf->comp[i].func->getBSDFs)(coef, inVec, outVec,
 							&sdf->comp[i]);
 		while (nch-- > 0) {
 			c_cmix(&sv->spec, sv->cieY, &sv->spec,
@@ -808,7 +808,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	if (ec)
 		return ec;
 					/* compute color */
-	j = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc);
+	j = (*sdc->func->getBSDFs)(coef, inVec, ioVec, sdc);
 	if (j <= 0) {
 		sprintf(SDerrorDetail, "BSDF \"%s\" sampling value error",
 				sd->name);

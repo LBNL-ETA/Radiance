@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.66 2021/10/13 20:03:31 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.67 2021/12/07 23:49:50 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -156,7 +156,7 @@ compute_through(BSDFDAT *ndp)
 		psamp[i].tdir[1] = -ndp->vray[1] + dir2check[i][1]*srchrad;
 		psamp[i].tdir[2] = -ndp->vray[2];
 		normalize(psamp[i].tdir);
-		ec = SDevalBSDF(&sv, psamp[i].tdir, ndp->vray, ndp->sd);
+		ec = SDevalBSDF(&sv, ndp->vray, psamp[i].tdir, ndp->sd);
 		if (ec)
 			goto baderror;
 		cvt_sdcolor(psamp[i].vcol, &sv);
@@ -173,7 +173,7 @@ compute_through(BSDFDAT *ndp)
 		if (i && psamp[i].vy == psamp[i-1].vy)
 			continue;		/* assume duplicate sample */
 
-		ec = SDsizeBSDF(&tomega, psamp[i].tdir, ndp->vray,
+		ec = SDsizeBSDF(&tomega, ndp->vray, psamp[i].tdir,
 						SDqueryMin, ndp->sd);
 		if (ec)
 			goto baderror;
