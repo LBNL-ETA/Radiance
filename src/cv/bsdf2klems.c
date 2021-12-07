@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.33 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.34 2021/12/07 23:55:02 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -196,7 +196,7 @@ eval_bsdf(const char *fname)
 		    for (n = npsamps; n-- > 0; ) {
 			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			fi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vin, vout, &bsd);
 			if (ec != SDEnone)
 				goto err;
 			sum += sdv.cieY;
@@ -245,7 +245,7 @@ eval_bsdf(const char *fname)
 		    for (n = npsamps; n-- > 0; ) {
 			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			bi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vin, vout, &bsd);
 			if (ec != SDEnone)
 				goto err;
 			sum += sdv.cieY;
@@ -293,7 +293,7 @@ eval_bsdf(const char *fname)
 		    for (n = npsamps; n-- > 0; ) {
 			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			fi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vin, vout, &bsd);
 			if (ec != SDEnone)
 				goto err;
 			sum += sdv.cieY;
@@ -342,7 +342,7 @@ eval_bsdf(const char *fname)
 		    for (n = npsamps; n-- > 0; ) {
 			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			bi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vin, vout, &bsd);
 			if (ec != SDEnone)
 				goto err;
 			sum += sdv.cieY;

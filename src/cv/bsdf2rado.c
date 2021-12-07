@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rado.c,v 2.4 2021/09/09 15:17:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rado.c,v 2.5 2021/12/07 23:55:02 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -167,8 +167,8 @@ main(int argc, char *argv[])
 			ovec_from_pos(odir, i, j);
 			if (inpXML) {
 				SDValue	sval;
-				if (SDreportError(SDevalBSDF(&sval, odir,
-							idir, &myBSDF), stderr))
+				if (SDreportError(SDevalBSDF(&sval, idir,
+							odir, &myBSDF), stderr))
 					return(1);
 				bsdf = sval.cieY;
 			} else
