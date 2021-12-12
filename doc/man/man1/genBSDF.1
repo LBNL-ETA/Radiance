@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.20 2017/05/31 17:25:21 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.21 2021/12/12 20:17:02 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -81,8 +81,9 @@ reduces all BSDF data to grayscale.
 The
 .I \-a
 option turns off reciprocity averaging for tensor tree output.
-Normally on (+a), this ensures that the tensor BRDF obeys Helmholtz reciprocity.
-However, in certain rare cases, reciprocity averaging can cause unwanted noise in the output.
+Normally on (+a), this ensures that each tensor-tree hemisphere follows symmetry
+implied by Helmholtz reciprocity, and is designed to reduce ray sampling noise.
+However, for some systems, reciprocity averaging can actually make the output worse.
 .PP
 The geometry must fit a rectangular profile, whose width is along the X-axis,
 height is in the Y-axis, and depth is in the Z-axis.
