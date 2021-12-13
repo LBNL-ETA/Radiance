@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.14 2021/12/03 16:51:44 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.15 2021/12/13 21:05:00 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -56,12 +56,8 @@ extern int32	encodedir(FVECT dv);
 extern void	decodedir(FVECT dv, int32 dc);
 extern double	dir2diff(int32 dc1, int32 dc2);
 extern double	fdir2diff(int32 dc1, FVECT v2);
-					/* defined in disk2square.c */
-extern void	SDsquare2disk(double ds[2], double seedx, double seedy);
-extern void	SDdisk2square(double sq[2], double diskx, double disky);
 
 #ifdef __cplusplus
 }
 #endif
 #endif /* _RAD_RTMATH_H_ */
-

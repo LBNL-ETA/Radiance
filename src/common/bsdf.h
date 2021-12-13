@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.29 2021/12/07 23:49:50 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.30 2021/12/13 21:05:00 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -190,12 +190,6 @@ extern SDError		SDsampComponent(SDValue *sv, FVECT ioVec,
 
 /* Convert 1-dimensional random variable to N-dimensional */
 extern void		SDmultiSamp(double t[], int n, double randX);
-
-/* Map a [0,1]^2 square to a unit radius disk */
-extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
-
-/* Map point on unit disk to a unit square in [0,1]^2 range */
-extern void		SDdisk2square(double sq[2], double diskx, double disky);
 
 /*****************************************************************
  * The calls below are the ones most applications require.
