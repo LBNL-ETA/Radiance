@@ -60,6 +60,9 @@ target_link_libraries(bsdf2klems rtrad)
 add_executable(pkgBSDF pkgBSDF.c trans.c)
 target_link_libraries(pkgBSDF rtrad)
 
+add_executable(checkBSDF checkBSDF.c)
+target_link_libraries(checkBSDF rtrad)
+
 add_executable(epw2wea epw2wea.c)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../meta)
@@ -71,6 +74,7 @@ install(TARGETS
   bsdf2klems
   bsdf2rad
   bsdf2ttree
+  checkBSDF
   epw2wea
   ies2rad
   lampcolor

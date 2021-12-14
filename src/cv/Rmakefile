@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.56 2020/03/30 18:28:35 greg Exp $
+# RCSid $Id: Rmakefile,v 2.57 2021/12/14 02:33:18 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -21,7 +21,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad robjutil \
-mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf bsdfquery \
+mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf bsdfquery checkBSDF \
 pabopto2xyz pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF epw2wea bsdf2rad
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal bsdf2rad.cal
@@ -113,6 +113,9 @@ bsdf2klems:	bsdf2klems.o bsdfrep.o bsdfinterp.o
 pkgBSDF:	pkgBSDF.o
 	$(CC) $(CFLAGS) -o pkgBSDF pkgBSDF.o -lrtrad $(MLIB)
 
+checkBSDF:	checkBSDF.o
+	$(CC) $(CFLAGS) -o checkBSDF checkBSDF.o -lrtrad $(MLIB)
+
 epw2wea:	epw2wea.o
 	$(CC) $(CFLAGS) -o epw2wea epw2wea.o
 
@@ -151,8 +154,8 @@ mgf2inv.o:	../common/mgf_parser.h ../common/ccolor.h
 
 3ds2mgf.o rayopt3ds.o vect3ds.o:	vect3ds.h
 
-pkgBSDF.o:	../common/bsdf.h ../common/fvect.h ../common/ccolor.h \
-../common/paths.h
+checkBSDF.o pkgBSDF.o:	../common/bsdf.h ../common/fvect.h \
+../common/ccolor.h ../common/paths.h
 
 bsdf2ttree.o bsdfinterp.o bsdfmesh.o bsdfrbf.o bsdfrep.o bsdf2rad.o bsdftrans.o \
 pabopto2bsdf.o:	bsdfrep.h ../common/bsdf.h ../common/fvect.h ../common/ccolor.h
@@ -170,5 +173,7 @@ bsdf2klems.o bsdf2ttree.o mgf2meta.o:	../common/random.h
 bsdftrans.o:	transportSimplex.h
 
 bsdfquery.o:	../common/rtmath.h ../common/rtio.h bsdfrep.h
+
+checkBSDF.o:	../common/rtio.h ../common/bsdf_m.h ../common/bsdf_t.h
 
 robjutil.o:	../common/objutil.h

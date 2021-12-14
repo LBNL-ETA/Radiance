@@ -2498,3 +2498,6 @@ option was added to rtpict, which calls on vwrays for its samples.
 Fixed issue with BSDFs that didn't obey reciprocity, where direct
 sampling wasn't following exactly with indirect sampling.  This was
 discovered and reported by Jon Sargent.
+
+Created checkBSDF tool to test XML BSDF reciprocity and perform similar
+sanity checks.
