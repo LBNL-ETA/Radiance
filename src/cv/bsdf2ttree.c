@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.57 2021/03/29 17:40:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.58 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -135,7 +135,7 @@ eval_isotropic(char *funame)
 	int		assignD = 0;
 	char		cmd[128];
 	int		ix, ox, oy;
-	double		iovec[6];
+	RREAL		iovec[6];
 	float		bsdf, uv[2];
 
 	if (pctcull >= 0) {
@@ -208,7 +208,7 @@ eval_isotropic(char *funame)
 			rbf = advect_rbf(iovec, lobe_lim);
 						/* presample first row */
 		for (oy = 0; oy < sqres; oy++) {
-		    SDsquare2disk(iovec+3, .5*sqfact, (oy+.5)*sqfact);
+		    square2disk(iovec+3, .5*sqfact, (oy+.5)*sqfact);
 		    iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 		    if (funame == NULL) {
@@ -230,7 +230,7 @@ eval_isotropic(char *funame)
 		     */
 		    for (oy = 0; oy < sqres; oy++) {
 			if (ox < sqres-1) {	/* keeping one row ahead... */
-			    SDsquare2disk(iovec+3, (ox+1.5)*sqfact, (oy+.5)*sqfact);
+			    square2disk(iovec+3, (ox+1.5)*sqfact, (oy+.5)*sqfact);
 			    iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			}
@@ -250,7 +250,7 @@ eval_isotropic(char *funame)
 				for (ssi = nssamp; ssi--; ) {
 				    SDmultiSamp(ssa, 2, (ssi+frandom()) /
 							(double)nssamp);
-				    SDsquare2disk(iovec+3, (ox+ssa[0])*sqfact,
+				    square2disk(iovec+3, (ox+ssa[0])*sqfact,
 							(oy+ssa[1])*sqfact);
 				    iovec[5] = output_orient *
 					sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
@@ -305,7 +305,7 @@ eval_isotropic(char *funame)
 					ssvec[2] = 1. - ssvec[0]*ssvec[0];
 				    }
 				    ssvec[2] = input_orient * sqrt(ssvec[2]);
-				    SDsquare2disk(ssvec+3, (ox+ssa[2])*sqfact,
+				    square2disk(ssvec+3, (ox+ssa[2])*sqfact,
 						(oy+ssa[3])*sqfact);
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
@@ -399,7 +399,7 @@ eval_anisotropic(char *funame)
 	int		assignD = 0;
 	char		cmd[128];
 	int		ix, iy, ox, oy;
-	double		iovec[6];
+	RREAL		iovec[6];
 	float		bsdf, uv[2];
 
 	if (pctcull >= 0) {
@@ -469,14 +469,14 @@ eval_anisotropic(char *funame)
 	for (ix = 0; ix < sqres; ix++)
 	    for (iy = 0; iy < sqres; iy++) {
 		RBFNODE	*rbf = NULL;		/* Klems reversal */
-		SDsquare2disk(iovec, 1.-(ix+.5)*sqfact, 1.-(iy+.5)*sqfact);
+		square2disk(iovec, 1.-(ix+.5)*sqfact, 1.-(iy+.5)*sqfact);
 		iovec[2] = input_orient *
 				sqrt(1. - iovec[0]*iovec[0] - iovec[1]*iovec[1]);
 		if (funame == NULL)
 			rbf = advect_rbf(iovec, lobe_lim);
 						/* presample first row */
 		for (oy = 0; oy < sqres; oy++) {
-		    SDsquare2disk(iovec+3, .5*sqfact, (oy+.5)*sqfact);
+		    square2disk(iovec+3, .5*sqfact, (oy+.5)*sqfact);
 		    iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 		    if (funame == NULL) {
@@ -498,7 +498,7 @@ eval_anisotropic(char *funame)
 		     */
 		    for (oy = 0; oy < sqres; oy++) {
 			if (ox < sqres-1) {	/* keeping one row ahead... */
-			    SDsquare2disk(iovec+3, (ox+1.5)*sqfact, (oy+.5)*sqfact);
+			    square2disk(iovec+3, (ox+1.5)*sqfact, (oy+.5)*sqfact);
 			    iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			}
@@ -518,7 +518,7 @@ eval_anisotropic(char *funame)
 				for (ssi = nssamp; ssi--; ) {
 				    SDmultiSamp(ssa, 2, (ssi+frandom()) /
 							(double)nssamp);
-				    SDsquare2disk(iovec+3, (ox+ssa[0])*sqfact,
+				    square2disk(iovec+3, (ox+ssa[0])*sqfact,
 							(oy+ssa[1])*sqfact);
 				    iovec[5] = output_orient *
 					sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
@@ -564,12 +564,12 @@ eval_anisotropic(char *funame)
 				for (ssi = nssamp; ssi--; ) {
 				    SDmultiSamp(ssa, 4, (ssi+frandom()) /
 							(double)nssamp);
-				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])*sqfact,
+				    square2disk(ssvec, 1.-(ix+ssa[0])*sqfact,
 						1.-(iy+ssa[1])*sqfact);
 				    ssvec[2] = input_orient *
 						sqrt(1. - ssvec[0]*ssvec[0] -
 							ssvec[1]*ssvec[1]);
-				    SDsquare2disk(ssvec+3, (ox+ssa[2])*sqfact,
+				    square2disk(ssvec+3, (ox+ssa[2])*sqfact,
 						(oy+ssa[3])*sqfact);
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -

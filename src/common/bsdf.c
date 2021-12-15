@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.61 2021/12/07 23:49:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.62 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -530,7 +530,7 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 
 /* Convert 1-dimensional random variable to N-dimensional */
 void
-SDmultiSamp(double t[], int n, double randX)
+SDmultiSamp(RREAL t[], int n, double randX)
 {
 	unsigned	nBits;
 	double		scale;
@@ -564,7 +564,7 @@ SDdiffuseSamp(FVECT ioVec, int outFront, double randX)
 {
 					/* convert to position on hemisphere */
 	SDmultiSamp(ioVec, 2, randX);
-	SDsquare2disk(ioVec, ioVec[0], ioVec[1]);
+	square2disk(ioVec, ioVec[0], ioVec[1]);
 	ioVec[2] = 1. - ioVec[0]*ioVec[0] - ioVec[1]*ioVec[1];
 	ioVec[2] = sqrt(ioVec[2]*(ioVec[2]>0));
 	if (!outFront)			/* going out back? */

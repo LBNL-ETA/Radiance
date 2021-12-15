@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.36 2021/11/17 01:39:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.37 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -228,10 +228,10 @@ rotate_rbf(RBFNODE *rbf, const FVECT invec)
 void
 ovec_from_pos(FVECT vec, int xpos, int ypos)
 {
-	double	uv[2];
+	RREAL	uv[2];
 	double	r2;
 	
-	SDsquare2disk(uv, (xpos+.5)/grid_res, (ypos+.5)/grid_res);
+	square2disk(uv, (xpos+.5)/grid_res, (ypos+.5)/grid_res);
 				/* uniform hemispherical projection */
 	r2 = uv[0]*uv[0] + uv[1]*uv[1];
 	vec[0] = vec[1] = sqrt(2. - r2);
@@ -244,10 +244,10 @@ ovec_from_pos(FVECT vec, int xpos, int ypos)
 void
 pos_from_vec(int pos[2], const FVECT vec)
 {
-	double	sq[2];		/* uniform hemispherical projection */
+	RREAL	sq[2];		/* uniform hemispherical projection */
 	double	norm = 1./sqrt(1. + fabs(vec[2]));
 
-	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
+	disk2square(sq, vec[0]*norm, vec[1]*norm);
 
 	pos[0] = (int)(sq[0]*grid_res);
 	pos[1] = (int)(sq[1]*grid_res);

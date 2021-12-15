@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: jitteraperture.c,v 2.1 2021/12/03 18:10:48 greg Exp $";
+static const char	RCSid[] = "$Id: jitteraperture.c,v 2.2 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  *  jitteraperture.c - routine to sample depth-of-field
@@ -23,13 +23,14 @@ VIEW  *v,
 double  dia
 )
 {
-	double  vc, df[2];
+	RREAL  df[2];
+	double  vc;
 	int  i;
 					/* are we even needed? */
 	if (dia <= FTINY)
 		return(1);
 					/* get random point on disk */
-	SDsquare2disk(df, frandom(), frandom());
+	square2disk(df, frandom(), frandom());
 	df[0] *= .5*dia;
 	df[1] *= .5*dia;
 	if ((v->type == VT_PER) | (v->type == VT_PAR)) {

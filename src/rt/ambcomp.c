@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.87 2021/12/12 19:55:43 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.88 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -24,8 +24,6 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.87 2021/12/12 19:55:43 greg Exp 
 #ifndef MINADIV
 #define MINADIV		7	/* minimum # divisions in each dimension */
 #endif
-
-extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
 typedef struct {
 	COLOR	v;		/* hemisphere sample value */
@@ -100,7 +98,8 @@ ambsample(				/* initial ambient division sample */
 	AMBSAMP	*ap = &ambsam(hp,i,j);
 	RAY	ar;
 	int	hlist[3], ii;
-	double	spt[2], zd;
+	RREAL	spt[2];
+	double	zd;
 					/* generate hemispherical sample */
 					/* ambient coefficient for weight */
 	if (ambacc > FTINY)
@@ -118,7 +117,7 @@ ambsample(				/* initial ambient division sample */
 	hlist[2] = i;
 	multisamp(spt, 2, urand(ilhash(hlist,3)+n));
 resample:
-	SDsquare2disk(spt, (j+spt[1])/hp->ns, (i+spt[0])/hp->ns);
+	square2disk(spt, (j+spt[1])/hp->ns, (i+spt[0])/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
 		ar.rdir[ii] =	spt[0]*hp->ux[ii] +

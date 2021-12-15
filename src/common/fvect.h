@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.22 2021/12/13 21:05:00 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.23 2021/12/15 01:38:50 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -71,8 +71,8 @@ extern void	spinvector(FVECT vres, const FVECT vorig,
 extern double	geodesic(FVECT vres, const FVECT vorig,
 			const FVECT vtarg, double t, int meas);
 				/* defined in disk2square.c */
-extern void	SDsquare2disk(double ds[2], double seedx, double seedy);
-extern void	SDdisk2square(double sq[2], double diskx, double disky);
+extern void	square2disk(RREAL ds[2], double seedx, double seedy);
+extern void	disk2square(RREAL sq[2], double diskx, double disky);
 #ifdef __cplusplus
 }
 #endif

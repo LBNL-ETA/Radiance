@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: disk2square.c,v 3.4 2014/10/23 18:19:14 greg Exp $";
+static const char RCSid[] = "$Id: disk2square.c,v 3.5 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  *  Disk2Square.c
@@ -40,7 +40,7 @@ change log:
 
 /* Map a [0,1]^2 square to a unit radius disk */
 void
-SDsquare2disk(double ds[2], double seedx, double seedy)
+square2disk(RREAL ds[2], double seedx, double seedy)
 {
 
    double phi, r;
@@ -78,7 +78,7 @@ SDsquare2disk(double ds[2], double seedx, double seedy)
 
 /* Map point on unit disk to a unit square in [0,1]^2 range */
 void
-SDdisk2square(double sq[2], double diskx, double disky)
+disk2square(RREAL sq[2], double diskx, double disky)
 {
     double r = sqrt( diskx*diskx + disky*disky );
     double phi = atan2( disky, diskx );

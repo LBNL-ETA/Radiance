@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.52 2021/12/07 23:49:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.53 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -523,7 +523,7 @@ SDqueryTre(const SDTre *sdt, float *coef,
 	const RREAL	*vtmp;
 	float		yval;
 	FVECT		rOutVec;
-	double		gridPos[4];
+	RREAL		gridPos[4];
 
 	if (sdt->stc[tt_Y] == NULL)	/* paranoia, I hope */
 		return 0;
@@ -561,10 +561,10 @@ SDqueryTre(const SDTre *sdt, float *coef,
 		spinvector(rOutVec, outVec, zvec, -atan2(-inVec[1],-inVec[0]));
 		gridPos[0] = (.5-FTINY) -
 				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
-		SDdisk2square(gridPos+1, rOutVec[0], rOutVec[1]);
+		disk2square(gridPos+1, rOutVec[0], rOutVec[1]);
 	} else if (sdt->stc[tt_Y]->ndim == 4) {
-		SDdisk2square(gridPos, -inVec[0], -inVec[1]);
-		SDdisk2square(gridPos+2, outVec[0], outVec[1]);
+		disk2square(gridPos, -inVec[0], -inVec[1]);
+		disk2square(gridPos+2, outVec[0], outVec[1]);
 	} else
 		return 0;		/* should be internal error */
 					/* get BSDF value */
@@ -746,7 +746,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 {
 	unsigned long	cacheLeft = SDmaxCache;
 	const SDTre	*sdt;
-	double		inCoord[2];
+	RREAL		inCoord[2];
 	int		i;
 	int		mode;
 	SDTreCDst	*cd, *cdlast, *cdlimit;
@@ -781,9 +781,9 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 	} else if (sdt->stc[tt_Y]->ndim == 4) {
 		if (mode != sdt->sidef)	/* use reciprocity? */
-			SDdisk2square(inCoord, inVec[0], inVec[1]);
+			disk2square(inCoord, inVec[0], inVec[1]);
 		else
-			SDdisk2square(inCoord, -inVec[0], -inVec[1]);
+			disk2square(inCoord, -inVec[0], -inVec[1]);
 	} else
 		return NULL;		/* should be internal error */
 					/* quantize to avoid f.p. errors */
@@ -888,7 +888,8 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 	const SDTreCDst	*cd = (const SDTreCDst *)cdp;
 	const unsigned	target = randX*cumlmax;
 	bitmask_t	hndx, hcoord[2];
-	double		gpos[3], rotangle;
+	FVECT		gpos;
+	double		rotangle;
 	int		i, iupper, ilower;
 					/* check arguments */
 	if ((ioVec == NULL) | (cd == NULL))
@@ -918,7 +919,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 	for (i = 2; i--; )
 		gpos[i] = ((double)hcoord[i] + rand()*(1./(RAND_MAX+.5))) /
 				(double)((bitmask_t)1 << nBitsC);
-	SDsquare2disk(gpos, gpos[0], gpos[1]);
+	square2disk(gpos, gpos[0], gpos[1]);
 					/* compute Z-coordinate */
 	gpos[2] = 1. - gpos[0]*gpos[0] - gpos[1]*gpos[1];
 	gpos[2] = sqrt(gpos[2]*(gpos[2]>0));

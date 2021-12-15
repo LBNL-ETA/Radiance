@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.6 2021/02/11 03:05:34 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.7 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.6 2021/02/11 03:05:34 greg E
 
 #define _USE_MATH_DEFINES
 #include "rtio.h"
+#include "fvect.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
@@ -38,8 +39,6 @@ typedef struct {
 	INTERP2		*ip2;		/* 2-D interpolatiing function */
 	float		*va;		/* corresponding value array */
 } PGINTERP;
-
-extern void		SDdisk2square(double sq[2], double diskx, double disky);
 
 char			*progname;	/* global argv[0] */
 
@@ -130,7 +129,7 @@ run_subprocess(void)
 
 /* Compute square location from normalized input/output vector */
 static void
-sq_from_ang(double sq[2], double theta, double phi)
+sq_from_ang(RREAL sq[2], double theta, double phi)
 {
 	double	vec[3];
 	double	norm;
@@ -141,14 +140,14 @@ sq_from_ang(double sq[2], double theta, double phi)
 	vec[2] = sqrt(1. - vec[2]*vec[2]);
 	norm = 1./sqrt(1. + vec[2]);
 
-	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
+	disk2square(sq, vec[0]*norm, vec[1]*norm);
 }
 
 /* Compute quantized grid position from normalized input/output vector */
 static void
 pos_from_ang(int gp[2], double theta, double phi)
 {
-	double	sq[2];
+	RREAL	sq[2];
 
 	sq_from_ang(sq, theta, phi);
 	gp[0] = (int)(sq[0]*ANGRES);

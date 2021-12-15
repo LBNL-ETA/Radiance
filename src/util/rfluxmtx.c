@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.53 2020/09/09 21:28:19 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.54 2021/12/15 01:38:50 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -740,8 +740,7 @@ sample_uniform(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
 	double	samp3[3];
-	double	duvw[3];
-	FVECT	orig_dir[2];
+	FVECT	duvw, orig_dir[2];
 	int	i;
 
 	if (fp == NULL)			/* just requesting number of bins? */
@@ -749,7 +748,7 @@ sample_uniform(PARAMS *p, int b, FILE *fp)
 
 	while (n--) {			/* stratified hemisphere sampling */
 		SDmultiSamp(samp3, 3, (n+frandom())/sampcnt);
-		SDsquare2disk(duvw, samp3[1], samp3[2]);
+		square2disk(duvw, samp3[1], samp3[2]);
 		duvw[2] = -sqrt(1. - duvw[0]*duvw[0] - duvw[1]*duvw[1]);
 		for (i = 3; i--; )
 			orig_dir[1][i] = duvw[0]*p->udir[i] +
@@ -769,8 +768,7 @@ sample_shirchiu(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
 	double	samp3[3];
-	double	duvw[3];
-	FVECT	orig_dir[2];
+	FVECT	duvw, orig_dir[2];
 	int	i;
 
 	if (fp == NULL)			/* just requesting number of bins? */
@@ -778,7 +776,7 @@ sample_shirchiu(PARAMS *p, int b, FILE *fp)
 
 	while (n--) {			/* stratified sampling */
 		SDmultiSamp(samp3, 3, (n+frandom())/sampcnt);
-		SDsquare2disk(duvw, (b/p->hsiz + samp3[1])/curparams.hsiz,
+		square2disk(duvw, (b/p->hsiz + samp3[1])/curparams.hsiz,
 				(b%p->hsiz + samp3[2])/curparams.hsiz);
 		duvw[2] = sqrt(1. - duvw[0]*duvw[0] - duvw[1]*duvw[1]);
 		for (i = 3; i--; )
