@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: disk2square.c,v 3.5 2021/12/15 01:38:50 greg Exp $";
+static const char RCSid[] = "$Id: disk2square.c,v 3.6 2021/12/15 01:39:52 greg Exp $";
 #endif
 /*
  *  Disk2Square.c
@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id: disk2square.c,v 3.5 2021/12/15 01:38:50 greg E
 
 #define	_USE_MATH_DEFINES
 #include <math.h>
+#include "fvect.h"
 
 /*
  This transforms points on [0,1]^2 to points on unit disk centered at
