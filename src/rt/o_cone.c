@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.10 2021/01/31 18:08:04 greg Exp $";
+static const char RCSid[] = "$Id: o_cone.c,v 2.11 2021/12/16 21:37:21 greg Exp $";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -85,6 +85,8 @@ o_cone(			/* intersect ray with cone */
 		VSUM(r->rop, r->rorg, r->rdir, r->rot);
 		VCOPY(r->ron, co->ad);
 		r->rod = -rdx[2];
+		r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
+		r->uv[0] = r->uv[1] = 0.0;
 		r->rox = NULL;
 		return(1);				/* good */
 	}
