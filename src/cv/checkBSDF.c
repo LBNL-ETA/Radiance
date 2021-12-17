@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.3 2021/12/17 20:51:55 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.4 2021/12/17 23:49:13 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -251,13 +251,13 @@ checkXML(char *fname)
 	printf("Color: %d\n", (flags & F_IN_COLOR) != 0);
 	printf("Has Geometry: %d\n", (myBSDF.mgf != NULL));
 	puts("Component\tLambertian XYZ %\tMax. Dir\tMin. Angle");
-	detailComponent("Internal Refl", &myBSDF.rLambFront, myBSDF.rf);
-	detailComponent("External Refl", &myBSDF.rLambBack, myBSDF.rb);
+	detailComponent("Interior Refl", &myBSDF.rLambFront, myBSDF.rf);
+	detailComponent("Exterior Refl", &myBSDF.rLambBack, myBSDF.rb);
 	detailComponent("Int->Ext Trans", &myBSDF.tLambFront, myBSDF.tf);
 	detailComponent("Ext->Int Trans", &myBSDF.tLambBack, myBSDF.tb);
 	puts("Component\tReciprocity Error (min avg max %)");
-	checkReciprocity("Front Refl", 1, 1, &myBSDF, flags);
-	checkReciprocity("Back Refl", -1, -1, &myBSDF, flags);
+	checkReciprocity("Interior Refl", 1, 1, &myBSDF, flags);
+	checkReciprocity("Exterior Refl", -1, -1, &myBSDF, flags);
 	checkReciprocity("Transmission", -1, 1, &myBSDF, flags);
 	SDfreeBSDF(&myBSDF);
 	return 1;
