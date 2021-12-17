@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.43 2021/12/07 23:49:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.44 2021/12/17 20:51:55 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -171,7 +171,7 @@ fo_getndx(const FVECT v, void *p)
 
 	if (v == NULL)
 		return -1;
-	if ((v[2] < 0) | (v[2] > 1.))
+	if ((v[2] < 0) | (v[2] > 1.00001))
 		return -1;
 	pol = 180.0/M_PI*Acos(v[2]);
 	azi = 180.0/M_PI*atan2(v[1], v[0]);

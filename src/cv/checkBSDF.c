@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.2 2021/12/15 02:13:27 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.3 2021/12/17 20:51:55 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -177,9 +177,15 @@ checkReciprocity(const char *nm, const int side1, const int side2,
 	if (fl & F_MATRIX) {			/* special case for matrix BSDF */
 		const SDMat	*m = (const SDMat *)df->comp[0].dist;
 		int		i = m->ninc;
+		double		diffuseY;
 		FVECT		vin, vout;
 		double		fwdY;
 		SDValue		rev;
+		if (side1 == side2)
+			diffuseY = (side1 > 0) ? bsdf->rLambFront.cieY : bsdf->rLambBack.cieY;
+		else
+			diffuseY = (side1 > 0) ? bsdf->tLambFront.cieY : bsdf->tLambBack.cieY;
+		diffuseY /= M_PI;
 		while (i--) {
 		    int	o = m->nout;
 		    if (!mBSDF_incvec(vin, m, i+.5))
@@ -187,7 +193,7 @@ checkReciprocity(const char *nm, const int side1, const int side2,
 		    while (o--) {
 			if (!mBSDF_outvec(vout, m, o+.5))
 				continue;
-			fwdY = mBSDF_value(m, o, i);
+			fwdY = mBSDF_value(m, o, i) + diffuseY;
 			if (fwdY <= 1e-4)
 				continue;
 			if (SDreportError( SDevalBSDF(&rev, vout, vin, bsdf), stderr))
@@ -196,7 +202,7 @@ checkReciprocity(const char *nm, const int side1, const int side2,
 				addStat(&myStats, rdiff(fwdY, rev.cieY));
 		    }
 		}
-	} if (fl & F_ISOTROPIC) {		/* isotropic case */
+	} else if (fl & F_ISOTROPIC) {		/* isotropic case */
 		const double	stepSize = sqrt(df->minProjSA/M_PI);
 		FVECT		vin;
 		vin[1] = 0;
