@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.52 2021/05/26 17:50:26 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.53 2022/01/07 23:01:01 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -321,7 +321,9 @@ int	len
 				cmon[BLU] += d;
 			}
 		} else if (tms->flags & TM_F_BW) {
-			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
+			int	j = 3;
+			while (j--) cs[3*i+j] = tms->cdiv[j]/(TM_BRES>>8);
+			continue;
 		}
 		d = tms->clf[RED]*cmon[RED]/lum;
 		cs[3*i  ] = d>=.999f ? 255 : gamtab[(int)(1024.f*d)];

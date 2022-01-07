@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.35 2020/10/13 00:08:46 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.36 2022/01/07 23:01:01 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -122,7 +122,9 @@ int	len
 				}
 			}
 		} else if (tms->flags & TM_F_BW) {
-			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
+			for (j = 3; j--; )
+				cs[3*i+j] = tms->cdiv[j]/(TM_BRES>>8);
+			continue;
 		} else {
 			for (j = 3; j--; )
 				cmon[j] *= (cmon[j] > 0);

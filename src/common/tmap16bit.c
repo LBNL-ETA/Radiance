@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.10 2011/05/20 02:06:38 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.11 2022/01/07 23:01:01 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -257,7 +257,9 @@ tmCvRGB48(TMstruct *tms, TMbright *ls, uby8 *cs,
 				cmon[BLU] = slum + pf*cmon[BLU];
 			}
 		} else if (tms->flags & TM_F_BW) {
-			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
+			int	j = 3;
+			while (j--) cs[3*i+j] = tms->cdiv[j]/(TM_BRES>>8);
+			continue;
 		}
 		bi = (double)MONGAMTSZ*tms->clf[RED]*cmon[RED]/lum;
 		cs[3*i  ] = bi>=MONGAMTSZ ? 255 : mongamtab[bi];
