@@ -1,4 +1,4 @@
-/* RCSid $Id: view.h,v 2.21 2021/12/03 18:10:48 greg Exp $ */
+/* RCSid $Id: view.h,v 2.22 2022/01/12 21:07:39 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
@@ -59,6 +59,7 @@ extern VIEW  stdview;
 #define VL_BEYOND	0x8		/* point is beyond aft clipping plane */
 
 extern char	*setview(VIEW *v);
+extern char	*cropview(VIEW *v, double x0, double y0, double x1, double y1);
 extern void	normaspect(double va, double *ap, int *xp, int *yp);
 extern double	viewray(FVECT orig, FVECT direc, VIEW *v, double x, double y);
 extern int	jitteraperture(FVECT orig, FVECT direc, VIEW *v, double dia);

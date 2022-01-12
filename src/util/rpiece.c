@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.58 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.59 2022/01/12 21:07:39 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -298,12 +298,12 @@ init(			/* set up output file and start rpict */
 		fprintf(fp, "SOFTWARE= %s\n", VersionID);
 		fputs(VIEWSTR, fp);
 		fprintview(&ourview, fp);
-		putc('\n', fp);
+		fputc('\n', fp);
 		fputnow(fp);
 		if (pixaspect < .99 || pixaspect > 1.01)
 			fputaspect(pixaspect, fp);
 		fputformat(COLRFMT, fp);
-		putc('\n', fp);
+		fputc('\n', fp);
 		fprtresolu(hres*hmult, vres*vmult, fp);
 	} else if ((outfd = open(outfile, O_RDWR)) >= 0) {
 		dolock(outfd, F_RDLCK);
@@ -461,57 +461,21 @@ cleanup(			/* close rpict process and clean up */
 static void
 rpiece(void)			/* render picture piece by piece */
 {
+	char  *err;
 	VIEW  pview;
 	int  xorg, yorg;
-					/* compute view parameters */
-	pview = ourview;
-	switch (ourview.type) {
-	case VT_PER:
-		pview.horiz = (2.*180./PI)*atan(
-				tan((PI/180./2.)*ourview.horiz)/hmult );
-		pview.vert = (2.*180./PI)*atan(
-				tan((PI/180./2.)*ourview.vert)/vmult );
-		break;
-	case VT_PAR:
-	case VT_ANG:
-		pview.horiz = ourview.horiz / hmult;
-		pview.vert = ourview.vert / vmult;
-		break;
-	case VT_CYL:
-		pview.horiz = ourview.horiz / hmult;
-		pview.vert = (2.*180./PI)*atan(
-				tan((PI/180./2.)*ourview.vert)/vmult );
-		break;
-	case VT_HEM:
-		pview.horiz = (2.*180./PI)*asin(
-				sin((PI/180./2.)*ourview.horiz)/hmult );
-		pview.vert = (2.*180./PI)*asin(
-				sin((PI/180./2.)*ourview.vert)/vmult );
-		break;
-	case VT_PLS:
-		pview.horiz = sin((PI/180./2.)*ourview.horiz) /
-				(1.0 + cos((PI/180./2.)*ourview.horiz)) / hmult;
-		pview.horiz *= pview.horiz;
-		pview.horiz = (2.*180./PI)*acos((1. - pview.horiz) /
-						(1. + pview.horiz));
-		pview.vert = sin((PI/180./2.)*ourview.vert) /
-				(1.0 + cos((PI/180./2.)*ourview.vert)) / vmult;
-		pview.vert *= pview.vert;
-		pview.vert = (2.*180./PI)*acos((1. - pview.vert) /
-						(1. + pview.vert));
-		break;
-	default:
-		fprintf(stderr, "%s: unknown view type '-vt%c'\n",
-				progname, ourview.type);
-		exit(cleanup(1));
-	}
 					/* render each piece */
 	while (nextpiece(&xorg, &yorg)) {
-		pview.hoff = ourview.hoff*hmult + xorg - 0.5*(hmult-1);
-		pview.voff = ourview.voff*vmult + yorg - 0.5*(vmult-1);
+		pview = ourview;
+		err = cropview(&pview, (double)xorg/hmult, (double)yorg/vmult,
+					(xorg+1.)/hmult, (yorg+1.)/vmult);
+		if (err != NULL) {
+			fprintf(stderr, "%s: %s\n", progname, err);
+			exit(cleanup(1));
+		}
 		fputs(VIEWSTR, torp);
 		fprintview(&pview, torp);
-		putc('\n', torp);
+		fputc('\n', torp);
 		fflush(torp);			/* assigns piece to rpict */
 		putpiece(xorg, yorg);		/* place piece in output */
 	}

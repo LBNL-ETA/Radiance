@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.52 2021/02/12 00:47:08 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.53 2022/01/12 21:07:39 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -63,8 +63,8 @@ VIEW  *v
 			return(ill_horiz);
 		if (v->vert >= 180.0-FTINY)
 			return(ill_vert);
-		v->hn2 = 2.0 * tan(v->horiz*(PI/180.0/2.0));
-		v->vn2 = 2.0 * tan(v->vert*(PI/180.0/2.0));
+		v->hn2 = 2.0 * tan(v->horiz*(PI/360.));
+		v->vn2 = 2.0 * tan(v->vert*(PI/360.));
 		break;
 	case VT_CYL:				/* cylindrical panorama */
 		if (v->horiz > 360.0+FTINY)
@@ -72,7 +72,7 @@ VIEW  *v
 		if (v->vert >= 180.0-FTINY)
 			return(ill_vert);
 		v->hn2 = v->horiz * (PI/180.0);
-		v->vn2 = 2.0 * tan(v->vert*(PI/180.0/2.0));
+		v->vn2 = 2.0 * tan(v->vert*(PI/360.));
 		break;
 	case VT_ANG:				/* angular fisheye */
 		if (v->horiz > 360.0+FTINY)
@@ -87,18 +87,18 @@ VIEW  *v
 			return(ill_horiz);
 		if (v->vert > 180.0+FTINY)
 			return(ill_vert);
-		v->hn2 = 2.0 * sin(v->horiz*(PI/180.0/2.0));
-		v->vn2 = 2.0 * sin(v->vert*(PI/180.0/2.0));
+		v->hn2 = 2.0 * sin(v->horiz*(PI/360.));
+		v->vn2 = 2.0 * sin(v->vert*(PI/360.));
 		break;
 	case VT_PLS:				/* planispheric fisheye */
 		if (v->horiz >= 360.0-FTINY)
 			return(ill_horiz);
 		if (v->vert >= 360.0-FTINY)
 			return(ill_vert);
-		v->hn2 = 2.*sin(v->horiz*(PI/180.0/2.0)) /
-				(1.0 + cos(v->horiz*(PI/180.0/2.0)));
-		v->vn2 = 2.*sin(v->vert*(PI/180.0/2.0)) /
-				(1.0 + cos(v->vert*(PI/180.0/2.0)));
+		v->hn2 = 2.*sin(v->horiz*(PI/360.)) /
+				(1.0 + cos(v->horiz*(PI/360.)));
+		v->vn2 = 2.*sin(v->vert*(PI/360.)) /
+				(1.0 + cos(v->vert*(PI/360.)));
 		break;
 	default:
 		return("unknown view type");
@@ -117,6 +117,80 @@ VIEW  *v
 	v->vn2 *= v->vn2;
 
 	return(NULL);
+}
+
+
+char *
+cropview(			/* crop a view to the indicated bounds */
+VIEW *v,
+double x0,
+double y0,
+double x1,
+double y1
+)
+{
+	static char	ill_crop[] = "zero crop area";
+	static char	ill_hemi[] = "illegal crop for hemispherical view";
+	double	d;
+					/* order crop extrema */
+	if (x0 > x1) { d=x0; x0=x1; x1=d; }
+	if (y0 > y1) { d=y0; y0=y1; y1=d; }
+
+	d = x1 - x0;
+	if (d == .0)
+		return(ill_crop);
+	if (!FABSEQ(d, 1.))		/* adjust horizontal size? */
+		switch (v->type) {
+		case VT_PER:
+			v->horiz = 360./PI*atan( d*tan(PI/360.*v->horiz) );
+			break;
+		case VT_PAR:
+		case VT_ANG:
+		case VT_CYL:
+			v->horiz *= d;
+			break;
+		case VT_HEM:
+			d *= sin(PI/360.*v->horiz);
+			if (d > 1.)
+				return(ill_hemi);
+			v->horiz = 360./PI*asin( d );
+			break;
+		case VT_PLS:
+			d *= sin(PI/360.*v->horiz) /
+					(1. + cos(PI/360.*v->horiz));
+			v->horiz = 360./PI*acos( (1. - d*d) / (1. + d*d) );
+			break;
+		}
+	d = y1 - y0;
+	if (d == .0)
+		return(ill_crop);
+	if (!FABSEQ(d, 1.))		/* adjust vertical size? */
+		switch (v->type) {
+		case VT_PER:
+		case VT_CYL:
+			v->vert = 360./PI*atan( d*tan(PI/360.*v->vert) );
+			break;
+		case VT_PAR:
+		case VT_ANG:
+			v->vert *= d;
+			break;
+		case VT_HEM:
+			d *= sin(PI/360.*v->vert);
+			if (d > 1.)
+				return(ill_hemi);
+			v->vert = 360./PI*asin( d );
+			break;
+		case VT_PLS:
+			d *= sin(PI/360.*v->vert) /
+					(1. + cos(PI/360.*v->vert));
+			v->vert = 360./PI*acos( (1. - d*d) / (1. + d*d) );
+			break;
+		}
+					/* fix offsets */
+	v->hoff = ((x0 + x1)*.5 - .5 + v->hoff) / (x1 - x0);
+	v->voff = ((y0 + y1)*.5 - .5 + v->voff) / (y1 - y0);
+
+	return(setview(v));		/* final error checks & set-up */
 }
 
 
