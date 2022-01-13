@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.53 2022/01/12 21:07:39 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.54 2022/01/13 00:26:09 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -129,17 +129,17 @@ double x1,
 double y1
 )
 {
-	static char	ill_crop[] = "zero crop area";
 	static char	ill_hemi[] = "illegal crop for hemispherical view";
 	double	d;
 					/* order crop extrema */
 	if (x0 > x1) { d=x0; x0=x1; x1=d; }
 	if (y0 > y1) { d=y0; y0=y1; y1=d; }
 
-	d = x1 - x0;
-	if (d == .0)
-		return(ill_crop);
-	if (!FABSEQ(d, 1.))		/* adjust horizontal size? */
+	if ((x1-x0 <= FTINY) | (y1-y0 <= FTINY))
+		return("zero crop area");
+
+	d = x1 - x0;			/* adjust horizontal size? */
+	if (!FABSEQ(d, 1.))
 		switch (v->type) {
 		case VT_PER:
 			v->horiz = 360./PI*atan( d*tan(PI/360.*v->horiz) );
@@ -161,10 +161,9 @@ double y1
 			v->horiz = 360./PI*acos( (1. - d*d) / (1. + d*d) );
 			break;
 		}
-	d = y1 - y0;
-	if (d == .0)
-		return(ill_crop);
-	if (!FABSEQ(d, 1.))		/* adjust vertical size? */
+
+	d = y1 - y0;			/* adjust vertical size? */
+	if (!FABSEQ(d, 1.))
 		switch (v->type) {
 		case VT_PER:
 		case VT_CYL:
@@ -186,7 +185,7 @@ double y1
 			v->vert = 360./PI*acos( (1. - d*d) / (1. + d*d) );
 			break;
 		}
-					/* fix offsets */
+					/* adjust offsets */
 	v->hoff = ((x0 + x1)*.5 - .5 + v->hoff) / (x1 - x0);
 	v->voff = ((y0 + y1)*.5 - .5 + v->voff) / (y1 - y0);
 
