@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.40 2020/06/19 22:33:45 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.41 2022/01/15 02:00:21 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -198,7 +198,7 @@ epfree(			/* free a parse tree */
 
     }
 
-    efree((char *)epar);
+    efree(epar);
 }
 
 				/* the following used to be a switch */
@@ -635,7 +635,7 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
 			epfree(ep3);		/* (0 * E3) or (0 / E3) */
 			ep1->sibling = NULL;
-			efree((char *)ep2);
+			efree(ep2);
 			ep2 = ep1;
 		}
 	}
@@ -666,7 +666,7 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
 			epfree(ep3);		/* (0 ^ E3) */
 			ep1->sibling = NULL;
-			efree((char *)ep2);
+			efree(ep2);
 			ep2 = ep1;
 		} else if ((ep3->type == NUM && ep3->v.num == 0) ||
 				(ep1->type == NUM && ep1->v.num == 1)) {
@@ -675,9 +675,9 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 			ep2->type = NUM;
 			ep2->v.num = 1;
 		} else if (ep3->type == NUM && ep3->v.num == 1) {
-			efree((char *)ep3);	/* (E4 ^ 1) */
+			efree(ep3);	/* (E4 ^ 1) */
 			ep1->sibling = NULL;
-			efree((char *)ep2);
+			efree(ep2);
 			ep2 = ep1;
 		}
 	}
@@ -700,7 +700,7 @@ getE4(void)			/* E4 -> ADDOP E5 */
 	}
 	if (ep2->type == UMINUS) {	/* don't generate -(-E5) */
 	    ep1 = ep2->v.kid;
-	    efree((char *)ep2);
+	    efree(ep2);
 	    return(ep1);
 	}
 	ep1 = newnode();

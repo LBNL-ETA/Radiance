@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.20 2021/05/01 00:58:18 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.21 2022/01/15 02:00:21 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -573,6 +573,7 @@ clearComments(Scene *sc)
 	while (sc->ndescr > 0)
 		freeqstr(sc->descr[--sc->ndescr]);
 	efree((char *)sc->descr);
+	sc->descr = NULL;
 	sc->ndescr = 0;
 }
 
@@ -747,7 +748,7 @@ getVertexNeighbors(Scene *sc, int vid)
 		return(NULL);
 	}
 						/* tighten array & return */
-	return((int *)erealloc((char *)varr, sizeof(int)*(varr[0]+1)));
+	return((int *)erealloc(varr, sizeof(int)*(varr[0]+1)));
 }
 
 /* Callback for growBoundingBox() */
@@ -813,14 +814,14 @@ dupScene(const Scene *osc, int flreq, int flexc)
 	for (i = 0; i < osc->ndescr; i++)
 		addComment(sc, osc->descr[i]);
 	if (osc->ngrps > 1) {
-		sc->grpname = (char **)erealloc((char *)sc->grpname,
+		sc->grpname = (char **)erealloc(sc->grpname,
 				sizeof(char *) * (osc->ngrps+(CHUNKSIZ-1)));
 		for (i = 1; i < osc->ngrps; i++)
 			sc->grpname[i] = savqstr(osc->grpname[i]);
 		sc->ngrps = osc->ngrps;
 	}
 	if (osc->nmats > 1) {
-		sc->matname = (char **)erealloc((char *)sc->matname,
+		sc->matname = (char **)erealloc(sc->matname,
 				sizeof(char *) * (osc->nmats+(CHUNKSIZ-1)));
 		for (i = 1; i < osc->nmats; i++)
 			sc->matname[i] = savqstr(osc->matname[i]);
@@ -893,14 +894,14 @@ addScene(Scene *scdst, const Scene *scsrc)
 	}
 	tex_off = scdst->ntex;		/* append texture coords */
 	if (scsrc->ntex > 0) {
-		scdst->tex = (TexCoord *)erealloc((char *)scdst->tex,
+		scdst->tex = (TexCoord *)erealloc(scdst->tex,
 			sizeof(TexCoord)*(tex_off+scsrc->ntex+(CHUNKSIZ-1)));
 		memcpy(scdst->tex+tex_off, scsrc->tex,
 				sizeof(TexCoord)*scsrc->ntex);
 	}
 	norm_off = scdst->nnorms;	/* append normals */
 	if (scsrc->nnorms > 0) {
-		scdst->norm = (Normal *)erealloc((char *)scdst->norm,
+		scdst->norm = (Normal *)erealloc(scdst->norm,
 			sizeof(Normal)*(norm_off+scsrc->nnorms+(CHUNKSIZ-1)));
 		memcpy(scdst->norm+norm_off, scsrc->norm,
 				sizeof(Normal)*scsrc->nnorms);
@@ -915,7 +916,7 @@ addScene(Scene *scdst, const Scene *scsrc)
 		if (f->nv > vllen) {
 			vlist = (VNDX *)( vlist == my_vlist ?
 				emalloc(sizeof(VNDX)*f->nv) :
-				erealloc((char *)vlist, sizeof(VNDX)*f->nv) );
+				erealloc(vlist, sizeof(VNDX)*f->nv) );
 			vllen = f->nv;
 		}
 		memset(vlist, 0xff, sizeof(VNDX)*f->nv);
@@ -930,8 +931,8 @@ addScene(Scene *scdst, const Scene *scsrc)
 		fcnt += (addFace(scdst, vlist, f->nv) != NULL);
 	}
 					/* clean up */
-	if (vlist != my_vlist) efree((char *)vlist);
-	efree((char *)vert_map);
+	if (vlist != my_vlist) efree(vlist);
+	efree(vert_map);
 	return(fcnt);
 }
 
@@ -1042,7 +1043,7 @@ deleteUnreferenced(Scene *sc)
 	}
 	if (nused == sc->nverts)
 		goto skip_pos;
-	sc->vert = (Vertex *)erealloc((char *)sc->vert,
+	sc->vert = (Vertex *)erealloc(sc->vert,
 				sizeof(Vertex)*(nused+(CHUNKSIZ-1)));
 	sc->nverts = nused;
 	for (f = sc->flist; f != NULL; f = f->next)
@@ -1068,7 +1069,7 @@ skip_pos:
 	}
 	if (nused == sc->ntex)
 		goto skip_tex;
-	sc->tex = (TexCoord *)erealloc((char *)sc->tex,
+	sc->tex = (TexCoord *)erealloc(sc->tex,
 				sizeof(TexCoord)*(nused+(CHUNKSIZ-1)));
 	sc->ntex = nused;
 	for (f = sc->flist; f != NULL; f = f->next)
@@ -1093,7 +1094,7 @@ skip_tex:
 	}
 	if (nused == sc->nnorms)
 		goto skip_norms;
-	sc->norm = (Normal *)erealloc((char *)sc->norm,
+	sc->norm = (Normal *)erealloc(sc->norm,
 				sizeof(Normal)*(nused+(CHUNKSIZ-1)));
 	sc->nnorms = nused;
 	for (f = sc->flist; f != NULL; f = f->next)
@@ -1102,7 +1103,7 @@ skip_tex:
 				f->v[i].nid = vmap[f->v[i].nid];
 skip_norms:
 						/* clean up */
-	efree((char *)vmap);
+	efree(vmap);
 }
 
 /* Free a scene */
@@ -1117,16 +1118,16 @@ freeScene(Scene *sc)
 	clearComments(sc);
 	for (i = sc->ngrps; i-- > 0; )
 		freeqstr(sc->grpname[i]);
-	efree((char *)sc->grpname);
+	efree(sc->grpname);
 	for (i = sc->nmats; i-- > 0; )
 		freeqstr(sc->matname[i]);
-	efree((char *)sc->matname);
-	efree((char *)sc->vert);
-	efree((char *)sc->tex);
-	efree((char *)sc->norm);
+	efree(sc->matname);
+	efree(sc->vert);
+	efree(sc->tex);
+	efree(sc->norm);
 	while ((f = sc->flist) != NULL) {
 		sc->flist = f->next;
-		efree((char *)f);
+		efree(f);
 	}
-	efree((char *)sc);
+	efree(sc);
 }

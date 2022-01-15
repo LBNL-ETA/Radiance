@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.8 2021/02/10 17:57:28 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.9 2022/01/15 02:00:21 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -160,7 +160,7 @@ add_face(Scene *sc, const VNDX ondx, int ac, char *av[])
 	if (i < 0)				/* create face if indices OK */
 		f = addFace(sc, varr, ac);
 	if (varr != vdef)
-		efree((char *)varr);
+		efree(varr);
 	return(f != NULL);
 }
 

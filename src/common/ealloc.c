@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.9 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.10 2022/01/15 02:00:21 greg Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -14,10 +14,10 @@ static const char	RCSid[] = "$Id: ealloc.c,v 2.9 2004/03/28 20:33:12 schorsch Ex
 #include "rterror.h"
 #include "rtmisc.h"
 
-extern void *	/* return pointer to n uninitialized bytes */
+void *			/* return pointer to n uninitialized bytes */
 emalloc(size_t  n)
 {
-	register void  *cp;
+	void  *cp;
 	
 	if (n == 0)
 		return(NULL);
@@ -31,28 +31,25 @@ emalloc(size_t  n)
 }
 
 
-extern void *			/* return pointer to initialized memory */
-ecalloc(register size_t ne, size_t es)
+void *			/* return pointer to initialized memory */
+ecalloc(size_t ne, size_t es)
 {
-	register char  *cp;
+	void  *cp;
 	
-	ne *= es;
-	if (ne == 0)
+	if (!ne | !es)
 		return(NULL);
 
-	if ((cp = malloc(ne)) == NULL) {
-		eputs("Out of memory in ecalloc\n");
-		quit(1);
-	}
-	cp += ne;
-	while (ne--)
-		*--cp = 0;
-	return(cp);
+	if ((cp = ecalloc(ne, es)) != NULL)
+		return(cp);
+
+	eputs("Out of memory in ecalloc\n");
+	quit(1);
+	return(NULL); /* pro forma return */
 }
 
 
-extern void *			/* reallocate cp to size n */
-erealloc(register void  *cp, size_t  n)
+void *			/* reallocate cp to size n */
+erealloc(void  *cp, size_t  n)
 {
 	if (n == 0) {
 		if (cp != NULL)
@@ -74,8 +71,9 @@ erealloc(register void  *cp, size_t  n)
 }
 
 
-extern void			/* free memory allocated by above */
-efree(void  *cp)
+void			/* free memory allocated by above */
+efree(void *cp)
 {
-	free(cp);
+	if (cp)
+		free(cp);
 }
