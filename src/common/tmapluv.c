@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.16 2011/05/20 02:06:38 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.17 2022/01/15 16:57:46 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -23,17 +23,17 @@ static const char	RCSid[] = "$Id: tmapluv.c,v 3.16 2011/05/20 02:06:38 greg Exp 
 #define isuvset(p,uv)		uvflgop(p,uv,&)
 #define setuv(p,uv)		uvflgop(p,uv,|=)
 #define clruv(p,uv)		uvflgop(p,uv,&=~)
-#define clruvall(p)		memset((MEM_PTR)(p)->rgbflg,'\0',sizeof((p)->rgbflg))
+#define clruvall(p)		memset((p)->rgbflg,'\0',sizeof((p)->rgbflg))
 
 #ifdef NOPROTO
-static MEM_PTR	luv32Init();
+static void *	luv32Init();
 static void	luv32NewSpace();
-static MEM_PTR	luv24Init();
+static void *	luv24Init();
 static void	luv24NewSpace();
 #else
-static MEM_PTR	luv32Init(TMstruct *);
+static void *	luv32Init(TMstruct *);
 static void	luv32NewSpace(TMstruct *);
-static MEM_PTR	luv24Init(TMstruct *);
+static void *	luv24Init(TMstruct *);
 static void	luv24NewSpace(TMstruct *);
 #endif
 
@@ -68,7 +68,7 @@ static int	uv14neu = -1;		/* neutral index for 14-bit (u',v') */
 static void
 uv2rgb(rgb, tms, uvp)			/* compute RGB from uv coordinate */
 uby8	rgb[3];
-register TMstruct	*tms;
+TMstruct	*tms;
 double	uvp[2];
 {	/* Should check that tms->inppri==TM_XYZPRIM beforehand... */
 	double	d, x, y;
@@ -99,7 +99,7 @@ TMbright	li;		/* encoded world luminance */
 double	uvp[2];			/* world (u',v') -> returned desaturated */
 {
 	double	scotrat;
-	register double	d;
+	double	d;
 
 	if (li >= BMESUPPER)
 		return(li);
@@ -134,8 +134,8 @@ int	len
 {
 	static const char	funcName[] = "tmCvLuv32";
 	double	uvp[2];
-	register LUV32DATA	*ld;
-	register int	i, j;
+	LUV32DATA	*ld;
+	int	i, j;
 					/* check arguments */
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
@@ -196,8 +196,8 @@ int	len
 {
 	char	funcName[] = "tmCvLuv24";
 	double	uvp[2];
-	register LUV24DATA	*ld;
-	register int	i, j;
+	LUV24DATA	*ld;
+	int	i, j;
 					/* check arguments */
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
@@ -259,7 +259,7 @@ int	len
 	static const char	funcName[] = "tmCvL16";
 	static double	lastsf;
 	static int	offset;
-	register int	i;
+	int	i;
 					/* check arguments */
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
@@ -285,7 +285,7 @@ static void
 luv32NewSpace(tms)		/* initialize 32-bit LogLuv color space */
 TMstruct	*tms;
 {
-	register LUV32DATA	*ld;
+	LUV32DATA	*ld;
 
 	if (tms->inppri != TM_XYZPRIM) {		/* panic time! */
 		fputs("Improper input color space in luv32NewSpace!\n", stderr);
@@ -297,18 +297,18 @@ TMstruct	*tms;
 }
 
 
-static MEM_PTR
+static void *
 luv32Init(tms)			/* allocate data for 32-bit LogLuv decoder */
 TMstruct	*tms;
 {
-	register LUV32DATA	*ld;
+	LUV32DATA	*ld;
 
 	ld = (LUV32DATA *)malloc(sizeof(LUV32DATA));
 	if (ld == NULL)
 		return(NULL);
-	tms->pd[luv32Reg] = (MEM_PTR)ld;
+	tms->pd[luv32Reg] = (void *)ld;
 	luv32NewSpace(tms);
-	return((MEM_PTR)ld);
+	return((void *)ld);
 }
 
 
@@ -316,7 +316,7 @@ static void
 luv24NewSpace(tms)		/* initialize 24-bit LogLuv color space */
 TMstruct *tms;
 {
-	register LUV24DATA	*ld;
+	LUV24DATA	*ld;
 
 	if (tms->inppri != TM_XYZPRIM) {		/* panic time! */
 		fputs("Improper input color space in luv24NewSpace!\n", stderr);
@@ -328,18 +328,18 @@ TMstruct *tms;
 }
 
 
-static MEM_PTR
+static void *
 luv24Init(tms)			/* allocate data for 24-bit LogLuv decoder */
 TMstruct	*tms;
 {
-	register LUV24DATA	*ld;
+	LUV24DATA	*ld;
 
 	ld = (LUV24DATA *)malloc(sizeof(LUV24DATA));
 	if (ld == NULL)
 		return(NULL);
-	tms->pd[luv24Reg] = (MEM_PTR)ld;
+	tms->pd[luv24Reg] = (void *)ld;
 	if (uv14neu < 0)		/* initialize neutral color index */
 		uv14neu = uv_encode(U_NEU, V_NEU, SGILOGENCODE_NODITHER);
 	luv24NewSpace(tms);
-	return((MEM_PTR)ld);
+	return((void *)ld);
 }

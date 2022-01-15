@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.16 2021/04/23 18:31:45 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.17 2022/01/15 16:57:46 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -216,7 +216,7 @@ extern void     efree(char *cp);
 
 #define chunk_alloc(typ, arr, nold) \
 		((nold)&(CHUNKSIZ-1) ? (arr) : \
-		(typ *)erealloc((char *)(arr), sizeof(typ)*((nold)+CHUNKSIZ)))
+		(typ *)erealloc(arr, sizeof(typ)*((nold)+CHUNKSIZ)))
 
 #ifdef __cplusplus
 }

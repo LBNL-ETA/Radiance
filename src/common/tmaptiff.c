@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.11 2011/06/28 21:11:04 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.12 2022/01/15 16:57:46 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -88,7 +88,7 @@ tmLoadTIFF(TMstruct *tms, TMbright **lpp, uby8 **cpp,
 	float	*fa;
 	TIFF	*tif;
 	int	err;
-	union {uint16 *w; uint32 *l; float *f; MEM_PTR p;} sl;
+	union {uint16 *w; uint32 *l; float *f; void *p;} sl;
 	uint32	width, height;
 	int	tcase;
 	double	stonits;
@@ -231,11 +231,11 @@ done:					/* clean up */
 		free(sl.p);
 	if (err != TM_E_OK) {		/* free buffers on error */
 		if (*lpp != NULL)
-			free((MEM_PTR)*lpp);
+			free(*lpp);
 		*lpp = NULL;
 		if (cpp != TM_NOCHROMP) {
 			if (*cpp != TM_NOCHROM)
-				free((MEM_PTR)*cpp);
+				free(*cpp);
 			*cpp = NULL;
 		}
 		*xp = *yp = 0;
@@ -282,7 +282,7 @@ tmMapTIFF(uby8 **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	if (cp == TM_NOCHROM) {
 		*psp = (uby8 *)malloc(*xp * *yp * sizeof(uby8));
 		if (*psp == NULL) {
-			free((MEM_PTR)lp);
+			free(lp);
 			tmDone(tms);
 			returnErr(TM_E_NOMEM);
 		}
@@ -299,10 +299,10 @@ tmMapTIFF(uby8 **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	err = tmMapPixels(tms, *psp, lp, cp, *xp * *yp);
 
 done:					/* clean up */
-	free((MEM_PTR)lp);
+	free(lp);
 	tmDone(tms);
 	if (err != TM_E_OK) {		/* free memory on error */
-		free((MEM_PTR)*psp);
+		free(*psp);
 		*psp = NULL;
 		*xp = *yp = 0;
 		returnErr(err);

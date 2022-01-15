@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.53 2022/01/07 23:01:01 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.54 2022/01/15 16:57:46 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -95,7 +95,7 @@ tmSetSpace(			/* set input color space for conversions */
 TMstruct	*tms,
 RGBPRIMP	pri,
 double	sf,
-MEM_PTR	dat
+void	*dat
 )
 {
 	static const char funcName[] = "tmSetSpace";

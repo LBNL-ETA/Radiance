@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.36 2022/01/07 23:01:01 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.37 2022/01/15 16:57:46 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -28,7 +28,7 @@ typedef struct {
 	TMbright	inpsfb;		/* encoded tm->inpsf */
 } COLRDATA;
 
-static MEM_PTR	colrInit(TMstruct *);
+static void *	colrInit(TMstruct *);
 static void	colrNewSpace(TMstruct *);
 static gethfunc headline;
 
@@ -254,12 +254,12 @@ done:						/* clean up */
 	if (fp == NULL)
 		fclose(inpf);
 	if (scanin != NULL)
-		free((MEM_PTR)scanin);
+		free(scanin);
 	if (err != TM_E_OK) {
 		if (*lpp != NULL)
-			free((MEM_PTR)*lpp);
+			free(*lpp);
 		if (cpp != TM_NOCHROMP && *cpp != NULL)
-			free((MEM_PTR)*cpp);
+			free(*cpp);
 		returnErr(err);
 	}
 	returnOK;
@@ -331,8 +331,8 @@ char	*fname;
 	for (y = 0; y < *yp; y++) {
 		if (freadcolrs(scan, *xp, infp) < 0) {
 			pclose(infp);
-			free((MEM_PTR)scan);
-			free((MEM_PTR)*psp);
+			free(scan);
+			free(*psp);
 			*psp = NULL;
 			returnErr(TM_E_BADFILE);
 		}
@@ -347,7 +347,7 @@ char	*fname;
 				*rp++ = scan[x][BLU];
 			}
 	}
-	free((MEM_PTR)scan);
+	free(scan);
 	pclose(infp);
 	returnOK;
 }
@@ -398,7 +398,7 @@ FILE	*fp;
 	if (flags & TM_F_BW) {
 		*psp = (uby8 *)malloc(sizeof(uby8) * *xp * *yp);
 		if (*psp == NULL) {
-			free((MEM_PTR)lp);
+			free(lp);
 			tmDone(tms);
 			returnErr(TM_E_NOMEM);
 		}
@@ -416,10 +416,10 @@ FILE	*fp;
 	err = tmMapPixels(tms, *psp, lp, cp, *xp * *yp);
 
 done:						/* clean up */
-	free((MEM_PTR)lp);
+	free(lp);
 	tmDone(tms);
 	if (err != TM_E_OK) {			/* free memory on error */
-		free((MEM_PTR)*psp);
+		free(*psp);
 		*psp = NULL;
 		returnErr(err);
 	}
@@ -447,7 +447,7 @@ TMstruct	*tms;
 }
 
 
-static MEM_PTR
+static void *
 colrInit(tms)			/* initialize private data for tone mapping */
 TMstruct	*tms;
 {
@@ -457,11 +457,11 @@ TMstruct	*tms;
 	cd = (COLRDATA *)malloc(sizeof(COLRDATA));
 	if (cd == NULL)
 		return(NULL);
-	tms->pd[colrReg] = (MEM_PTR)cd;
+	tms->pd[colrReg] = (void *)cd;
 					/* compute gamma table */
 	for (i = GAMTSZ; i--; )
 		cd->gamb[i] = 256.*pow((i+.5)/GAMTSZ, 1./tms->mongam);
 					/* compute color and scale factors */
 	colrNewSpace(tms);
-	return((MEM_PTR)cd);
+	return((void *)cd);
 }

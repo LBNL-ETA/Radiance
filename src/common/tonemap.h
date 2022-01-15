@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.31 2021/03/18 16:56:03 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.32 2022/01/15 16:57:46 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -63,9 +63,6 @@ extern "C" {
 
 /****    Global Data Types and Structures    ****/
 
-#ifndef	MEM_PTR
-#define	MEM_PTR		void *
-#endif
 #ifndef HIST_TYP
 #define HIST_TYP	unsigned long
 #endif
@@ -86,22 +83,22 @@ typedef struct {
 	int		cdiv[3];	/* computed color divisors */
 	RGBPRIMP	inppri;		/* current input primaries */
 	double		inpsf;		/* current input scalefactor */
-	MEM_PTR		inpdat;		/* current input client data */
+	void		*inpdat;	/* current input client data */
 	COLORMAT	cmat;		/* color conversion matrix */
 	TMbright	hbrmin, hbrmax;	/* histogram brightness limits */	
 	HIST_TYP	*histo;		/* input histogram */
 	TMbright	mbrmin, mbrmax;	/* mapped brightness limits */
 	TMAP_TYP	*lumap;		/* computed luminance map */
-	MEM_PTR		pd[TM_MAXPKG];	/* pointers to private data */
+	void		*pd[TM_MAXPKG];	/* pointers to private data */
 	int		lastError;	/* last error incurred */
 	const char	*lastFunc;	/* error-generating function name */
 } TMstruct;
 
 				/* conversion package functions */
 struct tmPackage {
-	MEM_PTR		(*Init)(TMstruct *tms);
+	void *		(*Init)(TMstruct *tms);
 	void		(*NewSpace)(TMstruct *tms);
-	void		(*Free)(MEM_PTR pp);
+	void		(*Free)(void *pp);
 };
 				/* our list of conversion packages */
 extern struct tmPackage	*tmPkg[TM_MAXPKG];
@@ -157,7 +154,7 @@ tmInit(int flags, RGBPRIMP monpri, double gamval);
 */
 
 extern int
-tmSetSpace(TMstruct *tms, RGBPRIMP pri, double sf, MEM_PTR dat);
+tmSetSpace(TMstruct *tms, RGBPRIMP pri, double sf, void *dat);
 /*
 	Set color primaries and scale factor for incoming scanlines.
 
