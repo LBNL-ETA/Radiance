@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.10 2022/01/15 02:00:21 greg Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.11 2022/01/19 00:59:33 greg Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -39,7 +39,7 @@ ecalloc(size_t ne, size_t es)
 	if (!ne | !es)
 		return(NULL);
 
-	if ((cp = ecalloc(ne, es)) != NULL)
+	if ((cp = calloc(ne, es)) != NULL)
 		return(cp);
 
 	eputs("Out of memory in ecalloc\n");
