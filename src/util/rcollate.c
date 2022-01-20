@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.37 2021/01/15 17:22:23 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.38 2022/01/20 17:35:03 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -87,17 +87,16 @@ load_stream(MEMLOAD *mp, FILE *fp)
 	return(mp->len > 0);
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+				/* too difficult to fix this */
+#define load_file	load_stream
+#else
 /* load a file into memory */
 static int
 load_file(MEMLOAD *mp, FILE *fp)
 {
 	int	fd;
 	off_t	skip, flen, fpos;
-
-#if defined(_WIN32) || defined(_WIN64)
-				/* too difficult to fix this */
-	return load_stream(mp, fp);
-#endif
 	if (mp == NULL)
 		return(-1);
 	mp->mapped = NULL;
@@ -112,7 +111,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 		return((int)(flen - skip));
 	mp->len = (size_t)(flen - skip);
 #ifdef MAP_FILE
-	if (mp->len > 1L<<20) {		/* map file if > 1 MByte */
+	if (mp->len >= 1L<<20) {	/* map file if >= 1 MByte */
 		mp->mapped = mmap(NULL, flen, PROT_READ, MAP_PRIVATE, fd, 0);
 		if (mp->mapped != MAP_FAILED) {
 			mp->base = (char *)mp->mapped + skip;
@@ -138,6 +137,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 	}
 	return(1);
 }
+#endif
 
 /* free a record index */
 #define free_records(rp)	free(rp)
