@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.87 2021/12/12 20:32:21 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.88 2022/01/24 17:49:32 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -436,7 +436,7 @@ sub ttree_comp {
 		}
 	}
 	if ($pctcull >= 0) {
-		my $avg = ( $dorecip && ( $ttree == 3 || "$typ" =~ /^r[fb]/ ) ) ? " -a" : "";
+		my $avg = ( $dorecip && ( $tensortree == 3 || "$typ" =~ /^r[fb]/ ) ) ? " -a" : "";
 		my $pcull = ("$spec" eq "Visible") ? $pctcull :
 						     (100 - (100-$pctcull)*.25) ;
 		if ($windoz) {
