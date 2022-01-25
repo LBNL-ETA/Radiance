@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.44 2021/12/17 20:51:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.45 2022/01/25 01:34:20 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -295,8 +295,13 @@ int
 mBSDF_color(float coef[], const SDMat *dp, int i, int o)
 {
 	C_COLOR	cxy;
+	double	d;
 
 	coef[0] = mBSDF_value(dp, o, i);
+				/* position-specific perturbation */
+	d = 2*dp->ninc/(i + .22545) + 4*dp->nout/(o + .70281);
+	d -= (int)d;
+	coef[0] *= 1. + 6e-4*(d - .5);
 	if (dp->chroma == NULL)
 		return 1;	/* grayscale */
 

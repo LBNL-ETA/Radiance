@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.53 2021/12/15 01:38:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.54 2022/01/25 01:34:20 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -515,15 +515,24 @@ SDyuv2rgb(double yval, double uprime, double vprime, float rgb[3])
 	c_toSharpRGB(&cxy, yval, rgb);
 }
 
+static double
+pfrac(double x)
+{
+	return( x - (int)x );
+}
+
 /* Query BSDF value and sample hypercube for the given vectors */
 static int
 SDqueryTre(const SDTre *sdt, float *coef,
 		const FVECT inVec, const FVECT outVec, double *hc)
 {
 	const RREAL	*vtmp;
+	double		hcube[SD_MAXDIM+1];
 	float		yval;
 	FVECT		rOutVec;
 	RREAL		gridPos[4];
+	double		d;
+	int		i;
 
 	if (sdt->stc[tt_Y] == NULL)	/* paranoia, I hope */
 		return 0;
@@ -567,10 +576,15 @@ SDqueryTre(const SDTre *sdt, float *coef,
 		disk2square(gridPos+2, outVec[0], outVec[1]);
 	} else
 		return 0;		/* should be internal error */
-					/* get BSDF value */
+
+	if (hc == NULL) hc = hcube;	/* get BSDF value */
 	yval = SDlookupTre(sdt->stc[tt_Y], gridPos, hc);
 	if (coef == NULL)		/* just getting hypercube? */
 		return 1;
+	d = 0;				/* position-specific perturbation */
+	for (i = sdt->stc[tt_Y]->ndim; i--; )
+		d += pfrac((2<<i)/(hc[i]+.01687)) - .5;
+	yval *= 1. + 1e-4*d;		/* assumes tolerance is > 0.04% */
 	if (sdt->stc[tt_u] == NULL || sdt->stc[tt_v] == NULL) {
 		*coef = yval;
 		return 1;		/* no color */
