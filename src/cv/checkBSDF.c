@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.4 2021/12/17 23:49:13 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.5 2022/01/26 16:19:30 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -236,7 +236,7 @@ checkXML(char *fname)
 	puts("=====================================================");
 	printf("File: '%s'\n", fname);
 	SDclearBSDF(&myBSDF, fname);
-	pth = getpath(fname, getrlibpath(), R_OK);
+	pth = getpath(fname, getrlibpath(), 0);
 	if (!pth) {
 		fprintf(stderr, "Cannot find file '%s'\n", fname);
 		return 0;
