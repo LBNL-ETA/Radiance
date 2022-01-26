@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.5 2022/01/26 16:19:30 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.6 2022/01/26 17:30:07 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -29,7 +29,7 @@ typedef struct {
 const SimpleStats	SSinit = {FHUGE, -FHUGE, .0, 0};
 
 				/* relative difference formula */
-#define rdiff(a,b)	((a)>(b) ? ((a)-(b))/(a) : ((b)-(a))/(b))
+#define rdiff(a,b)	((a)>(b) ? ((a)-(b))/((a)+FTINY) : ((b)-(a))/((b)+FTINY))
 
 /* Figure out BSDF type (and optionally determine if in color) */
 const char *
