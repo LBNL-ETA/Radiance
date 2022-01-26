@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.7 2018/07/20 00:50:40 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.8 2022/01/26 18:01:41 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -89,6 +89,11 @@ if (-e $rif) {			# RIF already exists?
 	}
 	die("\nTry removing '$rif' and starting again\n\n") if $?;
 	exit;
+}
+
+if ($objects[0] =~ /\.xml$/i) {
+	system "checkBSDF $objects[0]";
+	die "Bad XML input\n" if ( $? );
 }
 
 print "bsdfview: creating rad input file '$rif'\n";
