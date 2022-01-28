@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.6 2022/01/26 17:30:07 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.7 2022/01/28 02:25:28 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -80,15 +80,19 @@ getBSDFtype(const SDData *bsdf, int *flags)
 void
 detailComponent(const char *nm, const SDValue *lamb, const SDSpectralDF *df)
 {
-	printf("%s\t%4.1f %4.1f %4.1f\t\t", nm,
+	fputs(nm, stdout);
+	if (lamb->spec.flags)
+		printf("\t%4.1f %4.1f %4.1f\t\t",
 			100.*lamb->cieY*lamb->spec.cx/lamb->spec.cy,
 			100.*lamb->cieY,
 			100.*lamb->cieY*(1.f - lamb->spec.cx - lamb->spec.cy)/lamb->spec.cy);
+	else
+		fputs("\t 0    0    0\t\t", stdout);
 	if (df)
 		printf("%5.1f%%\t\t%.2f deg\n", 100.*df->maxHemi,
 				sqrt(df->minProjSA/M_PI)*(360./M_PI));
 	else
-		puts("0%\t\t180");
+		puts("  0%\t\t180 deg");
 }
 
 /* Add a value to stats */
@@ -222,7 +226,7 @@ checkReciprocity(const char *nm, const int side1, const int side2,
 		return;
 	}
 nothing2do:
-	printf("%s\t0\t0\t0\n", nm);
+	printf("%s\t  0\t  0\t  0\n", nm);
 }
 
 /* Report on the given BSDF XML file */
