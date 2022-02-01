@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.7 2022/01/28 02:25:28 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.8 2022/02/01 18:31:28 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -254,7 +254,7 @@ checkXML(char *fname)
 	printf("Type: %s\n", getBSDFtype(&myBSDF, &flags));
 	printf("Color: %d\n", (flags & F_IN_COLOR) != 0);
 	printf("Has Geometry: %d\n", (myBSDF.mgf != NULL));
-	puts("Component\tLambertian XYZ %\tMax. Dir\tMin. Angle");
+	puts("Component\tLambertian XYZ (%)\tMax. Dir\tMin. Angle");
 	detailComponent("Interior Refl", &myBSDF.rLambFront, myBSDF.rf);
 	detailComponent("Exterior Refl", &myBSDF.rLambBack, myBSDF.rb);
 	detailComponent("Int->Ext Trans", &myBSDF.tLambFront, myBSDF.tf);
