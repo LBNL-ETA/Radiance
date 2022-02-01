@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: savqstr.c,v 2.10 2012/06/01 19:17:17 greg Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.11 2022/02/01 18:43:26 greg Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -23,6 +23,10 @@ savqstr(char *s)			/* save a private string */
 	char  *cp;
 	char  *newp;
 
+	if (s == NULL)
+		return(NULL);
+	if (!*s)
+		return("");
 	for (cp = s; *cp++; )			/* compute strlen()+1 */
 		;
 	newp = (char *)malloc(cp-s);
@@ -30,7 +34,7 @@ savqstr(char *s)			/* save a private string */
 		eputs("out of memory in savqstr");
 		quit(1);
 	}
-	for (cp = newp; (*cp++ = *s++); )		/* inline strcpy() */
+	for (cp = newp; (*cp++ = *s++); )	/* inline strcpy() */
 		;
 	return(newp);				/* return new location */
 }
@@ -39,8 +43,8 @@ savqstr(char *s)			/* save a private string */
 void
 freeqstr(char *s)			/* free a private string */
 {
-	if (s != NULL)
-		free((void *)s);
+	if (s != NULL && *s)
+		free(s);
 }
 
 #else
@@ -78,13 +82,17 @@ savqstr(char *s)			/* save a private string */
 	char  *cp;
 	unsigned  n;
 
+	if (s == NULL)
+		return(NULL);
+	if (!*s)
+		return("");
 	for (cp = s; *cp++; )			/* compute strlen()+1 */
 		;
 	if ((n = cp-s) > nrem) {		/* do we need more core? */
 		bfree(curp, nrem);			/* free remnant */
 		while (n > nextalloc)
 			nextalloc <<= 1;
-		if ((curp = bmalloc(nrem=nextalloc)) == NULL) {
+		if ((curp = (char *)bmalloc(nrem=nextalloc)) == NULL) {
 			eputs("out of memory in savqstr");
 			quit(1);
 		}
@@ -103,7 +111,8 @@ savqstr(char *s)			/* save a private string */
 void
 freeqstr(char *s)		/* free a private string (not recommended) */
 {
-	bfree(s, strlen(s)+1);
+	if (s != NULL && *s)
+		bfree(s, strlen(s)+1);
 }
 
 #endif
