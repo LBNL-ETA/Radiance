@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.25 2022/02/02 00:01:48 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.26 2022/02/02 00:03:40 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -142,7 +142,7 @@ freefont(			/* release a font (free all if NULL) */
 	FONT  *fl, *f;
 	int  i;
 					/* check reference count */
-	if (fnt != NULL && (fnt->nref -= (f->nref > 0)) | retainfonts))
+	if (fnt != NULL && ((fnt->nref -= (f->nref > 0)) | retainfonts))
 		return;
 	head.next = fontlist;
 	fl = &head;
