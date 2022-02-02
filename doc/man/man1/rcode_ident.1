@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcode_ident.1,v 1.5 2021/04/28 19:15:09 greg Exp $"
+.\" RCSid "$Id: rcode_ident.1,v 1.6 2022/02/02 22:25:24 greg Exp $"
 .TH RCODE_IDENT 1 7/19/2019 RADIANCE
 .SH NAME
 rcode_ident - store identifiers in an indexed map and retrieve from same
@@ -34,10 +34,8 @@ input.txt
 ][
 .B \-tS
 ]
-[
 input.idx
 [output.txt]
-]
 .SH DESCRIPTION
 .I Rcode_ident
 takes a list of ASCII identifiers on the input and encodes them
@@ -63,6 +61,9 @@ and the maximum ID length is 255 characters.
 .PP
 Input is taken from the first named file, or standard input if no
 files are given.
+(Input file is required for
+.I \-r
+option.)
 Output is sent to the second named file, or standard output if none.
 .PP
 The
