@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.24 2021/11/20 22:39:01 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.25 2022/02/02 00:01:48 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -73,6 +73,8 @@ getfont(			/* return font fname */
 			err = "bad # vertices for";
 			goto fonterr;
 		}
+		if (ngv > f->maxgv)
+			f->maxgv = ngv;
 		g = galloc(ngv);
 		if (g == NULL)
 			goto memerr;
@@ -140,7 +142,7 @@ freefont(			/* release a font (free all if NULL) */
 	FONT  *fl, *f;
 	int  i;
 					/* check reference count */
-	if (fnt != NULL && ((fnt->nref-- > 1) | retainfonts))
+	if (fnt != NULL && (fnt->nref -= (f->nref > 0)) | retainfonts))
 		return;
 	head.next = fontlist;
 	fl = &head;

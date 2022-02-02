@@ -1,4 +1,4 @@
-/* RCSid $Id: font.h,v 2.9 2021/11/20 00:40:33 greg Exp $ */
+/* RCSid $Id: font.h,v 2.10 2022/02/02 00:01:48 greg Exp $ */
 /*
  * Header file for font handling routines
  */
@@ -22,8 +22,9 @@ typedef struct {
 typedef struct font {
 	char  name[64];			/* font file name */
 	struct font  *next;		/* next font in list */
-	int  nref;			/* number of references */
+	unsigned short  nref;		/* number of references */
 	short  mwidth, mheight;		/* mean glyph width and height */
+	short  maxgv;			/* max # glyph vertices */
 	GLYPH  *fg[256];		/* font glyphs */
 }  FONT;
 
