@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.14 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.15 2022/02/04 20:11:49 greg Exp $";
 #endif
 /*
  * Find extrema points in a Radiance picture.
@@ -15,9 +15,9 @@ static const char	RCSid[] = "$Id: pextrem.c,v 2.14 2019/07/19 17:37:56 greg Exp 
 
 int  orig = 0;
 
-int  wrongformat = 0;
-
 COLOR  expos = WHTCOLOR;
+
+char	fmt[MAXFMTLEN];
 
 static gethfunc headline;
 
@@ -28,14 +28,11 @@ headline(			/* check header line */
 	void	*p
 )
 {
-	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
 
-	if (isformat(s)) {			/* format */
-		formatval(fmt, s);
-		wrongformat = !globmatch(PICFMT, fmt);
-	}
+	if (formatval(fmt, s))			/* format */
+		return(0);
 	if (!orig)
 		return(0);
 	if (isexpos(s)) {			/* exposure */
@@ -66,7 +63,9 @@ main(
 	SET_FILE_BINARY(stdin);
 	for (i = 1; i < argc; i++)	/* get options */
 		if (!strcmp(argv[i], "-o"))
-			orig++;
+			orig = 1;
+		else if (!strcmp(argv[i], "-O"))
+			orig = -1;
 		else
 			break;
 
@@ -76,11 +75,13 @@ main(
 		exit(1);
 	}
 					/* get our header */
-	if (getheader(stdin, headline, NULL) < 0 || wrongformat ||
+	if (getheader(stdin, headline, NULL) < 0 || !globmatch(PICFMT, fmt) ||
 			fgetresolu(&xres, &yres, stdin) < 0) {
 		fprintf(stderr, "%s: bad picture format\n", argv[0]);
 		exit(1);
 	}
+	if (orig < 0 && !strcmp(CIEFMT, fmt))
+		scalecolor(expos, 1./WHTEFFICACY);
 	if ((scan = (COLR *)malloc(xres*sizeof(COLR))) == NULL) {
 		fprintf(stderr, "%s: out of memory\n", argv[0]);
 		exit(1);

@@ -1,11 +1,11 @@
-.\" RCSid "$Id: pextrem.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: pextrem.1,v 1.3 2022/02/04 20:11:48 greg Exp $"
 .TH PEXTREM 1 11/15/93 RADIANCE
 .SH NAME
 pextrem - find minimum and maximum values in RADIANCE picture
 .SH SYNOPSIS
 .B pextrem
 [
-.B \-o
+.B "-o | -O"
 ]
 [
 picture
@@ -25,6 +25,10 @@ The
 .I \-o
 option prints the original (radiance) values, undoing any exposure
 or color correction done on the picture.
+If the input is XYZE, then the second channel is in candelas/meter^2,
+unless
+.I \-O
+is specified, when watts/sr/meter^2 are always reported.
 .PP
 If no input 
 .I picture

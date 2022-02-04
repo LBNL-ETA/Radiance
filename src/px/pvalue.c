@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.40 2020/06/30 22:30:29 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.41 2022/02/04 20:11:49 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -117,6 +117,9 @@ main(
 				break;
 			case 'o':		/* original values */
 				original = argv[i][0] == '-';
+				break;
+			case 'O':		/* original watts/sr/m^2 */
+				original = -(argv[i][0] == '-');
 				break;
 			case 'g':		/* gamma correction */
 				gamcor = atof(argv[i+1]);
@@ -353,8 +356,13 @@ unkopt:
 			if (outprims != stdprims)
 				fputprims(outprims, stdout);
 			fputformat(COLRFMT, stdout);
-		} else				/* XYZ data */
+		} else {			/* XYZ data */
+			if (original < 0) {
+				scalecolor(exposure, WHTEFFICACY);
+				doexposure++;
+			}
 			fputformat(CIEFMT, stdout);
+		}
 		putchar('\n');
 		fputsresolu(&picres, stdout);	/* always put resolution */
 		valtopix();
@@ -372,6 +380,10 @@ unkopt:
 		if (!fgetsresolu(&picres, fin)) {
 			fprintf(stderr, "%s: missing resolution\n", progname);
 			quit(1);
+		}
+		if (original < 0 && mybright == &xyz_bright) {
+			scalecolor(exposure, 1./WHTEFFICACY);
+			doexposure++;
 		}
 		if (header) {
 			printargs(i, argv, stdout);

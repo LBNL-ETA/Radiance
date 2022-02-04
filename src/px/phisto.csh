@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: phisto.csh,v 3.7 2015/08/21 05:48:28 greg Exp $
+# RCSid: $Id: phisto.csh,v 3.8 2022/02/04 20:11:49 greg Exp $
 #
 # Compute foveal histogram for picture set
 #
@@ -7,12 +7,12 @@ set tf=`mktemp /tmp/phdat.XXXXX`
 onintr quit
 if ( $#argv == 0 ) then
 	pfilt -1 -x 128 -y 128 -p 1 \
-			| pvalue -o -h -H -df -b > $tf
+			| pvalue -O -h -H -df -b > $tf
 else
 	rm -f $tf
 	foreach i ( $* )
 		pfilt -1 -x 128 -y 128 -p 1 $i \
-				| pvalue -o -h -H -df -b >> $tf
+				| pvalue -O -h -H -df -b >> $tf
 		if ( $status ) exit 1
 	end
 endif

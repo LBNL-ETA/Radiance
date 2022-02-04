@@ -2501,3 +2501,6 @@ discovered and reported by Jon Sargent.
 
 Created checkBSDF tool to test XML BSDF reciprocity and perform similar
 sanity checks.
+
+Added -O option to pvalue and pextrem to report watts/sr/m^2 even if
+picture is XYZE.

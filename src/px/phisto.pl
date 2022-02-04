@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: phisto.pl,v 2.1 2020/01/03 20:05:14 greg Exp $
+# RCSid $Id: phisto.pl,v 2.2 2022/02/04 20:11:49 greg Exp $
 #
 # Compute foveal histogram for picture set
 #
@@ -18,11 +18,11 @@ if ($windoz) {
 	chomp $tf;
 	if ($#ARGV < 0) {
 		system "pfilt -1 -x 128 -y 128 -p 1 " .
-			"| pvalue -o -h -H -d -b > $tf";
+			"| pvalue -O -h -H -d -b > $tf";
 	} else {
 		foreach (@ARGV) {
 			system "pfilt -1 -x 128 -y 128 -p 1 $_" .
-				"| pvalue -o -h -H -d -b >> $tf";
+				"| pvalue -O -h -H -d -b >> $tf";
 			die "Bad picture '$_'\n" if ( $? );
 		}
 	}
@@ -37,11 +37,11 @@ if ($windoz) {
 	chomp $tf;
 	if ($#ARGV < 0) {
 		system "pfilt -1 -x 128 -y 128 -p 1 " .
-			"| pvalue -o -h -H -df -b > $tf";
+			"| pvalue -O -h -H -df -b > $tf";
 	} else {
 		foreach (@ARGV) {
 			system "pfilt -1 -x 128 -y 128 -p 1 '$_'" .
-				"| pvalue -o -h -H -df -b >> $tf";
+				"| pvalue -O -h -H -df -b >> $tf";
 			die "Bad picture '$_'\n" if ( $? );
 		}
 	}
