@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.128 2021/01/21 21:36:28 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.129 2022/02/06 17:19:55 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -242,12 +242,18 @@ main(
 				/* load variable values */
 	loadvars(rifname);
 				/* get any additional assignments */
-	for (i++; i < argc; i++)
-		if (setvariable(argv[i], matchvar) < 0) {
-			fprintf(stderr, "%s: unknown variable: %s\n",
+	for (i++; i < argc; i++) {
+		int	rv = setvariable(argv[i], matchvar);
+		if (rv < 0) {
+			fprintf(stderr, "%s: unknown setting: %s\n",
 					progname, argv[i]);
 			quit(1);
 		}
+		if (!rv)
+			fprintf(stderr,
+			"%s: bad variable assignment: %s (ignored)\n",
+					progname, argv[i]);
+	}
 				/* check assignments */
 	checkvalues();
 				/* check files and dates */
