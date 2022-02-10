@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.67 2021/12/07 23:49:50 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.68 2022/02/10 16:24:51 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -192,7 +192,7 @@ compute_through(BSDFDAT *ndp)
 		vypeak += psamp[i].vy;
 		++ns;
 	}
-	if (tomsurr <= FTINY)			/* no surround implies no peak */
+	if (tomsurr < 0.2*tomsum)		/* insufficient surround? */
 		return;
 	if ((vypeak/ns - (ndp->vray[2] > 0 ? ndp->sd->tLambFront.cieY
 			: ndp->sd->tLambBack.cieY)*(1./PI))*tomsum < .0005)
