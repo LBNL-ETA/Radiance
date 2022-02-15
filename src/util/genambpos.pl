@@ -1,9 +1,11 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.10 2016/04/20 20:57:57 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.11 2022/02/15 04:08:26 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
 use strict;
+my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
+die "Not supported under Windows -- sorry!\n" if ( $windoz );
 sub userror {
 	print STDERR "Usage: genambpos [-l lvl][-w minwt][-r rad][-s sf][-p][-d] scene.amb > ambloc.rad\n";
 	exit 1;
