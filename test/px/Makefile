@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.9 2022/02/16 17:57:05 greg Exp $
+# RCSid $Id: Makefile,v 1.10 2022/02/16 17:59:49 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -16,7 +16,7 @@ test-ra_gif
 clean:
 	rm -f test.hdr test24.hdr test24.tif test32L.tif pcomb.hdr \
 norm24.tif norm8.tif pcompos.hdr pcondh.hdr test_extrema.txt psign.hdr \
-pinterp.hdr false.hdr ra_psC.ps
+pinterp.hdr false.hdr ra_psC.ps test8.tga test8.gif
 
 test-pcond:	test.hdr
 	pcond -h test.hdr pcondh.hdr
@@ -90,7 +90,7 @@ test-ra_t16:	test24.hdr
 	ra_t16 -3 test24.hdr | ra_t16 -r | $(IMG_CMP) test24.hdr -
 
 test-ra_t8:	test.hdr
-	ra_t8 -d test.hdr test8.tga
+	ra_t8 test.hdr test8.tga
 	radcompare ref/test8.tga test8.tga
 	rm -f test8.tga
 
@@ -103,7 +103,7 @@ test-ra_ps:	test.hdr
 	rm -f ra_psC.ps
 
 test-ra_gif:	test.hdr
-	ra_gif -n 1 test.hdr > test8.gif
+	ra_gif -d -n 1 test.hdr > test8.gif
 	radcompare ref/test8.gif test8.gif
 	rm -f test8.gif
 
