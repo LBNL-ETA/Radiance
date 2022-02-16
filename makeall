@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.30 2020/09/11 20:38:46 greg Exp $
+# RCSid $Id: makeall,v 1.31 2022/02/16 18:56:32 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -26,7 +26,7 @@ endif
 if ( "$1" == test ) then
 	cd test
 	set fails=()
-	foreach d (cal gen util px renders)
+	foreach d (cv cal gen util px renders)
 		cd $d
 		make -k clean all && make clean
 		if ($status) set fails=($fails $d)
