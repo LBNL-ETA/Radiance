@@ -424,7 +424,18 @@ jobs:
           cd ./test/px/
           make clean
           make -j2
-  
+          
+      - name: run tests -cv
+        shell: cmd
+        run: |
+          set RAYPATH=.;${{ github.workspace }}\lib
+          set PATH=%PATH%;${{ github.workspace }}\bin
+          rtrace -version
+
+          cd ./test/cv/
+          make clean
+          make -j2
+
       - name: run tests -renders 1
         shell: cmd
         run: |
@@ -671,6 +682,16 @@ jobs:
           export PATH=$PATH:${{ github.workspace }}/radiance/bin
           rtrace -version
           cd ./test/px/
+          
+          make clean
+          make -j3
+
+      - name: run tests -cv
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/radiance/bin
+          rtrace -version
+          cd ./test/cv/
           
           make clean
           make -j3
@@ -932,6 +953,16 @@ jobs:
           export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
           rtrace -version
           cd ./test/px/
+          
+          make clean
+          make -j2
+
+      - name: run tests -cv
+        run: |
+          export RAYPATH=.:${{ github.workspace }}/buildRad/radiance/lib
+          export PATH=$PATH:${{ github.workspace }}/buildRad/radiance/bin
+          rtrace -version
+          cd ./test/cv/
           
           make clean
           make -j2
