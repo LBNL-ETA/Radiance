@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.8 2020/08/18 19:33:58 greg Exp $
+# RCSid $Id: Makefile,v 1.9 2022/02/16 17:57:05 greg Exp $
 #
 # Unit tests for tools built in src/px
 #
@@ -8,9 +8,10 @@ HDR_CMP = radcompare -rms 0.07 -rel 1e-6 -max 0.2
 IMG_CMP = radcompare -h -rms 0.03 -rel 0.007 -max 0.2
 
 all:	test-pfilt test-pvalue test-ra_tiff test-pcompos \
-test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond test-ra_t16 \
-test-ra_rgbe test-ra_ppm test-pextrem test-pcomb test-pinterp test-psign \
-test-falsecolor test-ra_ps
+test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond \
+test-ra_t16 test-ra_t8 test-ra_rgbe test-ra_ppm test-pextrem \
+test-pcomb test-pinterp test-psign test-falsecolor test-ra_ps \
+test-ra_gif
 
 clean:
 	rm -f test.hdr test24.hdr test24.tif test32L.tif pcomb.hdr \
@@ -88,6 +89,11 @@ test-ra_bmp:	test24.hdr
 test-ra_t16:	test24.hdr
 	ra_t16 -3 test24.hdr | ra_t16 -r | $(IMG_CMP) test24.hdr -
 
+test-ra_t8:	test.hdr
+	ra_t8 -d test.hdr test8.tga
+	radcompare ref/test8.tga test8.tga
+	rm -f test8.tga
+
 test-ra_ppm:	test24.hdr
 	ra_ppm test24.hdr | ra_ppm -r | $(IMG_CMP) test24.hdr -
 
@@ -95,6 +101,11 @@ test-ra_ps:	test.hdr
 	ra_ps -b -C test.hdr > ra_psC.ps
 	radcompare ref/ra_psC.ps ra_psC.ps
 	rm -f ra_psC.ps
+
+test-ra_gif:	test.hdr
+	ra_gif -n 1 test.hdr > test8.gif
+	radcompare ref/test8.gif test8.gif
+	rm -f test8.gif
 
 test24.hdr:	test.hdr
 	pvalue -g 2.2 -db test.hdr | pvalue -r -g 2.2 -db > test24.hdr

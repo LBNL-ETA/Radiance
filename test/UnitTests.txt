@@ -1,4 +1,4 @@
-# RCSid $Id: UnitTests.txt,v 1.14 2021/12/18 00:43:56 greg Exp $
+# RCSid $Id: UnitTests.txt,v 1.15 2022/02/16 17:57:05 greg Exp $
 #
 # Remember to add binary files using "cvs add -kb file"
 #
@@ -98,6 +98,7 @@ pcompos
 protate
 ra_bmp
 ra_t16
+ra_t8
 ra_xyze
 ra_rgbe
 ra_ps
@@ -108,7 +109,3 @@ ra_ppm
 pinterp
 psign
 falsecolor
-++++++++
-Missing:
-++++++++
-ra_t8
