@@ -1,61 +1,61 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.30 2019/12/10 19:00:26 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.31 2022/02/21 23:00:55 greg Exp $";
 #endif
 /*
- *  rcalc.c - record calculator program.
+ * rcalc.c - record calculator program.
  *
- *     9/11/87
+ * 9/11/87
  */
 
-#include  <stdlib.h>
-#include  <math.h>
-#include  <ctype.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
 
-#include  "platform.h"
-#include  "rterror.h"
-#include  "rtmisc.h"
-#include  "rtio.h"
-#include  "calcomp.h"
+#include "platform.h"
+#include "rterror.h"
+#include "rtmisc.h"
+#include "rtio.h"
+#include "calcomp.h"
 
-#define  isnum(c)       (isdigit(c) || ((c)=='-') | ((c)=='.') \
+#define isnum(c) (isdigit(c) || ((c)=='-') | ((c)=='.') \
 				| ((c)=='+') | ((c)=='e') | ((c)=='E'))
 
-#define  isblnk(c)      (igneol ? isspace(c) : ((c)==' ')|((c)=='\t'))
+#define isblnk(c) (igneol ? isspace(c) : ((c)==' ')|((c)=='\t'))
 
-#define  INBSIZ         16384	/* longest record */
-#define  MAXCOL         32      /* number of columns recorded */
+#define INBSIZ	 16384	/* longest record */
+#define MAXCOL	 32 /* number of columns recorded */
 
 				/* field type specifications */
-#define  F_NUL          0               /* empty */
-#define  F_TYP          0x7000          /* mask for type */
-#define  F_WID          0x0fff          /* mask for width */
-#define  T_LIT          0x1000          /* string literal */
-#define  T_STR          0x2000          /* string variable */
-#define  T_NUM          0x3000          /* numeric value */
+#define F_NUL	 0	 /* empty */
+#define F_TYP	 0x7000	 /* mask for type */
+#define F_WID	 0x0fff	 /* mask for width */
+#define T_LIT	 0x1000	 /* string literal */
+#define T_STR	 0x2000	 /* string variable */
+#define T_NUM	 0x3000	 /* numeric value */
 
-struct strvar {                 /* string variable */
-	char  *name;
-	char  *val;
-	char  *preset;
-	struct strvar  *next;
+struct strvar {		 /* string variable */
+	char *name;
+	char *val;
+	char *preset;
+	struct strvar *next;
 };
 
-struct field {                  /* record format structure */
-	int  type;                      /* type of field (& width) */
+struct field {		 /* record format structure */
+	int type;		 /* type of field (& width) */
 	union {
-		char  *sl;                      /* string literal */
-		struct strvar  *sv;             /* string variable */
-		char  *nv;                      /* numeric variable */
-		EPNODE  *ne;                    /* numeric expression */
-	} f;                            /* field contents */
-	struct field  *next;            /* next field in record */
+		char *sl;		 /* string literal */
+		struct strvar *sv;	 /* string variable */
+		char *nv;		 /* numeric variable */
+		EPNODE *ne;		 /* numeric expression */
+	} f;			 /* field contents */
+	struct field *next;	 /* next field in record */
 };
 
-#define  savqstr(s)     strcpy(emalloc(strlen(s)+1),s)
-#define  freqstr(s)     efree(s)
+#define savqstr(s) strcpy(emalloc(strlen(s)+1),s)
+#define freqstr(s) efree(s)
 
 static int getinputrec(FILE *fp);
-static void scaninp(void), advinp(void), resetinp(void);
+static void scaninp(void), advinp(void), skipinp(void);
 static void putrec(void), putout(void), nbsynch(void);
 static int getrec(void);
 static void execute(char *file);
@@ -69,51 +69,51 @@ static void bchanset(int n, double v);
 static struct strvar* getsvar(char *svname);
 static double l_in(char *);
 
-struct field  *inpfmt = NULL;   /* input record format */
-struct field  *outfmt = NULL;   /* output record structure */
-struct strvar  *svhead = NULL;  /* string variables */
+struct field *inpfmt = NULL; /* input record format */
+struct field *outfmt = NULL; /* output record structure */
+struct strvar *svhead = NULL; /* string variables */
 
-long  incnt = 0;		/* limit number of input records? */
-long  outcnt = 0;		/* limit number of output records? */
+long incnt = 0;		/* limit number of input records? */
+long outcnt = 0;		/* limit number of output records? */
 
-int  blnkeq = 1;                /* blanks compare equal? */
-int  igneol = 0;                /* ignore end of line? */
-int  passive = 0;		/* passive mode (transmit unmatched input) */
-char  sepchar = '\t';           /* input/output separator */
-int  noinput = 0;               /* no input records? */
-int  itype = 'a';		/* input type (a/f/F/d/D) */
-int  nbicols = 0;		/* number of binary input columns */
-int  otype = 'a';		/* output format (a/f/F/d/D) */
-char  inpbuf[INBSIZ];           /* input buffer */
-double  colval[MAXCOL];         /* input column values */
-unsigned long  colflg = 0;      /* column retrieved flags */
-int  colpos;                    /* output column position */
+int blnkeq = 1;		/* blanks compare equal? */
+int igneol = 0;		/* ignore end of line? */
+int passive = 0;		/* passive mode (transmit unmatched input) */
+char sepchar = '\t';	 /* input/output separator */
+int noinput = 0;	 /* no input records? */
+int itype = 'a';		/* input type (a/f/F/d/D) */
+int nbicols = 0;		/* number of binary input columns */
+int otype = 'a';		/* output format (a/f/F/d/D) */
+char inpbuf[INBSIZ];	 /* input buffer */
+double colval[MAXCOL];	 /* input column values */
+unsigned long colflg = 0; /* column retrieved flags */
+int colpos;		 /* output column position */
 
-int  nowarn = 0;                /* non-fatal diagnostic output */
-int  unbuff = 0;		/* unbuffered output (flush each record) */
+int nowarn = 0;		/* non-fatal diagnostic output */
+int unbuff = 0;		/* unbuffered output (flush each record) */
 
 struct {
-	FILE  *fin;                     /* input file */
-	int  chr;                       /* next character */
-	char  *beg;                     /* home position */
-	char  *pos;                     /* scan position */
-	char  *end;                     /* read position */
-} ipb;                          /* circular lookahead buffer */
+	FILE *fin;		 /* input file */
+	int chr;		 /* next character */
+	char *beg;		 /* home position */
+	char *pos;		 /* scan position */
+	char *end;		 /* read position */
+} ipb;			 /* circular lookahead buffer */
 
 
 int
 main(
-int  argc,
-char  *argv[]
+int argc,
+char *argv[]
 )
 {
-	char  *fpath;
-	int  i;
+	char *fpath;
+	int i;
 
 	esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_OUTCHAN|E_RCONST;
 	esupport &= ~(E_REDEFW);
 
-#ifdef  BIGGERLIB
+#ifdef BIGGERLIB
 	biggerlib();
 #endif
 	varset("PI", ':', 3.14159265358979323846);
@@ -237,7 +237,7 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 #ifdef getc_unlocked		/* avoid lock/unlock overhead */
 	flockfile(stdout);
 #endif
-	if (noinput) {          /* produce a single output record */
+	if (noinput) {	 /* produce a single output record */
 		if (i < argc) {
 			eputs(argv[0]);
 			eputs(": file argument(s) incompatible with -n\n");
@@ -247,12 +247,12 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 		putout();
 		quit(0);
 	}
-	if (blnkeq)             /* for efficiency */
+	if (blnkeq)	 /* for efficiency */
 		nbsynch();
 
-	if (i == argc)          /* from stdin */
+	if (i == argc)	 /* from stdin */
 		execute(NULL);
-	else                    /* from one or more files */
+	else		 /* from one or more files */
 		for ( ; i < argc; i++)
 			execute(argv[i]);
 	
@@ -262,7 +262,7 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 
 
 static void
-nbsynch(void)               /* non-blank starting synch character */
+nbsynch(void)	 /* non-blank starting synch character */
 {
 	if (inpfmt == NULL || (inpfmt->type & F_TYP) != T_LIT)
 		return;
@@ -275,7 +275,7 @@ nbsynch(void)               /* non-blank starting synch character */
 
 static int
 getinputrec(		/* get next input record */
-FILE  *fp
+FILE *fp
 )
 {
 	if (inpfmt != NULL)
@@ -299,16 +299,16 @@ FILE  *fp
 
 
 static void
-execute(           /* process a file */
-char  *file
+execute(	 /* process a file */
+char *file
 )
 {
-	const int  conditional = vardefined("cond");
-	const int  set_recno = (varlookup("recno") != NULL);
-	const int  set_outno = (varlookup("outno") != NULL);
-	long  nrecs = 0;
-	long  nout = 0;
-	FILE  *fp;
+	const int conditional = vardefined("cond");
+	const int set_recno = (varlookup("recno") != NULL);
+	const int set_outno = (varlookup("outno") != NULL);
+	long nrecs = 0;
+	long nout = 0;
+	FILE *fp;
 	
 	if (file == NULL)
 		fp = stdin;
@@ -347,7 +347,7 @@ char  *file
 
 
 static void
-putout(void)                /* produce an output record */
+putout(void)		/* produce an output record */
 {
 
 	colpos = 0;
@@ -367,8 +367,8 @@ putout(void)                /* produce an output record */
 static double
 l_in(char *funame)	/* function call for $channel */
 {
-	int  n;
-	char  *cp;
+	int n;
+	char *cp;
 			/* get argument as integer */
 	n = (int)(argument(1) + .5);
 	if (n != 0)	/* return channel value */
@@ -395,12 +395,12 @@ l_in(char *funame)	/* function call for $channel */
 }
 
 double
-chanvalue(            /* return value for column n */
-int  n
+chanvalue(	 /* return value for column n */
+int n
 )
 {
-	int  i;
-	char  *cp;
+	int i;
+	char *cp;
 
 	if (noinput || inpfmt != NULL) {
 		eputs("no column input\n");
@@ -434,7 +434,7 @@ int  n
 			while (*cp && *cp++ != sepchar)
 				;
 
-	while (isspace(*cp))            /* some atof()'s don't like tabs */
+	while (isspace(*cp))	 /* some atof()'s don't like tabs */
 		cp++;
 
 	if (n <= MAXCOL) {
@@ -446,12 +446,12 @@ int  n
 
 
 void
-chanset(                   /* output column n */
-int  n,
-double  v
+chanset(		 /* output column n */
+int n,
+double v
 )
 {
-	if (colpos == 0)                /* no leading separator */
+	if (colpos == 0)		/* no leading separator */
 		colpos = 1;
 	while (colpos < n) {
 		putchar(sepchar);
@@ -462,9 +462,9 @@ double  v
 
 
 void
-bchanset(                   /* output binary channel n */
-int  n,
-double  v
+bchanset(		 /* output binary channel n */
+int n,
+double v
 )
 {
 	static char	zerobuf[sizeof(double)];
@@ -492,23 +492,23 @@ double  v
 
 
 static void
-readfmt(                   /* read record format */
-char  *spec,
-int  output
+readfmt(		 /* read record format */
+char *spec,
+int output
 )
 {
-	int  fd;
-	char  *inptr;
-	struct field  fmt;
-	int  res;
-	struct field  *f;
+	int fd;
+	char *inptr;
+	struct field fmt;
+	int res;
+	struct field *f;
 						/* check for inline format */
 	for (inptr = spec; *inptr; inptr++)
 		if (*inptr == '$')
 			break;
-	if (*inptr)                             /* inline */
+	if (*inptr)			 /* inline */
 		inptr = spec;
-	else {                                  /* from file */
+	else {				 /* from file */
 		if ((fd = open(spec, 0)) == -1) {
 			eputs(spec);
 			eputs(": cannot open\n");
@@ -528,7 +528,7 @@ int  output
 		close(fd);
 		(inptr=inpbuf+2)[res] = '\0';
 	}
-	f = &fmt;                               /* get fields */
+	f = &fmt;			 /* get fields */
 	while ((res = readfield(&inptr)) != F_NUL) {
 		f->next = (struct field *)emalloc(sizeof(struct field));
 		f = f->next;
@@ -560,13 +560,13 @@ int  output
 
 
 static int
-readfield(                   /* get next field in format */
-char  **pp
+readfield(		 /* get next field in format */
+char **pp
 )
 {
-	int  type = F_NUL;
-	int  width = 0;
-	char  *cp;
+	int type = F_NUL;
+	int width = 0;
+	char *cp;
 	
 	cp = inpbuf;
 	while (cp < &inpbuf[INBSIZ-1] && **pp != '\0') {
@@ -627,11 +627,11 @@ char  **pp
 
 
 struct strvar *
-getsvar(                         /* get string variable */
-char  *svname
+getsvar(			 /* get string variable */
+char *svname
 )
 {
-	struct strvar  *sv;
+	struct strvar *sv;
 	
 	for (sv = svhead; sv != NULL; sv = sv->next)
 		if (!strcmp(sv->name, svname))
@@ -646,12 +646,12 @@ char  *svname
 
 
 static void
-svpreset(                    /* preset a string variable */
-char  *eqn
+svpreset(		 /* preset a string variable */
+char *eqn
 )
 {
-	struct strvar  *sv;
-	char  *val;
+	struct strvar *sv;
+	char *val;
 
 	for (val = eqn; *val != '='; val++)
 		if (!*val)
@@ -670,7 +670,7 @@ char  *eqn
 static void
 clearrec(void)			/* clear input record variables */
 {
-	struct field  *f;
+	struct field *f;
 
 	for (f = inpfmt; f != NULL; f = f->next)
 		switch (f->type & F_TYP) {
@@ -690,13 +690,13 @@ clearrec(void)			/* clear input record variables */
 static int
 getrec(void)				/* get next record from file */
 {
-	int  eatline;
-	struct field  *f;
+	int eatline;
+	struct field *f;
 
 	while (ipb.chr != EOF) {
 		if (blnkeq) {		/* beware of nbsynch() */
 			while (isblnk(ipb.chr))
-				resetinp();
+				skipinp();
 			if (ipb.chr == EOF)
 				return(0);
 		}
@@ -706,17 +706,17 @@ getrec(void)				/* get next record from file */
 			if (!getfield(f))
 				break;
 		if (f == NULL) {
-			advinp();       /* got one! */
+			advinp(); /* got one! */
 			return(1);
 		}
-		resetinp();		/* eat false start */
-		if (eatline) {          /* eat rest of line */
+		skipinp();		/* eat false start */
+		if (eatline) {	 /* eat rest of line */
 			while (ipb.chr != '\n') {
 				if (ipb.chr == EOF)
 					return(0);
-				resetinp();
+				skipinp();
 			}
-			resetinp();
+			skipinp();
 		}
 	}
 	return(0);
@@ -724,15 +724,15 @@ getrec(void)				/* get next record from file */
 
 
 static int
-getfield(                             /* get next field */
-struct field  *f
+getfield(			 /* get next field */
+struct field *f
 )
 {
-	static char  buf[RMAXWORD+1];            /* no recursion! */
-	int  delim, inword;
-	double  d;
-	char  *np;
-	char  *cp;
+	static char buf[RMAXWORD+1];	 /* no recursion! */
+	int delim, inword;
+	double d;
+	char *np;
+	char *cp;
 
 	switch (f->type & F_TYP) {
 	case T_LIT:
@@ -817,17 +817,17 @@ struct field  *f
 
 
 static void
-putrec(void)                                /* output a record */
+putrec(void)				/* output a record */
 {
-	char  fmt[32], typ[16];
-	int  n;
-	struct field  *f;
-	int  adlast, adnext;
-	double  dv, av;
+	char fmt[32], typ[16];
+	int n;
+	struct field *f;
+	int adlast, adnext;
+	double dv, av;
 	
 	adlast = 0;
 	for (f = outfmt; f != NULL; f = f->next) {
-		adnext =        blnkeq &&
+		adnext =	blnkeq &&
 				f->next != NULL &&
 				!( (f->next->type&F_TYP) == T_LIT &&
 					f->next->f.sl[0] == ' ' );
@@ -880,25 +880,25 @@ putrec(void)                                /* output a record */
 
 
 static void
-initinp(FILE  *fp)                     /* prepare lookahead buffer */
+initinp(FILE *fp)		 /* prepare lookahead buffer */
 
 {
 	ipb.fin = fp;
 	ipb.beg = ipb.end = inpbuf;
-	ipb.pos = inpbuf-1;             /* position before beginning */
+	ipb.pos = inpbuf-1;		/* position before beginning */
 	ipb.chr = '\0';
 	scaninp();
 }
 
 
 static void
-scaninp(void)                       /* scan next character */
+scaninp(void)			/* scan next character */
 {
 	if (ipb.chr == EOF)
 		return;
 	if (++ipb.pos >= &inpbuf[INBSIZ])
 		ipb.pos = inpbuf;
-	if (ipb.pos == ipb.end) {               /* new character */
+	if (ipb.pos == ipb.end) {	 /* new character */
 		if ((ipb.chr = getc(ipb.fin)) != EOF) {
 			*ipb.end = ipb.chr;
 			if (++ipb.end >= &inpbuf[INBSIZ])
@@ -912,21 +912,21 @@ scaninp(void)                       /* scan next character */
 
 
 static void
-advinp(void)                        /* move home to current position */
+advinp(void)			/* move home to current position */
 {
 	ipb.beg = ipb.pos;
 }
 
 
 static void
-resetinp(void)                      /* rewind position and advance 1 */
+skipinp(void)		 /* rewind position and advance 1 */
 {
-	if (ipb.beg == NULL)            /* full */
+	if (ipb.beg == NULL)	/* full */
 		ipb.beg = ipb.end;
 	ipb.pos = ipb.beg;
 	ipb.chr = *ipb.pos;
 	if (passive)			/* transmit unmatched character? */
-		fputc(ipb.chr, stdout);
+		putchar(ipb.chr);
 	if (++ipb.beg >= &inpbuf[INBSIZ])
 		ipb.beg = inpbuf;
 	scaninp();
@@ -934,14 +934,14 @@ resetinp(void)                      /* rewind position and advance 1 */
 
 
 void
-eputs(char  *msg)
+eputs(char *msg)
 {
 	fputs(msg, stderr);
 }
 
 
 void
-wputs(char  *msg)
+wputs(char *msg)
 {
 	if (!nowarn)
 		eputs(msg);
@@ -949,7 +949,7 @@ wputs(char  *msg)
 
 
 void
-quit(int  code)
+quit(int code)
 {
 	exit(code);
 }
