@@ -1,4 +1,4 @@
-/* $Id: tiff.h,v 3.17 2018/08/02 18:33:42 greg Exp $ */
+/* $Id: tiff.h,v 1.37 2005/06/23 11:01:55 dron Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

@@ -263,6 +263,7 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
 
    /* Set photon position and flags */
    VCOPY(photon.pos, ray -> rop);
+   VCOPY(photon.org, ray -> rorg);
    photon.flags = 0;
    photon.caustic = PMAP_CAUSTICRAY(ray);
 

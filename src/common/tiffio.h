@@ -1,4 +1,4 @@
-/* $Id: tiffio.h,v 3.17 2018/08/02 18:33:42 greg Exp $ */
+/* $Id: tiffio.h,v 1.43 2005/04/13 14:06:21 dron Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

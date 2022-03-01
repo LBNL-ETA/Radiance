@@ -56,7 +56,7 @@
     * heapfile pmap -> heap to guarantee logarithmic search times.  The heap
     * is destroyed on return.  */
 
-   int kdT_SavePhotons (const struct PhotonMap *pmap, FILE *out);
+   int kdT_SavePhotons (const struct PhotonMap *pmap, FILE *out, FILE *out_csv);
    /* Save photons in kd-tree to file. Return -1 on error, else 0 */
    
    int kdT_LoadPhotons (struct PhotonMap *pmap, FILE *in);

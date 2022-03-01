@@ -226,7 +226,7 @@ void kdT_BuildPhotonMap (struct PhotonMap *pmap)
 
 
 
-int kdT_SavePhotons (const struct PhotonMap *pmap, FILE *out)
+int kdT_SavePhotons (const struct PhotonMap *pmap, FILE *out, FILE *out_csv)
 {
    unsigned long        i, j;
    Photon               *p = (Photon*)pmap -> store.nodes;
@@ -235,6 +235,19 @@ int kdT_SavePhotons (const struct PhotonMap *pmap, FILE *out)
       /* Write photon attributes */
       for (j = 0; j < 3; j++)
          putflt(p -> pos [j], out);
+#ifdef PMAP_FLOAT_FLUX
+      fprintf(out_csv, "%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+         p->org[0], p->org[1], p->org[2],
+         p->pos[0], p->pos[1], p->pos[2],
+         p->flux[0], p->flux[1], p->flux[2]
+         );
+#else
+      fprintf(out_csv, "%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\n",
+         p->org[0], p->org[1], p->org[2],
+         p->pos[0], p->pos[1], p->pos[2],
+         p->flux[0], p->flux[1], p->flux[2], p->flux[3]
+         );
+#endif
          
       /* Bytewise dump otherwise we have portability probs */
       for (j = 0; j < 3; j++) 

@@ -32,6 +32,10 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
 {
    unsigned long  i, j;
    FILE           *file;
+   FILE           *file_csv;
+   char fname_csv[100];
+   strcpy(fname_csv, fname);
+   strcat(fname_csv, ".csv");
 
    if (!pmap || !pmap -> numPhotons || !validPmapType(pmap -> type)) {
       error(INTERNAL, "attempt to save empty or invalid photon map");
@@ -51,6 +55,10 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
    
    if (!(file = fopen(fname, "wb"))) {
       sprintf(errmsg, "can't open photon map file %s", fname);
+      error(SYSTEM, errmsg);
+   }
+   if (!(file_csv = fopen(fname_csv, "wb"))) {
+      sprintf(errmsg, "can't open photon map file %s", fname_csv);
       error(SYSTEM, errmsg);
    }
       
@@ -137,7 +145,7 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
 #ifdef PMAP_OOC
    if (OOC_SavePhotons(pmap, file)) {
 #else
-   if (kdT_SavePhotons(pmap, file)) {
+   if (kdT_SavePhotons(pmap, file, file_csv)) {
 #endif
       sprintf(errmsg, "error writing photon map file %s", fname);
       error(SYSTEM, errmsg);

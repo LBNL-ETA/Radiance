@@ -93,6 +93,7 @@
    
    typedef struct {
       float                pos [3];       /* Photon position */
+      float                org [3];       /* Photon position */
       signed char          norm [3];      /* Surface normal at pos (incident
                                              direction for volume photons) */
       union {
