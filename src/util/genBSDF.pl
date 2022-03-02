@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.88 2022/01/24 17:49:32 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.89 2022/03/02 21:15:18 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -213,6 +213,7 @@ if ( !defined $recovery ) {
 		printf MGFSCN "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
 		close MGFSCN;
 		if ( $mgfin ) {
+			die "+mgf requires input file with +geom\n" if ($#ARGV < 0);
 			system qq{mgfilt "#,o,xf,c,cxy,cspec,cmix,m,sides,rd,td,rs,ts,ir,v,p,n,f,fh,sph,cyl,cone,prism,ring,torus" @ARGV >> $mgfscn};
 		} else {
 			system "rad2mgf $radscn >> $mgfscn";
