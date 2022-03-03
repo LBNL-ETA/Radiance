@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.11 2021/01/26 18:47:25 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.12 2022/03/03 16:09:31 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -122,6 +122,14 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 		return 0;
 	}
 	dcp->gotview *= (dcp->gotview > 0);
+					/* get resolution string? */
+	if (dcp->hdrflags & HF_RESIN && !fgetsresolu(&dcp->res, dcp->finp)) {
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": bad resolution string\n", stderr);
+		}
+		return 0;
+	}
 	if (dcp->hdrflags & HF_HEADOUT) {	/* finish header */
 		if (!(dcp->hdrflags & HF_HEADIN))
 			newheader("RADIANCE", stdout);
@@ -132,7 +140,12 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 			fputs(dcp->depth_unit, stdout);
 			fputc('\n', stdout);
 			fputformat(DEPTH16FMT, stdout);
-		} else
+		} else {
+			fputs("NCOMP=1\n", stdout);
+			if ((dcp->hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESIN)
+				printf("NCOLS=%d\nNROWS=%d\n",
+						scanlen(&dcp->res),
+						numscans(&dcp->res));
 			switch (dcp->format) {
 			case 'a':
 				fputformat("ascii", stdout);
@@ -146,17 +159,10 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 				fputformat("double", stdout);
 				break;
 			}
+		}
 		fputc('\n', stdout);
 	}
-					/* get/put resolution string */
-	if (dcp->hdrflags & HF_RESIN && !fgetsresolu(&dcp->res, dcp->finp)) {
-		if (dcp->hdrflags & HF_STDERR) {
-			fputs(dcp->inpname, stderr);
-			fputs(": bad resolution string\n", stderr);
-		}
-		return 0;
-	}
-	if (dcp->hdrflags & HF_RESOUT)
+	if (dcp->hdrflags & HF_RESOUT)	/* put resolution string? */
 		fputsresolu(&dcp->res, stdout);
 
 	dcp->dstart = dcp->curpos = ftell(dcp->finp);

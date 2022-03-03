@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.5 2019/11/07 23:20:28 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.6 2022/03/03 16:09:31 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -57,6 +57,14 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 		}
 		return 0;
 	}
+					/* get resolution string? */
+	if (ncp->hdrflags & HF_RESIN && !fgetsresolu(&ncp->res, ncp->finp)) {
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": bad resolution string\n", stderr);
+		}
+		return 0;
+	}
 	if (ncp->hdrflags & HF_HEADOUT) {	/* finish header */
 		if (!(ncp->hdrflags & HF_HEADIN))
 			newheader("RADIANCE", stdout);
@@ -64,7 +72,12 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 			printargs(ac, av, stdout);
 		if (ncp->hdrflags & HF_ENCODE) {
 			fputformat(NORMAL32FMT, stdout);
-		} else
+		} else {
+			fputs("NCOMP=3\n", stdout);
+			if ((ncp->hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESIN)
+				printf("NCOLS=%d\nNROWS=%d\n",
+						scanlen(&ncp->res),
+						numscans(&ncp->res));
 			switch (ncp->format) {
 			case 'a':
 				fputformat("ascii", stdout);
@@ -78,17 +91,10 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 				fputformat("double", stdout);
 				break;
 			}
+		}
 		fputc('\n', stdout);
 	}
-					/* get/put resolution string */
-	if (ncp->hdrflags & HF_RESIN && !fgetsresolu(&ncp->res, ncp->finp)) {
-		if (ncp->hdrflags & HF_STDERR) {
-			fputs(ncp->inpname, stderr);
-			fputs(": bad resolution string\n", stderr);
-		}
-		return 0;
-	}
-	if (ncp->hdrflags & HF_RESOUT)
+	if (ncp->hdrflags & HF_RESOUT)	/* put resolution string? */
 		fputsresolu(&ncp->res, stdout);
 
 	ncp->dstart = ncp->curpos = ftell(ncp->finp);
