@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.21 2019/07/24 17:27:54 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.22 2022/03/03 22:54:49 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -49,6 +49,7 @@ main(
 )
 {
 	int  dim = 0;
+	char	fmt[MAXFMTLEN];
 	FILE  *fp;
 	int  i;
 
@@ -61,14 +62,17 @@ main(
 	flockfile(stdin);
 #endif
 	SET_FILE_BINARY(stdin);
+	fmt[0] = '*'; fmt[1] = '\0';
 	if (argc > 2 && !strcmp(argv[1], "-c")) {
 		SET_FILE_BINARY(stdout);
 		setvbuf(stdin, NULL, _IONBF, 2);
-		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0) {
+		if (checkheader(stdin, fmt, stdout) < 0) {
 			fputs("Bad header!\n", stderr);
 			return 1;
 		}
 		printargs(argc-2, argv+2, stdout);
+		if (fmt[0] != '*')		/* better be the same! */
+			fputformat(fmt, stdout);
 		fputc('\n', stdout);
 		if (dim) {			/* copy resolution string? */
 			RESOLU	rs;
@@ -85,7 +89,7 @@ main(
 		return 1;
 	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
 		SET_FILE_BINARY(stdout);
-		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0) {
+		if (checkheader(stdin, fmt, stdout) < 0) {
 			fputs("Bad header!\n", stderr);
 			return 1;
 		}
@@ -96,6 +100,8 @@ main(
 			if (argv[i][len-1] != '\n')
 				fputc('\n', stdout);
 		}
+		if (fmt[0] != '*')
+			fputformat(fmt, stdout);
 		fputc('\n', stdout);
 		copycat();
 		return 0;
