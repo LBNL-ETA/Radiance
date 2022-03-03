@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.28 2021/09/27 19:00:04 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.29 2022/03/03 00:01:48 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -26,6 +26,8 @@ static const char RCSid[] = "$Id: radcompare.c,v 2.28 2021/09/27 19:00:04 greg E
 int	report = REP_WARN;	/* reporting level */
 
 int	ign_header = 0;		/* ignore header differences? */
+
+int	escape_newlines = 0;	/* allow backslash to skip newlines */
 
 double	rel_min = 1e-5;		/* positive for relative comparisons */
 
@@ -132,8 +134,19 @@ read_line(LINEBUF *bp, FILE *fp)
 	}
 	while (fgets(bp->str + bp->len, bp->siz - bp->len, fp)) {
 		bp->len += strlen(bp->str + bp->len);
-		if (bp->str[bp->len-1] == '\n')
+		if (bp->str[bp->len-1] == '\n') {
+			if (bp->len > 1 && bp->str[bp->len-2] == '\r') {
+				bp->str[--bp->len] = '\0';
+				bp->str[bp->len-1] = '\n';
+			}
+			if (escape_newlines && bp->len > 1 &&
+					bp->str[bp->len-2] == '\\') {
+				bp->str[--bp->len] = '\0';
+				bp->str[bp->len-1] = ' ';
+				continue;
+			}
 			break;		/* found EOL */
+		}
 		if (bp->len < bp->siz - 4)
 			continue;	/* at EOF? */
 		if (bp->siz >= MAXBUF) {
@@ -569,6 +582,8 @@ compare_text()
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
 		fputs(": comparing inputs as ASCII text", stdout);
+		if (escape_newlines)
+			fputs(", allowing escaped newlines", stdout);
 		if (comment_c) {
 			fputs(", ignoring comments starting with '", stdout);
 			fputc(comment_c, stdout);
@@ -916,6 +931,9 @@ main(int argc, char *argv[])
 		switch (argv[a][1]) {
 		case 'h':			/* ignore header info. */
 			ign_header = !ign_header;
+			continue;
+		case 'n':			/* allow newline escapes */
+			escape_newlines = !escape_newlines;
 			continue;
 		case 'c':			/* ignore comments */
 			comment_c = argv[a][2];
