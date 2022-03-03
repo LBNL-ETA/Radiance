@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.15 2020/04/06 04:00:08 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.16 2022/03/03 03:55:13 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -27,7 +27,7 @@ extern "C" {
 
 			/* standard scanline ordering */
 #define  PIXSTANDARD		(YMAJOR|YDECR)
-#define  PIXSTDFMT		"-Y %d +X %d\n"
+#define  PIXSTDFMT		"-Y %8d +X %8d\n"
 
 			/* structure for image dimensions */
 typedef struct {

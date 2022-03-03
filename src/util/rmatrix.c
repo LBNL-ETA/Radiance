@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.48 2021/03/18 00:34:31 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.49 2022/03/03 03:55:13 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -453,7 +453,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 	}
 	if ((dtype == DTfloat) | (dtype == DTdouble))
 		fputendian(fp);			/* important to record */
-	fputformat((char *)cm_fmt_id[dtype], fp);
+	fputformat(cm_fmt_id[dtype], fp);
 	fputc('\n', fp);
 	switch (dtype) {			/* write data */
 	case DTascii:

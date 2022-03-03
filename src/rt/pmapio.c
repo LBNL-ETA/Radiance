@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapio.c,v 2.13 2021/02/18 17:08:50 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapio.c,v 2.14 2022/03/03 03:55:13 greg Exp $";
 #endif
 
 /* 
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: pmapio.c,v 2.13 2021/02/18 17:08:50 rschregle 
         SNSF #179067, "Light Fields for Spatio-Temporal Glare Assessment")
    =======================================================================
    
-   $Id: pmapio.c,v 2.13 2021/02/18 17:08:50 rschregle Exp $    
+   $Id: pmapio.c,v 2.14 2022/03/03 03:55:13 greg Exp $    
 */
 
 
@@ -80,7 +80,7 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
       fprintf(file, "%d primary rays\n", pmap -> numPrimary);
    
    /* Write format, including human-readable file version */
-   fputformat((char*)pmapFormat [pmap -> type], file);
+   fputformat(pmapFormat [pmap -> type], file);
    fprintf(file, "VERSION=%s\n", PMAP_FILEVER);
    
    /* Empty line = end of header */

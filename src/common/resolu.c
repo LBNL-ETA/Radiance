@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: resolu.c,v 2.6 2006/06/07 17:52:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: resolu.c,v 2.7 2022/03/03 03:55:13 greg Exp $";
 #endif
 /*
  * Read and write image resolutions.
@@ -63,11 +63,11 @@ char  *buf;
 register RESOLU  *rp;
 {
 	if (rp->rt&YMAJOR)
-		sprintf(buf, "%cY %d %cX %d\n",
+		sprintf(buf, "%cY %-8d %cX %-8d\n",
 				rp->rt&YDECR ? '-' : '+', rp->yr,
 				rp->rt&XDECR ? '-' : '+', rp->xr);
 	else
-		sprintf(buf, "%cX %d %cY %d\n",
+		sprintf(buf, "%cX %-8d %cY %-8d\n",
 				rp->rt&XDECR ? '-' : '+', rp->xr,
 				rp->rt&YDECR ? '-' : '+', rp->yr);
 	return(buf);

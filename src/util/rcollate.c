@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.38 2022/01/20 17:35:03 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.39 2022/03/03 03:55:13 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -456,6 +456,7 @@ do_reorder(const MEMLOAD *mp)
 	if (o_header) {				/* finish header? */
 		printf("NROWS=%d\n", no_rows);
 		printf("NCOLS=%d\n", no_columns);
+		fputformat(fmtid, stdout);
 		fputc('\n', stdout);
 	}
 						/* reorder records */
@@ -500,6 +501,7 @@ do_resize(FILE *fp)
 			printf("NROWS=%d\n", no_rows);
 		if (no_columns > 0)
 			printf("NCOLS=%d\n", no_columns);
+		fputformat(fmtid, stdout);
 		fputc('\n', stdout);
 	}
 						/* sanity checks */
@@ -728,7 +730,6 @@ main(int argc, char *argv[])
 			newheader("RADIANCE", stdout);
 		printargs(a, argv, stdout);
 		printf("NCOMP=%d\n", n_comp);
-		fputformat(fmtid, stdout);
 	}
 	if (transpose | check | (outLevels > 1) || (o_header && no_rows <= 0)) {
 		MEMLOAD	myMem;			/* need to map into memory */

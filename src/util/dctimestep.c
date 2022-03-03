@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.45 2020/03/25 01:51:09 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.46 2022/03/03 03:55:13 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -64,7 +64,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 			pmat = cm_alloc(myYR, myXR);
 			memset(pmat->cmem, 0, sizeof(COLOR)*myXR*myYR);
 							/* finish header */
-			fputformat((char *)cm_fmt_id[myDT], fout);
+			fputformat(cm_fmt_id[myDT], fout);
 			fputc('\n', fout);
 			fflush(fout);
 		} else if ((dt != myDT) | (xr != myXR) | (yr != myYR)) {
@@ -308,7 +308,7 @@ main(int argc, char *argv[])
 					fputs("NCOLS=1\nNCOMP=3\n", ofp);
 					if ((outfmt == 'f') | (outfmt == 'd'))
 						fputendian(ofp);
-					fputformat((char *)cm_fmt_id[outfmt], ofp);
+					fputformat(cm_fmt_id[outfmt], ofp);
 					fputc('\n', ofp);
 				}
 				cm_write(rvec, outfmt, ofp);
@@ -336,7 +336,7 @@ main(int argc, char *argv[])
 				fputs("NCOMP=3\n", ofp);
 				if ((outfmt == 'f') | (outfmt == 'd'))
 					fputendian(ofp);
-				fputformat((char *)cm_fmt_id[outfmt], ofp);
+				fputformat(cm_fmt_id[outfmt], ofp);
 				fputc('\n', ofp);
 			}
 			cm_write(rmtx, outfmt, ofp);
