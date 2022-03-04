@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.50 2022/03/04 01:27:12 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.51 2022/03/04 02:07:34 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -204,7 +204,8 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 	int	i;
 #ifdef MAP_FILE
 	long	pos;		/* map memory to file if possible */
-	if (!rm->swapin && (pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
+	if (!rm->swapin && array_size(rm) >= 1L<<20 &&
+			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
 		rm->mapped = mmap(NULL, array_size(rm)+pos, PROT_READ|PROT_WRITE,
 					MAP_PRIVATE, fileno(fp), 0);
 		if (rm->mapped != MAP_FAILED) {
