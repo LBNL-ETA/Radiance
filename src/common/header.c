@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.42 2022/03/03 15:43:04 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.43 2022/03/04 17:16:12 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -214,11 +214,15 @@ fputformat(		/* put out a format value */
 	fputs(FMTSTR, fp);
 	fputs(s, fp);
 			/* pad to align binary type for mmap() */
-	if (!strncmp(s, "16-bit", 6))
+	if (!strncmp(s, "float", 5))
+		align = sizeof(float);
+	else if (!strncmp(s, "double", 6))
+		align = sizeof(double);
+	else if (!strncmp(s, "16-bit", 6))
 		align = 2;
-	else if (!strcmp(s, "float") || !strncmp(s, "32-bit", 6))
+	else if (!strncmp(s, "32-bit", 6))
 		align = 4;
-	else if (!strcmp(s, "double") || !strncmp(s, "64-bit", 6))
+	else if (!strncmp(s, "64-bit", 6))
 		align = 8;
 	if (align) {
 		long	pos = ftell(fp);
