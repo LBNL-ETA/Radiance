@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.51 2022/03/04 02:07:34 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.52 2022/03/04 17:17:28 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -137,8 +137,8 @@ get_dminfo(char *s, void *p)
 		return(0);
 	}
 	if (isexpos(s)) {
-		double	d = exposval(s);
-		scalecolor(ip->cexp, d);
+		float	f = exposval(s);
+		scalecolor(ip->cexp, f);
 		return(0);
 	}
 	if (iscolcor(s)) {
@@ -410,11 +410,11 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 static int
 rmx_write_double(const RMATRIX *rm, FILE *fp)
 {
-	int	i, j;
+	int	i;
 
 	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++)
-		if (putbinary(&rmx_lval(rm,i,j,0), sizeof(double), rm->ncomp, fp) != rm->ncomp)
+		if (putbinary(&rmx_lval(rm,i,0,0), sizeof(double)*rm->ncomp,
+					rm->ncols, fp) != rm->ncols)
 			return(0);
 	return(1);
 }
@@ -462,10 +462,9 @@ findCIEprims(const char *info)
 int
 rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 {
-	RMATRIX	*mydm = NULL;
 	int	ok = 1;
 
-	if (!rm | !fp)
+	if (!rm | !fp || !rm->mtx)
 		return(0);
 #ifdef getc_unlocked
 	flockfile(fp);
@@ -485,14 +484,16 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		fprintf(fp, "NCOLS=%d\n", rm->ncols);
 		fprintf(fp, "NCOMP=%d\n", rm->ncomp);
 	} else if (rm->ncomp != 3) {		/* wrong # components? */
-		double	cmtx[3];
+		CMATRIX	*cm;			/* convert & write */
 		if (rm->ncomp != 1)		/* only convert grayscale */
 			return(0);
-		cmtx[0] = cmtx[1] = cmtx[2] = 1;
-		mydm = rmx_transform(rm, 3, cmtx);
-		if (!mydm)
+		if (!(cm = cm_from_rmatrix(rm)))
 			return(0);
-		rm = mydm;
+		fputformat(cm_fmt_id[dtype], fp);
+		fputc('\n', fp);
+		ok = cm_write(cm, dtype, fp);
+		cm_free(cm);
+		return(ok);
 	}
 	if ((dtype == DTfloat) | (dtype == DTdouble))
 		fputendian(fp);			/* important to record */
@@ -520,8 +521,6 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 #ifdef getc_unlocked
 	funlockfile(fp);
 #endif
-	if (mydm)
-		rmx_free(mydm);
 	return(ok);
 }
 
@@ -534,7 +533,7 @@ rmx_identity(const int dim, const int n)
 
 	if (!rid)
 		return(NULL);
-	memset(rid->mtx, 0, sizeof(rid->mtx[0])*n*dim*dim);
+	memset(rid->mtx, 0, array_size(rid));
 	for (i = dim; i--; )
 	    for (k = n; k--; )
 		rmx_lval(rid,i,i,k) = 1;
@@ -554,8 +553,7 @@ rmx_copy(const RMATRIX *rm)
 		return(NULL);
 	rmx_addinfo(dnew, rm->info);
 	dnew->dtype = rm->dtype;
-	memcpy(dnew->mtx, rm->mtx,
-		sizeof(rm->mtx[0])*rm->ncomp*rm->nrows*rm->ncols);
+	memcpy(dnew->mtx, rm->mtx, array_size(dnew));
 	return(dnew);
 }
 
@@ -788,7 +786,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 	int	i, j;
 	CMATRIX	*cnew;
 
-	if (!rm || rm->ncomp != 3)
+	if (!rm || !rm->mtx | ((rm->ncomp != 3) & (rm->ncomp != 1)))
 		return(NULL);
 	cnew = cm_alloc(rm->nrows, rm->ncols);
 	if (!cnew)
@@ -796,9 +794,13 @@ cm_from_rmatrix(const RMATRIX *rm)
 	for (i = cnew->nrows; i--; )
 	    for (j = cnew->ncols; j--; ) {
 		COLORV	*cv = cm_lval(cnew,i,j);
-		cv[0] = (COLORV)rmx_lval(rm,i,j,0);
-		cv[1] = (COLORV)rmx_lval(rm,i,j,1);
-		cv[2] = (COLORV)rmx_lval(rm,i,j,2);
+		if (rm->ncomp == 1)
+		    cv[0] = cv[1] = cv[2] = (COLORV)rmx_lval(rm,i,j,0);
+		else {
+		    cv[0] = (COLORV)rmx_lval(rm,i,j,0);
+		    cv[1] = (COLORV)rmx_lval(rm,i,j,1);
+		    cv[2] = (COLORV)rmx_lval(rm,i,j,2);
+		}
 	    }
 	return(cnew);
 }
