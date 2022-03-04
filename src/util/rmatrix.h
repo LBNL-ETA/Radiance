@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.13 2021/01/19 23:32:00 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.14 2022/03/04 01:27:12 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -16,19 +16,27 @@ extern "C" {
 	transmission, reflection front (normal side), reflection back */
 typedef enum {RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
-/* General plane-ordered component matrix */
+/* General [row][col][cmp] component matrix */
 typedef struct {
+	char	*info;
+	void	*mapped;
+	double	*mtx;
+	COLOR	cexp;
 	int	nrows, ncols;
 	short	ncomp;
 	uby8	dtype;
 	uby8	swapin;
-	char	*info;
-	double	mtx[3];			/* extends struct */
 } RMATRIX;
 
 #define rmx_lval(rm,r,c,i)	(rm)->mtx[(i)+(rm)->ncomp*((c)+(size_t)(rm)->ncols*(r))]
 
-/* Allocate a nr x nc matrix with n components */
+/* Initialize a RMATRIX struct but don't allocate array space */
+extern RMATRIX	*rmx_new(int nr, int nc, int n);
+
+/* Prepare a RMATRIX for writing (allocate array if needed) */
+extern int	rmx_prepare(RMATRIX *rm);
+
+/* Call rmx_new() and rmx_prepare() */
 extern RMATRIX	*rmx_alloc(int nr, int nc, int n);
 
 /* Free a RMATRIX array */

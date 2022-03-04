@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.49 2022/03/03 03:55:13 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.50 2022/03/04 01:27:12 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -12,25 +12,51 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.49 2022/03/03 03:55:13 greg Exp 
 #include "resolu.h"
 #include "paths.h"
 #include "rmatrix.h"
+#if !defined(_WIN32) && !defined(_WIN64)
+#include <sys/mman.h>
+#endif
 
 static char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
 
-/* Allocate a nr x nc matrix with n components */
+#define array_size(rm)	(sizeof(double)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
+#define mapped_size(rm)	((char *)(rm)->mtx + array_size(rm) - (char *)(rm)->mapped)
+
+/* Initialize a RMATRIX struct but don't allocate array space */
 RMATRIX *
+rmx_new(int nr, int nc, int n)
+{
+	RMATRIX	*dnew = (RMATRIX *)calloc(1, sizeof(RMATRIX));
+
+	if (dnew) {
+		dnew->dtype = DTdouble;
+		dnew->nrows = nr;
+		dnew->ncols = nc;
+		dnew->ncomp = n;
+	}
+	return(dnew);
+}
+
+/* Prepare a RMATRIX for writing (allocate array if needed) */
+int
+rmx_prepare(RMATRIX *rm)
+{
+	if (!rm) return(0);
+	if (rm->mtx)
+		return(1);
+	rm->mtx = (double *)malloc(array_size(rm));
+	return(rm->mtx != NULL);
+}
+
+/* Call rmx_new() and rmx_prepare() */
+RMATRIX	*
 rmx_alloc(int nr, int nc, int n)
 {
-	RMATRIX	*dnew;
+	RMATRIX	*dnew = rmx_new(nr, nc, n);
 
-	if ((nr <= 0) | (nc <= 0) | (n <= 0))
-		return(NULL);
-	dnew = (RMATRIX *)malloc(sizeof(RMATRIX)-sizeof(dnew->mtx) +
-					sizeof(dnew->mtx[0])*n*nr*nc);
-	if (!dnew)
-		return(NULL);
-	dnew->nrows = nr; dnew->ncols = nc; dnew->ncomp = n;
-	dnew->dtype = DTdouble;
-	dnew->swapin = 0;
-	dnew->info = NULL;
+	if (dnew && !rmx_prepare(dnew)) {
+		rmx_free(dnew);
+		dnew = NULL;
+	}
 	return(dnew);
 }
 
@@ -41,6 +67,12 @@ rmx_free(RMATRIX *rm)
 	if (!rm) return;
 	if (rm->info)
 		free(rm->info);
+#ifdef MAP_FILE
+	if (rm->mapped)
+		munmap(rm->mapped, mapped_size(rm));
+	else
+#endif
+		free(rm->mtx);
 	free(rm);
 }
 
@@ -61,17 +93,21 @@ rmx_newtype(int dtyp1, int dtyp2)
 int
 rmx_addinfo(RMATRIX *rm, const char *info)
 {
+	int	oldlen = 0;
+
 	if (!rm || !info || !*info)
 		return(0);
 	if (!rm->info) {
 		rm->info = (char *)malloc(strlen(info)+1);
 		if (rm->info) rm->info[0] = '\0';
-	} else
+	} else {
+		oldlen = strlen(rm->info);
 		rm->info = (char *)realloc(rm->info,
-				strlen(rm->info)+strlen(info)+1);
+				oldlen+strlen(info)+1);
+	}
 	if (!rm->info)
 		return(0);
-	strcat(rm->info, info);
+	strcpy(rm->info+oldlen, info);
 	return(1);
 }
 
@@ -102,19 +138,19 @@ get_dminfo(char *s, void *p)
 	}
 	if (isexpos(s)) {
 		double	d = exposval(s);
-		scalecolor(ip->mtx, d);
+		scalecolor(ip->cexp, d);
 		return(0);
 	}
 	if (iscolcor(s)) {
 		COLOR	ctmp;
 		colcorval(ctmp, s);
-		multcolor(ip->mtx, ctmp);
+		multcolor(ip->cexp, ctmp);
 		return(0);
 	}
 	if (!formatval(fmt, s)) {
 		rmx_addinfo(ip, s);
 		return(0);
-	}
+	}			/* else check format */
 	for (i = 1; i < DTend; i++)
 		if (!strcmp(fmt, cm_fmt_id[i])) {
 			ip->dtype = i;
@@ -128,6 +164,8 @@ rmx_load_ascii(RMATRIX *rm, FILE *fp)
 {
 	int	i, j, k;
 
+	if (!rmx_prepare(rm))
+		return(0);
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++)
 	        for (k = 0; k < rm->ncomp; k++)
@@ -146,6 +184,8 @@ rmx_load_float(RMATRIX *rm, FILE *fp)
 		fputs("Unsupported # components in rmx_load_float()\n", stderr);
 		exit(1);
 	}
+	if (!rmx_prepare(rm))
+		return(0);
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
 		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
@@ -162,12 +202,20 @@ static int
 rmx_load_double(RMATRIX *rm, FILE *fp)
 {
 	int	i;
-
-	if ((char *)&rmx_lval(rm,1,0,0) - (char *)&rmx_lval(rm,0,0,0) !=
-					sizeof(double)*rm->ncols*rm->ncomp) {
-		fputs("Code error in rmx_load_double()\n", stderr);
-		exit(1);
+#ifdef MAP_FILE
+	long	pos;		/* map memory to file if possible */
+	if (!rm->swapin && (pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
+		rm->mapped = mmap(NULL, array_size(rm)+pos, PROT_READ|PROT_WRITE,
+					MAP_PRIVATE, fileno(fp), 0);
+		if (rm->mapped != MAP_FAILED) {
+			rm->mtx = (double *)rm->mapped + pos/sizeof(double);
+			return(1);
+		}
+		rm->mapped = NULL;
 	}
+#endif
+	if (!rmx_prepare(rm))
+		return(0);
 	for (i = 0; i < rm->nrows; i++) {
 		if (getbinary(&rmx_lval(rm,i,0,0), sizeof(double)*rm->ncomp,
 					rm->ncols, fp) != rm->ncols)
@@ -185,6 +233,8 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 	int	i, j;
 
 	if (!scan)
+		return(0);
+	if (!rmx_prepare(rm))
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
 	    if (freadscan(scan, rm->ncols, fp) < 0) {
@@ -206,7 +256,6 @@ RMATRIX *
 rmx_load(const char *inspec, RMPref rmp)
 {
 	FILE		*fp;
-	RMATRIX		dinfo;
 	RMATRIX		*dnew;
 
 	if (!inspec)
@@ -242,35 +291,28 @@ rmx_load(const char *inspec, RMPref rmp)
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
-	dinfo.nrows = dinfo.ncols = dinfo.ncomp = 0;
-	dinfo.dtype = DTascii;			/* assumed w/o FORMAT */
-	dinfo.swapin = 0;
-	dinfo.info = NULL;
-	dinfo.mtx[0] = dinfo.mtx[1] = dinfo.mtx[2] = 1.;
-	if (getheader(fp, get_dminfo, &dinfo) < 0) {
+	if (!(dnew = rmx_new(0,0,3))) {
 		fclose(fp);
 		return(NULL);
 	}
-	if ((dinfo.nrows <= 0) | (dinfo.ncols <= 0)) {
-		if (!fscnresolu(&dinfo.ncols, &dinfo.nrows, fp)) {
-			fclose(fp);
-			return(NULL);
-		}
-		if (dinfo.ncomp <= 0)
-			dinfo.ncomp = 3;
-		else if ((dinfo.dtype == DTrgbe) | (dinfo.dtype == DTxyze) &&
-				dinfo.ncomp != 3) {
-			fclose(fp);
-			return(NULL);
-		}
-	}
-	dnew = rmx_alloc(dinfo.nrows, dinfo.ncols, dinfo.ncomp);
-	if (!dnew) {
+	dnew->dtype = DTascii;			/* assumed w/o FORMAT */
+	dnew->cexp[0] = dnew->cexp[1] = dnew->cexp[2] = 1.f;
+	if (getheader(fp, get_dminfo, dnew) < 0) {
 		fclose(fp);
 		return(NULL);
 	}
-	dnew->info = dinfo.info;
-	switch (dinfo.dtype) {
+	if ((dnew->nrows <= 0) | (dnew->ncols <= 0)) {
+		if (!fscnresolu(&dnew->ncols, &dnew->nrows, fp)) {
+			fclose(fp);
+			return(NULL);
+		}
+		if ((dnew->dtype == DTrgbe) | (dnew->dtype == DTxyze) &&
+				dnew->ncomp != 3) {
+			fclose(fp);
+			return(NULL);
+		}
+	}
+	switch (dnew->dtype) {
 	case DTascii:
 		SET_FILE_TEXT(fp);
 		if (!rmx_load_ascii(dnew, fp))
@@ -278,13 +320,11 @@ rmx_load(const char *inspec, RMPref rmp)
 		dnew->dtype = DTascii;		/* should leave double? */
 		break;
 	case DTfloat:
-		dnew->swapin = dinfo.swapin;
 		if (!rmx_load_float(dnew, fp))
 			goto loaderr;
 		dnew->dtype = DTfloat;
 		break;
 	case DTdouble:
-		dnew->swapin = dinfo.swapin;
 		if (!rmx_load_double(dnew, fp))
 			goto loaderr;
 		dnew->dtype = DTdouble;
@@ -293,14 +333,16 @@ rmx_load(const char *inspec, RMPref rmp)
 	case DTxyze:
 		if (!rmx_load_rgbe(dnew, fp))
 			goto loaderr;
-		dnew->dtype = dinfo.dtype;	/* undo exposure? */
-		if ((dinfo.mtx[0] != 1.) | (dinfo.mtx[1] != 1.) |
-				(dinfo.mtx[2] != 1.)) {
-			dinfo.mtx[0] = 1./dinfo.mtx[0];
-			dinfo.mtx[1] = 1./dinfo.mtx[1];
-			dinfo.mtx[2] = 1./dinfo.mtx[2];
-			rmx_scale(dnew, dinfo.mtx);
+						/* undo exposure? */
+		if ((dnew->cexp[0] != 1.f) | (dnew->cexp[1] != 1.f) |
+				(dnew->cexp[2] != 1.f)) {
+			double	cmlt[3];
+			cmlt[0] = 1./dnew->cexp[0];
+			cmlt[1] = 1./dnew->cexp[1];
+			cmlt[2] = 1./dnew->cexp[2];
+			rmx_scale(dnew, cmlt);
 		}
+		dnew->swapin = 0;
 		break;
 	default:
 		goto loaderr;
