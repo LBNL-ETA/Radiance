@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.14 2022/03/04 01:27:12 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.15 2022/03/05 01:45:21 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -28,7 +28,7 @@ typedef struct {
 	uby8	swapin;
 } RMATRIX;
 
-#define rmx_lval(rm,r,c,i)	(rm)->mtx[(i)+(rm)->ncomp*((c)+(size_t)(rm)->ncols*(r))]
+#define rmx_lval(rm,r,c)	((rm)->mtx + (rm)->ncomp*((c)+(size_t)(rm)->ncols*(r)))
 
 /* Initialize a RMATRIX struct but don't allocate array space */
 extern RMATRIX	*rmx_new(int nr, int nc, int n);

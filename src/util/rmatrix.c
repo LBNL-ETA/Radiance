@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.52 2022/03/04 17:17:28 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.53 2022/03/05 01:45:21 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -167,10 +167,12 @@ rmx_load_ascii(RMATRIX *rm, FILE *fp)
 	if (!rmx_prepare(rm))
 		return(0);
 	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++)
+	    for (j = 0; j < rm->ncols; j++) {
+	    	double	*dp = rmx_lval(rm,i,j);
 	        for (k = 0; k < rm->ncomp; k++)
-		    if (fscanf(fp, "%lf", &rmx_lval(rm,i,j,k)) != 1)
+		    if (fscanf(fp, "%lf", &dp[k]) != 1)
 			return(0);
+	    }
 	return(1);
 }
 
@@ -188,12 +190,13 @@ rmx_load_float(RMATRIX *rm, FILE *fp)
 		return(0);
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
+	    	double	*dp = rmx_lval(rm,i,j);
 		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
 		if (rm->swapin)
 		    swap32((char *)val, rm->ncomp);
 	        for (k = rm->ncomp; k--; )
-		     rmx_lval(rm,i,j,k) = val[k];
+		     dp[k] = val[k];
 	    }
 	return(1);
 }
@@ -218,11 +221,11 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 	if (!rmx_prepare(rm))
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
-		if (getbinary(&rmx_lval(rm,i,0,0), sizeof(double)*rm->ncomp,
+		if (getbinary(rmx_lval(rm,i,0), sizeof(double)*rm->ncomp,
 					rm->ncols, fp) != rm->ncols)
 			return(0);
 		if (rm->swapin)
-			swap64((char *)&rmx_lval(rm,i,0,0), rm->ncols*rm->ncomp);
+			swap64((char *)rmx_lval(rm,i,0), rm->ncols*rm->ncomp);
 	}
 	return(1);
 }
@@ -238,14 +241,15 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 	if (!rmx_prepare(rm))
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
+	    double	*dp = rmx_lval(rm,i,j);
 	    if (freadscan(scan, rm->ncols, fp) < 0) {
 		free(scan);
 		return(0);
 	    }
-	    for (j = rm->ncols; j--; ) {
-	        rmx_lval(rm,i,j,0) = colval(scan[j],RED);
-	        rmx_lval(rm,i,j,1) = colval(scan[j],GRN);
-	        rmx_lval(rm,i,j,2) = colval(scan[j],BLU);
+	    for (j = 0; j < rm->ncols; j++, dp += 3) {
+	        dp[0] = colval(scan[j],RED);
+	        dp[1] = colval(scan[j],GRN);
+	        dp[2] = colval(scan[j],BLU);
 	    }
 	}
 	free(scan);
@@ -378,8 +382,9 @@ rmx_write_ascii(const RMATRIX *rm, FILE *fp)
 
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = 0; j < rm->ncols; j++) {
+		const double	*dp = rmx_lval(rm,i,j);
 	        for (k = 0; k < rm->ncomp; k++)
-		    fprintf(fp, fmt, rmx_lval(rm,i,j,k));
+		    fprintf(fp, fmt, dp[k]);
 		fputc('\t', fp);
 	    }
 	    fputc('\n', fp);
@@ -399,9 +404,10 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 	}
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
+	    	const double	*dp = rmx_lval(rm,i,j);
 	        for (k = rm->ncomp; k--; )
-		    val[k] = (float)rmx_lval(rm,i,j,k);
-		if (putbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+		    val[k] = (float)dp[k];
+		if (putbinary(val, sizeof(float), rm->ncomp, fp) != rm->ncomp)
 			return(0);
 	    }
 	return(1);
@@ -413,7 +419,7 @@ rmx_write_double(const RMATRIX *rm, FILE *fp)
 	int	i;
 
 	for (i = 0; i < rm->nrows; i++)
-		if (putbinary(&rmx_lval(rm,i,0,0), sizeof(double)*rm->ncomp,
+		if (putbinary(rmx_lval(rm,i,0), sizeof(double)*rm->ncomp,
 					rm->ncols, fp) != rm->ncols)
 			return(0);
 	return(1);
@@ -428,10 +434,10 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 	if (!scan)
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
-	    for (j = rm->ncols; j--; )
-	        setcolr(scan[j],	rmx_lval(rm,i,j,0),
-					rmx_lval(rm,i,j,1),
-					rmx_lval(rm,i,j,2)	);
+	    for (j = rm->ncols; j--; ) {
+	    	const double	*dp = rmx_lval(rm,i,j);
+	        setcolr(scan[j], dp[0], dp[1], dp[2]);
+	    }
 	    if (fwritecolrs(scan, rm->ncols, fp) < 0) {
 		free(scan);
 		return(0);
@@ -534,9 +540,11 @@ rmx_identity(const int dim, const int n)
 	if (!rid)
 		return(NULL);
 	memset(rid->mtx, 0, array_size(rid));
-	for (i = dim; i--; )
+	for (i = dim; i--; ) {
+	    double	*dp = rmx_lval(rid,i,i);
 	    for (k = n; k--; )
-		rmx_lval(rid,i,i,k) = 1;
+		dp[k] = 1.;
+	}
 	return(rid);
 }
 
@@ -584,8 +592,8 @@ rmx_transpose(const RMATRIX *rm)
 	dnew->dtype = rm->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; )
-		for (k = dnew->ncomp; k--; )
-			rmx_lval(dnew,i,j,k) = rmx_lval(rm,j,i,k);
+	    	memcpy(rmx_lval(dnew,i,j), rmx_lval(rm,i,j),
+	    			sizeof(double)*dnew->ncomp);
 	return(dnew);
 }
 
@@ -609,10 +617,10 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	for (i = mres->nrows; i--; )
 	    for (j = mres->ncols; j--; )
 	        for (k = mres->ncomp; k--; ) {
-		    long double	d = 0;
+		    double	d = 0;
 		    for (h = m1->ncols; h--; )
-			d += rmx_lval(m1,i,h,k) * rmx_lval(m2,h,j,k);
-		    rmx_lval(mres,i,j,k) = (double)d;
+			d += rmx_lval(m1,i,h)[k] * rmx_lval(m2,h,j)[k];
+		    rmx_lval(mres,i,j)[k] = d;
 		}
 	return(mres);
 }
@@ -638,33 +646,33 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 		if (divide) {
 		    double	d;
 		    if (m2->ncomp == 1) {
-			d = rmx_lval(m2,i,j,0);
+			d = rmx_lval(m2,i,j)[0];
 			if (d == 0) {
 			    ++zeroDivides;
 			    for (k = m1->ncomp; k--; )
-				rmx_lval(m1,i,j,k) = 0;
+				rmx_lval(m1,i,j)[k] = 0;
 			} else {
 			    d = 1./d;
 			    for (k = m1->ncomp; k--; )
-				rmx_lval(m1,i,j,k) *= d;
+				rmx_lval(m1,i,j)[k] *= d;
 			}
 		    } else
 		        for (k = m1->ncomp; k--; ) {
-			    d = rmx_lval(m2,i,j,k);
+			    d = rmx_lval(m2,i,j)[k];
 			    if (d == 0) {
 			        ++zeroDivides;
-				rmx_lval(m1,i,j,k) = 0;
+				rmx_lval(m1,i,j)[k] = 0;
 			    } else
-				rmx_lval(m1,i,j,k) /= d;
+				rmx_lval(m1,i,j)[k] /= d;
 			}
 		} else {
 		    if (m2->ncomp == 1) {
-			const double	d = rmx_lval(m2,i,j,0);
+			const double	d = rmx_lval(m2,i,j)[0];
 		        for (k = m1->ncomp; k--; )
-			    rmx_lval(m1,i,j,k) *= d;
+			    rmx_lval(m1,i,j)[k] *= d;
 		    } else
 		        for (k = m1->ncomp; k--; )
-			    rmx_lval(m1,i,j,k) *= rmx_lval(m2,i,j,k);
+			    rmx_lval(m1,i,j)[k] *= rmx_lval(m2,i,j)[k];
 		}
 	if (zeroDivides) {
 		rmx_addinfo(m1, "WARNING: zero divide(s) corrupted results\n");
@@ -699,9 +707,12 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 	else
 		rmx_addinfo(msum, rmx_mismatch_warn);
 	for (i = msum->nrows; i--; )
-	    for (j = msum->ncols; j--; )
+	    for (j = msum->ncols; j--; ) {
+	    	const double	*da = rmx_lval(madd,i,j);
+	    	double		*ds = rmx_lval(msum,i,j);
 		for (k = msum->ncomp; k--; )
-		     rmx_lval(msum,i,j,k) += sf[k] * rmx_lval(madd,i,j,k);
+		     ds[k] += sf[k] * da[k];
+	    }
 	if (mysf)
 		free(mysf);
 	return(1);
@@ -716,10 +727,11 @@ rmx_scale(RMATRIX *rm, const double sf[])
 	if (!rm | !sf)
 		return(0);
 	for (i = rm->nrows; i--; )
-	    for (j = rm->ncols; j--; )
+	    for (j = rm->ncols; j--; ) {
+	    	double	*dp = rmx_lval(rm,i,j);
 		for (k = rm->ncomp; k--; )
-		    rmx_lval(rm,i,j,k) *= sf[k];
-
+		    dp[k] *= sf[k];
+	    }
 	if (rm->info)
 		rmx_addinfo(rm, "Applied scalar\n");
 	return(1);
@@ -746,13 +758,15 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	}
 	dnew->dtype = msrc->dtype;
 	for (i = dnew->nrows; i--; )
-	    for (j = dnew->ncols; j--; )
+	    for (j = dnew->ncols; j--; ) {
+		const double	*ds = rmx_lval(msrc,i,j);
 	        for (kd = dnew->ncomp; kd--; ) {
 		    double	d = 0;
 		    for (ks = msrc->ncomp; ks--; )
-		        d += cmat[kd*msrc->ncomp + ks] * rmx_lval(msrc,i,j,ks);
-		    rmx_lval(dnew,i,j,kd) = d;
+		        d += cmat[kd*msrc->ncomp + ks] * ds[ks];
+		    rmx_lval(dnew,i,j)[kd] = d;
 		}
+	    }
 	return(dnew);
 }
 
@@ -772,9 +786,10 @@ rmx_from_cmatrix(const CMATRIX *cm)
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; ) {
 		const COLORV	*cv = cm_lval(cm,i,j);
-		rmx_lval(dnew,i,j,0) = cv[0];
-		rmx_lval(dnew,i,j,1) = cv[1];
-		rmx_lval(dnew,i,j,2) = cv[2];
+		double		*dp = rmx_lval(dnew,i,j);
+		dp[0] = cv[0];
+		dp[1] = cv[1];
+		dp[2] = cv[2];
 	    }
 	return(dnew);
 }
@@ -793,14 +808,12 @@ cm_from_rmatrix(const RMATRIX *rm)
 		return(NULL);
 	for (i = cnew->nrows; i--; )
 	    for (j = cnew->ncols; j--; ) {
-		COLORV	*cv = cm_lval(cnew,i,j);
+		const double	*dp = rmx_lval(rm,i,j);
+		COLORV		*cv = cm_lval(cnew,i,j);
 		if (rm->ncomp == 1)
-		    cv[0] = cv[1] = cv[2] = (COLORV)rmx_lval(rm,i,j,0);
-		else {
-		    cv[0] = (COLORV)rmx_lval(rm,i,j,0);
-		    cv[1] = (COLORV)rmx_lval(rm,i,j,1);
-		    cv[2] = (COLORV)rmx_lval(rm,i,j,2);
-		}
+		    setcolor(cv, dp[0], dp[0], dp[0]);
+		else
+	    	    setcolor(cv, dp[0], dp[1], dp[2]);
 	    }
 	return(cnew);
 }
