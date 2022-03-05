@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pict.c,v 2.12 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: ra_pict.c,v 2.13 2022/03/05 17:30:38 greg Exp $";
 #endif
 /*		Convert an Radiance image to APPLE pict format.
  *
@@ -320,8 +320,7 @@ getrow(
 	int xsize
 )
 {
-    extern char *tempbuffer();		/* defined in color.c */
-    COLR    *scanin = NULL;
+     COLR    *scanin = NULL;
     int	    x;
 
     if ((scanin = (COLR *)tempbuffer(xsize*sizeof(COLR))) == NULL) {
