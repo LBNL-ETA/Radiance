@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.53 2022/03/05 01:45:21 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.54 2022/03/05 15:33:09 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -436,7 +436,10 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = rm->ncols; j--; ) {
 	    	const double	*dp = rmx_lval(rm,i,j);
-	        setcolr(scan[j], dp[0], dp[1], dp[2]);
+	    	if (rm->ncomp == 1)
+	    		setcolr(scan[j], dp[0], dp[0], dp[0]);
+	    	else
+	        	setcolr(scan[j], dp[0], dp[1], dp[2]);
 	    }
 	    if (fwritecolrs(scan, rm->ncols, fp) < 0) {
 		free(scan);
@@ -489,18 +492,8 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		fprintf(fp, "NROWS=%d\n", rm->nrows);
 		fprintf(fp, "NCOLS=%d\n", rm->ncols);
 		fprintf(fp, "NCOMP=%d\n", rm->ncomp);
-	} else if (rm->ncomp != 3) {		/* wrong # components? */
-		CMATRIX	*cm;			/* convert & write */
-		if (rm->ncomp != 1)		/* only convert grayscale */
-			return(0);
-		if (!(cm = cm_from_rmatrix(rm)))
-			return(0);
-		fputformat(cm_fmt_id[dtype], fp);
-		fputc('\n', fp);
-		ok = cm_write(cm, dtype, fp);
-		cm_free(cm);
-		return(ok);
-	}
+	} else if ((rm->ncomp != 3) & (rm->ncomp != 1))
+		return(0);			/* wrong # components */
 	if ((dtype == DTfloat) | (dtype == DTdouble))
 		fputendian(fp);			/* important to record */
 	fputformat(cm_fmt_id[dtype], fp);
