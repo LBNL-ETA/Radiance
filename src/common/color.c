@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.21 2019/05/27 15:44:26 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.22 2022/03/05 17:18:02 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -28,20 +28,29 @@ static const char	RCSid[] = "$Id: color.c,v 2.21 2019/05/27 15:44:26 greg Exp $"
 #define  MINRUN		4	/* minimum run length */
 
 
-char *
+void *
 tempbuffer(			/* get a temporary buffer */
 	unsigned int  len
 )
 {
-	static char  *tempbuf = NULL;
-	static unsigned  tempbuflen = 0;
+	static void		*tempbuf = NULL;
+	static unsigned int	tempbuflen = 0;
 
-	if (!len | (len > tempbuflen)) {
-		if (tempbuflen)
+	if (!len) {		/* call to free */
+		if (tempbuflen) {
 			free(tempbuf);
-		tempbuf = len ? (char *)malloc(len) : (char *)NULL;
-		tempbuflen = len*(tempbuf != NULL);
+			tempbuf = NULL;
+			tempbuflen = 0;
+		}
+		return(NULL);
 	}
+	if (len <= tempbuflen)	/* big enough already? */
+		return(tempbuf);
+				/* else free & reallocate */
+	if (tempbuflen)
+		free(tempbuf);
+	tempbuf = malloc(len);
+	tempbuflen = len*(tempbuf != NULL);
 	return(tempbuf);
 }
 

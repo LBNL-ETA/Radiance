@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.35 2021/11/14 17:30:02 greg Exp $ */
+/* RCSid $Id: color.h,v 2.36 2022/03/05 17:18:02 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -209,7 +209,7 @@ extern COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
 #define  cpcolormat(md,ms)	memcpy((void *)md,(void *)ms,sizeof(COLORMAT))
 
 					/* defined in color.c */
-extern char	*tempbuffer(unsigned int len);
+extern void	*tempbuffer(unsigned int len);
 extern int	fwritecolrs(COLR *scanline, int len, FILE *fp);
 extern int	freadcolrs(COLR *scanline, int len, FILE *fp);
 extern int	fwritescan(COLOR *scanline, int len, FILE *fp);
