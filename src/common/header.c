@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.43 2022/03/04 17:16:12 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.44 2022/03/06 16:27:55 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -31,6 +31,7 @@ static const char	RCSid[] = "$Id: header.c,v 2.43 2022/03/04 17:16:12 greg Exp $
 
 #include  "tiff.h"	/* for int32 */
 #include  "rtio.h"
+#include  "color.h"
 #include  "resolu.h"
 
 #define	 MAXLINE	2048
@@ -214,15 +215,17 @@ fputformat(		/* put out a format value */
 	fputs(FMTSTR, fp);
 	fputs(s, fp);
 			/* pad to align binary type for mmap() */
-	if (!strncmp(s, "float", 5))
+	if (globmatch(PICFMT, s))
+		align = 0;	/* not needed for picture data */
+	else if (!strncmp("float", s, 5))
 		align = sizeof(float);
-	else if (!strncmp(s, "double", 6))
+	else if (!strncmp("double", s, 6))
 		align = sizeof(double);
-	else if (!strncmp(s, "16-bit", 6))
+	else if (!strncmp("16-bit", s, 6))
 		align = 2;
-	else if (!strncmp(s, "32-bit", 6))
+	else if (!strncmp("32-bit", s, 6))
 		align = 4;
-	else if (!strncmp(s, "64-bit", 6))
+	else if (!strncmp("64-bit", s, 6))
 		align = 8;
 	if (align) {
 		long	pos = ftell(fp);

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.89 2021/12/03 18:10:48 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.90 2022/03/06 16:27:55 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -99,7 +99,7 @@ tmapcolrs.o:	tmapcolrs.c
 testBSDF:	testBSDF.c bsdf.h rtio.h
 	$(CC) -L../lib $(CFLAGS) -o testBSDF testBSDF.c -lrtrad -lm
 
-color.o colrops.o lamps.o spec_rgb.o:	color.h
+color.o colrops.o header.o lamps.o spec_rgb.o:	color.h
 
 cone.o:		cone.h
 
