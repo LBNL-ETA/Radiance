@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.112 2022/03/07 17:52:14 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.113 2022/03/07 19:30:53 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -21,8 +21,6 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.112 2022/03/07 17:52:14 greg Exp
 #ifndef  OCTSCALE
 #define	 OCTSCALE	1.0	/* ceil((valid rad.)/(cube size)) */
 #endif
-
-extern char  *shm_boundary;	/* memory sharing boundary */
 
 #ifndef  MAXASET
 #define	 MAXASET	4095	/* maximum number of elements in ambient set */
