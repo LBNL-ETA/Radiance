@@ -2508,3 +2508,9 @@ picture is XYZE.
 Made subtle changes to header i/o routines to preserve alignment in
 binary file formats to enable memory-mapping.  Implemented memory-mapped
 matrix loading in rmtxop for binary double files.
+
+Removed ambient value sorting, which was written when ambient caches
+could overwhelm available memory.  This is rarely the case these days,
+and the added code complexity and updating of cache values with LRU
+counts dirties pages that would otherwise remain clean, so it was
+often a loss even when VM was an issue.
