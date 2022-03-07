@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.111 2021/11/18 19:38:21 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.112 2022/03/07 17:52:14 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -37,42 +37,12 @@ static AMBTREE	atrunk;		/* our ambient trunk node */
 static FILE  *ambfp = NULL;	/* ambient file pointer */
 static int  nunflshed = 0;	/* number of unflushed ambient values */
 
-#ifndef SORT_THRESH
-#ifdef SMLMEM
-#define SORT_THRESH	((16L<<20)/sizeof(AMBVAL))
-#else
-#define SORT_THRESH	((64L<<20)/sizeof(AMBVAL))
-#endif
-#endif
-#ifndef SORT_INTVL
-#define SORT_INTVL	(SORT_THRESH<<1)
-#endif
-#ifndef MAX_SORT_INTVL
-#define MAX_SORT_INTVL	(SORT_INTVL<<6)
-#endif
-
-
 static double  avsum = 0.;		/* computed ambient value sum (log) */
 static unsigned int  navsum = 0;	/* number of values in avsum */
 static unsigned int  nambvals = 0;	/* total number of indirect values */
 static unsigned int  nambshare = 0;	/* number of values from file */
-static unsigned long  ambclock = 0;	/* ambient access clock */
-static unsigned long  lastsort = 0;	/* time of last value sort */
-static long  sortintvl = SORT_INTVL;	/* time until next sort */
 static FILE  *ambinp = NULL;		/* auxiliary file for input */
 static long  lastpos = -1;		/* last flush position */
-
-#define MAXACLOCK	(1L<<30)	/* clock turnover value */
-	/*
-	 * Track access times unless we are sharing ambient values
-	 * through memory on a multiprocessor, when we want to avoid
-	 * claiming our own memory (copy on write).  Go ahead anyway
-	 * if more than two thirds of our values are unshared.
-	 * Compile with -Dtracktime=0 to turn this code off.
-	 */
-#ifndef tracktime
-#define tracktime	(shm_boundary == NULL || nambvals > 3*nambshare)
-#endif
 
 #define	 AMBFLUSH	(BUFSIZ/AMBVALSIZ)
 
@@ -88,13 +58,10 @@ static void freeambtree(AMBTREE  *atp);
 
 typedef void unloadtf_t(AMBVAL *);
 static unloadtf_t avinsert;
-static unloadtf_t av2list;
 static unloadtf_t avfree;
 static void unloadatree(AMBTREE  *at, unloadtf_t *f);
 
-static int aposcmp(const void *avp1, const void *avp2);
-static int avlmemi(AMBVAL *avaddr);
-static void sortambvals(int always);
+static void sortambvals(void);
 
 static int	plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang);
 static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
@@ -142,7 +109,7 @@ setambacc(				/* set ambient accuracy */
 	if (fabs(newa - olda) >= .05*(newa + olda)) {
 		ambacc = newa;
 		if (ambacc > FTINY && nambvals > 0)
-			sortambvals(1);		/* rebuild tree */
+			sortambvals();		/* rebuild tree */
 	}
 }
 
@@ -229,9 +196,6 @@ ambdone(void)			/* close ambient file and free memory */
 	navsum = 0;
 	nambvals = 0;
 	nambshare = 0;
-	ambclock = 0;
-	lastsort = 0;
-	sortintvl = SORT_INTVL;
 }
 
 
@@ -331,9 +295,6 @@ multambient(		/* compute ambient component & multiply by coef. */
 		addcolor(aval, caustic);
 		return;
 	}
-
-	if (tracktime)				/* sort to minimize thrashing */
-		sortambvals(0);
 						/* interpolate ambient value */
 	setcolor(acol, 0.0, 0.0, 0.0);
 	d = sumambient(acol, r, nrm, rdepth,
@@ -476,9 +437,6 @@ sumambient(		/* get interpolated ambient value */
 		double	u, v, d, delta_r2, delta_t2;
 		COLOR	ct;
 		FVECT	uvw[3];
-					/* record access */
-		if (tracktime)
-			av->latick = ambclock;
 		/*
 		 *  Ambient level test
 		 */
@@ -726,7 +684,6 @@ avstore(				/* allocate memory and save aval */
 	if ((av = newambval()) == NULL)
 		error(SYSTEM, "out of memory in avstore");
 	*av = *aval;
-	av->latick = ambclock;
 	av->next = NULL;
 	nambvals++;
 	d = bright(av->val);
@@ -799,175 +756,21 @@ unloadatree(			/* unload an ambient value tree */
 }
 
 
-static struct avl {
-	AMBVAL	*p;
-	unsigned long	t;
-}	*avlist1;			/* ambient value list with ticks */
-static AMBVAL	**avlist2;		/* memory positions for sorting */
-static int	i_avlist;		/* index for lists */
-
-static int alatcmp(const void *av1, const void *av2);
-
 static void
 avfree(AMBVAL *av)
 {
 	free(av);
 }
 
-static void
-av2list(
-	AMBVAL *av
-)
-{
-#ifdef DEBUG
-	if (i_avlist >= nambvals)
-		error(CONSISTENCY, "too many ambient values in av2list1");
-#endif
-	avlist1[i_avlist].p = avlist2[i_avlist] = (AMBVAL*)av;
-	avlist1[i_avlist++].t = av->latick;
-}
-
-
-static int
-alatcmp(			/* compare ambient values for MRA */
-	const void *av1,
-	const void *av2
-)
-{
-	long  lc = ((struct avl *)av2)->t - ((struct avl *)av1)->t;
-	return(lc<0 ? -1 : lc>0 ? 1 : 0);
-}
-
-
-/* GW NOTE 2002/10/3:
- * I used to compare AMBVAL pointers, but found that this was the
- * cause of a serious consistency error with gcc, since the optimizer
- * uses some dangerous trick in pointer subtraction that
- * assumes pointers differ by exact struct size increments.
- */
-static int
-aposcmp(			/* compare ambient value positions */
-	const void	*avp1,
-	const void	*avp2
-)
-{
-	long	diff = *(char * const *)avp1 - *(char * const *)avp2;
-	if (diff < 0)
-		return(-1);
-	return(diff > 0);
-}
-
-
-static int
-avlmemi(				/* find list position from address */
-	AMBVAL	*avaddr
-)
-{
-	AMBVAL  **avlpp;
-
-	avlpp = (AMBVAL **)bsearch(&avaddr, avlist2,
-			nambvals, sizeof(AMBVAL *), aposcmp);
-	if (avlpp == NULL)
-		error(CONSISTENCY, "address not found in avlmemi");
-	return(avlpp - avlist2);
-}
-
 
 static void
-sortambvals(			/* resort ambient values */
-	int	always
-)
+sortambvals(void)			/* resort ambient values */
 {
-	AMBTREE  oldatrunk;
-	AMBVAL	tav, *tap, *pnext;
-	int	i, j;
-					/* see if it's time yet */
-	if (!always && (ambclock++ < lastsort+sortintvl ||
-			nambvals < SORT_THRESH))
-		return;
-	/*
-	 * The idea here is to minimize memory thrashing
-	 * in VM systems by improving reference locality.
-	 * We do this by periodically sorting our stored ambient
-	 * values in memory in order of most recently to least
-	 * recently accessed.  This ordering was chosen so that new
-	 * ambient values (which tend to be less important) go into
-	 * higher memory with the infrequently accessed values.
-	 *	Since we expect our values to need sorting less
-	 * frequently as the process continues, we double our
-	 * waiting interval after each call.
-	 * 	This routine is also called by setambacc() with
-	 * the "always" parameter set to 1 so that the ambient
-	 * tree will be rebuilt with the new accuracy parameter.
-	 */
-	if (tracktime) {		/* allocate pointer arrays to sort */
-		avlist2 = (AMBVAL **)malloc(nambvals*sizeof(AMBVAL *));
-		avlist1 = (struct avl *)malloc(nambvals*sizeof(struct avl));
-	} else {
-		avlist2 = NULL;
-		avlist1 = NULL;
-	}
-	if (avlist1 == NULL) {		/* no time tracking -- rebuild tree? */
-		if (avlist2 != NULL)
-			free(avlist2);
-		if (always) {		/* rebuild without sorting */
-			oldatrunk = atrunk;
-			atrunk.alist = NULL;
-			atrunk.kid = NULL;
-			unloadatree(&oldatrunk, avinsert);
-		}
-	} else {			/* sort memory by last access time */
-		/*
-		 * Sorting memory is tricky because it isn't contiguous.
-		 * We have to sort an array of pointers by MRA and also
-		 * by memory position.  We then copy values in "loops"
-		 * to minimize memory hits.  Nevertheless, we will visit
-		 * everyone at least twice, and this is an expensive process
-		 * when we're thrashing, which is when we need to do it.
-		 */
-#ifdef DEBUG
-		sprintf(errmsg, "sorting %u ambient values at ambclock=%lu...",
-				nambvals, ambclock);
-		eputs(errmsg);
-#endif
-		i_avlist = 0;
-		unloadatree(&atrunk, av2list);	/* empty current tree */
-#ifdef DEBUG
-		if (i_avlist < nambvals)
-			error(CONSISTENCY, "missing ambient values in sortambvals");
-#endif
-		qsort(avlist1, nambvals, sizeof(struct avl), alatcmp);
-		qsort(avlist2, nambvals, sizeof(AMBVAL *), aposcmp);
-		for (i = 0; i < nambvals; i++) {
-			if (avlist1[i].p == NULL)
-				continue;
-			tap = avlist2[i];
-			tav = *tap;
-			for (j = i; (pnext = avlist1[j].p) != tap;
-					j = avlmemi(pnext)) {
-				*(avlist2[j]) = *pnext;
-				avinsert(avlist2[j]);
-				avlist1[j].p = NULL;
-			}
-			*(avlist2[j]) = tav;
-			avinsert(avlist2[j]);
-			avlist1[j].p = NULL;
-		}
-		free(avlist1);
-		free(avlist2);
-						/* compute new sort interval */
-		sortintvl = ambclock - lastsort;
-		if (sortintvl >= MAX_SORT_INTVL/2)
-			sortintvl = MAX_SORT_INTVL;
-		else
-			sortintvl <<= 1;	/* wait twice as long next */
-#ifdef DEBUG
-		eputs("done\n");
-#endif
-	}
-	if (ambclock >= MAXACLOCK)
-		ambclock = MAXACLOCK/2;
-	lastsort = ambclock;
+	AMBTREE  oldatrunk = atrunk;
+
+	atrunk.alist = NULL;
+	atrunk.kid = NULL;
+	unloadatree(&oldatrunk, avinsert);
 }
 
 

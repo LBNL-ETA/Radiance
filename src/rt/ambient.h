@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.25 2019/05/14 17:39:10 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.26 2022/03/07 17:52:14 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -16,7 +16,6 @@ extern "C" {
  */
 typedef struct ambrec {
 	struct ambrec  *next;	/* next in list */
-	unsigned long  latick;	/* last accessed tick */
 	float  pos[3];		/* position in space */
 	int32  ndir;		/* encoded surface normal */
 	int32  udir;		/* u-vector direction */
