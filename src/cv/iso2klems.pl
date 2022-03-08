@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: iso2klems.pl,v 2.1 2022/03/08 19:04:56 greg Exp $
+# RCSid $Id: iso2klems.pl,v 2.2 2022/03/08 19:50:06 greg Exp $
 #
 # Convert tabulated isotropic direct-hemispherical and direct-direct to Klems XML
 #
@@ -9,7 +9,7 @@ use strict;
 my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 use File::Temp qw/ :mktemp  /;
 sub userror {
-	print STDERR "Usage: iso2klems [-t][-W][-s \"x=string;y=string\"] [input.dat]\n";
+	print STDERR "Usage: iso2klems [-t][-f \"x=string;y=string\"][-u unit] [input.dat]\n";
 	exit 1;
 }
 my ($td,$rmtmp,$cmd);
@@ -29,8 +29,11 @@ my $reverse = 0;
 while ($#ARGV >= 0) {
 	if  ("$ARGV[0]" eq "-t") {
 		$reverse = ! $reverse;
-	} elsif ("$ARGV[0]" eq "-s") {
+	} elsif ("$ARGV[0]" =~ /^-[fs]$/) {
 		$wrapper .= " -f \"$ARGV[1]\"";
+		shift @ARGV;
+	} elsif ("$ARGV[0]" eq "-u") {
+		$wrapper .= " -u $ARGV[1]";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-./) {
 		userror();
