@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.68 2022/02/10 16:24:51 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.69 2022/03/08 22:27:56 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -135,7 +135,7 @@ compute_through(BSDFDAT *ndp)
 	FVECT		pdir;
 	double		tomega, srchrad;
 	double		tomsum, tomsurr;
-	COLOR		vpeak, vsurr;
+	COLOR		vpeak, vsurr, btdiff;
 	double		vypeak;
 	int		i, ns;
 	SDError		ec;
@@ -194,14 +194,24 @@ compute_through(BSDFDAT *ndp)
 	}
 	if (tomsurr < 0.2*tomsum)		/* insufficient surround? */
 		return;
-	if ((vypeak/ns - (ndp->vray[2] > 0 ? ndp->sd->tLambFront.cieY
-			: ndp->sd->tLambBack.cieY)*(1./PI))*tomsum < .0005)
-		return;				/* < 0.05% transmission */
-	copycolor(ndp->cthru, vpeak);		/* already scaled by omega */
-	multcolor(ndp->cthru, ndp->pr->pcol);	/* modify by pattern */
 	scalecolor(vsurr, 1./tomsurr);		/* surround is avg. BTDF */
+	if (ndp->vray[2] > 0)			/* get diffuse BTDF */
+		cvt_sdcolor(btdiff, &ndp->sd->tLambFront);
+	else
+		cvt_sdcolor(btdiff, &ndp->sd->tLambBack);
+	scalecolor(btdiff, (1./PI));
+	for (i = 3; i--; ) {			/* remove diffuse contrib. */
+		if ((colval(vpeak,i) -= tomsum*colval(btdiff,i)) < 0)
+			colval(vpeak,i) = 0;
+		if ((colval(vsurr,i) -= colval(btdiff,i)) < 0)
+			colval(vsurr,i) = 0;
+	}
+	if (bright(vpeak) < .0005)		/* < 0.05% specular? */
+		return;
+	multcolor(vsurr, ndp->pr->pcol);	/* modify by color */
+	multcolor(vpeak, ndp->pr->pcol);
+	copycolor(ndp->cthru, vpeak);
 	copycolor(ndp->cthru_surr, vsurr);
-	multcolor(ndp->cthru_surr, ndp->pr->pcol);
 	return;
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));

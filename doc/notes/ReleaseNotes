@@ -2517,3 +2517,6 @@ often a loss even when VM was an issue.
 
 Added iso2klems script to compute a Klems BSDF based on specular
 and diffuse measurements as a function of incident angle.
+
+Fixed issue with over-counting diffuse component during aBSDF
+peak extraction.
