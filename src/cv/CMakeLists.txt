@@ -104,13 +104,16 @@ if(WIN32)
   add_custom_target(optics2rad ALL
     COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/optics2rad.exe -d
   )
-  install(PROGRAMS optics2rad.exe
+   add_custom_target(iso2klems ALL
+    COMMAND pp ${CMAKE_CURRENT_SOURCE_DIR}/iso2klems.pl -o ${CMAKE_CURRENT_SOURCE_DIR}/iso2klems.exe -d
+  )
+ install(PROGRAMS optics2rad.exe iso2klems.exe
     DESTINATION "bin"
   )
 else()
-  install(PROGRAMS optics2rad.pl
-    DESTINATION "bin"
-    RENAME optics2rad
+  install_without_extension(
+    optics2rad.pl
+    iso2klems.pl
   )
 endif()
 

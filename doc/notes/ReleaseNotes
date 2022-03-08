@@ -2514,3 +2514,6 @@ could overwhelm available memory.  This is rarely the case these days,
 and the added code complexity and updating of cache values with LRU
 counts dirties pages that would otherwise remain clean, so it was
 often a loss even when VM was an issue.
+
+Added iso2klems script to compute a Klems BSDF based on specular
+and diffuse measurements as a function of incident angle.

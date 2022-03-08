@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.57 2021/12/14 02:33:18 greg Exp $
+# RCSid $Id: Rmakefile,v 2.58 2022/03/08 19:04:56 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -31,7 +31,8 @@ all:	$(PROGS)
 install:	$(PROGS) $(LIBFILES) optics2rad.csh
 	cp $(PROGS) $(INSTDIR)
 	cp optics2rad.csh $(INSTDIR)/optics2rad
-	chmod 755 $(INSTDIR)/optics2rad
+	cp iso2klems.pl $(INSTDIR)/iso2klems
+	chmod 755 $(INSTDIR)/optics2rad $(INSTDIR)/iso2klems
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
