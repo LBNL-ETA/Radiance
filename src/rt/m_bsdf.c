@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.69 2022/03/08 22:27:56 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.70 2022/03/09 00:27:25 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -251,6 +251,23 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 					/* transform source direction */
 	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
 		return(0);
+					/* check indirect over-counting */
+	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
+		double		dx = vsrc[0] + ndp->vray[0];
+		double		dy = vsrc[1] + ndp->vray[1];
+		SDSpectralDF	*dfp = (ndp->pr->rod > 0) ?
+			((ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb) :
+			((ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf) ;
+
+		tomega = omega*fabs(vsrc[2]);
+		if (dx*dx + dy*dy <= (2.5*4./PI)*(tomega + dfp->minProjSA +
+						2.*sqrt(tomega*dfp->minProjSA))) {
+			if (bright(ndp->cthru_surr) <= FTINY)
+				return(0);
+			copycolor(cval, ndp->cthru_surr);
+			return(1);	/* return non-zero surround BTDF */
+		}
+	}
 					/* will discount diffuse portion */
 	switch ((vsrc[2] > 0)<<1 | (ndp->vray[2] > 0)) {
 	case 3:
@@ -280,23 +297,6 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	} else {
 		diffY = 0;
 		setcolor(cdiff,  0, 0, 0);
-	}
-					/* check indirect over-counting */
-	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
-		double		dx = vsrc[0] + ndp->vray[0];
-		double		dy = vsrc[1] + ndp->vray[1];
-		SDSpectralDF	*dfp = (ndp->pr->rod > 0) ?
-			((ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb) :
-			((ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf) ;
-
-		tomega = omega*fabs(vsrc[2]);
-		if (dx*dx + dy*dy <= (2.5*4./PI)*(tomega + dfp->minProjSA +
-						2.*sqrt(tomega*dfp->minProjSA))) {
-			if (bright(ndp->cthru_surr) <= FTINY)
-				return(0);
-			copycolor(cval, ndp->cthru_surr);
-			return(1);	/* return non-zero surround BTDF */
-		}
 	}
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
