@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: iso2klems.pl,v 2.2 2022/03/08 19:50:06 greg Exp $
+# RCSid $Id: iso2klems.pl,v 2.3 2022/03/10 17:26:04 greg Exp $
 #
 # Convert tabulated isotropic direct-hemispherical and direct-direct to Klems XML
 #
@@ -91,10 +91,10 @@ if ($windoz) {
 		qq{-e "Rd1=if($h2h[1]-.001,Rdiff(tideg)*Rdiff(tsdeg)/$h2h[1],0)" } .
 		qq{-e "Td2=if($h2h[2]-.001,Tdiff(180-tideg)*Tdiff(180-tsdeg)/$h2h[2],0)" } .
 		qq{-e "Rd2=if($h2h[3]-.001,Rdiff(180-tideg)*Rdiff(180-tsdeg)/$h2h[3],0)" } .
-		qq{-e "\$1=if(Tspec(0),if(diag,Tspec(tideg)/om,Td1*corr),Td1)" } .
-		qq{-e "\$2=if(Rspec(0),if(diag,Rspec(tideg)/om,Rd1*corr),Rd1)" } .
-		qq{-e "\$3=if(Tspec(180),if(diag,Tspec(180-tideg)/om,Td2*corr),Td2)" } .
-		qq{-e "\$4=if(Rspec(180),if(diag,Rspec(180-tideg)/om,Rd2*corr),Rd2)" };
+		q{-e "$1=if(Tspec(0),if(diag,Tspec(tideg)/om,Td1*corr),Td1)" } .
+		q{-e "$2=if(Rspec(0),if(diag,Rspec(tideg)/om,Rd1*corr),Rd1)" } .
+		q{-e "$3=if(Tspec(180),if(diag,Tspec(180-tideg)/om,Td2*corr),Td2)" } .
+		q{-e "$4=if(Rspec(180),if(diag,Rspec(180-tideg)/om,Rd2*corr),Rd2)" };
 } else {
 	$cmd = qq{cnt 145 145 } .
 		qq{| rcalc -f $funcfile } .
@@ -103,10 +103,10 @@ if ($windoz) {
 		qq{-e 'Rd1=if($h2h[1]-.001,Rdiff(tideg)*Rdiff(tsdeg)/$h2h[1],0)' } .
 		qq{-e 'Td2=if($h2h[2]-.001,Tdiff(180-tideg)*Tdiff(180-tsdeg)/$h2h[2],0)' } .
 		qq{-e 'Rd2=if($h2h[3]-.001,Rdiff(180-tideg)*Rdiff(180-tsdeg)/$h2h[3],0)' } .
-		qq{-e '\$1=if(Tspec(0),if(diag,Tspec(tideg)/om,Td1*corr),Td1)' } .
-		qq{-e '\$2=if(Rspec(0),if(diag,Rspec(tideg)/om,Rd1*corr),Rd1)' } .
-		qq{-e '\$3=if(Tspec(180),if(diag,Tspec(180-tideg)/om,Td2*corr),Td2)' } .
-		qq{-e '\$4=if(Rspec(180),if(diag,Rspec(180-tideg)/om,Rd2*corr),Rd2)' };
+		q{-e '$1=if(Tspec(0),if(diag,Tspec(tideg)/om,Td1*corr),Td1)' } .
+		q{-e '$2=if(Rspec(0),if(diag,Rspec(tideg)/om,Rd1*corr),Rd1)' } .
+		q{-e '$3=if(Tspec(180),if(diag,Tspec(180-tideg)/om,Td2*corr),Td2)' } .
+		q{-e '$4=if(Rspec(180),if(diag,Rspec(180-tideg)/om,Rd2*corr),Rd2)' };
 }
 system qq{$cmd | rsplit "-t " $TK1dataf $RK1dataf $TK2dataf $RK2dataf};
 die "Error running rcalc or rsplit" if ( $? );
