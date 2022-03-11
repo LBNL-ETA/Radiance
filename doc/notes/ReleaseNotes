@@ -2523,3 +2523,5 @@ peak extraction.
 
 Added dctimestep -x and -y options to specify image dimensions
 for multiple outputs corresponding to result vectors.
+
+Added -P option to rcalc to pass formatted input when cond is <= 0.

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: icalc.1,v 1.4 2019/06/10 13:56:52 greg Exp $"
+.\" RCSid "$Id: icalc.1,v 1.5 2022/03/11 22:50:13 greg Exp $"
 .TH ICALC 1 2/3/95 RADIANCE
 .SH NAME
 icalc - interactive calculator
@@ -88,8 +88,8 @@ The following library of predefined functions and variables is provided:
 .BR PI
 the ratio of a circle's circumference to its diameter.
 .TP
-.BR "if(cond, then, else)"
-if cond is greater than zero,
+.BR "if(test, then, else)"
+if test is greater than zero,
 then is evaluated, otherwise else is evaluated.
 This function is necessary for recursive definitions.
 .TP

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.31 2022/02/21 23:00:55 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.32 2022/03/11 22:50:13 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -55,7 +55,7 @@ struct field {		 /* record format structure */
 #define freqstr(s) efree(s)
 
 static int getinputrec(FILE *fp);
-static void scaninp(void), advinp(void), skipinp(void);
+static void scaninp(void), advinp(void), passinp(void), skipinp(void);
 static void putrec(void), putout(void), nbsynch(void);
 static int getrec(void);
 static void execute(char *file);
@@ -69,28 +69,28 @@ static void bchanset(int n, double v);
 static struct strvar* getsvar(char *svname);
 static double l_in(char *);
 
-struct field *inpfmt = NULL; /* input record format */
-struct field *outfmt = NULL; /* output record structure */
-struct strvar *svhead = NULL; /* string variables */
+struct field *inpfmt = NULL;	/* input record format */
+struct field *outfmt = NULL;	/* output record structure */
+struct strvar *svhead = NULL;	/* string variables */
 
-long incnt = 0;		/* limit number of input records? */
+long incnt = 0;			/* limit number of input records? */
 long outcnt = 0;		/* limit number of output records? */
 
-int blnkeq = 1;		/* blanks compare equal? */
-int igneol = 0;		/* ignore end of line? */
+int blnkeq = 1;			/* blanks compare equal? */
+int igneol = 0;			/* ignore end of line? */
 int passive = 0;		/* passive mode (transmit unmatched input) */
-char sepchar = '\t';	 /* input/output separator */
-int noinput = 0;	 /* no input records? */
+char sepchar = '\t';		/* input/output separator */
+int noinput = 0;		/* no input records? */
 int itype = 'a';		/* input type (a/f/F/d/D) */
 int nbicols = 0;		/* number of binary input columns */
 int otype = 'a';		/* output format (a/f/F/d/D) */
-char inpbuf[INBSIZ];	 /* input buffer */
-double colval[MAXCOL];	 /* input column values */
-unsigned long colflg = 0; /* column retrieved flags */
-int colpos;		 /* output column position */
+char inpbuf[INBSIZ];		/* input buffer */
+double colval[MAXCOL];		/* input column values */
+unsigned long colflg = 0;	/* column retrieved flags */
+int colpos;			/* output column position */
 
-int nowarn = 0;		/* non-fatal diagnostic output */
-int unbuff = 0;		/* unbuffered output (flush each record) */
+int nowarn = 0;			/* non-fatal diagnostic output */
+int unbuff = 0;			/* unbuffered output (flush each record) */
 
 struct {
 	FILE *fin;		 /* input file */
@@ -128,7 +128,10 @@ char *argv[]
 			igneol = !igneol;
 			break;
 		case 'p':
-			passive = !passive;
+			passive = 1;
+			break;
+		case 'P':
+			passive = -1;
 			break;
 		case 't':
 			sepchar = argv[i][2];
@@ -229,7 +232,7 @@ char *argv[]
 		userr:
 			eputs("Usage: ");
 			eputs(argv[0]);
-eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
+eputs(" [-b][-l][-n][-p|-P][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
 			quit(1);
 		}
 	if (otype != 'a')
@@ -246,6 +249,11 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 		eclock++;
 		putout();
 		quit(0);
+	}
+	if (passive && (inpfmt == NULL) | (outfmt == NULL)) {
+		eputs(argv[0]);
+		eputs(": options -p and -P require -i and -o formats\n");
+		quit(1);
 	}
 	if (blnkeq)	 /* for efficiency */
 		nbsynch();
@@ -278,8 +286,6 @@ getinputrec(		/* get next input record */
 FILE *fp
 )
 {
-	if (inpfmt != NULL)
-		return(getrec());
 	if ((itype == 'd') | (itype == 'D')) {
 		if (getbinary(inpbuf, sizeof(double), nbicols, fp) != nbicols)
 			return(0);
@@ -325,7 +331,7 @@ char *file
 	if (inpfmt != NULL)
 		initinp(fp);
 	
-	while (getinputrec(fp)) {
+	while (inpfmt != NULL ? getrec() : getinputrec(fp)) {
 		++nrecs;
 		if (set_recno)
 			varset("recno", '=', (double)nrecs);
@@ -336,6 +342,12 @@ char *file
 		if (!conditional || varvalue("cond") > 0.0) {
 			putout();
 			++nout;
+			advinp();
+		} else if (inpfmt != NULL) {
+			if (passive < 0)
+				passinp();
+			else
+				advinp();
 		}
 		if (incnt && nrecs >= incnt)
 			break;
@@ -688,7 +700,7 @@ clearrec(void)			/* clear input record variables */
 
 
 static int
-getrec(void)				/* get next record from file */
+getrec(void)			/* get next record from file */
 {
 	int eatline;
 	struct field *f;
@@ -705,12 +717,10 @@ getrec(void)				/* get next record from file */
 		for (f = inpfmt; f != NULL; f = f->next)
 			if (!getfield(f))
 				break;
-		if (f == NULL) {
-			advinp(); /* got one! */
+		if (f == NULL)		/* got one? */
 			return(1);
-		}
-		skipinp();		/* eat false start */
-		if (eatline) {	 /* eat rest of line */
+		skipinp();		/* else eat false start */
+		if (eatline) {		/* eat rest of line */
 			while (ipb.chr != '\n') {
 				if (ipb.chr == EOF)
 					return(0);
@@ -919,9 +929,24 @@ advinp(void)			/* move home to current position */
 
 
 static void
-skipinp(void)		 /* rewind position and advance 1 */
+passinp(void)			/* pass beginning to current position */
 {
-	if (ipb.beg == NULL)	/* full */
+	if (!passive | (ipb.beg == NULL)) {
+		advinp();
+		return;
+	}
+	while (ipb.beg != ipb.pos) {	/* transfer buffer unaltered */
+		putchar(*ipb.beg);
+		if (++ipb.beg >= &inpbuf[INBSIZ])
+			ipb.beg = inpbuf;
+	}
+}
+
+
+static void
+skipinp(void)			/* rewind position and advance 1 */
+{
+	if (ipb.beg == NULL)		/* full */
 		ipb.beg = ipb.end;
 	ipb.pos = ipb.beg;
 	ipb.chr = *ipb.pos;

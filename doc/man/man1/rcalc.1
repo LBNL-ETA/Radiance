@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.15 2019/07/20 00:57:43 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.16 2022/03/11 22:50:13 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -9,7 +9,7 @@ rcalc - record calculator
 ][
 .B \-l
 ][
-.B \-p
+.B "\-p | \-P"
 ][
 .B \-n
 ][
@@ -87,11 +87,18 @@ The
 .I \-p
 option specifies "passive mode," where characters that do not
 match the input format are passed unaltered to the output.
-This option has no effect unless
+If the
+.I \-P
+option is given instead, then valid input records that do not
+yield a positive
+.I cond
+value are similarly passed to the output.
+(See paragraph below.)\0
+These options options require that the
 .I \-i
-is also specified, and does not make much sense unless
+input format and
 .I \-o
-is also given.
+output format also be present.
 With both input and output formats, the passive mode can
 effectively substitute information in the middle of a file
 or stream without affecting the rest of the data.
@@ -250,7 +257,10 @@ If
 is positive, output is produced.
 If
 .I cond
-is less than or equal to zero, the record is skipped and no other expressions
+is less than or equal to zero, the record is skipped (or passed to the
+output if
+.I \-P
+is specified) and no other expressions
 are evaluated.
 This provides a convenient method for avoiding inappropriate calculations.
 The following library of pre-defined functions and variables is provided:
@@ -270,8 +280,8 @@ This is an alternate way to get a column value instead of using
 the $N notation, and is more flexible since it is programmable.
 This function is disabled if an input format is used.
 .TP
-.BR "if(cond, then, else)"
-if cond is greater than zero,
+.BR "if(test, then, else)"
+if test is greater than zero,
 then is evaluated, otherwise else is evaluated.
 This function is necessary for recursive definitions.
 .TP
