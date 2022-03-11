@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.48 2022/03/11 02:28:51 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.49 2022/03/11 02:44:33 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -105,6 +105,35 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 	i = cm_write(pmat, myDT, fout);			/* write picture */
 	cm_free(pmat);					/* free data */
 	return(i);
+}
+
+/* adjust matrix dimensions according to user size(s) */
+static int
+alt_dim(CMATRIX *cm, int nr, int nc)
+{
+	if ((nr <= 0) & (nc <= 0))
+		return(0);
+	if ((nr == cm->nrows) & (nc == cm->ncols))
+		return(0);
+	if (nr > 0) {
+		if (nc <= 0)
+			nc = cm->nrows*cm->ncols/nr;
+		if (nr*nc != cm->nrows*cm->ncols) {
+			fprintf(stderr, "Bad dimensions: %dx%d != %dx%d\n",
+					nr, nc, cm->nrows, cm->ncols);
+			return(-1);
+		}
+	} else /* nc > 0 */ {
+		nr = cm->nrows*cm->ncols/nc;
+		if (nc*nr != cm->nrows*cm->ncols) {
+			fprintf(stderr, "Bad dimensions: %d does not divide %dx%d evenly\n",
+					nc, cm->nrows, cm->ncols);
+			return(-1);
+		}
+	}
+	cm->nrows = nr;
+	cm->ncols = nc;
+	return(1);
 }
 
 /* check to see if a string contains a %d or %o specification */
@@ -296,27 +325,8 @@ main(int argc, char *argv[])
 			const char	*wtype = (outfmt==DTascii) ? "w" : "wb";
 			for (i = 0; i < nsteps; i++) {
 				CMATRIX	*rvec = cm_column(rmtx, i);
-				if (yres > 0) {
-					if (xres <= 0)
-						xres = rvec->nrows/yres;
-					if (xres*yres != rvec->nrows) {
-						fprintf(stderr, "Bad resolution: %d != %dx%d\n",
-								rvec->nrows, xres, yres);
-						return(1);
-					}
-					rvec->nrows = yres;
-					rvec->ncols = xres;
-				} else if (xres > 0) {
-					yres = rvec->nrows/xres;
-					if (xres*yres != rvec->nrows) {
-						fprintf(stderr,
-							"Bad resolution: %d does not divide %d evenly\n",
-									xres, rvec->nrows);
-						return(1);
-					}
-					rvec->nrows = yres;
-					rvec->ncols = xres;
-				}
+				if (alt_dim(rvec, yres, xres) < 0)
+					return(1);
 				sprintf(fnbuf, ofspec, i);
 				if ((ofp = fopen(fnbuf, wtype)) == NULL) {
 					fprintf(stderr,
@@ -358,6 +368,8 @@ main(int argc, char *argv[])
 #endif
 			if (outfmt != DTascii)
 				SET_FILE_BINARY(ofp);
+			if (alt_dim(rmtx, yres, xres) < 0)
+				return(1);
 			if (headout) {		/* header output */
 				newheader("RADIANCE", ofp);
 				printargs(argc, argv, ofp);
