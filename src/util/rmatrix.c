@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.55 2022/03/06 17:21:49 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.56 2022/03/11 01:11:13 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -206,7 +206,7 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 {
 	int	i;
 #ifdef MAP_FILE
-	long	pos;		/* map memory to file if possible */
+	long	pos;		/* map memory for file > 1MB if possible */
 	if (!rm->swapin && array_size(rm) >= 1L<<20 &&
 			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
 		rm->mapped = mmap(NULL, array_size(rm)+pos, PROT_READ|PROT_WRITE,
@@ -214,7 +214,7 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 		if (rm->mapped != MAP_FAILED) {
 			rm->mtx = (double *)rm->mapped + pos/sizeof(double);
 			return(1);
-		}
+		}		/* else fall back on reading into memory */
 		rm->mapped = NULL;
 	}
 #endif
@@ -583,8 +583,8 @@ rmx_transpose(const RMATRIX *rm)
 		rmx_addinfo(dnew, "Transposed rows and columns\n");
 	}
 	dnew->dtype = rm->dtype;
-	for (i = dnew->nrows; i--; )
-	    for (j = dnew->ncols; j--; )
+	for (j = dnew->ncols; j--; )
+	    for (i = dnew->nrows; i--; )
 	    	memcpy(rmx_lval(dnew,i,j), rmx_lval(rm,j,i),
 	    			sizeof(double)*dnew->ncomp);
 	return(dnew);
