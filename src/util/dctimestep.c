@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.46 2022/03/03 03:55:13 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.47 2022/03/11 02:27:02 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -141,6 +141,7 @@ main(int argc, char *argv[])
 	int		nsteps = 0;
 	char		*ofspec = NULL;
 	FILE		*ofp = stdout;
+	int		xres=0, yres=0;
 	CMATRIX		*cmtx;		/* component vector/matrix result */
 	char		fnbuf[256];
 	int		a, i;
@@ -193,6 +194,12 @@ main(int argc, char *argv[])
 			default:
 				goto userr;
 			}
+			break;
+		case 'x':
+			xres = atoi(argv[++a]);
+			break;
+		case 'y':
+			yres = atoi(argv[++a]);
 			break;
 		default:
 			goto userr;
@@ -289,6 +296,27 @@ main(int argc, char *argv[])
 			const char	*wtype = (outfmt==DTascii) ? "w" : "wb";
 			for (i = 0; i < nsteps; i++) {
 				CMATRIX	*rvec = cm_column(rmtx, i);
+				if (yres > 0) {
+					if (xres <= 0)
+						xres = rvec->nrows/yres;
+					if (xres*yres != rvec->nrows) {
+						fprintf(stderr, "Bad resolution: %d != %dx%d\n",
+								rvec->nrows, xres, yres);
+						return(1);
+					}
+					rvec->nrows = yres;
+					rvec->ncols = xres;
+				} else if (xres > 0) {
+					yres = rvec->nrows/xres;
+					if (xres*yres != rvec->nrows) {
+						fprintf(stderr,
+							"Bad resolution: %d does not divide %d evenly\n",
+									xres, rvec->nrows);
+						return(1);
+					}
+					rvec->nrows = yres;
+					rvec->ncols = xres;
+				}
 				sprintf(fnbuf, ofspec, i);
 				if ((ofp = fopen(fnbuf, wtype)) == NULL) {
 					fprintf(stderr,
@@ -304,9 +332,12 @@ main(int argc, char *argv[])
 					printargs(argc, argv, ofp);
 					fputnow(ofp);
 					fprintf(ofp, "FRAME=%d\n", i);
-					fprintf(ofp, "NROWS=%d\n", rvec->nrows);
-					fputs("NCOLS=1\nNCOMP=3\n", ofp);
-					if ((outfmt == 'f') | (outfmt == 'd'))
+					if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
+						fprintf(ofp, "NROWS=%d\n", rvec->nrows);
+						fprintf(ofp, "NCOLS=%d\n", rvec->ncols);
+						fputs("NCOMP=3\n", ofp);
+					}
+					if ((outfmt == DTfloat) | (outfmt == DTdouble))
 						fputendian(ofp);
 					fputformat(cm_fmt_id[outfmt], ofp);
 					fputc('\n', ofp);
@@ -331,10 +362,12 @@ main(int argc, char *argv[])
 				newheader("RADIANCE", ofp);
 				printargs(argc, argv, ofp);
 				fputnow(ofp);
-				fprintf(ofp, "NROWS=%d\n", rmtx->nrows);
-				fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
-				fputs("NCOMP=3\n", ofp);
-				if ((outfmt == 'f') | (outfmt == 'd'))
+				if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
+					fprintf(ofp, "NROWS=%d\n", rmtx->nrows);
+					fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
+					fputs("NCOMP=3\n", ofp);
+				}
+				if ((outfmt == DTfloat) | (outfmt == DTdouble))
 					fputendian(ofp);
 				fputformat(cm_fmt_id[outfmt], ofp);
 				fputc('\n', ofp);

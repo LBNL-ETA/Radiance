@@ -475,7 +475,7 @@ main(int argc, char *argv[])
 					fprintf(ofp, "FRAME=%d\n", i);
 					fprintf(ofp, "NROWS=%d\n", rvec->nrows);
 					fputs("NCOLS=1\nNCOMP=3\n", ofp);
-					if ((outfmt == 'f') | (outfmt == 'd'))
+					if ((outfmt == DTfloat) | (outfmt == DTdouble))
 						fputendian(ofp);
 					fputformat(cm_fmt_id[outfmt], ofp);
 					fputc('\n', ofp);
@@ -508,7 +508,7 @@ main(int argc, char *argv[])
 				fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
 				fputs("NCOMP=3\n", ofp);
 #endif /* DC_GLARE */
-				if ((outfmt == 'f') | (outfmt == 'd'))
+				if ((outfmt == DTfloat) | (outfmt == DTdouble))
 					fputendian(ofp);
 				fputformat(cm_fmt_id[outfmt], ofp);
 				fputc('\n', ofp);

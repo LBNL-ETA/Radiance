@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.16 2019/10/23 17:00:14 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.17 2022/03/11 02:27:02 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -10,6 +10,10 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 .B "\-h"
 ][
 .B "\-o ospec"
+][
+.B "\-x xres"
+][
+.B "\-y yres"
 ][
 .B "\-i{f|d}
 ][
@@ -122,6 +126,13 @@ If the given specification contains a '%d' format string, this
 will be replaced by the time step index, starting from 0.
 In this way, multiple output pictures may be produced,
 or separate result vectors (one per time step).
+If input is a matrix rather than a set of images, the
+.I \-x
+and/or
+.I \-y
+options may be necessary to set the output image size.
+If only one dimension is specified, the other is computed based
+on the number of rows in the result vectors.
 .PP
 A header will normally be produced on the output, unless the
 .I \-h

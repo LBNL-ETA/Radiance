@@ -2520,3 +2520,6 @@ and diffuse measurements as a function of incident angle.
 
 Fixed issue with over-counting diffuse component during aBSDF
 peak extraction.
+
+Added dctimestep -x and -y options to specify image dimensions
+for multiple outputs corresponding to result vectors.
