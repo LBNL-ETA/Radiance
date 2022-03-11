@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.33 2021/01/22 16:19:15 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.34 2022/03/11 17:15:42 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -240,13 +240,13 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 #endif
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
-	if (!dtype | !ncols) {			/* expecting header? */
+	if (!dtype | !nrows | !ncols) {		/* expecting header? */
 		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, scale, fp);
 		if (err)
 			error(USER, err);
 	}
-	if (ncols <= 0 && !fscnresolu(&ncols, &nrows, fp))
-		error(USER, "unspecified number of columns");
+	if (!nrows | !ncols && !fscnresolu(&ncols, &nrows, fp))
+		error(USER, "unspecified matrix size");
 	switch (dtype) {
 	case DTascii:
 	case DTfloat:
