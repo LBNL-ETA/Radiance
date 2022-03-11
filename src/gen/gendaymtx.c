@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.38 2020/09/11 16:50:50 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.39 2022/03/11 18:04:39 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -485,8 +485,8 @@ main(int argc, char *argv[])
 			fprintf(stderr, "%s: %d sky patches\n",
 					progname, nskypatch);
 		if (sunsfp)
-			fprintf(stderr, "%s: outputting suns to file\n",
-					progname);
+			fprintf(stderr, "%s: outputting suns to %s\n",
+					progname, sunsfp==stdout ? "stdout" : "file");
 		if (rotation != 0)
 			fprintf(stderr, "%s: rotating output %.0f degrees\n",
 					progname, rotation);
