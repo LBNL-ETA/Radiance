@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.33 2022/03/12 15:50:13 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.34 2022/03/12 18:14:45 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -939,10 +939,12 @@ advinp(void)			/* move home to current position */
 static void
 passinp(void)			/* pass beginning to current position */
 {
-	if (!passive | (ipb.beg == NULL)) {
-		advinp();
+	if (!passive) {
+		advinp();		/* mistake to call us */
 		return;
 	}
+	if (ipb.beg == NULL)		/* buffer overflowed a bit */
+		ipb.beg = ipb.end;
 	while (ipb.beg != ipb.pos) {	/* transfer buffer unaltered */
 		putchar(*ipb.beg);
 		if (++ipb.beg >= &inpbuf[INBSIZ])
@@ -954,7 +956,7 @@ passinp(void)			/* pass beginning to current position */
 static void
 skipinp(void)			/* rewind position and advance 1 */
 {
-	if (ipb.beg == NULL)		/* full */
+	if (ipb.beg == NULL)		/* overflow - can't fully rewind */
 		ipb.beg = ipb.end;
 	ipb.pos = ipb.beg;
 	ipb.chr = *ipb.pos;
