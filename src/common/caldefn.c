@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.30 2022/03/12 15:50:13 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.31 2022/03/12 17:21:10 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -200,10 +200,11 @@ vardefined(	/* return '=' or ':' if variable/constant defined */
 	char  *name
 )
 {
-    EPNODE  *dp;
+    EPNODE  *dp = dlookup(name);
 
-    if ((dp = dlookup(name)) == NULL || dp->v.kid->type != SYM)
+    if (dp == NULL || dp->v.kid->type != SYM)
     	return(0);
+
     return(dp->type);
 }
 
