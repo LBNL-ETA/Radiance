@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.34 2022/03/12 18:14:45 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.35 2022/03/12 19:20:11 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -55,7 +55,7 @@ struct field {		 /* record format structure */
 #define freqstr(s) efree(s)
 
 static int getinputrec(FILE *fp);
-static void scaninp(void), advinp(void), passinp(void), skipinp(void);
+static void scaninp(void), skipinp(void), advinp(int skip);
 static void putrec(void), putout(void), nbsynch(void);
 static int getrec(void);
 static void execute(char *file);
@@ -348,14 +348,12 @@ char *file
 		colflg = 0;
 		eclock++;
 		if (!conditional || varvalue(condVN) > 0.0) {
+			if (inpfmt != NULL)
+				advinp(0);
 			putout();
 			++nout;
-			advinp();
 		} else if (inpfmt != NULL) {
-			if (passive < 0)
-				passinp();
-			else
-				advinp();
+			advinp(1);
 		}
 		if (incnt && nrecs >= incnt)
 			break;
@@ -930,33 +928,9 @@ scaninp(void)			/* scan next character */
 
 
 static void
-advinp(void)			/* move home to current position */
-{
-	ipb.beg = ipb.pos;
-}
-
-
-static void
-passinp(void)			/* pass beginning to current position */
-{
-	if (!passive) {
-		advinp();		/* mistake to call us */
-		return;
-	}
-	if (ipb.beg == NULL)		/* buffer overflowed a bit */
-		ipb.beg = ipb.end;
-	while (ipb.beg != ipb.pos) {	/* transfer buffer unaltered */
-		putchar(*ipb.beg);
-		if (++ipb.beg >= &inpbuf[INBSIZ])
-			ipb.beg = inpbuf;
-	}
-}
-
-
-static void
 skipinp(void)			/* rewind position and advance 1 */
 {
-	if (ipb.beg == NULL)		/* overflow - can't fully rewind */
+	if (ipb.beg == NULL)		/* can't fully rewind? */
 		ipb.beg = ipb.end;
 	ipb.pos = ipb.beg;
 	ipb.chr = *ipb.pos;
@@ -965,6 +939,23 @@ skipinp(void)			/* rewind position and advance 1 */
 	if (++ipb.beg >= &inpbuf[INBSIZ])
 		ipb.beg = inpbuf;
 	scaninp();
+}
+
+
+static void
+advinp(int skip)		/* advance home to current position */
+{
+	if (!skip | (passive >= 0)) {
+		ipb.beg = ipb.pos;	/* no need to copy input */
+		return;
+	}
+	if (ipb.beg == NULL)		/* buffer overflowed a bit? */
+		ipb.beg = ipb.end;
+	while (ipb.beg != ipb.pos) {	/* copy buffer to current */
+		putchar(*ipb.beg);
+		if (++ipb.beg >= &inpbuf[INBSIZ])
+			ipb.beg = inpbuf;
+	}
 }
 
 
