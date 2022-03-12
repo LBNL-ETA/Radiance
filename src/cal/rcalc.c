@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.32 2022/03/11 22:50:13 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.33 2022/03/12 15:50:13 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -309,12 +309,15 @@ execute(	 /* process a file */
 char *file
 )
 {
-	const int conditional = vardefined("cond");
-	const int set_recno = (varlookup("recno") != NULL);
-	const int set_outno = (varlookup("outno") != NULL);
-	long nrecs = 0;
-	long nout = 0;
-	FILE *fp;
+	static char	condVN[] = "cond";
+	static char	recnoVN[] = "recno";
+	static char	outnoVN[] = "outno";
+	const int	conditional = vardefined(condVN);
+	const int	set_recno = (varlookup(recnoVN) != NULL);
+	const int	set_outno = (varlookup(outnoVN) != NULL);
+	long		nrecs = 0;
+	long		nout = 0;
+	FILE		*fp;
 	
 	if (file == NULL)
 		fp = stdin;
@@ -328,18 +331,23 @@ char *file
 #ifdef getc_unlocked		/* avoid lock/unlock overhead */
 	flockfile(fp);
 #endif
+	if (conditional == ':') {
+		eputs(condVN);
+		eputs(": defined as constant\n");
+		quit(1);
+	}
 	if (inpfmt != NULL)
 		initinp(fp);
 	
 	while (inpfmt != NULL ? getrec() : getinputrec(fp)) {
 		++nrecs;
 		if (set_recno)
-			varset("recno", '=', (double)nrecs);
+			varset(recnoVN, '=', (double)nrecs);
 		if (set_outno)
-			varset("outno", '=', (double)(nout+1));
+			varset(outnoVN, '=', (double)(nout+1));
 		colflg = 0;
 		eclock++;
-		if (!conditional || varvalue("cond") > 0.0) {
+		if (!conditional || varvalue(condVN) > 0.0) {
 			putout();
 			++nout;
 			advinp();
