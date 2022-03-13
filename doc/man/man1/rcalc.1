@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.16 2022/03/11 22:50:13 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.17 2022/03/13 16:11:48 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -351,6 +351,17 @@ String variables can only be used in input and output formats and
 options, not in definitions.
 .PP
 Tabs count as single spaces inside fields.
+.PP
+The
+.I \-P
+option buffers up to 16 Kbytes of data per record.
+Longer records passed because the "cond" variable
+evaluates to <= 0 will be partial; a warning will
+be generated and the string "*** MISSING DATA ***"
+will appear at the break.
+The only workaround is to use the
+.I \-p
+option instead, which does not pass rejected records.
 .SH "SEE ALSO"
 cnt(1), ev(1), getinfo(1), icalc(1), rcollate(1), rlam(1),
 rsplit(1), tabfunc(1), total(1)
