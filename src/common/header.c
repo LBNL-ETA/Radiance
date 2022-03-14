@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.46 2022/03/14 19:25:56 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.47 2022/03/14 22:57:24 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -381,10 +381,11 @@ globmatch(			/* check for match of s against pattern p */
 			s++;
 			break;
 		case '\\':			/* literal next */
-			p++;
+			if (!*++p)
+				return(0);
 		/* fall through */
 		default:			/* normal character */
-			if (!*s | (*p != *s))
+			if (*p != *s)
 				return(0);
 			s++;
 			break;
