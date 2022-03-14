@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.17 2022/01/15 16:57:46 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.18 2022/03/14 19:51:19 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -203,10 +203,10 @@ extern int	findName(const char *nm, const char **nmlist, int n);
 /* Verbose mode global */
 extern int      verbose;
 
-extern char     *emalloc(unsigned int n);
-extern char     *ecalloc(unsigned int ne, unsigned int n);
-extern char     *erealloc(char *cp, unsigned int n);
-extern void     efree(char *cp);
+extern void	*emalloc(unsigned int n);
+extern void	*ecalloc(unsigned int ne, unsigned int n);
+extern void	*erealloc(void *ptr, unsigned int n);
+extern void	efree(void *ptr);
 
 #define getGroupID(sc,nm)	findName(nm, (const char **)(sc)->grpname, (sc)->ngrps)
 #define getMaterialID(sc,nm)	findName(nm, (const char **)(sc)->matname, (sc)->nmats)
