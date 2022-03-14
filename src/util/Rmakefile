@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.99 2020/11/24 16:30:15 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.100 2022/03/14 23:28:14 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -22,7 +22,7 @@ LIBDIR = /usr/local/lib/ray
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare radcompare \
-		rcode_depth rcode_norm rcode_ident dcglare
+		rcode_depth rcode_norm rcode_ident dcglare rcrop
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -158,6 +158,9 @@ rcode_norm:	rcode_norm.o
 rcode_ident:	rcode_ident.o
 	$(CC) $(CFLAGS) -o rcode_ident rcode_ident.o -lrtrad
 
+rcrop:		rcrop.o
+	$(CC) $(CFLAGS) -o rcrop rcrop.o -lrtrad -lm
+
 dcglare:	dcglare.o cmbsdf.o cmatrix.o cmglare.o
 	$(CC) $(CFLAGS) -o dcglare dcglare.o cmbsdf.o cmatrix.o cmglare.o \
 -lrtrad $(MLIB)
@@ -291,3 +294,6 @@ rcode_ident.o:	../common/idmap.h ../common/resolu.h \
 ../common/platform.h ../common/rtio.h ../common/lookup.h
 
 dcglare.o:	../common/platform.h ../common/resolu.h cmglare.h
+
+rcrop.o:	../common/platform.h ../common/resolu.h \
+../common/color.h ../common/fvect.h ../common/view.h ../common/rtio.h

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.56 2022/03/11 01:11:13 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.57 2022/03/14 23:28:14 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -241,7 +241,7 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 	if (!rmx_prepare(rm))
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
-	    double	*dp = rmx_lval(rm,i,j);
+	    double	*dp = rmx_lval(rm,i,0);
 	    if (freadscan(scan, rm->ncols, fp) < 0) {
 		free(scan);
 		return(0);
