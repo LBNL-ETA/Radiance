@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcrop.1,v 1.2 2022/03/15 04:41:45 greg Exp $"
+.\" RCSid "$Id: rcrop.1,v 1.3 2022/03/15 17:19:52 greg Exp $"
 .TH RCROP 1 3/14/2022 RADIANCE
 .SH NAME
 rcrop - crop RADIANCE matrix or picture
@@ -19,6 +19,16 @@ to include per row.
 Note that rows are numbered from 0 at the top of a matrix or picture,
 and columns are changing fastest in the input, which can have any number
 of components per matrix element.
+.PP
+The input must have a valid header, including dimensions and format,
+and a header will always be produced.
+This is similar behavior to
+.I rmtxop(1).
+If the input header is missing, one can usually be added with an
+appropriate call to
+.I rcollate(1).
+If an output header is not desired, it can be removed using
+.I getinfo(1).
 .PP
 One cannot specify crop boundaries outside the matrix dimension limits.
 If a 0 value is specified for the number of rows to copy, then all rows
@@ -66,6 +76,14 @@ To crop a picture to (X by Y) = (1500 by 1000),
 starting from upper-left corner:
 .IP "" .2i
 rcrop 0 0 1000 1500 orig.hdr cropped.hdr
+.PP
+Two ways of computing the inner product of row 15 in matrix 1 by
+column 27 in matrix 2 and extracting the result without a header,
+the second command being more efficient:
+.IP "" .2i
+rmtxop -fa mat1.mtx mat2.mtx | rcrop 15 27 1 1 | getinfo -
+.IP "" .2i
+rmtxop -fa '!rcrop 15 0 1 0 mat1.mtx' '!rcrop 0 27 0 1 mat2.mtx' | getinfo -
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
