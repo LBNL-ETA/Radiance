@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.4 2022/03/15 02:28:05 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.5 2022/03/15 04:41:45 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -316,6 +316,12 @@ main(int argc, char *argv[])
 		asiz = sizeof(float);
 	} else if (!strcmp(fmt, "double")) {
 		asiz = sizeof(double);
+	} else if (!strcmp(fmt, "32-bit_encoded_normal")) {
+		asiz = 4;
+		ncomp = 1;
+	} else if (!strcmp(fmt, "16-bit_encoded_depth")) {
+		asiz = 2;
+		ncomp = 1;
 	} else if (globmatch(PICFMT, fmt)) {
 		asiz = -1;
 		if (!ncomp) ncomp = 3;
