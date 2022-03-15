@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.9 2022/03/15 00:25:50 greg Exp $
+# RCSid $Id: Makefile,v 1.10 2022/03/15 20:37:02 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
@@ -82,5 +82,5 @@ test-dctimestep:	test.mtx
 
 test-rcrop:	test.mtx
 	rcrop 15 31 75 19 test.mtx > cropped.mtx
-	radcompare -v ref/cropped.mtx cropped.mtx
+	radcompare ref/cropped.mtx cropped.mtx
 	rm -f cropped.mtx
