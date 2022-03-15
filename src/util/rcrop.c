@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.5 2022/03/15 04:41:45 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.6 2022/03/15 15:01:22 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -341,6 +341,11 @@ main(int argc, char *argv[])
 	if (!(asiz < 0 ? colr_copyf(fp) :
 			!asiz ? ascii_copyf(fp) : binary_copyf(fp, asiz)))
 		return(1);
+					/* need to consume the rest? */
+	if (fp == stdin && rmin+nrows < numscans(&res) &&
+			fseek(fp, 0L, SEEK_END) < 0)
+		while (getc(fp) != EOF)
+			;
 	return(0);
 usage:
 	fputs("Usage: ", stderr);
