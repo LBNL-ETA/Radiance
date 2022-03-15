@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.3 2022/03/15 01:44:27 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.4 2022/03/15 02:28:05 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -79,11 +79,11 @@ colr_copyf(FILE *fp)
 		return(1);
 writerr:
 	fputs(progname, stderr);
-	fputs(": error writing scanline\n", stderr);
+	fputs(": error writing picture\n", stderr);
 	return(0);
 readerr:
 	fputs(progname, stderr);
-	fputs(": error reading scanline\n", stderr);
+	fputs(": error reading picture\n", stderr);
 	return(0);
 }
 
@@ -258,7 +258,7 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	printargs(argc, argv, stdout);
-	if (gotvw) {
+	if (gotvw) {		/* adjust view? */
 		double		p0[2], p1[2];
 		const char	*err;
 		if (res.rt & YMAJOR) {
@@ -287,10 +287,11 @@ main(int argc, char *argv[])
 			fputs(err, stderr);
 			fputc('\n', stderr);
 			return(1);
+		} else {
+			fputs(VIEWSTR, stdout);
+			fprintview(&vw, stdout);
+			fputc('\n', stdout);
 		}
-		fputs(VIEWSTR, stdout);
-		fprintview(&vw, stdout);
-		fputc('\n', stdout);
 	}
 	if (gotdims)
 		printf("NROWS=%d\nNCOLS=%d\n", nrows, ncols);
@@ -318,6 +319,7 @@ main(int argc, char *argv[])
 	} else if (globmatch(PICFMT, fmt)) {
 		asiz = -1;
 		if (!ncomp) ncomp = 3;
+		else ncomp *= (ncomp == 3);
 	} else if (strcasecmp(fmt, "ascii")) {
 		fputs(progname, stderr);
 		fputs(": unsupported format - ", stderr);
