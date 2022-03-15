@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.20 2020/07/24 17:09:33 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.21 2022/03/15 18:05:03 greg Exp $";
 #endif
 
 /*
@@ -27,8 +27,7 @@ VIEW		ourview =  {VT_ANG,{0.,0.,0.},{0.,0.,1.},{1.,0.,0.},
                                 1.,180.,180.,0.,0.,0.,0.,
                                 {0.,0.,0.},{0.,0.,0.},0.,0.};
 
-unsigned long	nsamps = 10000;	/* desired number of initial samples */
-unsigned long	nssamps = 9000;	/* number of super-samples */
+long		nsamps = 10000;	/* desired number of initial samples */
 int		ndsamps = 32;	/* number of direct samples */
 int		nprocs = 1;     /* number of rendering processes */
 
@@ -60,7 +59,6 @@ print_defaults()		/* print out default parameters */
 	over_options();
 	printf("-n %-9d\t\t\t# number of processes\n", nprocs);
 	printf("-rd %-9ld\t\t\t# ray directions\n", nsamps);
-	/* printf("-rs %-9ld\t\t\t# ray super-samples\n", nssamps); */
 	printf("-dn %-9d\t\t\t# direct number of samples\n", ndsamps);
 	printf("-vp %f %f %f\t# view point\n",
 			ourview.vp[0], ourview.vp[1], ourview.vp[2]);
@@ -132,8 +130,6 @@ main(
 		if (argv[i][1] == 'r') {	/* sampling options */
 			if (argv[i][2] == 'd')
 				nsamps = atol(argv[++i]);
-			else if (argv[i][2] == 's')
-				nssamps = atol(argv[++i]);
 			else {
 				sprintf(errmsg, "bad option at '%s'", argv[i]);
 				error(USER, errmsg);
@@ -325,7 +321,7 @@ init_ptable(
 	char	*sfile
 )
 {
-	int	samptot = nsamps;
+	long	samptot = nsamps;
 	float	*rowp, *rowp1;
 	double	rowsum[MAXNT], rowomega[MAXNT];
 	double	thdiv[MAXNT+1], phdiv[MAXNP+1];
