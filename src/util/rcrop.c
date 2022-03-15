@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.1 2022/03/15 00:25:50 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.2 2022/03/15 01:40:17 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -91,22 +91,41 @@ readerr:
 static int
 binary_copyf(FILE *fp, int asize)
 {
+	const int	skip_thresh = 1024;
 	const size_t	elsiz = asize*ncomp;
 	const int	width = scanlen(&res);
-	char		*buf = (char *)malloc(elsiz*width);
+	const long	skip_len = (width-ncols)*elsiz;
+	char		*buf;
 	int		y;
-
-	if (!buf) {
-		fputs(progname, stderr);
-		fputs(": out of memory!\n", stderr);
-		return(0);
-	}
+					/* check if fseek() useful */
+	if (skip_len > skip_thresh &&
+			fseek(fp, (rmin*width + cmin)*elsiz, SEEK_CUR) == 0) {
+		buf = (char *)malloc(ncols*elsiz);
+		if (!buf)
+			goto memerr;
+		for (y = nrows; y-- > 0; ) {
+			if (getbinary(buf, elsiz, ncols, fp) != ncols)
+				goto readerr;
+			if (putbinary(buf, elsiz, ncols, stdout) != ncols)
+				goto writerr;
+			if (y && fseek(fp, skip_len, SEEK_CUR) < 0) {
+				fputs(progname, stderr);
+				fputs(": unexpected seek error on input\n", stderr);
+				return(0);
+			}
+		}
+		free(buf);		/* success! */
+		return(1);
+	}				/* else need to read it all... */
+	buf = (char *)malloc(width*elsiz);
+	if (!buf)
+		goto memerr;
 					/* skip rows as requested */
-	if (rmin && fseek(fp, rmin*width*elsiz, SEEK_CUR) < 0) {
+	if (skip_len > skip_thresh ||
+			(rmin && fseek(fp, rmin*width*elsiz, SEEK_CUR) < 0))
 		for (y = 0; y < rmin; y++)
 			if (getbinary(buf, elsiz, width, fp) != width)
 				goto readerr;
-	}
 	for (y = 0; y < nrows; y++) {	/* copy portion */
 		if (getbinary(buf, elsiz, width, fp) != width)
 			goto readerr;
@@ -123,6 +142,10 @@ writerr:
 readerr:
 	fputs(progname, stderr);
 	fputs(": error reading binary data\n", stderr);
+	return(0);
+memerr:
+	fputs(progname, stderr);
+	fputs(": out of memory!\n", stderr);
 	return(0);
 }
 
