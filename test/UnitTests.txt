@@ -1,4 +1,4 @@
-# RCSid $Id: UnitTests.txt,v 1.17 2022/02/17 00:12:13 greg Exp $
+# RCSid $Id: UnitTests.txt,v 1.18 2022/03/15 00:25:50 greg Exp $
 #
 # Remember to add binary files using "cvs add -kb file"
 #
@@ -54,6 +54,7 @@ rcode_depth
 rcode_ident
 rcode_norm
 rcollate
+rcrop
 rmtxop
 rttree_reduce
 vwrays

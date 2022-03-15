@@ -1,14 +1,14 @@
-# RCSid $Id: Makefile,v 1.8 2020/08/18 19:33:58 greg Exp $
+# RCSid $Id: Makefile,v 1.9 2022/03/15 00:25:50 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
 
 all:	test-vwright test-getinfo test-rcollate test-rmtxop test-dctimestep \
 test-genskyvec test-vwrays test-glarendx test-rcode_norm test-rcode_depth \
-test-rcode_ident test-wrapBSDF test-rttree_reduce
+test-rcode_ident test-wrapBSDF test-rttree_reduce test-rcrop
 
 clean:
-	rm -f test.mtx ttree.txt vwrays.txt
+	rm -f test.mtx cropped.mtx ttree.txt vwrays.txt
 
 test-vwright:	test.vf
 	vwright -vf test.vf 3.5 > vwright.txt
@@ -79,3 +79,8 @@ test-dctimestep:	test.mtx
 		| dctimestep '!rmtxop -ff -t test.mtx' > dctimestep.mtx
 	radcompare ref/dctimestep.mtx dctimestep.mtx
 	rm -f dctimestep.mtx
+
+test-rcrop:	test.mtx
+	rcrop 15 31 75 19 test.mtx > cropped.mtx
+	radcompare -v ref/cropped.mtx cropped.mtx
+	rm -f cropped.mtx

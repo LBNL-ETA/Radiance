@@ -16,6 +16,9 @@ target_link_libraries(glarendx rtrad)
 add_executable(rad rad.c)
 target_link_libraries(rad rtrad)
 
+add_executable(rcrop rcrop.c)
+target_link_libraries(rcrop rtrad)
+
 if(WIN32)
   set(netproc_SOURCES win_netproc.c)
 else()
