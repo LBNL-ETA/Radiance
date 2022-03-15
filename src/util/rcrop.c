@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.6 2022/03/15 15:01:22 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.7 2022/03/15 20:21:18 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -234,6 +234,10 @@ main(int argc, char *argv[])
 		fputs(": cannot open for writing\n", stderr);
 		return(1);
 	}
+#ifdef getc_unlocked		/* avoid stupid semaphores */
+	flockfile(fp);
+	flockfile(stdout);
+#endif
 				/* process information header */
 	if (getheader(fp, headline, NULL) < 0) {
 		fputs(progname, stderr);
