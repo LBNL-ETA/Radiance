@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.7 2022/03/15 20:21:18 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.8 2022/03/15 20:54:49 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -18,7 +18,7 @@ char	*progname;		/* global argv[0] */
 
 VIEW	vw = STDVIEW;
 int	gotvw = 0;
-char	fmt[MAXFMTLEN] = "Unknown";
+char	fmt[MAXFMTLEN] = "ascii";	/* assumed when unspecified */
 int	ncomp = 0;
 RESOLU	res;
 int	rmin, cmin, nrows, ncols;
