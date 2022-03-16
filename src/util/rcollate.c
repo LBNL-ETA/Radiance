@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.40 2022/03/16 17:36:45 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.41 2022/03/16 18:01:47 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -18,8 +18,6 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.40 2022/03/16 17:36:45 greg Exp
 #else
   #include <sys/mman.h>
 #endif
-
-static char	delims[] = " \t\n\r\f";
 
 #define MAXLEVELS	16	/* max RxC.. block pairs */
 
@@ -235,8 +233,9 @@ count_columns(const RECINDEX *rp)
 static int
 print_record(const RECINDEX *rp, ssize_t n)
 {
-	int	words2go = rp->nw_rec;
-	char	*scp;
+	static char	delims[] = " \t\n\r\f";
+	int		words2go = rp->nw_rec;
+	char		*scp;
 
 	if ((n < 0) | (n >= rp->nrecs))
 		return(0);
@@ -502,7 +501,7 @@ badspec:
 	return(0);
 }
 
-/* resize ASCII stream input by ignoring EOLs between records */
+/* resize stream input by ignoring EOLs between ASCII records */
 static int
 do_resize(FILE *fp)
 {
@@ -543,7 +542,7 @@ do_resize(FILE *fp)
 					break;
 				goto done;	/* normal EOD */
 			}
-			if (check && !isfltd(word, delims)) {
+			if (check && !isflt(word)) {
 				fputs("Badly formed number: ", stderr);
 				fputs(word, stderr);
 				fputc('\n', stderr);
