@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.41 2022/03/16 18:01:47 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.42 2022/03/16 19:25:25 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -29,7 +29,7 @@ typedef struct {
 
 typedef struct {
 	int	nw_rec;		/* number of words per record */
-	ssize_t	nrecs;		/* number of records we found */
+	size_t	nrecs;		/* number of records we found */
 	char	*rec[1];	/* record array (extends struct) */
 } RECINDEX;
 
@@ -231,13 +231,13 @@ count_columns(const RECINDEX *rp)
 
 /* copy nth record from index to stdout */
 static int
-print_record(const RECINDEX *rp, ssize_t n)
+print_record(const RECINDEX *rp, size_t n)
 {
 	static char	delims[] = " \t\n\r\f";
 	int		words2go = rp->nw_rec;
 	char		*scp;
 
-	if ((n < 0) | (n >= rp->nrecs))
+	if (n >= rp->nrecs)
 		return(0);
 	scp = rp->rec[n];
 
@@ -268,20 +268,23 @@ formerr:
 	return(0);
 }
 
-/* copy a stream to stdout */
-static int
+/* copy a stream to stdout, return bytes written or 0 on error */
+static size_t
 output_stream(FILE *fp)
 {
+	size_t	ntot = 0;
 	char	buf[8192];
-	ssize_t	n;
+	size_t	n;
 
 	if (fp == NULL)
 		return(0);
 	fflush(stdout);
-	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
+	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
 		if (write(fileno(stdout), buf, n) != n)
 			return(0);
-	return(!ferror(fp));
+		ntot += n;
+	}
+	return(!ferror(fp) * ntot);
 }
 
 /* get next word from stream, leaving stream on EOL or start of next word */
@@ -363,19 +366,23 @@ check_sizes()
 	if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
 		if (ni_rows > 0) no_columns = ni_rows;
 		if (ni_columns > 0) no_rows = ni_columns;
-	} else if ((no_rows <= 0) & (no_columns > 0) &&
-			!((ni_rows*ni_columns) % no_columns))
-		no_rows = ni_rows*ni_columns/no_columns;
+	} else {
+		if (no_columns <= 0)
+			no_columns = ni_columns;
+		if ((no_rows <= 0) & (no_columns > 0) &&
+				!((ni_rows*ni_columns) % no_columns))
+			no_rows = ni_rows*ni_columns/no_columns;
+	}
 	if (n_comp <= 0)
 		n_comp = 3;
 	return(1);
 }
 
 /* call to compute block input position */
-static ssize_t
+static size_t
 get_block_pos(int r, int c, int blklvl[][2], int nlvls)
 {
-	ssize_t	n = 0;
+	size_t	n = 0;
 
 	while (nlvls > 1) {
 		int	sr = r/blklvl[1][0];
@@ -391,22 +398,22 @@ get_block_pos(int r, int c, int blklvl[][2], int nlvls)
 }
 
 /* return input offset based on array ordering and transpose option */
-static ssize_t
+static size_t
 get_input_pos(int r, int c)
 {
-	ssize_t	n;
+	size_t	n;
 
 	if (outLevels > 1) {		/* block reordering */
 		n = get_block_pos(r, c, outArray, outLevels);
 		if (transpose) {
 			r = n/ni_rows;
 			c = n - r*ni_rows;
-			n = (ssize_t)c*ni_columns + r;
+			n = (size_t)c*ni_columns + r;
 		}
 	} else if (transpose)		/* transpose only */
-		n = (ssize_t)c*ni_columns + r;
+		n = (size_t)c*ni_columns + r;
 	else				/* XXX should never happen! */
-		n = (ssize_t)r*no_columns + c;
+		n = (size_t)r*no_columns + c;
 	return(n);
 }
 
@@ -416,7 +423,7 @@ do_reorder(const MEMLOAD *mp)
 {
 	static const char	tabEOL[2] = {'\t','\n'};
 	RECINDEX		*rp = NULL;
-	ssize_t			nrecords;
+	size_t			nrecords;
 	int			i, j;
 						/* propogate sizes */
 	if (ni_rows <= 0)
@@ -431,7 +438,7 @@ do_reorder(const MEMLOAD *mp)
 			ni_columns = count_columns(rp);
 		nrecords = rp->nrecs;
 	} else if ((ni_rows > 0) & (ni_columns > 0)) {
-		nrecords = (ssize_t)ni_rows*ni_columns;
+		nrecords = (size_t)ni_rows*ni_columns;
 		if (nrecords > mp->len/(n_comp*comp_size)) {
 			fputs("Input too small for specified size and type\n",
 					stderr);
@@ -444,7 +451,7 @@ do_reorder(const MEMLOAD *mp)
 		ni_rows = nrecords/ni_columns;
 	else if ((ni_columns <= 0) & (ni_rows > 0))
 		ni_columns = nrecords/ni_rows;
-	if (nrecords != (ssize_t)ni_rows*ni_columns)
+	if (nrecords != (size_t)ni_rows*ni_columns)
 		goto badspec;
 	if (transpose) {
 		if (no_columns <= 0)
@@ -474,7 +481,7 @@ do_reorder(const MEMLOAD *mp)
 						/* reorder records */
 	for (i = 0; i < no_rows; i++) {
 	    for (j = 0; j < no_columns; j++) {
-		ssize_t	n = get_input_pos(i, j);
+		size_t	n = get_input_pos(i, j);
 		if (n >= nrecords) {
 			fputs("Index past end-of-file\n", stderr);
 			return(0);
@@ -505,7 +512,7 @@ badspec:
 static int
 do_resize(FILE *fp)
 {
-	ssize_t	records2go = ni_rows*ni_columns;
+	size_t	records2go = ni_rows*ni_columns;
 	int	columns2go = no_columns;
 	char	word[256];
 			
@@ -517,10 +524,22 @@ do_resize(FILE *fp)
 		fputformat(fmtid, stdout);
 		fputc('\n', stdout);
 	}
-						/* sanity checks */
-	if (comp_size || !check &
-			(no_columns == ni_columns) & (no_rows == ni_rows))
-		return(output_stream(fp));	/* no-op -- just copy */
+	if (comp_size) {			/* just copy binary data? */
+		size_t	nwritten = output_stream(fp);
+		if ((no_rows > 0) & (no_columns > 0) &&
+				nwritten != (size_t)no_rows*no_columns*n_comp*comp_size) {
+			if (check) {
+				fputs("Incorrect binary file size\n", stderr);
+				return(0);	/* fatal if check is true */
+			}
+			if (warnings)
+				fputs("Warning -- unexpected binary file size\n", stderr);
+		}
+		return(nwritten > 0);
+	}					/* else straight ASCII data copy? */
+	if (!check & (no_columns == ni_columns) & (no_rows == ni_rows))
+		return(output_stream(fp) > 0);
+						/* need to reshape (& check?) input */
 	if (no_columns <= 0) {
 		fputs("Missing -oc specification\n", stderr);
 		return(0);
@@ -534,11 +553,10 @@ do_resize(FILE *fp)
 		return(0);
 	}
 	do {					/* reshape records */
-		int	n;
-
-		for (n = n_comp; n--; ) {
+		int	n = n_comp;
+		while (n--) {
 			if (fget_word(word, fp) == NULL) {
-				if (records2go > 0 || n < n_comp-1)
+				if ((records2go > 0) | (n < n_comp-1))
 					break;
 				goto done;	/* normal EOD */
 			}
@@ -568,10 +586,22 @@ do_resize(FILE *fp)
 			putc('\t', stdout);
 	} while (--records2go);			/* expected EOD? */
 done:
-	if (warnings && columns2go != no_columns)
-		fputs("Warning -- incomplete final row\n", stderr);
-	if (warnings && fget_word(word, fp) != NULL)
-		fputs("Warning -- characters beyond expected EOD\n", stderr);
+	if (columns2go != no_columns) {
+		if (check) {
+			fputs("Incomplete final row\n", stderr);
+			return(0);
+		}
+		if (warnings)
+			fputs("Warning -- incomplete final row\n", stderr);
+	}
+	if (fget_word(word, fp) != NULL) {
+		if (check) {
+			fputs("Characters beyond expected EOD\n", stderr);
+			return(0);
+		}
+		if (warnings)
+			fputs("Warning -- characters beyond expected EOD\n", stderr);
+	}
 	return(1);
 }
 
@@ -715,14 +745,12 @@ main(int argc, char *argv[])
 		no_columns = outArray[0][1];
 	}
 						/* open input file? */
-	if (a == argc-1 && freopen(argv[a], "r", stdin) == NULL) {
+	if (a == argc-1 && freopen(argv[a], "rb", stdin) == NULL) {
 		fprintf(stderr, "%s: cannot open for reading\n", argv[a]);
 		return(1);
-	}
-	if (comp_size) {
+	} else
 		SET_FILE_BINARY(stdin);
-		SET_FILE_BINARY(stdout);
-	}
+	SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked				/* avoid stupid semaphores */
 	flockfile(stdin);
 	flockfile(stdout);
@@ -733,19 +761,13 @@ main(int argc, char *argv[])
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
 				argv[0]);
-		if (!output_stream(stdin))
-			return(1);
-		return(0);
+		return(!output_stream(stdin));
 	}
 	if (i_header) {				/* read header */
 		if (getheader(stdin, headline, NULL) < 0)
 			return(1);
 		if (!check_sizes())
 			return(1);
-		if (comp_size) {		/* a little late... */
-			SET_FILE_BINARY(stdin);
-			SET_FILE_BINARY(stdout);
-		}
 	} else if (!check_sizes())
 		return(1);
 	if (o_header) {				/* write/add to header */
@@ -754,7 +776,11 @@ main(int argc, char *argv[])
 		printargs(a, argv, stdout);
 		printf("NCOMP=%d\n", n_comp);
 	}
-	if (transpose | check | (outLevels > 1) || (o_header && no_rows <= 0)) {
+	if (!comp_size) {			/* a little late... */
+		SET_FILE_TEXT(stdin);
+		SET_FILE_TEXT(stdout);
+	}
+	if (transpose | (outLevels > 1) || (o_header && no_rows <= 0)) {
 		MEMLOAD	myMem;			/* need to map into memory */
 		if (a == argc-1) {
 			if (load_file(&myMem, stdin) <= 0) {
