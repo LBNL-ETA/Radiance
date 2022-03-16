@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.9 2022/03/16 01:51:16 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.10 2022/03/16 15:50:24 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -199,6 +199,44 @@ io_err:
 	return(0);
 }
 
+/* Adjust (crop) our view */
+static int
+adjust_view(void)
+{
+	double		p0[2], p1[2];
+	const char	*err;
+
+	if (res.rt & YMAJOR) {
+		p0[0] = cmin/(double)res.xr;
+		p0[1] = rmin/(double)res.yr;
+		p1[0] = (cmin+ncols)/(double)res.xr;
+		p1[1] = (rmin+nrows)/(double)res.yr;
+	} else {
+		p0[0] = rmin/(double)res.xr;
+		p0[1] = cmin/(double)res.yr;
+		p1[0] = (rmin+nrows)/(double)res.xr;
+		p1[1] = (cmin+ncols)/(double)res.yr;
+	}
+	if (res.rt & XDECR) {
+		p0[0] = 1. - p0[0];
+		p1[0] = 1. - p1[0];
+	}
+	if (res.rt & YDECR) {
+		p0[1] = 1. - p0[1];
+		p1[1] = 1. - p1[1];
+	}
+	err = cropview(&vw, p0[0], p0[1], p1[0], p1[1]);
+	if (err) {
+		fputs(progname, stderr);
+		fputs(": view error - ", stderr);
+		fputs(err, stderr);
+		fputc('\n', stderr);
+		return(0);
+	}
+	return(1);
+}
+
+
 /* Main routine -- load header and call processor */
 int
 main(int argc, char *argv[])
@@ -261,43 +299,13 @@ main(int argc, char *argv[])
 		fputs(": illegal crop\n", stderr);
 		return(1);
 	}
-	printargs(5, argv, stdout);
-	if (gotvw) {		/* adjust view? */
-		double		p0[2], p1[2];
-		const char	*err;
-		if (res.rt & YMAJOR) {
-			p0[0] = cmin/(double)res.xr;
-			p0[1] = rmin/(double)res.yr;
-			p1[0] = (cmin+ncols)/(double)res.xr;
-			p1[1] = (rmin+nrows)/(double)res.yr;
-		} else {
-			p0[0] = rmin/(double)res.xr;
-			p0[1] = cmin/(double)res.yr;
-			p1[0] = (rmin+nrows)/(double)res.xr;
-			p1[1] = (cmin+ncols)/(double)res.yr;
-		}
-		if (res.rt & XDECR) {
-			p0[0] = 1. - p0[0];
-			p1[0] = 1. - p1[0];
-		}
-		if (res.rt & YDECR) {
-			p0[1] = 1. - p0[1];
-			p1[1] = 1. - p1[1];
-		}
-		err = cropview(&vw, p0[0], p0[1], p1[0], p1[1]);
-		if (err) {
-			fputs(progname, stderr);
-			fputs(": view error - ", stderr);
-			fputs(err, stderr);
-			fputc('\n', stderr);
-			return(1);
-		} else {
-			fputs(VIEWSTR, stdout);
-			fprintview(&vw, stdout);
-			fputc('\n', stdout);
-		}
+	printargs(5, argv, stdout);	/* add to header */
+	if (gotvw && adjust_view()) {
+		fputs(VIEWSTR, stdout);	/* write adjusted view */
+		fprintview(&vw, stdout);
+		fputc('\n', stdout);
 	}
-	if (gotdims)
+	if (gotdims)			/* dimensions + format */
 		printf("NROWS=%d\nNCOLS=%d\n", nrows, ncols);
 	if (ncomp)
 		printf("NCOMP=%d\n", ncomp);
@@ -343,7 +351,7 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	if (!(asiz < 0 ? colr_copyf(fp) :
-			!asiz ? ascii_copyf(fp) : binary_copyf(fp, asiz)))
+			asiz ? binary_copyf(fp, asiz) : ascii_copyf(fp)))
 		return(1);
 					/* need to consume the rest? */
 	if (fp == stdin && rmin+nrows < numscans(&res) &&
