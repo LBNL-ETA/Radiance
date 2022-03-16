@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.8 2022/03/15 20:54:49 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.9 2022/03/16 01:51:16 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -261,7 +261,7 @@ main(int argc, char *argv[])
 		fputs(": illegal crop\n", stderr);
 		return(1);
 	}
-	printargs(argc, argv, stdout);
+	printargs(5, argv, stdout);
 	if (gotvw) {		/* adjust view? */
 		double		p0[2], p1[2];
 		const char	*err;
@@ -271,10 +271,10 @@ main(int argc, char *argv[])
 			p1[0] = (cmin+ncols)/(double)res.xr;
 			p1[1] = (rmin+nrows)/(double)res.yr;
 		} else {
-			p0[1] = cmin/(double)res.xr;
-			p0[0] = rmin/(double)res.yr;
-			p1[1] = (cmin+ncols)/(double)res.xr;
-			p1[0] = (rmin+nrows)/(double)res.yr;
+			p0[0] = rmin/(double)res.xr;
+			p0[1] = cmin/(double)res.yr;
+			p1[0] = (rmin+nrows)/(double)res.xr;
+			p1[1] = (cmin+ncols)/(double)res.yr;
 		}
 		if (res.rt & XDECR) {
 			p0[0] = 1. - p0[0];
