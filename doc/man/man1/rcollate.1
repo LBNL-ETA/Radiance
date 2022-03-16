@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.15 2022/03/15 00:25:50 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.16 2022/03/16 17:36:45 greg Exp $"
 .TH RCOLLATE 1 9/5/2013 RADIANCE
 .SH NAME
 rcollate - resize or re-order matrix data
@@ -71,7 +71,7 @@ The
 .I \-c
 opiton forces the operation to proceed, even if it appears to be a no-op,
 which can be useful to correct a misshapen input matrix or check that
-the data is the proper size.
+the data is the proper size and formatted correctly (in the case of ASCII input).
 .PP
 The input format is assumed to be ASCII, with three white-space separated words
 (typically numbers) in each record.

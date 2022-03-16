@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.39 2022/03/03 03:55:13 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.40 2022/03/16 17:36:45 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -19,6 +19,8 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.39 2022/03/03 03:55:13 greg Exp
   #include <sys/mman.h>
 #endif
 
+static char	delims[] = " \t\n\r\f";
+
 #define MAXLEVELS	16	/* max RxC.. block pairs */
 
 typedef struct {
@@ -33,7 +35,21 @@ typedef struct {
 	char	*rec[1];	/* record array (extends struct) */
 } RECINDEX;
 
-int		warnings = 1;	/* report warnings? */
+int		warnings = 1;			/* report warnings? */
+
+char		*fmtid = NULL;			/* format id */
+int		comp_size = 0;			/* binary bytes/channel */
+int		n_comp = 0;			/* components/record */
+int		ni_columns = 0;			/* number of input columns */
+int		ni_rows = 0;			/* number of input rows */
+int		no_columns = 0;			/* number of output columns */
+int		no_rows = 0;			/* number of output rows */
+int		transpose = 0;			/* transpose rows & cols? */
+int		i_header = 1;			/* input header? */
+int		o_header = 1;			/* output header? */
+int		outArray[MAXLEVELS][2];		/* output block nesting */
+int		outLevels = 0;			/* number of blocking levels */
+int		check = 0;			/* force data check? */
 
 /* free loaded file */
 static void
@@ -183,8 +199,7 @@ index_records(const MEMLOAD *mp, int nw_rec)
 					break;	/* got requisite # words */
 				do {		/* else find next word */
 					if (*cp == '\n') {
-						fprintf(stderr,
-						"Unexpected EOL in record!\n");
+						fputs("Unexpected EOL in record!\n", stderr);
 						free_records(rp);
 						return(NULL);
 					}
@@ -226,6 +241,9 @@ print_record(const RECINDEX *rp, ssize_t n)
 	if ((n < 0) | (n >= rp->nrecs))
 		return(0);
 	scp = rp->rec[n];
+
+	if (check && !isfltd(scp, delims))
+		goto formerr;
 	do {
 		putc(*scp++, stdout);
 		if (!*scp | isspace(*scp)) {
@@ -236,10 +254,19 @@ print_record(const RECINDEX *rp, ssize_t n)
 				if (++scp >= rp->rec[n+1])
 					break;
 			while (!*scp | isspace(*scp));
+
+			if (check && !isfltd(scp, delims))
+				goto formerr;
 		}
 	} while (scp < rp->rec[n+1]);
 						/* caller adds record sep. */
 	return(1);
+formerr:
+	fputs("Badly formed number: ", stderr);
+	while (*scp && !isspace(*scp))
+		fputc(*scp++, stderr);
+	fputc('\n', stderr);
+	return(0);
 }
 
 /* copy a stream to stdout */
@@ -280,20 +307,6 @@ fget_word(char buf[256], FILE *fp)
 		ungetc(c, fp);
 	return(buf);
 }
-
-char		*fmtid = NULL;			/* format id */
-int		comp_size = 0;			/* binary bytes/channel */
-int		n_comp = 0;			/* components/record */
-int		ni_columns = 0;			/* number of input columns */
-int		ni_rows = 0;			/* number of input rows */
-int		no_columns = 0;			/* number of output columns */
-int		no_rows = 0;			/* number of output rows */
-int		transpose = 0;			/* transpose rows & cols? */
-int		i_header = 1;			/* input header? */
-int		o_header = 1;			/* output header? */
-int		outArray[MAXLEVELS][2];		/* output block nesting */
-int		outLevels = 0;			/* number of blocking levels */
-int		check = 0;			/* force data check? */
 
 /* parse RxCx... string */
 static int
@@ -468,7 +481,8 @@ do_reorder(const MEMLOAD *mp)
 			return(0);
 		}
 		if (rp != NULL) {		/* ASCII output */
-			print_record(rp, n);
+			if (!print_record(rp, n))
+				return(0);
 			putc(tabEOL[j >= no_columns-1], stdout);
 		} else {			/* binary output */
 			putbinary((char *)mp->base + (n_comp*comp_size)*n,
@@ -476,7 +490,7 @@ do_reorder(const MEMLOAD *mp)
 		}
 	    }
 	    if (ferror(stdout)) {
-		fprintf(stderr, "Error writing to stdout\n");
+		fputs("Error writing to stdout\n", stderr);
 		return(0);
 	    }
 	}
@@ -484,7 +498,7 @@ do_reorder(const MEMLOAD *mp)
 		free_records(rp);
 	return(1);
 badspec:
-	fprintf(stderr, "Bad dimension(s)\n");
+	fputs("Bad dimension(s)\n", stderr);
 	return(0);
 }
 
@@ -509,7 +523,7 @@ do_resize(FILE *fp)
 			(no_columns == ni_columns) & (no_rows == ni_rows))
 		return(output_stream(fp));	/* no-op -- just copy */
 	if (no_columns <= 0) {
-		fprintf(stderr, "Missing -oc specification\n");
+		fputs("Missing -oc specification\n", stderr);
 		return(0);
 	}
 	if ((records2go <= 0) & (no_rows > 0))
@@ -529,6 +543,12 @@ do_resize(FILE *fp)
 					break;
 				goto done;	/* normal EOD */
 			}
+			if (check && !isfltd(word, delims)) {
+				fputs("Badly formed number: ", stderr);
+				fputs(word, stderr);
+				fputc('\n', stderr);
+				return(0);
+			}
 			fputs(word, stdout);
 			if (n) {		/* mid-record? */
 				int	c = getc(fp);
@@ -539,7 +559,7 @@ do_resize(FILE *fp)
 			}
 		}
 		if (n >= 0) {
-			fprintf(stderr, "Incomplete record / unexpected EOF\n");
+			fputs("Incomplete record / unexpected EOF\n", stderr);
 			return(0);
 		}
 		if (--columns2go <= 0) {	/* time to end output row? */
@@ -550,9 +570,9 @@ do_resize(FILE *fp)
 	} while (--records2go);			/* expected EOD? */
 done:
 	if (warnings && columns2go != no_columns)
-		fprintf(stderr, "Warning -- incomplete final row\n");
+		fputs("Warning -- incomplete final row\n", stderr);
 	if (warnings && fget_word(word, fp) != NULL)
-		fprintf(stderr, "Warning -- characters beyond expected EOD\n");
+		fputs("Warning -- characters beyond expected EOD\n", stderr);
 	return(1);
 }
 
@@ -704,6 +724,10 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
 	}
+#ifdef getc_unlocked				/* avoid stupid semaphores */
+	flockfile(stdin);
+	flockfile(stdout);
+#endif
 						/* check for no-op */
 	if (!transpose & !check & (outLevels <= 1) & (i_header == o_header) &&
 			(no_columns == ni_columns) & (no_rows == ni_rows)) {
