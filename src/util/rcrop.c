@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.10 2022/03/16 15:50:24 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.11 2022/03/16 16:48:39 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -11,8 +11,6 @@ static const char RCSid[] = "$Id: rcrop.c,v 1.10 2022/03/16 15:50:24 greg Exp $"
 #include "color.h"
 #include "fvect.h"
 #include "view.h"
-
-#define MAXWORD		64	/* maximum word (number) length */
 
 char	*progname;		/* global argv[0] */
 
@@ -226,14 +224,15 @@ adjust_view(void)
 		p1[1] = 1. - p1[1];
 	}
 	err = cropview(&vw, p0[0], p0[1], p1[0], p1[1]);
-	if (err) {
-		fputs(progname, stderr);
-		fputs(": view error - ", stderr);
-		fputs(err, stderr);
-		fputc('\n', stderr);
-		return(0);
-	}
-	return(1);
+
+	if (!err)
+		return(1);	/* success! */
+
+	fputs(progname, stderr);
+	fputs(": view error - ", stderr);
+	fputs(err, stderr);
+	fputc('\n', stderr);
+	return(0);		/* something went wrong */
 }
 
 
