@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.42 2022/03/16 19:25:25 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.43 2022/03/17 01:23:16 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -763,20 +763,18 @@ main(int argc, char *argv[])
 				argv[0]);
 		return(!output_stream(stdin));
 	}
-	if (i_header) {				/* read header */
-		if (getheader(stdin, headline, NULL) < 0)
-			return(1);
-		if (!check_sizes())
-			return(1);
-	} else if (!check_sizes())
+						/* read input header? */
+	if (i_header && getheader(stdin, headline, NULL) < 0)
 		return(1);
-	if (o_header) {				/* write/add to header */
+	if (!check_sizes())			/* adjust sizes */
+		return(1);
+	if (o_header) {				/* add to output header? */
 		if (!i_header)
 			newheader("RADIANCE", stdout);
 		printargs(a, argv, stdout);
 		printf("NCOMP=%d\n", n_comp);
 	}
-	if (!comp_size) {			/* a little late... */
+	if (!comp_size) {			/* a little late, here... */
 		SET_FILE_TEXT(stdin);
 		SET_FILE_TEXT(stdout);
 	}
