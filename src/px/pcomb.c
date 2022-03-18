@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.52 2019/04/03 20:16:31 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.53 2022/03/18 18:31:47 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -76,7 +76,7 @@ int	gotview;
 
 
 static gethfunc headline;
-static void checkfile(void);
+static void checkfile(int orig);
 static double rgb_bright(COLOR  clr);
 static double xyz_bright(COLOR  clr);
 static void init(void);
@@ -177,16 +177,7 @@ main(
 				quit(1);
 			}
 		}
-		checkfile();
-		if (original) {
-			colval(input[nfiles].coef,RED) /=
-					colval(input[nfiles].expos,RED);
-			colval(input[nfiles].coef,GRN) /=
-					colval(input[nfiles].expos,GRN);
-			colval(input[nfiles].coef,BLU) /=
-					colval(input[nfiles].expos,BLU);
-			setcolor(input[nfiles].expos, 1.0, 1.0, 1.0);
-		}
+		checkfile(original);
 		nfiles++;
 		original = 0;
 	}
@@ -261,6 +252,7 @@ headline(			/* check header line & echo if requested */
 	void	*p
 )
 {
+	int	orig = *(int *)p;
 	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
@@ -275,10 +267,23 @@ headline(			/* check header line & echo if requested */
 			wrongformat = globmatch(PICFMT, fmt) ? 1 : -1;
 		return(0);	/* don't echo */
 	}
-	if (isexpos(s)) {			/* exposure */
+	if (orig) {				/* undo exposure? */
+		if (isexpos(s)) {
+			d = 1./exposval(s);
+			scalecolor(input[nfiles].coef, d);
+			return(0);	/* don't echo */
+		}
+		if (iscolcor(s)) {
+			int	i;
+			colcorval(ctmp, s);
+			for (i = 3; i--; )
+				colval(input[nfiles].coef,i) /= colval(ctmp,i);
+			return(0);	/* don't echo */
+		}
+	} else if (isexpos(s)) {		/* record exposure? */
 		d = exposval(s);
 		scalecolor(input[nfiles].expos, d);
-	} else if (iscolcor(s)) {		/* color correction */
+	} else if (iscolcor(s)) {
 		colcorval(ctmp, s);
 		multcolor(input[nfiles].expos, ctmp);
 	} else if (isaspect(s))
@@ -295,7 +300,7 @@ headline(			/* check header line & echo if requested */
 
 
 static void
-checkfile(void)			/* ready a file */
+checkfile(int orig)			/* ready a file */
 {
 	int	i;
 					/* process header */
@@ -304,7 +309,7 @@ checkfile(void)			/* ready a file */
 		fputs(input[nfiles].name, stdout);
 		fputs(":\n", stdout);
 	}
-	getheader(input[nfiles].fp, headline, NULL);
+	getheader(input[nfiles].fp, headline, &orig);
 	if (wrongformat < 0) {
 		eputs(input[nfiles].name);
 		eputs(": not a Radiance picture\n");

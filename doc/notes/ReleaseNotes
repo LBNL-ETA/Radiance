@@ -2529,3 +2529,6 @@ Added -P option to rcalc to pass formatted input when cond is <= 0.
 Created rcrop utility for cropping matrices and pictures more
 conveniently, correcting view information.  Expect it to be handy
 for extracting rows and columns from matrices, mostly.
+
+Changed pcomb so -o option elides original exposure values
+from indented source headers.
