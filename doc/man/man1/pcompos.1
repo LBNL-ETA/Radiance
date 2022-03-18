@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcompos.1,v 1.8 2022/03/15 00:25:50 greg Exp $"
+.\" RCSid "$Id: pcompos.1,v 1.9 2022/03/18 21:09:16 greg Exp $"
 .TH PCOMPOS 1 12/18/97 RADIANCE
 .SH NAME
 pcompos - composite RADIANCE pictures.
@@ -172,6 +172,14 @@ Even if the system limit on open files is large,
 .I pcompos
 places an artificial limit of 1024 on the number of open files and/or
 processes.
+.PP
+The EXPOSURE= line is ignored on the input except when there is only
+a single input picture, or mutliple pictures all have the same
+exposure value.
+In such cases,
+.I pcompos
+will echo the exposure line to the output header appropriately,
+so that absolute calibration is maintained.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.11 2018/05/04 23:56:49 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.12 2022/03/18 21:09:16 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -118,6 +118,9 @@ give the exposure values for picture
 and
 .I pa(n)
 gives the corresponding pixel aspect ratio.
+Exposure values will be set to 1.0 for inputs with the
+.I \-o
+option set.
 Finally, for pictures with stored view parameters,
 the functions
 .I "Ox(n), Oy(n)"
