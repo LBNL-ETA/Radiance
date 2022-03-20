@@ -147,6 +147,7 @@ install(TARGETS
   rcode_ident
   rcode_norm
   rcollate
+  rcrop
   rfluxmtx
   rmtxop
   rsensor
