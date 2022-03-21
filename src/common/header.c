@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.47 2022/03/14 22:57:24 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.48 2022/03/21 17:03:51 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -191,15 +191,20 @@ formatval(			/* get format value (return true if format) */
 {
 	const char  *cp = FMTSTR;
 	char  *r = fmt;
-
+				/* check against format string */
 	while (*cp) if (*cp++ != *s++) return(0);
 	while (isspace(*s)) s++;
 	if (!*s) return(0);
-	if (r == NULL) return(1);
-	do
+	if (r == NULL)		/* just checking if format? */
+		return(1);
+	do			/* copy format ID */
 		*r++ = *s++;
-	while (*s && !isspace(*s) && r-fmt < MAXFMTLEN-1);
-	*r = '\0';
+	while (*s && r-fmt < MAXFMTLEN-1);
+
+	do			/* remove trailing white space */
+		*r-- = '\0';
+	while (r > fmt && isspace(*r));
+
 	return(1);
 }
 
