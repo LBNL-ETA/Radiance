@@ -1,4 +1,4 @@
-.\" RCSid "$Id: getinfo.1,v 1.10 2022/03/21 00:21:13 greg Exp $"
+.\" RCSid "$Id: getinfo.1,v 1.11 2022/03/21 17:12:49 greg Exp $"
 .TH GETINFO 1 1/15/99 RADIANCE
 .SH NAME
 getinfo - get header information from a RADIANCE file
@@ -83,6 +83,8 @@ replaces any previous occurances of the settings in the given
 line(s) with nothing if there is only one word, or with
 the whole line if quoted and containing interior white space or
 an equals sign ('=').
+Any leading white space matches any leading number of spaces and
+tabs in the input header.
 .PP
 The fourth form of
 .I "getinfo \-c"
