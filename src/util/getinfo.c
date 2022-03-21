@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.23 2022/03/21 00:21:13 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.24 2022/03/21 17:11:29 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -135,6 +135,7 @@ main(
 	}
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 	flockfile(stdin);
+	flockfile(stdout);
 #endif
 	SET_FILE_BINARY(stdin);
 	if (argc > 2 && !strcmp(argv[1], "-c")) {
@@ -228,6 +229,9 @@ main(
 		if ((fp = fopen(argv[i], "r")) == NULL)
 			fputs(": cannot open\n", stdout);
 		else {
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+			flockfile(fp);
+#endif
 			if (dim < 0) {			/* dimensions only */
 				if (getheader(fp, NULL, NULL) < 0) {
 					fputs("bad header!\n", stdout);
