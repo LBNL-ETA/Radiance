@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.10 2022/03/15 20:37:02 greg Exp $
+# RCSid $Id: Makefile,v 1.11 2022/03/21 01:17:18 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
@@ -61,7 +61,7 @@ test-wrapBSDF:	ttree.txt
 	rm -f testBSDF.xml
 
 test.mtx:	../renders/ref/rfmirror.mtx
-	rcollate -t ../renders/ref/rfmirror.mtx > test.mtx
+	rcollate -c -t ../renders/ref/rfmirror.mtx > test.mtx
 
 ttree.txt:
 	cnt 256 | rcalc -e '$$1=floor(sin(PI/256*recno)*40)' \
