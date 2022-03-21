@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.22 2022/03/03 22:54:49 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.23 2022/03/21 00:21:13 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -7,23 +7,13 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.22 2022/03/03 22:54:49 greg Exp 
  *     1/3/86
  */
 
+#include  <ctype.h>
 #include  "rtio.h"
 #include  "platform.h"
 #include  "rtprocess.h"
 #include  "resolu.h"
 
-#ifdef getc_unlocked		/* avoid nasty file-locking overhead */
-#undef getc
-#undef getchar
-#undef putchar
-#define getc		getc_unlocked
-#define getchar		getchar_unlocked
-#define putchar		putchar_unlocked
-#endif
-
-static gethfunc tabstr;
-static void getdim(FILE *fp);
-static void copycat(void);
+static char	fmt[MAXFMTLEN] = "*";
 
 
 static int
@@ -37,8 +27,94 @@ tabstr(				/* put out line followed by tab */
 		s++;
 	}
 	if (*--s == '\n')
-		putchar('\t');
+		fputc('\t', stdout);
 	return(0);
+}
+
+
+static int
+adjheadline(			/* check for lines to remove */
+	char  *s,
+	void *p
+)
+{
+	char	**av;
+
+	if (formatval(fmt, s))
+		return(0);	/* don't echo format */
+
+				/* check for match to skip */
+	for (av = (char **)p; *av; av++) {
+		char	*s1 = s;
+		char	*s2 = *av;
+		if (isspace(*s2)) {
+			if (!isspace(*s1))
+				continue;
+			while (isspace(*++s1)) ;
+			while (isspace(*++s2)) ;
+		}
+		while (*s2 && *s1 == *s2) {
+			if ((*s1 == '=') & (s1 > s))
+				return(0);
+			if (isspace(*s2))
+				break;
+			s1++; s2++;
+		}
+		if (s1 == s)
+			continue;
+		if (isspace(*s1) && !*s2 | isspace(*s2))
+			return(0);	/* skip */
+	}
+	fputs(s, stdout);	/* copy if no match */
+	return(0);
+}
+
+
+static void
+getdim(				/* get dimensions from file */
+	FILE  *fp
+)
+{
+	int  j;
+	int  c;
+
+	switch (c = getc(fp)) {
+	case '+':		/* picture */
+	case '-':
+		do
+			putchar(c);
+		while (c != '\n' && (c = getc(fp)) != EOF);
+		break;
+	case 1:			/* octree */
+		getc(fp);
+		j = 0;
+		while ((c = getc(fp)) != EOF)
+			if (c == 0) {
+				if (++j >= 4)
+					break;
+				fputc(' ', stdout);
+			} else {
+				putchar(c);
+			}
+		fputc('\n', stdout);
+		break;
+	default:		/* ??? */
+		fputs("unknown file type\n", stdout);
+		break;
+	}
+}
+
+
+static void
+copycat(void)			/* copy input to output */
+{
+	char	buf[8192];
+	int	n;
+
+	fflush(stdout);
+	while ((n = fread(buf, 1, sizeof(buf), stdin)) > 0)
+		if (writebuf(fileno(stdout), buf, n) != n)
+			break;
 }
 
 
@@ -49,7 +125,6 @@ main(
 )
 {
 	int  dim = 0;
-	char	fmt[MAXFMTLEN];
 	FILE  *fp;
 	int  i;
 
@@ -62,7 +137,6 @@ main(
 	flockfile(stdin);
 #endif
 	SET_FILE_BINARY(stdin);
-	fmt[0] = '*'; fmt[1] = '\0';
 	if (argc > 2 && !strcmp(argv[1], "-c")) {
 		SET_FILE_BINARY(stdout);
 		setvbuf(stdin, NULL, _IONBF, 2);
@@ -87,7 +161,8 @@ main(
 		execvp(argv[2], argv+2);
 		perror(argv[2]);
 		return 1;
-	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
+	}
+	if (argc > 2 && !strcmp(argv[1], "-a")) {
 		SET_FILE_BINARY(stdout);
 		if (checkheader(stdin, fmt, stdout) < 0) {
 			fputs("Bad header!\n", stderr);
@@ -105,7 +180,34 @@ main(
 		fputc('\n', stdout);
 		copycat();
 		return 0;
-	} else if (argc == 2 && !strcmp(argv[1], "-")) {
+	}
+	if (argc > 2 && !strcmp(argv[1], "-r")) {
+		SET_FILE_BINARY(stdout);
+		if (getheader(stdin, adjheadline, argv+2) < 0) {
+			fputs("Bad header!\n", stderr);
+			return 1;
+		}
+		for (i = 2; i < argc; i++) {	/* add lines w/ var[= ]value */
+			int	len = strlen(argv[i]);
+			int	strt = 0, j;
+			while(isspace(argv[i][strt])) strt++;
+			if (strt == len) continue;
+			while (isspace(argv[i][len-1])) len--;
+			for (j = strt+1; j < len-1; j++)
+				if (argv[i][j] == '=' || isspace(argv[i][j])) {
+					for (j = 0; j < len; j++)
+						putchar(argv[i][j]);
+					fputc('\n', stdout);
+					break;
+				}
+		}
+		if (fmt[0] != '*')
+			fputformat(fmt, stdout);
+		fputc('\n', stdout);
+		copycat();
+		return 0;
+	}
+	if (argc == 2 && !strcmp(argv[1], "-")) {
 		SET_FILE_BINARY(stdout);
 		if (getheader(stdin, NULL, NULL) < 0) {
 			fputs("Bad header!\n", stderr);
@@ -167,52 +269,4 @@ main(
 		}
 	}
 	return 0;
-}
-
-
-static void
-getdim(				/* get dimensions from file */
-	FILE  *fp
-)
-{
-	int  j;
-	int  c;
-
-	switch (c = getc(fp)) {
-	case '+':		/* picture */
-	case '-':
-		do
-			putchar(c);
-		while (c != '\n' && (c = getc(fp)) != EOF);
-		break;
-	case 1:			/* octree */
-		getc(fp);
-		j = 0;
-		while ((c = getc(fp)) != EOF)
-			if (c == 0) {
-				if (++j >= 4)
-					break;
-				putchar(' ');
-			} else {
-				putchar(c);
-			}
-		putchar('\n');
-		break;
-	default:		/* ??? */
-		fputs("unknown file type\n", stdout);
-		break;
-	}
-}
-
-
-static void
-copycat(void)			/* copy input to output */
-{
-	char	buf[8192];
-	int	n;
-
-	fflush(stdout);
-	while ((n = fread(buf, 1, sizeof(buf), stdin)) > 0)
-		if (writebuf(fileno(stdout), buf, n) != n)
-			break;
 }

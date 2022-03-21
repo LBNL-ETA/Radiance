@@ -1,4 +1,4 @@
-.\" RCSid "$Id: getinfo.1,v 1.9 2019/07/16 17:07:35 greg Exp $"
+.\" RCSid "$Id: getinfo.1,v 1.10 2022/03/21 00:21:13 greg Exp $"
 .TH GETINFO 1 1/15/99 RADIANCE
 .SH NAME
 getinfo - get header information from a RADIANCE file
@@ -19,7 +19,11 @@ getinfo - get header information from a RADIANCE file
 -
 .br
 .B getinfo
+{
 .B -a
+|
+.B -r
+}
 .B "info_line1 .."
 .br
 .B getinfo
@@ -73,6 +77,12 @@ adds one or more header lines to the standard input.
 These lines are given as arguments to
 .I getinfo,
 and must be quoted if they contain spaces.
+The alternative form with
+.I \-r
+replaces any previous occurances of the settings in the given
+line(s) with nothing if there is only one word, or with
+the whole line if quoted and containing interior white space or
+an equals sign ('=').
 .PP
 The fourth form of
 .I "getinfo \-c"
@@ -106,6 +116,11 @@ To add two header lines modifying the view
 and exposure calibration of a picture:
 .IP "" .2i
 getinfo -a "VIEW= -vta -vh 180 -vv 180" "EXPOSURE=1.5" < orig.hdr > modified.hdr
+.PP
+To remove any indented lines containing "EXPOSURE=" and replace any
+left-justified "EXPOSURE=" lines with a single value of 16:
+.IP "" .2i
+getinfo -r " EXPOSURE=" "EXPOSURE=16" < orig.hdr > fixed.hdr
 .PP
 To raise floating-point matrix elements to a power of 2.7:
 .IP "" .2i

@@ -2532,3 +2532,6 @@ for extracting rows and columns from matrices, mostly.
 
 Changed pcomb so -o option elides original exposure values
 from indented source headers.
+
+Added getinfo -r option, which is similar to -a except it will
+replace indicated lines with new ones.
