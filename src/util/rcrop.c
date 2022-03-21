@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.11 2022/03/16 16:48:39 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.12 2022/03/21 20:19:19 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -112,8 +112,10 @@ binary_copyf(FILE *fp, int asize)
 				return(0);
 			}
 		}
-		free(buf);		/* success! */
-		return(1);
+		free(buf);
+		if (fflush(stdout) == EOF)
+			goto writerr;
+		return(1);		/* success! */
 	}				/* else need to read it all... */
 	buf = (char *)malloc(width*elsiz);
 	if (!buf)
