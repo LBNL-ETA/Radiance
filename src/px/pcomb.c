@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.53 2022/03/18 18:31:47 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.54 2022/03/22 15:14:42 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -286,7 +286,8 @@ headline(			/* check header line & echo if requested */
 	} else if (iscolcor(s)) {
 		colcorval(ctmp, s);
 		multcolor(input[nfiles].expos, ctmp);
-	} else if (isaspect(s))
+	}
+	if (isaspect(s))
 		input[nfiles].pa *= aspectval(s);
 	else if (isview(s) && sscanview(&input[nfiles].vw, s) > 0)
 		gotview++;
