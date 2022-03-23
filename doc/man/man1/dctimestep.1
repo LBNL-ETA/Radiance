@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.17 2022/03/11 02:27:02 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.18 2022/03/23 01:52:51 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -51,15 +51,15 @@ is given a daylight coefficient specification and an optional sky
 vector or matrix, which may be read from the standard input if unspecified.
 The daylight coefficients are multiplied against these sky values
 and the results are written to the standard output.
-This may be a list of color values or a combined Radiance image,
+This may be a list of color values or a combined Radiance picture,
 as explained below.
 .PP
 In the second form,
 .I dctimestep
 takes four input files, forming a matrix expression.
-The first argument is the View matrix file that specifies how window output
+The first argument is the View matrix that specifies how window output
 directions are related to some set of measured values, such as an array of
-illuminance points or images.
+illuminance points or pictures.
 This matrix is usually computed by
 .I rfluxmtx(1)
 or
@@ -126,11 +126,11 @@ If the given specification contains a '%d' format string, this
 will be replaced by the time step index, starting from 0.
 In this way, multiple output pictures may be produced,
 or separate result vectors (one per time step).
-If input is a matrix rather than a set of images, the
+If input is a matrix rather than a set of pictures, the
 .I \-x
 and/or
 .I \-y
-options may be necessary to set the output image size.
+options may be necessary to set the output picture size.
 If only one dimension is specified, the other is computed based
 on the number of rows in the result vectors.
 .PP
@@ -149,7 +149,7 @@ To compute workplane illuminances at 3:30pm on Feb 10th:
 .IP "" .2i
 gensky 2 10 15:30 | genskyvec | dctimestep workplaneDC.dmx > Ill_02-10-1530.dat
 .PP
-To compute an image at 10am on the equinox from a set of component images:
+To compute a picture at 10am on the equinox from a set of component pictures:
 .IP "" .2i
 gensky 3 21 10 | genskyvec | dctimestep dcomp%03d.hdr > view_03-21-10.hdr
 .PP
@@ -182,9 +182,25 @@ dctimestep Illum.vmx "!rmtxop -ff Blinds1.xml Windo1.xml" Exter.dmx Jan20.sky
 To multiply two matrices into a IEEE-float result with header:
 .IP "" .2i
 dctimestep -of Inp1.fmx Inp2.fmx > Inp1xInp2.fmx
+.SH NOTES
+.I Dctimestep
+optimizes its matrix concatenation by checking for all-zero rows
+or columns, thus avoiding unnecessary vector multiplications.
+This can improve performance when a daylight matrix contains
+zero-filled column vectors corresponding to hours of darkness.
+.PP
+It rarely makes sense to specify the
+.I \-od
+output option with
+.I dctimestep,
+since matrix operations are carried out using 32-bit "float" values.
+This take less memory, but can also be less accurate than an
+equivalent invocation of
+.I rmtxop(1),
+which performs all operations on 64-bit "double" values.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
 gendaymtx(1), genskyvec(1), getinfo(1),
-mkillum(1), rcollate(1), rcontrib(1),
+mkillum(1), rcollate(1), rcontrib(1), rcrop(1),
 rfluxmtx(1), rmtxop(1), rtrace(1), vwrays(1)
