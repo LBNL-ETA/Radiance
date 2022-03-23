@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.19 2021/01/21 17:47:07 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.20 2022/03/23 00:58:35 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -38,7 +38,7 @@ int	verbose = 0;			/* verbose reporting? */
 static int
 loadmatrix(ROPMAT *rop)
 {
-	if (rop->mtx != NULL)
+	if (rop->mtx != NULL)		/* already loaded? */
 		return(0);
 
 	rop->mtx = rmx_load(rop->inspec, rop->rmp);
@@ -239,7 +239,7 @@ op_right2left(ROPMAT *mop)
 	while (rpos-- > 0) {
 		if (mright == NULL)
 			break;
-		mright = binaryop(mop[rpos].inspec,
+		mright = binaryop(mop[rpos+1].inspec,
 				loadop(mop+rpos), mop[rpos].binop, mright);
 	}
 	return(mright);
