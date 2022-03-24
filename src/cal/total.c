@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.15 2021/11/16 03:30:45 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.16 2022/03/24 22:26:50 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -59,7 +59,6 @@ char  *argv[]
 					func = MULT;
 					break;
 				case 's':
-					func = ADD;
 					power = atof(argv[a]+2);
 					break;
 				case 'u':
@@ -137,6 +136,10 @@ char  *argv[]
 				}
 		else
 			break;
+	if ((power != 0.0) & (func != ADD)) {
+		fprintf(stderr, "%s: -sE option requires summation\n", argv[0]);
+		exit(1);
+	}
 	if (mean) {
 		if (func == MAX) {
 			fprintf(stderr, "%s: average maximum?!\n", argv[0]);
@@ -282,10 +285,14 @@ char  *fname
 				case ADD:
 					if (inpval[n] == 0.0)
 						break;
-					if (power != 0.0)
-						tally[n] += pow(fabs(inpval[n]),power);
-					else
+					if (power == 0.0)
 						tally[n] += inpval[n];
+					else if (power == 1.0)
+						tally[n] += fabs(inpval[n]);
+					else if (power == -1.0)
+						tally[n] += 1.0/fabs(inpval[n]);
+					else
+						tally[n] += pow(fabs(inpval[n]), power);
 					break;
 				case MULT:
 					if (inpval[n] == 0.0)
