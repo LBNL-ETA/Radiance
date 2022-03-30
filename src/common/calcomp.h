@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.22 2008/05/01 16:42:05 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.23 2022/03/30 16:00:56 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -84,7 +84,7 @@ extern void	varset(char *vname, int assign, double val);
 extern void	dclear(char *name);
 extern void	dremove(char *name);
 extern int	vardefined(char *name);
-extern char	*setcontext(char *ctx);
+extern char	*calcontext(char *ctx);
 extern char	*pushcontext(char *ctx);
 extern char	*popcontext(void);
 extern char	*qualname(char *nam, int lvl);

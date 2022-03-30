@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.20 2021/02/16 20:06:06 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.21 2022/03/30 16:00:56 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -188,7 +188,7 @@ main(int argc, char *argv[])
 #endif
 					/* initialize calcomp routines early */
 	initfunc();
-	setcontext(RCCONTEXT);
+	calcontext(RCCONTEXT);
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */

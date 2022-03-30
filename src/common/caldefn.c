@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.31 2022/03/12 17:21:10 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.32 2022/03/30 16:00:56 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -210,7 +210,7 @@ vardefined(	/* return '=' or ':' if variable/constant defined */
 
 
 char *
-setcontext(			/* set a new context path */
+calcontext(			/* set a new context path */
 	char  *ctx
 )
 {
@@ -251,7 +251,7 @@ pushcontext(		/* push on another context */
     int  n;
 
     strcpy(oldcontext, context);	/* save old context */
-    setcontext(ctx);			/* set new context */
+    calcontext(ctx);			/* set new context */
     n = strlen(context);		/* tack on old */
     if (n+strlen(oldcontext) > MAXCNTX) {
 	strncpy(context+n, oldcontext, MAXCNTX-n);

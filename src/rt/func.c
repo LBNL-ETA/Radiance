@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.38 2020/04/02 18:00:34 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.39 2022/03/30 16:00:56 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -43,7 +43,7 @@ initfunc(void)	/* initialize function evaluation */
 		return;
 	esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
 	esupport &= ~(E_OUTCHAN);
-	setcontext("");
+	calcontext("");
 	scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
 	scompile("Nx=$4;Ny=$5;Nz=$6;", NULL, 0);
 	scompile("Px=$7;Py=$8;Pz=$9;", NULL, 0);
@@ -136,12 +136,12 @@ getfunc(	/* get function for this modifier */
 		goto memerr;
 	i = strlen(arg[ff]);			/* set up context */
 	if (i == 1 && arg[ff][0] == '.') {
-		setcontext(f->ctx = "");	/* "." means no file */
+		calcontext(f->ctx = "");	/* "." means no file */
 	} else {
 		strcpy(sbuf,arg[ff]);		/* file name is context */
 		if (i > LCALSUF && !strcmp(sbuf+i-LCALSUF, CALSUF))
 			sbuf[i-LCALSUF] = '\0';	/* remove suffix */
-		setcontext(f->ctx = savestr(sbuf));
+		calcontext(f->ctx = savestr(sbuf));
 		if (!vardefined(REFVNAME)) {	/* file loaded? */
 			loadfunc(arg[ff]);
 			varset(REFVNAME, '=', 1.0);
@@ -205,7 +205,7 @@ freefunc(			/* free memory associated with modifier */
 	for (i = 0; f->ep[i] != NULL; i++)
 		epfree(f->ep[i]);
 	if (f->ctx[0]) {			/* done with definitions */
-		setcontext(f->ctx);
+		calcontext(f->ctx);
 		i = varvalue(REFVNAME)-.5;	/* reference_count-- */
 		if (i > 0)
 			varset(REFVNAME, '=', (double)i);
@@ -234,7 +234,7 @@ setfunc(			/* set channels for function call */
 	if ((f = (MFUNC *)m->os) == NULL)
 		objerror(m, CONSISTENCY, "setfunc called before getfunc");
 		
-	setcontext(f->ctx);		/* set evaluator context */
+	calcontext(f->ctx);		/* set evaluator context */
 					/* check to see if matrix set */
 	if ((m == fobj) & (r->rno == lastrno))
 		return(0);
@@ -265,7 +265,7 @@ worldfunc(			/* special function context sans object */
 	if (rayinitcal[0])		/* initialize on first call */
 		initfunc();
 					/* set evaluator context */
-	setcontext(ctx);
+	calcontext(ctx);
 					/* check if ray already set */
 	if ((fobj == NULL) & (r->rno == lastrno))
 		return(0);
