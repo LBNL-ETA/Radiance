@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.77 2021/11/24 19:08:51 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.78 2022/03/30 16:40:03 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -36,8 +36,8 @@ typedef struct {
 	float  brt;		/* brightness (for comparison) */
 }  CNTPTR;		/* contribution pointer */
 
-static CONTRIB  *srccnt;		/* source contributions in direct() */
-static CNTPTR  *cntord;			/* source ordering in direct() */
+static CONTRIB  *srccnt = NULL;		/* source contributions in direct() */
+static CNTPTR  *cntord = NULL;		/* source ordering in direct() */
 static int  maxcntr = 0;		/* size of contribution arrays */
 
 static int cntcmp(const void *p1, const void *p2);
@@ -46,10 +46,13 @@ static int cntcmp(const void *p1, const void *p2);
 void
 marksources(void)			/* find and mark source objects */
 {
-	int  foundsource = 0;
+	int  indirect = 0;
 	int  i;
 	OBJREC  *o, *m;
 	int  ns;
+					/* call us only once! */
+	if (nsources)
+		error(CONSISTENCY, "Multiple calls to marksources!");
 					/* initialize dispatch table */
 	initstypes();
 					/* find direct sources */
@@ -80,7 +83,7 @@ marksources(void)			/* find and mark source objects */
 		if (m->otype == MAT_GLOW &&
 				o->otype != OBJ_SOURCE &&
 				m->oargs.farg[3] <= FTINY) {
-			foundsource += (ambounce > 0);
+			indirect += (ambounce > 0);
 			continue;			/* don't track these */
 		}
 		if (sfun[o->otype].of == NULL ||
@@ -97,7 +100,7 @@ marksources(void)			/* find and mark source objects */
 			source[ns].sl.prox = m->oargs.farg[3];
 			if (source[ns].sflags & SDISTANT) {
 				source[ns].sflags |= SSKIP;
-				foundsource += (ambounce > 0);
+				indirect += (ambounce > 0);
 			}
 		} else if (m->otype == MAT_SPOT) {
 			if (source[ns].sflags & SDISTANT)
@@ -113,11 +116,12 @@ marksources(void)			/* find and mark source objects */
 				source[ns].sflags |= SSKIP;
 			}
 		}
-		foundsource += !(source[ns].sflags & SSKIP);
+		maxcntr += !(source[ns].sflags & SSKIP);
 	}
-	if (!foundsource) {
-		error(WARNING, "no light sources found");
-		return;
+	if (!maxcntr) {
+		if (!indirect)
+			error(WARNING, "no light sources found");
+		return;		/* no direct calculation, it seems */
 	}
 #if  SHADCACHE
 	for (ns = 0; ns < nsources; ns++)	/* initialize obstructor cache */
@@ -128,7 +132,7 @@ marksources(void)			/* find and mark source objects */
 		markvirtuals();			/* find and add virtual sources */
 		
 				/* allocate our contribution arrays */
-	maxcntr = nsources + MAXSPART;	/* start with this many */
+	maxcntr += MAXSPART;	/* start with this many */
 	srccnt = (CONTRIB *)malloc(maxcntr*sizeof(CONTRIB));
 	cntord = (CNTPTR *)malloc(maxcntr*sizeof(CNTPTR));
 	if ((srccnt != NULL) & (cntord != NULL))
@@ -144,6 +148,9 @@ distantsources(void)			/* only mark distant sources */
 	int  i;
 	OBJREC  *o, *m;
 	int  ns;
+					/* call us only once! */
+	if (nsources)
+		error(CONSISTENCY, "Multiple calls to distantsources!");
 					/* initialize dispatch table */
 	initstypes();
 					/* sources needed for sourcehit() */
@@ -408,12 +415,11 @@ direct(					/* add direct component */
 		multDirectPmap(r);
 		return;
 	}
-	
 			/* NOTE: srccnt and cntord global so no recursion */
-	if (nsources <= 0)
-		return;		/* no sources?! */
-						/* potential contributions */
-	initsrcindex(&si);
+	if (maxcntr <= 0)
+		return;		/* no direct?! */
+
+	initsrcindex(&si);			/* potential contributions */
 	for (sn = 0; srcray(&sr, r, &si); sn++) {
 		if (sn >= maxcntr) {
 			maxcntr = sn + MAXSPART;
