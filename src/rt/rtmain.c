@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.34 2020/04/08 00:57:39 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.35 2022/04/05 03:02:15 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -335,9 +335,11 @@ main(int  argc, char  *argv[])
 		setambient();		/* initialize ambient calculation */
 	} else
 		distantsources();	/* else mark only distant sources */
+
+		fflush(stdout);		/* in case we're duplicating header */
+
 #ifdef  PERSIST
 	if (persist) {
-		fflush(stdout);
 						/* reconnect stdout */
 		dup2(duped1, fileno(stdout));
 		close(duped1);

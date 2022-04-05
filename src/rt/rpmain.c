@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.19 2019/03/21 16:52:40 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.20 2022/04/05 03:02:15 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -303,9 +303,10 @@ main(int  argc, char  *argv[])
 
 	setambient();			/* initialize ambient calculation */
 	
+	fflush(stdout);			/* in case we're duplicating header */
+
 #ifdef  PERSIST
 	if (persist) {
-		fflush(stdout);
 		if (outfile == NULL) {		/* reconnect stdout */
 			dup2(duped1, fileno(stdout));
 			close(duped1);
