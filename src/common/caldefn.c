@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.32 2022/03/30 16:00:56 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.33 2022/04/08 23:32:25 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -443,7 +443,7 @@ libupdate(			/* update library links */
 					/* if fn is NULL then relink all */
     for (i = 0; i < NHASH; i++)
 	for (vp = hashtbl[i]; vp != NULL; vp = vp->next)
-	    if (vp->lib != NULL || fn == NULL || !strcmp(fn, vp->name))
+	    if ((vp->lib != NULL) | (fn == NULL) || !strcmp(fn, vp->name))
 		vp->lib = liblookup(vp->name);
 }
 
@@ -621,7 +621,7 @@ getdefn(void)
 {
     EPNODE  *ep1, *ep2;
 
-    if (!isalpha(nextc) && nextc != CNTXMARK)
+    if (!isalpha(nextc) & (nextc != CNTXMARK))
 	syntax("illegal variable name");
 
     ep1 = newnode();
@@ -650,7 +650,7 @@ getdefn(void)
 	curfunc = ep1;
     }
 
-    if (nextc != '=' && nextc != ':')
+    if ((nextc != '=') & (nextc != ':'))
 	syntax("'=' or ':' expected");
 
     ep2 = newnode();

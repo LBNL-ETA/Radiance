@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.41 2022/01/15 02:00:21 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.42 2022/04/08 23:32:25 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -33,7 +33,7 @@ static const char	RCSid[] = "$Id: calexpr.c,v 2.41 2022/01/15 02:00:21 greg Exp 
 
 #define	 newnode()	(EPNODE *)ecalloc(1, sizeof(EPNODE))
 
-#define	 isdecimal(c)	(isdigit(c) || (c) == '.')
+#define	 isdecimal(c)	(isdigit(c) | ((c) == '.'))
 
 static double  euminus(EPNODE *), eargument(EPNODE *), enumber(EPNODE *);
 static double  echannel(EPNODE *);
@@ -303,7 +303,7 @@ epow(
 	    errno = ERANGE;
     }
 #endif
-    if (errno == EDOM || errno == ERANGE) {
+    if ((errno == EDOM) | (errno == ERANGE)) {
 	wputs("Illegal power\n");
 	return(0.0);
     }
@@ -471,7 +471,7 @@ syntax(			/* report syntax error and quit */
 {
     int  i;
 
-    if (infile != NULL || lineno != 0) {
+    if ((infile != NULL) | (lineno != 0)) {
 	if (infile != NULL) eputs(infile);
 	if (lineno != 0) {
 	    eputs(infile != NULL ? ", line " : "line ");
@@ -552,7 +552,7 @@ getnum(void)			/* scan a positive float */
 	str[i++] = lnext;
 	lnext = scan();
     }
-    if (lnext == '.' && i < RMAXWORD) {
+    if ((lnext == '.') & (i < RMAXWORD)) {
 	str[i++] = lnext;
 	lnext = scan();
 	if (i == 1 && !isdigit(lnext))
@@ -589,14 +589,14 @@ getE1(void)			/* E1 -> E1 ADDOP E2 */
     EPNODE  *ep1, *ep2;
 
     ep1 = getE2();
-    while (nextc == '+' || nextc == '-') {
+    while ((nextc == '+') | (nextc == '-')) {
 	ep2 = newnode();
 	ep2->type = nextc;
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE2());
 	if (esupport&E_RCONST &&
-			ep1->type == NUM && ep1->sibling->type == NUM)
+			(ep1->type == NUM) & (ep1->sibling->type == NUM))
 		ep2 = rconst(ep2);
 	ep1 = ep2;
     }
@@ -611,7 +611,7 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
     EPNODE  *ep1, *ep2;
 
     ep1 = getE3();
-    while (nextc == '*' || nextc == '/') {
+    while ((nextc == '*') | (nextc == '/')) {
 	ep2 = newnode();
 	ep2->type = nextc;
 	scan();
@@ -619,7 +619,7 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
 		EPNODE	*ep3 = ep1->sibling;
-		if (ep1->type == NUM && ep3->type == NUM) {
+		if ((ep1->type == NUM) & (ep3->type == NUM)) {
 			ep2 = rconst(ep2);
 		} else if (ep3->type == NUM) {
 			if (ep2->type == '/') {
@@ -661,14 +661,14 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
 		EPNODE	*ep3 = ep1->sibling;
-		if (ep1->type == NUM && ep3->type == NUM) {
+		if ((ep1->type == NUM) & (ep3->type == NUM)) {
 			ep2 = rconst(ep2);
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
 			epfree(ep3);		/* (0 ^ E3) */
 			ep1->sibling = NULL;
 			efree(ep2);
 			ep2 = ep1;
-		} else if ((ep3->type == NUM && ep3->v.num == 0) ||
+		} else if ((ep3->type == NUM && ep3->v.num == 0) |
 				(ep1->type == NUM && ep1->v.num == 1)) {
 			epfree(ep2);		/* (E4 ^ 0) or (1 ^ E3) */
 			ep2 = newnode();
@@ -744,7 +744,7 @@ getE5(void)			/* E5 -> (E1) */
 	}
 
 	if (esupport&(E_VARIABLE|E_FUNCTION) &&
-			(isalpha(nextc) || nextc == CNTXMARK)) {
+			(isalpha(nextc) | (nextc == CNTXMARK))) {
 		nam = getname();
 		ep1 = NULL;
 		if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
@@ -803,7 +803,7 @@ rconst(			/* reduce a constant expression */
     ep->type = NUM;
     errno = 0;
     ep->v.num = evalue(epar);
-    if (errno == EDOM || errno == ERANGE)
+    if ((errno == EDOM) | (errno == ERANGE))
 	syntax("bad constant expression");
     epfree(epar);
  

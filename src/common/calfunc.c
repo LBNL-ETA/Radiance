@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.27 2021/09/27 23:30:53 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.28 2022/04/08 23:32:25 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -358,7 +358,7 @@ libfunc(				/* execute library function */
 	    errno = ERANGE;
     }
 #endif
-    if (errno == EDOM || errno == ERANGE) {
+    if ((errno == EDOM) | (errno == ERANGE)) {
 	wputs(fname);
 	if (errno == EDOM)
 		wputs(": domain error\n");
@@ -396,7 +396,7 @@ l_select(char *nm)	/* return argument #(A1+1) */
 	double	a1 = argument(1);
 	int  n = (int)(a1 + .5);
 
-	if (a1 < -.5 || n >= narg) {
+	if ((a1 < -.5) | (n >= narg)) {
 		errno = EDOM;
 		return(0.0);
 	}
