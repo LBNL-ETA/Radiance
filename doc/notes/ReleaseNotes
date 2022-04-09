@@ -2535,3 +2535,6 @@ from indented source headers.
 
 Added getinfo -r option, which is similar to -a except it will
 replace indicated lines with new ones.
+
+Slight change to vwrays -d option to not spit out "-ld-", and to
+produce "-ld+" without requiring input picture as argument.

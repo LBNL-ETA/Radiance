@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwrays.1,v 1.12 2021/12/04 16:29:29 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.13 2022/04/09 17:18:08 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
@@ -87,9 +87,7 @@ The
 .I \-ld
 switch will also be printed, with
 .I \-ld+
-if the view file has an aft clipping plane, and
-.I \-ld-
-otherwise.
+if the view has an aft clipping plane.
 This is useful for passing options to the
 .I rtrace
 command line.

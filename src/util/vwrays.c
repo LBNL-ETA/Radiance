@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.23 2021/12/04 16:29:29 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.24 2022/04/09 17:18:08 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -79,7 +79,7 @@ main(
 					fprintf(stderr,
 						"%s: no view in file\n",
 							argv[i]);
-					exit(1);
+					return(1);
 				}
 				break;
 			}
@@ -96,7 +96,7 @@ main(
 			if (rs.xr <= 0) {
 				fprintf(stderr, "%s: bad x resolution\n",
 						progname);
-				exit(1);
+				return(1);
 			}
 			break;
 		case 'y':			/* y resolution */
@@ -104,7 +104,7 @@ main(
 			if (rs.yr <= 0) {
 				fprintf(stderr, "%s: bad y resolution\n",
 						progname);
-				exit(1);
+				return(1);
 			}
 			break;
 		case 'c':			/* repeat count */
@@ -135,35 +135,35 @@ main(
 		rval = viewfile(argv[i], &vw, &rs);
 		if (rval <= 0) {
 			fprintf(stderr, "%s: no view in picture\n", argv[i]);
-			exit(1);
+			return(1);
 		}
 		if (!getdim & (i+1 < argc)) {
 			zfd = open_float_depth(argv[i+1], (long)rs.xr*rs.yr);
 			if (zfd < 0)
-				exit(1);
+				return(1);
 		}
 	}
 	if ((err = setview(&vw)) != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
-		exit(1);
+		return(1);
 	}
 	if (i == argc)
 		normaspect(viewaspect(&vw), &pa, &rs.xr, &rs.yr);
 	if (getdim) {
-		printf("-x %d -y %d -ld%c\n", rs.xr, rs.yr,
-				(i+1 == argc) & (vw.vaft > FTINY) ? '+' : '-');
-		exit(0);
+		printf("-x %d -y %d%s\n", rs.xr, rs.yr,
+				(vw.vaft > FTINY) ? " -ld+" : "");
+		return(0);
 	}
 	if (fromstdin)
 		pix2rays(stdin);
 	else
 		putrays();
-	exit(0);
+	return(0);
 userr:
 	fprintf(stderr,
 	"Usage: %s [ -i -u -f{a|f|d} -c rept | -d ] { view opts .. | picture [zbuf] }\n",
 			progname);
-	exit(1);
+	return(1);
 }
 
 
