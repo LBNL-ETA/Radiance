@@ -2538,3 +2538,7 @@ replace indicated lines with new ones.
 
 Slight change to vwrays -d option to not spit out "-ld-", and to
 produce "-ld+" without requiring input picture as argument.
+
+Added automatic overture calculation to rtpict with -n > 1 if
+ambient cache is on and file is named.  Random image sampling
+avoids some of the issues with redundant calculations but not all.

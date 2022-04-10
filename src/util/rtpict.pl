@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.19 2021/12/04 16:29:29 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.20 2022/04/10 03:46:27 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -34,6 +34,9 @@ my $outpatt = '^-o[vrxlLRXnNsmM]+';
 my $refDepth = "";
 my $irrad = 0;
 my $persist = 0;
+my $ambounce = 0;
+my $ambcache = 1;
+my $ambfile;
 my $outlyr;
 my $outdir;
 my $outpic;
@@ -77,7 +80,15 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 	# Check rtrace options
 	if (defined $rtraceC{$ARGV[0]}) {
-		$persist ||= ("$ARGV[0]" =~ /^-PP?$/);
+		if ("$ARGV[0]" =~ /^-PP?$/) {
+			$persist = 1;
+		} elsif ("$ARGV[0]" eq '-ab') {
+			$ambounce = $ARGV[1];
+		} elsif ("$ARGV[0]" eq '-aa') {
+			$ambcache = ($ARGV[1] > 0.0);
+		} elsif ("$ARGV[0]" eq '-af') {
+			$ambfile = "$ARGV[1]";
+		}
 		push @rtraceA, $ARGV[0];
 		push @rpictA, shift(@ARGV);
 		for (my $i = $rtraceC{$rpictA[-1]}; $i-- > 0; ) {
@@ -138,6 +149,18 @@ my $oct = $ARGV[0];
 my $view = `@vwrightA 0`;
 chomp $view;
 my @res = split(/\s/, `@vwraysA -d`);
+#####################################################################
+##### Run overture calculation?
+if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
+	my $oxres = int($res[1]/6) + 1;
+	my $oyres = int($res[3]/6) + 1;
+	print STDERR "Running $oxres by $oyres overture calculation " .
+			"to populate '$ambfile'...\n";
+	system "cnt $oxres $oyres | sort -R | @vwraysA -i -x $oxres -y $oyres -pj 0 " .
+		"| @rtraceA -ff -ov '$oct' > /dev/null";
+	die "Failure running overture\n" if ( $? );
+	print STDERR "Finished overture.\n";
+}
 #####################################################################
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
