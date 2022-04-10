@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.20 2022/04/10 03:46:27 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.21 2022/04/10 16:00:14 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -152,12 +152,12 @@ my @res = split(/\s/, `@vwraysA -d`);
 #####################################################################
 ##### Run overture calculation?
 if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
-	my $oxres = int($res[1]/6) + 1;
-	my $oyres = int($res[3]/6) + 1;
+	my $oxres = int($res[1]/6);
+	my $oyres = int($res[3]/6);
 	print STDERR "Running $oxres by $oyres overture calculation " .
 			"to populate '$ambfile'...\n";
-	system "cnt $oxres $oyres | sort -R | @vwraysA -i -x $oxres -y $oyres -pj 0 " .
-		"| @rtraceA -ff -ov '$oct' > /dev/null";
+	system "@vwraysA -x $oxres -y $oyres -pj 0 -fa " .
+		"| sort -R | @rtraceA -faf -ov '$oct' > /dev/null";
 	die "Failure running overture\n" if ( $? );
 	print STDERR "Finished overture.\n";
 }
