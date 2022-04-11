@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtpict.1,v 1.10 2022/04/10 03:46:27 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.11 2022/04/11 04:03:36 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
 rtpict - generate a RADIANCE picture or layered image using rtrace
@@ -109,26 +109,6 @@ rtpict -n 4 -vf mypers.vf -ab 1 -af scene.amb scene.oct > scene_pers.hdr
 To render radiance, first surface distance, and normals in a layered image:
 .IP "" .2i
 rtpict -n 8 -vf fish.vf @render.opt -ovLn fisholay scene.oct
-.SH NOTES
-Users should seriously consider using
-.I rpiece(1)
-for multiprocessing
-when irradiance caching is employed with a shared ambient file.
-If
-.I rtpict
-is used with
-.I \-n
-greater than 1, it tries to compute neighboring parts
-of the same scanline in different processes, which can
-result in many redundant calculations and cache entries.
-.I Rtpict
-will automatically run a randomly-ordered overture calculation
-to mitigate this problem, but it is not a perfect solution.
-.I Rpiece
-avoids redundant cache calculations by working on separate tiles in each
-process, which brings other benefits as well, such as enabling the
-.I \-ps
-option for image plane sampling.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

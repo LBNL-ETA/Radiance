@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.21 2022/04/10 16:00:14 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.22 2022/04/11 04:03:36 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -27,7 +27,7 @@ my %ignoreC = ('-t',1, '-ps',1, '-pt',1, '-pm',1,);
 # Starting options for rtrace (rpict values)
 my @rtraceA = split(' ', 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 ' .
 				'-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03');
-my @vwraysA = ('vwrays', '-ff', '-pj', '.67');
+my @vwraysA = ('vwrays', '-pj', '.67');
 my @vwrightA = ('vwright', '-vtv');
 my @rpictA = ('rpict', '-ps', '1');
 my $outpatt = '^-o[vrxlLRXnNsmM]+';
@@ -150,13 +150,28 @@ my $view = `@vwrightA 0`;
 chomp $view;
 my @res = split(/\s/, `@vwraysA -d`);
 #####################################################################
-##### Run overture calculation?
+##### Resort pixels to reduce ambient cache collisions?
 if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
+	if (!defined($outzbf) && !defined($outdir)) {
+		# Straight picture output, so just randomize sample order
+		system "cnt $res[1] $res[3] | sort -R > /tmp/ord$$.txt";
+		die "sort error\n" if ( $? );
+		system "@vwraysA -ff -i < /tmp/ord$$.txt " .
+			"| @rtraceA -ffa -ov '$oct' > /tmp/pix$$.txt";
+		die "Error running rtrace\n" if ( $? );
+		system "( getinfo < /tmp/pix$$.txt ; getinfo - < /tmp/pix$$.txt " .
+			"| rlam /tmp/ord$$.txt - | sort -k2rn -k1n ) " .
+			"| pvalue -r -Y $res[3] +X $res[1] | getinfo -a 'VIEW=$view'";
+		die "rlam error\n" if ( $? );
+		unlink ("/tmp/ord$$.txt", "/tmp/pix$$.txt");
+		exit 0;
+	}
+	# Else randomize overture calculation to prime ambient cache
 	my $oxres = int($res[1]/6);
 	my $oyres = int($res[3]/6);
 	print STDERR "Running $oxres by $oyres overture calculation " .
 			"to populate '$ambfile'...\n";
-	system "@vwraysA -x $oxres -y $oyres -pj 0 -fa " .
+	system "@vwraysA -x $oxres -y $oyres -pj 0 " .
 		"| sort -R | @rtraceA -faf -ov '$oct' > /dev/null";
 	die "Failure running overture\n" if ( $? );
 	print STDERR "Finished overture.\n";
@@ -164,14 +179,14 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 #####################################################################
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
-	exec "@vwraysA | @rtraceA -fff -olv @res '$oct' | " .
+	exec "@vwraysA -ff | @rtraceA -fff -olv @res '$oct' | " .
 		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of3 - | " .
 		"pvalue -r -df | getinfo -a 'VIEW=$view'";
 }
 #####################################################################
 ##### Base case with output picture only?
 if (! defined $outdir) {
-	exec "@vwraysA | @rtraceA -ffc @res '$oct' | getinfo -a 'VIEW=$view'";
+	exec "@vwraysA -ff | @rtraceA -ffc @res '$oct' | getinfo -a 'VIEW=$view'";
 }
 #####################################################################
 ##### Layered image output case
@@ -220,4 +235,4 @@ foreach my $oval (split //, $outlyr) {
 	delete $rtoutC{$oval};
 }
 			# call rtrace + rsplit
-exec "@vwraysA | @rtraceA -fff @res '$oct' | getinfo -a 'VIEW=$view' | @rsplitA";
+exec "@vwraysA -ff | @rtraceA -fff @res '$oct' | getinfo -a 'VIEW=$view' | @rsplitA";
