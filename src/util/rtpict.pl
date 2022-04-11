@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.22 2022/04/11 04:03:36 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.23 2022/04/11 14:59:54 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -159,9 +159,9 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 		system "@vwraysA -ff -i < /tmp/ord$$.txt " .
 			"| @rtraceA -ffa -ov '$oct' > /tmp/pix$$.txt";
 		die "Error running rtrace\n" if ( $? );
-		system "( getinfo < /tmp/pix$$.txt ; getinfo - < /tmp/pix$$.txt " .
-			"| rlam /tmp/ord$$.txt - | sort -k2rn -k1n ) " .
-			"| pvalue -r -Y $res[3] +X $res[1] | getinfo -a 'VIEW=$view'";
+		system "( getinfo < /tmp/pix$$.txt | getinfo -a 'VIEW=$view'; " .
+			"getinfo - < /tmp/pix$$.txt | rlam /tmp/ord$$.txt - " .
+			"| sort -k2rn -k1n ) | pvalue -r -Y $res[3] +X $res[1]";
 		die "rlam error\n" if ( $? );
 		unlink ("/tmp/ord$$.txt", "/tmp/pix$$.txt");
 		exit 0;
