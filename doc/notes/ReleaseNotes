@@ -2542,3 +2542,5 @@ produce "-ld+" without requiring input picture as argument.
 Added automatic overture calculation to rtpict with -n > 1 if
 ambient cache is on and file is named.  If straight image output
 is requested, we randomize all samples and avoid cache collisions.
+
+Added cnt -s option to shuffle output.

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.23 2022/04/11 14:59:54 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.24 2022/04/11 18:08:19 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -154,8 +154,8 @@ my @res = split(/\s/, `@vwraysA -d`);
 if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 	if (!defined($outzbf) && !defined($outdir)) {
 		# Straight picture output, so just randomize sample order
-		system "cnt $res[1] $res[3] | sort -R > /tmp/ord$$.txt";
-		die "sort error\n" if ( $? );
+		system "cnt -s $res[1] $res[3] > /tmp/ord$$.txt";
+		die "cnt error\n" if ( $? );
 		system "@vwraysA -ff -i < /tmp/ord$$.txt " .
 			"| @rtraceA -ffa -ov '$oct' > /tmp/pix$$.txt";
 		die "Error running rtrace\n" if ( $? );

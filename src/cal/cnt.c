@@ -1,46 +1,31 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cnt.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: cnt.c,v 1.3 2022/04/11 18:08:19 greg Exp $";
 #endif
 /*
  *  cnt.c - simple counting program.
  *
  *	2/1/88
+ *
+ *  Added -s (shuffle) option April 2022
  */
 
-#include  <stdlib.h>
 #include  <stdio.h>
+#include  <time.h>
+#include  "random.h"
 
+#define	MAXDIM	50
 
-int  n[50];
 char  buf[256];
 
-static void loop(int *n, char *b);
 
-int
-main(
-int  argc,
-char  *argv[]
-)
-{
-	int  a;
-
-	argv++; argc--;
-	for (a = 0; a < argc; a++)
-		n[a] = atoi(argv[a]);
-	n[a] = 0;
-	loop(n, buf);
-
-	exit(0);
-}
-
-
-char *
+/* Encode integer in string and return pointer to end */
+static char *
 tack(
-register char  *b,
-register int  i
+char  *b,
+int  i
 )
 {
-	register char  *cp;
+	char  *cp;
 	char  *res;
 
 	*b++ = '\t';
@@ -64,6 +49,7 @@ register int  i
 }
 
 
+/* Loop over dimensions, spitting out buffer after each increment */
 static void
 loop(
 int  *n,
@@ -79,4 +65,89 @@ char  *b
 	}
 	for (i = 0; i < n[0]; i++)
 		loop(n+1, tack(b, i));
+}
+
+
+/* Shuffle all possible output strings and spit out randomly */
+static void
+shuffle(
+int *n
+)
+{
+	int  sub[MAXDIM];
+	int  ndim;
+	int  alen;
+	int  *myshuf;
+	int  i, j;
+
+	alen = 1;		/* allocate shuffle index array */
+	for (j = 0; n[j]; j++)
+		if ((alen *= n[j]) < 0)
+			exit(1);
+
+	myshuf = (int *)malloc(alen*sizeof(int));
+	if (myshuf == NULL) {
+		fputs("Insufficient memory for shuffle\n", stderr);
+		exit(1);
+	}
+	for (i = alen; i--; )	/* initialize in any order */
+		myshuf[i] = i;
+				/* get unique starting point */
+	srandom((long)time(0));
+				/* perform Fisher-Yates shuffle */
+	for (i = 0; i < alen-1; i++) {
+		int	ix = random()%(alen-i) + i;
+		int	ndx = myshuf[i];
+		myshuf[i] = myshuf[ix];
+		myshuf[ix] = ndx;
+	}
+				/* put randomly indexed output */
+	for (i = alen; i--; ) {
+		int	aval = myshuf[i];
+		for (j = 0; n[j+1]; j++) {
+			printf("\t%d", aval % n[j]);
+			aval /= n[j];
+		}
+		printf("\t%d\n", aval);
+	}
+	free(myshuf);
+}
+
+
+int
+main(
+int  argc,
+char  *argv[]
+)
+{
+	char  *prog = argv[0];
+	int  doshuffle = 0;
+	int  n[MAXDIM];
+	int  a;
+
+	argv++; argc--;
+	if (argc <= 0)
+		goto userr;
+	if (argv[0][0] == '-' && argv[0][1] == 's') {
+		doshuffle = 1;
+		argv++; argc--;
+	}
+	for (a = 0; a < argc; a++)
+		if ((n[a] = atoi(argv[a])) <= 1)
+			goto userr;
+	n[a] = 0;
+	if (!a)
+		goto userr;
+
+	if (doshuffle)
+		shuffle(n);
+	else
+		loop(n, buf);
+
+	return(0);
+userr:
+	fputs("Usage: ", stderr);
+	fputs(prog, stderr);
+	fputs(" [-s] N0 [N1 ..]\n", stderr);
+	return(1);
 }

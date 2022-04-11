@@ -1,10 +1,16 @@
-.\" RCSid "$Id: cnt.1,v 1.4 2019/07/20 00:57:43 greg Exp $"
+.\" RCSid "$Id: cnt.1,v 1.5 2022/04/11 18:08:19 greg Exp $"
 .TH CNT 1 11/15/93 RADIANCE
 .SH NAME
 cnt - index counter
 .SH SYNOPSIS
 .B cnt
-N ..
+[
+.B \-s
+]
+N1
+[
+N2 ..
+]
 .SH DESCRIPTION
 .I Cnt
 counts from 0 to N-1, producing N lines of output.
@@ -12,6 +18,10 @@ If multiple arguments are given,
 .I cnt
 produces a nested array of values where the final counter
 rotates fastest through its range.
+The
+.I \-s
+option shuffles the output lines, giving a different random
+order on each invocation.
 .I Cnt
 is most useful in conjunction with
 .I rcalc(1)
@@ -20,6 +30,14 @@ to produce array values.
 To create a 3 by 5 array:
 .IP "" .2i
 cnt 3 5
+.PP
+To generate a random shuffle of indices 0 through 51:
+.IP "" .2i
+cnt -s 52
+.PP
+Similar shuffling broken down by suit:
+.IP "" .2i
+cnt -s 4 13
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
