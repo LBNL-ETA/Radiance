@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.24 2022/04/11 18:08:19 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.25 2022/04/12 00:30:58 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -153,7 +153,7 @@ my @res = split(/\s/, `@vwraysA -d`);
 ##### Resort pixels to reduce ambient cache collisions?
 if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 	if (!defined($outzbf) && !defined($outdir)) {
-		# Straight picture output, so just randomize sample order
+		# Straight picture output, so just shuffle sample order
 		system "cnt -s $res[1] $res[3] > /tmp/ord$$.txt";
 		die "cnt error\n" if ( $? );
 		system "@vwraysA -ff -i < /tmp/ord$$.txt " .
@@ -167,12 +167,11 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 		exit 0;
 	}
 	# Else randomize overture calculation to prime ambient cache
-	my $oxres = int($res[1]/6);
-	my $oyres = int($res[3]/6);
-	print STDERR "Running $oxres by $oyres overture calculation " .
+	my @ores = (int($res[1]/6), int($res[3]/6));
+	print STDERR "Running $ores[0] by $ores[1] overture calculation " .
 			"to populate '$ambfile'...\n";
-	system "@vwraysA -x $oxres -y $oyres -pj 0 " .
-		"| sort -R | @rtraceA -faf -ov '$oct' > /dev/null";
+	system "cnt -s @ores | @vwraysA -i -ff -x $ores[0] -y $ores[1] -pj 0 " .
+		"| @rtraceA -ff -ov '$oct' > /dev/null";
 	die "Failure running overture\n" if ( $? );
 	print STDERR "Finished overture.\n";
 }
