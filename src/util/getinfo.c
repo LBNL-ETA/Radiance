@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.24 2022/03/21 17:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.25 2022/04/13 15:43:06 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -62,8 +62,10 @@ adjheadline(			/* check for lines to remove */
 		}
 		if (s1 == s)
 			continue;
-		if (isspace(*s1) && !*s2 | isspace(*s2))
-			return(0);	/* skip */
+		if ((*s1 == '=') & !*s2)
+			return(0);
+		if (isspace(*s1) & isspace(*s2))
+			return(0);
 	}
 	fputs(s, stdout);	/* copy if no match */
 	return(0);
