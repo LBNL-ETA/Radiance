@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.88 2021/12/15 01:38:50 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.89 2022/04/19 00:36:34 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -178,7 +178,7 @@ getambdiffs(AMBHEMI *hp)
 		if (i) {		/* from above */
 			b1 = bright(ap[-hp->ns].v);
 			d2 = b - b1;
-			d2 *= d2*normf/(b + b1);
+			d2 *= d2*normf/(b + b1 + FTINY);
 			ep[0] += d2;
 			ep[-hp->ns] += d2;
 		}
@@ -186,14 +186,14 @@ getambdiffs(AMBHEMI *hp)
 					/* from behind */
 		b1 = bright(ap[-1].v);
 		d2 = b - b1;
-		d2 *= d2*normf/(b + b1);
+		d2 *= d2*normf/(b + b1 + FTINY);
 		ep[0] += d2;
 		ep[-1] += d2;
 		if (!i) continue;
 					/* diagonal */
 		b1 = bright(ap[-hp->ns-1].v);
 		d2 = b - b1;
-		d2 *= d2*normf/(b + b1);
+		d2 *= d2*normf/(b + b1 + FTINY);
 		ep[0] += d2;
 		ep[-hp->ns-1] += d2;
 	    }
