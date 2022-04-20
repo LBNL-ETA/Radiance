@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cnt.c,v 1.4 2022/04/20 19:13:12 greg Exp $";
+static const char	RCSid[] = "$Id: cnt.c,v 1.5 2022/04/20 20:56:01 greg Exp $";
 #endif
 /*
  *  cnt.c - simple counting program.
@@ -128,11 +128,11 @@ tree_alloc(long alen)
 		exit(1);
 	}
 	*troot = ht;			/* first byte is tree height */
-	for (i = 256; i--; ) {		/* assign bit count table */
+	for (i = 256; i--; ) {		/* assign 0-bit count table */
 		int	b;
-		buf[i] = 0;
+		buf[i] = 8;
 		for (b = i; b; b >>= 1)
-			buf[i] += b&1;
+			buf[i] -= b&1;
 	}
 	return(troot);
 }
@@ -190,17 +190,17 @@ eat_nth_leaf(uby8 *brp, long ski)
 		incr_counter(brp, lvl);		/* we intend to eat one */
 		brp += tree_br[lvl--].cntr_siz;	/* drop a level */
 	}
-	b = 0;					/* browse the leaves */
-	while (ski >= 8-buf[*brp]) {		/* buf contains bit counts */
+	while (ski >= buf[*brp]) {		/* browse the leaves */
 		pos += 8;
-		ski -= 8-buf[*brp++];
+		ski -= buf[*brp++];		/* buf contains 0-bit counts */
 	}
-	while (ski >= 0) {			/* target zero leaf bit */
+	b = 0;					/* find target bit in byte */
+	while ((ski -= !(*brp & 1<<b)) >= 0) {
 		pos++;
-		ski -= !(*brp & 1<<b++);
+		b++;
 	}
-	*brp |= 1 << --b;			/* eat it */
-	return(--pos);				/* & return leaf's slot# */
+	*brp |= 1<<b;				/* eat it */
+	return(pos);				/* & return leaf's slot# */
 }
 
 
