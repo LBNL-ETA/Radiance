@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.30 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.31 2022/04/21 22:31:42 greg Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -216,10 +216,8 @@ packrays(		/* pack ray origins and directions */
 	retry:
 		if (useyelim) {
 			initeyelim(&eyelim, NULL, gc+1);
-			p->ra[i].r[0][0] = (int)(frandom()*rrng0[0][1])
-						+ rrng0[0][0];
-			p->ra[i].r[0][1] = (int)(frandom()*rrng0[1][1])
-						+ rrng0[1][0];
+			p->ra[i].r[0][0] = irandom(rrng0[0][1]) + rrng0[0][0];
+			p->ra[i].r[0][1] = irandom(rrng0[1][1]) + rrng0[1][0];
 			groweyelim(&eyelim, gc,
 					(1./256.)*(p->ra[i].r[0][0]+.5),
 					(1./256.)*(p->ra[i].r[0][1]+.5), 1);
@@ -232,15 +230,13 @@ packrays(		/* pack ray origins and directions */
 #endif
 				goto retry;
 			}
-			p->ra[i].r[1][0] = (int)(frandom()*rrng1[0][1])
-						+ rrng1[0][0];
-			p->ra[i].r[1][1] = (int)(frandom()*rrng1[1][1])
-						+ rrng1[1][0];
+			p->ra[i].r[1][0] = irandom(rrng1[0][1]) + rrng1[0][0];
+			p->ra[i].r[1][1] = irandom(rrng1[1][1]) + rrng1[1][0];
 		} else {
-			p->ra[i].r[0][0] = frandom() * 256.;
-			p->ra[i].r[0][1] = frandom() * 256.;
-			p->ra[i].r[1][0] = frandom() * 256.;
-			p->ra[i].r[1][1] = frandom() * 256.;
+			p->ra[i].r[0][0] = random() & 0xff;
+			p->ra[i].r[0][1] = random() & 0xff;
+			p->ra[i].r[1][0] = random() & 0xff;
+			p->ra[i].r[1][1] = random() & 0xff;
 		}
 		d = hdray(ro, rd, hdlist[p->hd], gc, p->ra[i].r);
 #if 0
