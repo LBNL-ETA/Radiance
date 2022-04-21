@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.13 2022/04/21 02:55:19 greg Exp $";
+static const char	RCSid[] = "$Id: urand.c,v 2.14 2022/04/21 15:22:30 greg Exp $";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -25,13 +25,13 @@ irandom(			/* better than using random() % modulus */
 	long modulus
 )
 {
-	if ((sizeof(long) == 8) | (sizeof(int) == 8))
+	if (sizeof(long) >= 8)
 		return((random()*modulus)>>31);
 
-	if (sizeof(long long) == 8)
+	if (sizeof(long long) >= 8)
 		return((random()*(long long)modulus)>>31);
 
-	return(random() % modulus);
+	return(frandom()*modulus);
 }
 
 int
