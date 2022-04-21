@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.18 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.19 2022/04/21 03:11:55 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -113,7 +113,7 @@ bestout(void)			/* get best process to process packet */
 		if (pqlen[i] == pqlen[pn])
 			cnt++;
 				/* break ties fairly */
-	if ((cnt = random() % cnt))
+	if ((cnt = irandom(cnt)))
 		for (i = pn; i < nprocs; i++)
 			if (pqlen[i] == pqlen[pn] && !cnt--)
 				return(i);

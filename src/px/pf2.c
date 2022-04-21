@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pf2.c,v 2.8 2018/07/26 23:50:40 greg Exp $";
+static const char	RCSid[] = "$Id: pf2.c,v 2.9 2022/04/21 03:11:55 greg Exp $";
 #endif
 /*
  *  pf2.c - routines used by pfilt.
@@ -85,7 +85,7 @@ pass1scan(		/* process first pass scanline */
 			copycolor(hp->val, scan[x]);
 			hp->x = x;
 			hp->y = y;
-			hp->slope = tan(PI*(0.5-(random()%npts+0.5)/npts));
+			hp->slope = tan(PI*(0.5-(irandom(npts)+0.5)/npts));
 			hp->next = head;
 			head = hp;
 		}

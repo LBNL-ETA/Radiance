@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2meta.c,v 2.12 2011/02/22 16:45:12 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.13 2022/04/21 03:11:55 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
@@ -151,7 +151,7 @@ doline(		/* draw line conditionally */
 	hshtab[h][0] = v1x; hshtab[h][1] = v1y;
 	hshtab[h][2] = v2x; hshtab[h][3] = v2y;
 	if ((long)(v2x-v1x)*(v2x-v1x) + (long)(v2y-v1y)*(v2y-v1y)
-			<= random() % rthresh)
+			<= irandom(rthresh))
 		return(0);
 	mline(v1x, v1y, layer/4, 0, layer%4);
 	mdraw(v2x, v2y);
