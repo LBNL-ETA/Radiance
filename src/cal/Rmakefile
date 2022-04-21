@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.10 2019/07/05 00:20:57 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.11 2022/04/21 02:52:40 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -40,7 +40,7 @@ total:	total.o
 	$(CC) $(CFLAGS) -o total total.o -lrtrad $(MLIB)
 
 cnt:		cnt.o
-	$(CC) $(CFLAGS) -o cnt cnt.o
+	$(CC) $(CFLAGS) -o cnt cnt.o -lrtrad
 
 neaten:	neat.o
 	$(CC) $(CFLAGS) -o neaten neat.o

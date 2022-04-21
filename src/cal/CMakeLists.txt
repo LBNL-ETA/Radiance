@@ -1,4 +1,5 @@
 add_executable(cnt cnt.c)
+target_link_libraries(cnt rtrad)
 
 add_executable(ev ev.c)
 target_link_libraries(ev rtrad)

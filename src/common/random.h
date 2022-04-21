@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.23 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid $Id: random.h,v 2.24 2022/04/21 02:52:40 greg Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -35,11 +35,13 @@ extern int	urmask;
 #define	 urand(i)	(urmask ? (urperm[(i)&urmask]+frandom())/(urmask+1.) \
 				: frandom())
 
+				/* defined in urand.c */
+extern long	irandom(long modulus);
+
 extern int	initurand(int size);
 
-				/* defined in urand.c */
 extern int	ilhash(int *d, int n);
-				/* defined in urind.c */
+
 extern int	urind(int s, int i);
 				/* defined in multisamp.c */
 extern void	multisamp(double t[], int n, double r);

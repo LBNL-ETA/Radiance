@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.11 2015/05/27 08:42:06 greg Exp $";
+static const char	RCSid[] = "$Id: urand.c,v 2.12 2022/04/21 02:52:40 greg Exp $";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -7,7 +7,7 @@ static const char	RCSid[] = "$Id: urand.c,v 2.11 2015/05/27 08:42:06 greg Exp $"
 
 #include "copyright.h"
 
-#include  "standard.h"
+#include  "rterror.h"
 #include  "random.h"
 
 #undef initurand
@@ -19,6 +19,24 @@ static unsigned short  empty_tab = 0;
 unsigned short  *urperm = &empty_tab;	/* urand() permutation */
 int  urmask = 0;			/* bits used in permutation */
 
+
+long
+irandom(			/* better than using random() % modulus */
+	long modulus
+)
+{
+	static const int	isize = sizeof(int);
+	static const int	lsize = sizeof(long);
+	static const int	llsize = sizeof(long long);
+
+	if ((lsize == 8) | (isize == 8))
+		return((random()*modulus)>>31);
+
+	if (llsize == 8)
+		return((random()*(long long)modulus)>>31);
+
+	return(random() % modulus);
+}
 
 int
 initurand(			/* initialize urand() for size entries */

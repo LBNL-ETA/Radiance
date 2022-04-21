@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cnt.c,v 1.5 2022/04/20 20:56:01 greg Exp $";
+static const char	RCSid[] = "$Id: cnt.c,v 1.6 2022/04/21 02:52:40 greg Exp $";
 #endif
 /*
  *  cnt.c - simple counting program.
@@ -213,7 +213,7 @@ big_shuffle(long *n, long alen)
 	tree_root = tree_alloc(alen);
 
 	while (alen > 0)		/* allocate and print random array entries */
-		print_shuf(n, eat_nth_leaf(tree_root, random() % alen--));
+		print_shuf(n, eat_nth_leaf(tree_root, irandom(alen--)));
 
 	free(tree_root);		/* all done */
 }
@@ -251,7 +251,7 @@ shuffle(long *n)
 		myshuf[i] = i;
 				/* perform Fisher-Yates shuffle */
 	for (i = 0; i < alen-1; i++) {
-		int	ix = random()%(alen-i) + i;
+		int	ix = irandom(alen-i) + i;
 		int	ndx = myshuf[i];
 		myshuf[i] = myshuf[ix];
 		myshuf[ix] = ndx;
