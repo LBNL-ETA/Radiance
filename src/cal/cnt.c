@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cnt.c,v 1.7 2022/04/22 15:50:34 greg Exp $";
+static const char	RCSid[] = "$Id: cnt.c,v 1.8 2022/04/22 15:52:50 greg Exp $";
 #endif
 /*
  *  cnt.c - simple counting program.
@@ -161,7 +161,7 @@ incr_counter(uby8 *ctrp, int n)
 {
 	n = tree_br[n].cntr_siz;
 
-	while (++(*ctrp++))		/* LSB first */
+	while (! ++(*ctrp++))		/* LSB first */
 		if (--n <= 0) {
 			fputs("Shuffle occupancy overflow!\n", stderr);
 			exit(1);	/* means we sized something wrong */
