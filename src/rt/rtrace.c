@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.102 2021/04/16 16:31:35 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.103 2022/04/24 15:40:33 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -166,17 +166,6 @@ rtrace(				/* trace rays from file */
 		error(WARNING, "reducing number of processes to match flush interval");
 		nproc = nextflush;
 	}
-	switch (outform) {
-	case 'a': putreal = puta; break;
-	case 'f': putreal = putf; break;
-	case 'd': putreal = putd; break;
-	case 'c': 
-		if (outvals[1] || !strchr("vrx", outvals[0]))
-			error(USER, "color format only with -ov, -or, -ox");
-		putreal = putrgbe; break;
-	default:
-		error(CONSISTENCY, "botched output format");
-	}
 	if (nproc > 1) {		/* start multiprocessing */
 		ray_popen(nproc);
 		ray_fifo_out = printvals;
@@ -241,6 +230,17 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	if (!*vs)
 		error(USER, "empty output specification");
 
+	switch (outform) {	/* make sure (*putreal)() calls someone! */
+	case 'a': putreal = puta; break;
+	case 'f': putreal = putf; break;
+	case 'd': putreal = putd; break;
+	case 'c':
+		if (outvals[1] || !strchr("vrx", outvals[0]))
+			error(USER, "color format only with -ov, -or, -ox");
+		putreal = putrgbe; break;
+	default:
+		error(CONSISTENCY, "botched output format");
+	}
 	castonly = 1;			/* sets castonly as side-effect */
 	do
 		switch (*vs) {
