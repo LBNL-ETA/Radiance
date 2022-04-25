@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.114 2022/04/11 00:45:30 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.115 2022/04/25 03:38:30 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -639,9 +639,10 @@ initambfile(		/* initialize ambient file */
 				ambvwt, ambounce, ambacc);
 		fprintf(ambfp, "-ad %d -as %d -ar %d ",
 				ambdiv, ambssamp, ambres);
-		fprintf(ambfp, "-dt %g -dc %g -ss %g -lr %d -lw %g ",
-				shadthresh, shadcert, specjitter,
-				maxdepth, minweight);
+		fprintf(ambfp, "-dr %d -ds %g -dt %g -dc %g ", directrelay,
+				srcsizerat, shadthresh, shadcert);
+		fprintf(ambfp, "-ss %g -st %g -lr %d -lw %g ", specjitter,
+				specthresh, maxdepth, minweight);
 		if (octname != NULL)
 			fputs(octname, ambfp);
 		fputc('\n', ambfp);
