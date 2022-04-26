@@ -2544,3 +2544,9 @@ ambient cache is on and file is named.  If straight image output
 is requested, we randomize all samples and avoid cache collisions.
 
 Added cnt -s option to shuffle output.
+
+Fixed issue with divide-by-zero errors in the ambient super-sampling
+routine discovered by Jon Sargent of Solemma.  This affected regions
+that had zero radiance, such as black backgrounds or unlit areas
+with -av 0 0 0, when super-sampling was effectively disabled, causing
+some loss in accuracy of the results.
