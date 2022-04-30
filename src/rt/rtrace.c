@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.103 2022/04/24 15:40:33 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.104 2022/04/30 15:13:42 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -160,8 +160,11 @@ rtrace(				/* trace rays from file */
 					/* set up output */
 	if (castonly || every_out[0] != NULL)
 		nproc = 1;		/* don't bother multiprocessing */
-	if (Tflag && every_out[0] != NULL)
-		trace_sources();	/* asking to trace light sources */
+	if (every_out[0] != NULL) {
+		trace = ourtrace;	/* enable full tree tracing */
+		if (Tflag)		/* light sources, too? */
+			trace_sources();
+	}
 	if ((nextflush > 0) & (nproc > nextflush)) {
 		error(WARNING, "reducing number of processes to match flush interval");
 		nproc = nextflush;
@@ -251,7 +254,6 @@ setrtoutput(void)			/* set up output tables, return #comp */
 			if (!vs[1]) break;
 			*table = NULL;
 			table = every_out;
-			trace = ourtrace;
 			castonly = 0;
 			break;
 		case 'o':				/* origin */
