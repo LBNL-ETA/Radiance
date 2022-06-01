@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.56 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.57 2022/06/01 17:08:24 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -1465,7 +1465,7 @@ getblur(double *mbf, double *dbf)	/* get # blur samples (and fraction) */
 	int	nmblur, ndblur;
 	char	*s;
 					/* get motion blur */
-	if (!vdef(MBLUR) || (mblurf = atof(vval(MBLUR))) < 0.0)
+	if (vdef(ANIMATE) || !vdef(MBLUR) || (mblurf = atof(vval(MBLUR))) < 0.0)
 		mblurf = 0.0;
 	if (mbf != NULL)
 		*mbf = mblurf;
