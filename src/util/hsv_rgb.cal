@@ -1,4 +1,4 @@
-{ RCSid $Id: hsv_rgb.cal,v 1.1 2019/07/24 21:36:28 greg Exp $ }
+{ RCSid $Id: hsv_rgb.cal,v 2.1 2022/06/01 17:22:31 greg Exp $ }
 {
 	Convert between HSV (hue, saturation, value) and RGB
 	Hue angles are in degrees, from 0 to 360.
