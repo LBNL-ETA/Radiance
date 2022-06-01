@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimate.1,v 1.10 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: ranimate.1,v 1.11 2022/06/01 16:59:34 greg Exp $"
 .TH RANIMATE 1 6/24/98 RADIANCE
 .SH NAME
 ranimate - compute a RADIANCE animation
@@ -362,7 +362,7 @@ used otherwise.
 The default fraction is 0, meaning no motion blurring.
 This option does not currently work with the
 .I ANIMATE
-variable, since pinterp only works for static environments.
+variable.
 .TP
 .BR DBLUR
 This variable specifies the aperture diameter for depth-of-field blurring,
@@ -384,10 +384,8 @@ world coordinate units.
 For example, if you wish to simulate a 50mm lens at f/2.0 in
 a scene modeled in meters, then you divide 50mm by 2.0 to get 25mm,
 which corresponds to an effective aperture of 0.025 meters.
+The focus distance is determined by the length of the view directon vector.
 The default aperture is 0, meaning no depth-of-field blurring.
-This option does not currently work with the
-.I ANIMATE
-variable, since pinterp only works for static environments.
 .TP
 .BR RTRACE
 This boolean variable tells
