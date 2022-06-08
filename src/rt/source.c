@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.78 2022/03/30 16:40:03 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.79 2022/06/08 17:18:41 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -766,9 +766,11 @@ m_light(				/* ray hit a light source */
 		return(1);
 	}
 					/* otherwise treat as source */
-						/* check for behind */
-	if (r->rod < 0.0)
+	if (r->rod < 0.0) {			/* check for behind */
+		if (!backvis)
+			raytrans(r);		/* used to return black */
 		return(1);
+	}
 						/* check for outside spot */
 	if (m->otype==MAT_SPOT && spotout(r, makespot(m)))
 		return(1);
