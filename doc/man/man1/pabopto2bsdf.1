@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.9 2021/08/25 04:42:38 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.10 2022/06/14 17:45:53 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
 pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
@@ -111,9 +111,9 @@ some measurements exhibit near grazing.
 .PP
 The
 .I Mountain
-software operates the pg2 goniophotometer to
-capture BSDF scattering data in separate text files for each incident
-angle, beginning with a header
+program, written by Peter Apian-Bennewitz, stores data taken by 
+his pg2 goniophotometer in separate
+BSDF scattering files for each incident angle, beginning with a header
 whose lines each start with a pound sign ('#').
 Some header settings require colons and others do not, as indicated below.
 The
