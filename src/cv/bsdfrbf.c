@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.33 2019/05/08 16:38:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.34 2022/06/29 15:52:07 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -381,7 +381,8 @@ make_rbfrep()
 			get_theta180(newnode->invec), get_phi360(newnode->invec),
 			newnode->vtotal);
 #endif
-	insert_dsf(newnode);
+	if (insert_dsf(newnode) < 0)
+		return(NULL);
 	return(newnode);
 memerr:
 	fprintf(stderr, "%s: Out of memory in make_rbfrep()\n", progname);
