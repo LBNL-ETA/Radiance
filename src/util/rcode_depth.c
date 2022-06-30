@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.11 2020/07/20 15:53:30 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.12 2022/06/30 00:16:49 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -162,16 +162,12 @@ pixel_depths(DEPTHCODEC *dcp, int unbuf)
 		return 0;
 
 	while (scanf("%d %d", &xy[0], &xy[1]) == 2) {
-
-		loc2pix(xy, &dcp->res,
-			(xy[0]+.5)/dcp->res.xr, (xy[1]+.5)/dcp->res.yr);
-
+		loc2pix(xy, &dcp->res, xy[0]/(double)dcp->res.xr,
+				xy[1]/(double)dcp->res.yr);
 		d = decode_depth_pix(dcp, xy[0], xy[1]);
 		if (d < -FTINY)
 			return 0;
-
 		output_depth(dcp, d);
-
 		if (unbuf && fflush(stdout) == EOF) {
 			fputs(progname, stderr);
 			fputs(": write error on output\n", stderr);
@@ -260,8 +256,8 @@ pixel_points(DEPTHCODEC *dcp, int unbuf)
 		return 0;
 
 	while (scanf("%d %d", &xy[0], &xy[1]) == 2) {
-		loc2pix(xy, &dcp->res,
-			(xy[0]+.5)/dcp->res.xr, (xy[1]+.5)/dcp->res.yr);
+		loc2pix(xy, &dcp->res, xy[0]/(double)dcp->res.xr,
+				xy[1]/(double)dcp->res.yr);
 		if (get_worldpos_pix(wpos, dcp, xy[0], xy[1]) < 0)
 			return 0;
 		output_worldpos(dcp, wpos);
