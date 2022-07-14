@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_quarter.cal,v 1.5 2015/03/27 18:58:06 greg Exp $ }
+{ RCSid $Id: klems_quarter.cal,v 1.6 2022/07/14 02:52:02 greg Exp $ }
 {
 	Compute interior bin for quarter Klems BSDF basis (0-40)
 	Returns -1 for wrong-side rays
@@ -12,7 +12,7 @@ Acos(x) : if(x-1, 0, if(-1-x, PI, acos(x))) / DEGREE;
 posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
 Atan2(y,x) : posangle(atan2(y,x));
 
-kqpola(r) : select(r, 9, 27, 46, 66, 90);
+kqpola(r) : select(r, 9, 27, 45, 63, 90);
 kqnaz(r) : select(r, 1, 8, 12, 12, 8);
 kqaccum(r) : if(r-.5, kqnaz(r) + kqaccum(r-1), 0);
 kqfindrow(r, pol) : if(r-kqpola(0)+.5, r,

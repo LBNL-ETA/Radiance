@@ -2550,3 +2550,6 @@ routine discovered by Jon Sargent of Solemma.  This affected regions
 that had zero radiance, such as black backgrounds or unlit areas
 with -av 0 0 0, when super-sampling was effectively disabled, causing
 some loss in accuracy of the results.
+
+Updated Klems Half- and Quarter-bases to match angles currently used
+in WINDOW.

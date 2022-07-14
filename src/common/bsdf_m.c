@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.45 2022/01/25 01:34:20 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.46 2022/07/14 02:52:02 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -42,22 +42,22 @@ ANGLE_BASIS	abase_list[MAXABASES] = {
 		{75., 12},
 		{90., 0} }
 	}, {
-		"LBNL/Klems Half", 73,
+		"LBNL/Klems Half", 77,
 		{ {0., 1},
 		{6.5, 8},
 		{19.5, 12},
 		{32.5, 16},
-		{46.5, 20},
-		{61.5, 12},
-		{76.5, 4},
+		{45.5, 20},
+		{58.5, 12},
+		{71.5, 8},
 		{90., 0} }
 	}, {
 		"LBNL/Klems Quarter", 41,
 		{ {0., 1},
 		{9., 8},
 		{27., 12},
-		{46., 12},
-		{66., 8},
+		{45., 12},
+		{63., 8},
 		{90., 0} }
 	}
 };
