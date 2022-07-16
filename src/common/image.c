@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.54 2022/01/13 00:26:09 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.55 2022/07/16 00:26:34 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -313,8 +313,8 @@ FVECT  p
 		break;
 	case VT_PER:			/* perspective view */
 		d = DOT(disp,v->vdir);
-		if ((v->vaft > FTINY) & (d >= v->vaft))
-			rflags |= VL_BEYOND;
+		rflags |= VL_BEYOND*((v->vaft > FTINY) &
+					(d >= v->vaft));
 		ip[2] = VLEN(disp);
 		if (d < -FTINY) {	/* fold pyramid */
 			ip[2] = -ip[2];
@@ -343,8 +343,8 @@ FVECT  p
 		d2 = d*d + d2*d2;
 		if (d2 <= FTINY*FTINY)
 			return(VL_BAD);	/* at pole */
-		if ((v->vaft > FTINY) & (d2 >= v->vaft*v->vaft))
-			rflags |= VL_BEYOND;
+		rflags |= VL_BEYOND*((v->vaft > FTINY) &
+					(d2 >= v->vaft*v->vaft));
 		d = 1.0/sqrt(d2);
 		ip[1] = DOT(disp,v->vvec)*d/v->vn2 + 0.5 - v->voff;
 		ip[2] = VLEN(disp);
