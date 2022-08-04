@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.22 2020/12/17 03:30:37 greg Exp $ */
+/* RCSid $Id: source.h,v 2.23 2022/08/04 22:43:46 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -72,7 +72,7 @@ typedef struct {
 	} sa;			/* source aiming information */
 	unsigned long
 		ntests, nhits;	/* shadow tests and hits */
-#ifdef  SHADCACHE
+#if  SHADCACHE
 	OBSCACHE  *obscache;    /* obstructor cache */
 #endif
 	int  sflags;		/* source flags */

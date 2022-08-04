@@ -2553,3 +2553,7 @@ some loss in accuracy of the results.
 
 Updated Klems Half- and Quarter-bases to match angles currently used
 in WINDOW.
+
+Eliminated most aiming failures for triangular light sources, at the
+expense of conservative sampling near the centroid.  Thanks to
+David Geisler-Moroder for his help on this.

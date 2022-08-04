@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.23 2016/04/21 00:40:35 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.24 2022/08/04 22:43:46 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -121,13 +121,33 @@ fsetsrc(			/* set a face as a source */
 	}
 	src->srad = sqrt(src->srad);
 						/* compute size vectors */
-	if (f->nv == 4)				/* parallelogram case */
+	if (f->nv == 4) {				/* parallelogram case */
 		for (j = 0; j < 3; j++) {
 			src->ss[SU][j] = .5*(VERTEX(f,1)[j]-VERTEX(f,0)[j]);
 			src->ss[SV][j] = .5*(VERTEX(f,3)[j]-VERTEX(f,0)[j]);
 		}
-	else
-		setflatss(src);
+	} else if (f->nv == 3) {			/* triangle case */
+		int	near0 = 2;
+		double	dmin = dist2line(src->sloc, VERTEX(f,2), VERTEX(f,0));
+		for (i = 0; i < 2; i++) {
+			double	d2 = dist2line(src->sloc, VERTEX(f,i), VERTEX(f,i+1));
+			if (d2 >= dmin)
+				continue;
+			near0 = i;
+			dmin = d2;			/* radius = min distance */
+		}
+		if (dmin < .08*f->area)
+			objerror(so, WARNING, "triangular source with poor aspect");
+		i = (near0 + 1) % 3;
+		for (j = 0; j < 3; j++)
+			src->ss[SU][j] = VERTEX(f,i)[j] - VERTEX(f,near0)[j];
+		normalize(src->ss[SU]);
+		dmin = sqrt(dmin);
+		for (j = 0; j < 3; j++)
+			src->ss[SU][j] *= dmin;
+		fcross(src->ss[SV], f->norm, src->ss[SU]);
+	} else
+		setflatss(src);				/* hope for convex! */
 }
 
 
@@ -155,7 +175,6 @@ ssetsrc(			/* set a source as a source */
 	src->srad = sqrt(src->ss2/PI);
 	VCOPY(src->snorm, src->sloc);
 	setflatss(src);			/* hey, whatever works */
-	src->ss[SW][0] = src->ss[SW][1] = src->ss[SW][2] = 0.0;
 }
 
 
@@ -177,8 +196,7 @@ sphsetsrc(			/* set a sphere as a source */
 	VCOPY(src->sloc, so->oargs.farg);
 	src->srad = so->oargs.farg[3];
 	src->ss2 = PI * src->srad * src->srad;
-	for (i = 0; i < 3; i++)
-		src->ss[SU][i] = src->ss[SV][i] = src->ss[SW][i] = 0.0;
+	memset(src->ss, 0, sizeof(src->ss));
 	for (i = 0; i < 3; i++)
 		src->ss[i][i] = 0.7236 * so->oargs.farg[3];
 }
