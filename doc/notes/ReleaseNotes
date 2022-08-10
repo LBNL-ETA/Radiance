@@ -2557,3 +2557,5 @@ in WINDOW.
 Eliminated most aiming failures for triangular light sources, at the
 expense of conservative sampling near the centroid.  Thanks to
 David Geisler-Moroder for his help on this.
+
+Increased maximum set size to 8191 to avoid set overflow errors.
