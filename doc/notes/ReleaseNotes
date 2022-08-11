@@ -2559,3 +2559,7 @@ expense of conservative sampling near the centroid.  Thanks to
 David Geisler-Moroder for his help on this.
 
 Increased maximum set size to 8191 to avoid set overflow errors.
+
+Added source obstruction test to statistics being kept on which
+sources were visible in adaptive shadow testing code.  Previous
+behavior was likely over-estimating source contributions.

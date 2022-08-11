@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.79 2022/06/08 17:18:41 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.80 2022/08/11 15:09:14 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -435,7 +435,11 @@ direct(					/* add direct component */
 		scp->sno = sr.rsrc;
 #if SHADCACHE					/* check shadow cache */
 		if (si.np == 1 && srcblocked(&sr)) {
-			cntord[sn].brt = 0.0;
+			cntord[sn].brt = 0.0;	/* & count as test */
+			if (source[scp->sno].ntests++ > 0xfffffff0) {
+				source[scp->sno].ntests >>= 1;
+				source[scp->sno].nhits >>= 1;
+			}
 			continue;
 		}
 #endif
