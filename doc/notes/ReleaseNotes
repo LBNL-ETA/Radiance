@@ -2563,3 +2563,10 @@ Increased maximum set size to 8191 to avoid set overflow errors.
 Added source obstruction test to statistics being kept on which
 sources were visible in adaptive shadow testing code.  Previous
 behavior was likely over-estimating source contributions.
+
+Added diffuse components into maximum directional hemispherical
+reported by checkBSDF, so comparing to 100% is easier for each
+component.
+
+Fixed incorrect calculations in iso2klems script, thanks to
+help from Jacob Jonnson.

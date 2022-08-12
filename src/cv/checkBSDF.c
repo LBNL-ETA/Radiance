@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.8 2022/02/01 18:31:28 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.9 2022/08/12 23:55:00 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -80,19 +80,22 @@ getBSDFtype(const SDData *bsdf, int *flags)
 void
 detailComponent(const char *nm, const SDValue *lamb, const SDSpectralDF *df)
 {
+	double	Lamb = 0;
+
 	fputs(nm, stdout);
-	if (lamb->spec.flags)
+	if (lamb->spec.flags) {
 		printf("\t%4.1f %4.1f %4.1f\t\t",
 			100.*lamb->cieY*lamb->spec.cx/lamb->spec.cy,
 			100.*lamb->cieY,
 			100.*lamb->cieY*(1.f - lamb->spec.cx - lamb->spec.cy)/lamb->spec.cy);
-	else
+		Lamb = lamb->cieY;
+	} else
 		fputs("\t 0    0    0\t\t", stdout);
 	if (df)
-		printf("%5.1f%%\t\t%.2f deg\n", 100.*df->maxHemi,
+		printf("%5.1f%%\t\t%.2f deg\n", 100.*(Lamb+df->maxHemi),
 				sqrt(df->minProjSA/M_PI)*(360./M_PI));
 	else
-		puts("  0%\t\t180 deg");
+		printf("%5.1f%%\t\t180 deg", Lamb);
 }
 
 /* Add a value to stats */
@@ -254,7 +257,7 @@ checkXML(char *fname)
 	printf("Type: %s\n", getBSDFtype(&myBSDF, &flags));
 	printf("Color: %d\n", (flags & F_IN_COLOR) != 0);
 	printf("Has Geometry: %d\n", (myBSDF.mgf != NULL));
-	puts("Component\tLambertian XYZ (%)\tMax. Dir\tMin. Angle");
+	puts("Component\tLambertian XYZ (%)\tMax. Tot. Dir\tMin. Angle");
 	detailComponent("Interior Refl", &myBSDF.rLambFront, myBSDF.rf);
 	detailComponent("Exterior Refl", &myBSDF.rLambBack, myBSDF.rb);
 	detailComponent("Int->Ext Trans", &myBSDF.tLambFront, myBSDF.tf);

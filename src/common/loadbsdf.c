@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.13 2021/03/27 17:50:18 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.14 2022/08/12 23:55:00 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -73,16 +73,16 @@ fprintf(stderr, "Front diffuse RGB transmittance: %.4f %.4f %.4f\n", rgb[0], rgb
 ccy2rgb(&sd->tLambBack.spec, sd->tLamb.cieY, rgb);
 fprintf(stderr, "Back diffuse RGB transmittance: %.4f %.4f %.4f\n", rgb[0], rgb[1], rgb[2]);
 if (sd->rf)
-fprintf(stderr, "Maximum direct hemispherical front reflection: %.3f%%\n",
+fprintf(stderr, "Maximum direct hemispherical front reflection (less diffuse): %.3f%%\n",
 sd->rf->maxHemi*100.);
 if (sd->rb)
-fprintf(stderr, "Maximum direct hemispherical back reflection: %.3f%%\n",
+fprintf(stderr, "Maximum direct hemispherical back reflection (less diffuse): %.3f%%\n",
 sd->rb->maxHemi*100.);
 if (sd->tf)
-fprintf(stderr, "Maximum direct hemispherical front transmission: %.3f%%\n",
+fprintf(stderr, "Maximum direct hemispherical front transmission (less diffuse): %.3f%%\n",
 sd->tf->maxHemi*100.);
 if (sd->tb)
-fprintf(stderr, "Maximum direct hemispherical back transmission: %.3f%%\n",
+fprintf(stderr, "Maximum direct hemispherical back transmission (less diffuse): %.3f%%\n",
 sd->tb->maxHemi*100.);
 }
 #endif

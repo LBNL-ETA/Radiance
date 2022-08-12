@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: iso2klems.pl,v 2.3 2022/03/10 17:26:04 greg Exp $
+# RCSid $Id: iso2klems.pl,v 2.4 2022/08/12 23:55:00 greg Exp $
 #
 # Convert tabulated isotropic direct-hemispherical and direct-direct to Klems XML
 #
@@ -48,13 +48,13 @@ system "cat @ARGV | tabfunc -i @vnm > $funcfile";
 die "Invalid input data, requires 5 columns\n" if ( $? );
 open (MYFH, ">> $funcfile");
 print MYFH "DEG : PI/180;\n";
-print MYFH "and(a,b) : if(a,b,a);\n";
+print MYFH "sq(x) : x*x;\n";
 print MYFH "eq(a,b) : min(a-b+1e-5,b-a+1e-5);\n";
 print MYFH "rtheta(i) : select(i,5,15,25,35,45,55,65,75,90);\n";
 print MYFH "nphis(i) : select(i,1,8,16,20,24,24,24,16,12);\n";
 print MYFH "tdeg1(tb) : if(tb-1.5, (rtheta(tb)+rtheta(tb-1))/2, 0);\n";
-print MYFH "omega1(tb) : 2*PI*if(tb-1.5, (cos(rtheta(tb-1)*DEG)-cos(rtheta(tb)*DEG))/nphis(tb),";
-print MYFH "\t(1 - cos(rtheta(1)*DEG)));\n";
+print MYFH "omega1(tb) : PI*if(tb-1.5, (sq(cos(rtheta(tb-1)*DEG))-sq(cos(rtheta(tb)*DEG)))/nphis(tb),";
+print MYFH "\t(1 - sq(cos(rtheta(1)*DEG))));\n";
 print MYFH "tbin(b,cnt) : if(nphis(b)-cnt-.5, b, tbin(b+1,cnt-nphis(b)));\n";
 print MYFH "tdeg(b) : tdeg1(tbin(1,b-1));\n";
 print MYFH "omega(b) : omega1(tbin(1,b-1));\n";
@@ -65,13 +65,13 @@ my $nsamps = $hsamps * 2;
 if ($windoz) {
 	$cmd = qq{cnt $nsamps } .
 		qq{| rcalc -f $funcfile -w -e "tdeg=180/$nsamps*(\$1+.5);abs(x):if(x,x,-x)" } .
-		qq{-e "theta=tdeg*DEG;ifact=2*PI*abs(cos(theta))*sin(theta)" } .
+		qq{-e "theta=tdeg*DEG;ifact=PI*PI*abs(cos(theta))*sin(theta)" } .
 		q{-e "$1=ifact*Tdiff(tdeg);$2=ifact*Rdiff(tdeg)" } .
 		qq{| total -$hsamps -m};
 } else {
 	$cmd = qq{cnt $nsamps } .
 		qq{| rcalc -f $funcfile -w -e 'tdeg=180/$nsamps*(\$1+.5);abs(x):if(x,x,-x)' } .
-		qq{-e 'theta=tdeg*DEG;ifact=2*PI*abs(cos(theta))*sin(theta)' } .
+		qq{-e 'theta=tdeg*DEG;ifact=PI*PI*abs(cos(theta))*sin(theta)' } .
 		q{-e '$1=ifact*Tdiff(tdeg);$2=ifact*Rdiff(tdeg)' -od } .
 		qq{| total -id2 -$hsamps -m};
 }
