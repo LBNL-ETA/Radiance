@@ -2570,3 +2570,8 @@ component.
 
 Fixed incorrect calculations in iso2klems script, thanks to
 help from Jacob Jonnson.
+
+Updated official copyright and license according to new wording
+provided by Jean Haemmerle at the LBNL Intellectual Property Office.
+Both were copied verbatim from e-mail I received from Taoning Wang
+on 8/20/2022.
