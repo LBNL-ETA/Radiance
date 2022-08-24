@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: idmap.c,v 2.2 2019/07/26 18:37:21 greg Exp $";
+static const char RCSid[] = "$Id: idmap.c,v 2.3 2022/08/24 19:55:58 greg Exp $";
 #endif
 /*
  * Routines for loading identifier maps
@@ -121,7 +121,7 @@ idmap_ropen(const char *fname, int hflags)
 		free(idmp);
 		return NULL;
 	}
-	if (fseek(idmp->finp, idmp->curpos = idmp->dstart, SEEK_SET) < 0)
+	if (fseek(idmp->finp, idmp->dstart, SEEK_SET) < 0)
 		goto seekerr;
 	while (tablength > 0)		/* create index */
 		idmp->nids += !idmp->idtable[--tablength];
@@ -159,8 +159,6 @@ idmap_next_i(IDMAP *idmp)
 	if (ndx == EOF && feof(idmp->finp))
 		return -1;
 
-	idmp->curpos += idmp->bytespi;
-
 	ndx &= (1<<(idmp->bytespi<<3)) - 1;	/* undo sign extension */
 
 	return ndx;
@@ -184,18 +182,13 @@ idmap_next(IDMAP *idmp)
 int
 idmap_seek(IDMAP *idmp, int x, int y)
 {
-	long	seekto;
-
 	if ((x < 0) | (y < 0) | (x >= idmp->res.xr) | (y >= idmp->res.yr))
 		return 0;
 	
-	seekto = idmp->dstart + ((long)y*idmp->res.xr + x)*idmp->bytespi;
-
-	if (seekto != idmp->curpos && fseek(idmp->finp, seekto, SEEK_SET) < 0)
+	if (fseek(idmp->finp, idmp->dstart + ((long)y*idmp->res.xr + x)*idmp->bytespi,
+			SEEK_SET) < 0)
 		return -1;
 
-	idmp->curpos = seekto;
-	
 	return 1;
 }
 

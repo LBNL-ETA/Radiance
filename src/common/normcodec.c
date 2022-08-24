@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.6 2022/03/03 16:09:31 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.7 2022/08/24 19:55:58 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -97,7 +97,7 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 	if (ncp->hdrflags & HF_RESOUT)	/* put resolution string? */
 		fputsresolu(&ncp->res, stdout);
 
-	ncp->dstart = ncp->curpos = ftell(ncp->finp);
+	ncp->dstart = ftell(ncp->finp);
 	return 1;
 }
 
@@ -137,8 +137,6 @@ decode_normal_next(FVECT nrm, NORMCODEC *ncp)
 	if (c == EOF && feof(ncp->finp))
 		return -1;
 
-	ncp->curpos += 4;
-
 	if (c == lastc) {			/* optimization */
 		VCOPY(nrm, lastv);
 	} else {
@@ -156,8 +154,6 @@ decode_normal_next(FVECT nrm, NORMCODEC *ncp)
 int
 seek_nc_pix(NORMCODEC *ncp, int x, int y)
 {
-	long	seekpos;
-
 	if ((ncp->res.xr <= 0) | (ncp->res.yr <= 0)) {
 		if (ncp->hdrflags & HF_STDERR) {
 			fputs(progname, stderr);
@@ -173,17 +169,14 @@ seek_nc_pix(NORMCODEC *ncp, int x, int y)
 		}
 		return 0;
 	}
-	seekpos = ncp->dstart + 4*((long)y*scanlen(&ncp->res) + x);
-
-	if (seekpos != ncp->curpos &&
-			fseek(ncp->finp, seekpos, SEEK_SET) == EOF) {
+	if (fseek(ncp->finp, ncp->dstart + 4*((long)y*scanlen(&ncp->res) + x),
+			SEEK_SET) == EOF) {
 		if (ncp->hdrflags & HF_STDERR) {
 			fputs(ncp->inpname, stderr);
 			fputs(": seek error\n", stderr);
 		}
 		return -1;
 	}
-	ncp->curpos = seekpos;
 	return 1;
 }
 

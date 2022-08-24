@@ -1,4 +1,4 @@
-/* RCSid $Id: idmap.h,v 2.2 2019/07/26 18:37:21 greg Exp $ */
+/* RCSid $Id: idmap.h,v 2.3 2022/08/24 19:55:58 greg Exp $ */
 /*
  * Definitions and delcarations for loading identifier maps
  *
@@ -28,7 +28,6 @@ extern "C" {
 typedef struct {
 	FILE		*finp;			/* input file pointer */
 	long		dstart;			/* start of data */
-	long		curpos;			/* current input position */
 	RESOLU		res;			/* input resolution */
 	int		bytespi;		/* 1, 2, or 3 bytes per index */
 	int		nids;			/* ID count */
