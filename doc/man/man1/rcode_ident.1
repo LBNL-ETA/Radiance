@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcode_ident.1,v 1.6 2022/02/02 22:25:24 greg Exp $"
+.\" RCSid "$Id: rcode_ident.1,v 1.7 2022/08/24 19:34:07 greg Exp $"
 .TH RCODE_IDENT 1 7/19/2019 RADIANCE
 .SH NAME
 rcode_ident - store identifiers in an indexed map and retrieve from same
@@ -85,6 +85,8 @@ The second form applies the
 .I \-r
 option to read an indexed id file and produce the original
 identifiers for each pixel position on the output.
+With this option, the ID file must be given on the
+command line and cannot be read from the standard input.
 The 
 .I \-h
 and
@@ -112,10 +114,6 @@ to produce an identifier for each integer input pair specifying
 the horizontal and vertical coordinates of a particular pixel,
 where x is measured from 0 on the left and y from 0 at the bottom
 in the standard orientation.
-Note that
-.I \-i
-implies that an indexed ID file is explicitly given on the command
-line, since the pixel coordinates are read from the standard input.
 If the
 .I \-u
 option is also given, output will be flushed after each identifier
