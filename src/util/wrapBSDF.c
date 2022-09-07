@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.26 2020/10/26 21:12:20 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.27 2022/09/07 18:55:39 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -417,12 +417,12 @@ determine_angle_basis(const char *fn, ezxml_t wtl)
 	return -1;
 }
 
-/* Filter Klems angle basis, factoring out incident projected solid angle */
+/* Filter Klems angle data, factoring out incident projected solid angle */
 static int
 filter_klems_matrix(FILE *fp)
 {
 	const char	*bn = klems_basis_name[angle_basis];
-	int		i, j, n = nabases;
+	int		i, j, c, n = nabases;
 					/* get angle basis */
 	while (n-- > 0)
 		if (!strcasecmp(bn, abase_list[n].name))
@@ -434,8 +434,10 @@ filter_klems_matrix(FILE *fp)
 	    const double	corr = 1./io_getohm(i, &abase_list[n]);
 	    for (j = 0; j < abase_list[n].nangles; j++) {
 		double	d;
-		if (fscanf(fp, "%lf", &d) != 1)
+		if (fscanf(fp, "%lf ", &d) != 1)
 			return 0;
+		if ((c = getc(fp)) != ',')
+			ungetc(c, fp);
 		if (d < -1e-3) {
 			fputs("Negative BSDF data!\n", stderr);
 			return 0;
@@ -444,8 +446,8 @@ filter_klems_matrix(FILE *fp)
 	    }
 	    fputc('\n', stdout);
 	}
-	while ((i = getc(fp)) != EOF)
-		if (!isspace(i)) {
+	while ((c = getc(fp)) != EOF)
+		if (!isspace(c)) {
 			fputs("Unexpected data past EOF\n", stderr);
 			return 0;
 		}
