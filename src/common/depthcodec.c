@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.12 2022/03/03 16:09:31 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.13 2022/09/22 21:45:28 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -80,7 +80,25 @@ headline(char *s, void *p)
 		dcp->swapped = (nativebigendian() != rv);
 		return 0;
 	}
-					/* check for reference depth */
+	if (!strncmp(s, "NCOMP=", 6)) {
+		if (atoi(s+6) != 1) {
+			if (dcp->hdrflags & HF_STDERR) {
+				fputs(dcp->inpname, stderr);
+				fputs(": NCOMP must equal 1\n", stderr);
+			}
+			return -1;
+		}
+		return 0;
+	}
+	if (!strncmp(s, "NROWS=", 6)) {
+		dcp->res.yr = atoi(s+6);
+		return 0;
+	}
+	if (!strncmp(s, "NCOLS=", 6)) {
+		dcp->res.xr = atoi(s+6);
+		return 0;
+	}
+	 					/* check for reference depth */
 	if (!strncmp(s, DEPTHSTR, LDEPTHSTR)) {
 		char	*cp;
 		strlcpy(dcp->depth_unit, s+LDEPTHSTR, sizeof(dcp->depth_unit));
@@ -123,7 +141,9 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 	}
 	dcp->gotview *= (dcp->gotview > 0);
 					/* get resolution string? */
-	if (dcp->hdrflags & HF_RESIN && !fgetsresolu(&dcp->res, dcp->finp)) {
+	if (dcp->hdrflags & HF_RESIN &&
+			(dcp->res.xr <= 0) | (dcp->res.yr <= 0) &&
+			!fgetsresolu(&dcp->res, dcp->finp)) {
 		if (dcp->hdrflags & HF_STDERR) {
 			fputs(dcp->inpname, stderr);
 			fputs(": bad resolution string\n", stderr);

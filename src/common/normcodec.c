@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.7 2022/08/24 19:55:58 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.8 2022/09/22 21:45:28 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -39,6 +39,24 @@ headline(char *s, void *p)
 		ncp->swapped = (nativebigendian() != rv);
 		return 0;
 	}
+	if (!strncmp(s, "NCOMP=", 6)) {
+		if (atoi(s+6) != 3) {
+			if (ncp->hdrflags & HF_STDERR) {
+				fputs(ncp->inpname, stderr);
+				fputs(": NCOMP must equal 3\n", stderr);
+			}
+			return -1;
+		}
+		return 0;
+	}
+	if (!strncmp(s, "NROWS=", 6)) {
+		ncp->res.yr = atoi(s+6);
+		return 0;
+	}
+	if (!strncmp(s, "NCOLS=", 6)) {
+		ncp->res.xr = atoi(s+6);
+		return 0;
+	}
 	if (ncp->hdrflags & HF_HEADOUT)
 		fputs(s, stdout);	/* copy to standard output */
 	return 1;
@@ -58,7 +76,9 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 		return 0;
 	}
 					/* get resolution string? */
-	if (ncp->hdrflags & HF_RESIN && !fgetsresolu(&ncp->res, ncp->finp)) {
+	if (ncp->hdrflags & HF_RESIN &&
+			(ncp->res.xr <= 0) | (ncp->res.yr <= 0) &&
+			!fgetsresolu(&ncp->res, ncp->finp)) {
 		if (ncp->hdrflags & HF_STDERR) {
 			fputs(ncp->inpname, stderr);
 			fputs(": bad resolution string\n", stderr);
