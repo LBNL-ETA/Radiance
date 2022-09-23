@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.45 2021/01/31 18:08:04 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.46 2022/09/23 21:53:34 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -97,8 +97,6 @@ extern int	dimlist[];	/* dimension list for distribution */
 extern int	ndims;		/* number of dimensions so far */
 extern int	samplendx;	/* index for this sample */
 
-extern int	ray_savesiz;	/* size of parameter save buffer */
-
 extern int	do_irrad;	/* compute irradiance? */
 
 extern int	rand_samp;	/* pure Monte Carlo sampling? */
@@ -186,7 +184,7 @@ extern void	headclean(void);
 extern void	openheader(void);
 extern void	dupheader(void);
 					/* defined in persist.c */
-extern void persistfile(char *pfn);
+extern void	persistfile(char *pfn);
 extern void	pfdetach(void);
 extern void	pfclean(void);
 extern void	pflock(int lf);
@@ -242,9 +240,9 @@ extern void	print_rdefaults(void);
 					/* defined in srcdraw.c */
 extern void	drawsources(COLOR *pic[], float *zbf[],
 			int x0, int xsiz, int y0, int ysiz);
-extern void init_drawsources(int rad);
+extern void	init_drawsources(int rad);
 					/* defined in rt/initotypes.c */
-extern void initotypes(void);
+extern void	initotypes(void);
 					/* module main procedures */
 extern void	rtrace(char *fname, int nproc);
 extern char	*formstr(int  f);
