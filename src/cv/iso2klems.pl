@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: iso2klems.pl,v 2.4 2022/08/12 23:55:00 greg Exp $
+# RCSid $Id: iso2klems.pl,v 2.5 2022/10/04 14:08:17 greg Exp $
 #
 # Convert tabulated isotropic direct-hemispherical and direct-direct to Klems XML
 #
@@ -42,9 +42,14 @@ while ($#ARGV >= 0) {
 	}
 	shift @ARGV;
 }
+userror() if ($#ARGV >= 0);
 my $funcfile = "$td/isofuncs.cal";
 my @vnm = ("Tspec","Tdiff","Rspec","Rdiff");
-system "cat @ARGV | tabfunc -i @vnm > $funcfile";
+if ($#ARGV == 0) {
+	system "tabfunc -i @vnm < \"$ARGV[0]\" > $funcfile";
+} else {
+	system "tabfunc -i @vnm > $funcfile";
+}
 die "Invalid input data, requires 5 columns\n" if ( $? );
 open (MYFH, ">> $funcfile");
 print MYFH "DEG : PI/180;\n";
