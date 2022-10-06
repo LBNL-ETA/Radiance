@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: iso2klems.pl,v 2.5 2022/10/04 14:08:17 greg Exp $
+# RCSid $Id: iso2klems.pl,v 2.6 2022/10/06 14:22:44 greg Exp $
 #
 # Convert tabulated isotropic direct-hemispherical and direct-direct to Klems XML
 #
@@ -42,7 +42,7 @@ while ($#ARGV >= 0) {
 	}
 	shift @ARGV;
 }
-userror() if ($#ARGV >= 0);
+userror() if ($#ARGV > 0);
 my $funcfile = "$td/isofuncs.cal";
 my @vnm = ("Tspec","Tdiff","Rspec","Rdiff");
 if ($#ARGV == 0) {
