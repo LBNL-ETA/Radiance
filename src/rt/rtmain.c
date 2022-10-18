@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.36 2022/04/06 15:28:18 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.37 2022/10/18 18:07:50 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -501,7 +501,7 @@ printdefaults(void)			/* print default values to stdout */
 		case 'W': printf(" coefficient"); break;
 		case 'm': printf(" modifier"); break;
 		case 'M': printf(" material"); break;
-		case '-': printf(" stroke"); break;
+		case '~': printf(" tilde"); break;
 		}
 	putchar('\n');
 	printf(erract[WARNING].pf != NULL ?
