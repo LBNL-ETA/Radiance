@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.26 2020/05/19 16:00:58 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.27 2022/10/19 18:23:14 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -310,21 +310,21 @@ change greater than the
 specification will be calculated.
 .TP
 .BI -dr \ N
-Set the number of relays for secondary sources to
+Set the number of relays for virtual sources to
 .I N.
-A value of 0 means that secondary sources will be ignored.
+A value of 0 means that virtual sources will be ignored.
 A value of 1 means that sources will be made into first generation
-secondary sources; a value of 2 means that first generation
-secondary sources will also be made into second generation secondary
+virtual sources; a value of 2 means that first generation
+virtual sources will also be made into second generation virtual
 sources, and so on.
 .TP
 .BI -dp \ D
-Set the secondary source presampling density to D.
+Set the virtual source presampling density to D.
 This is the number of samples per steradian 
 that will be used to determine ahead of time whether or not
 it is worth following shadow rays through all the reflections and/or
-transmissions associated with a secondary source path.
-A value of 0 means that the full secondary source path will always
+transmissions associated with a virtual source path.
+A value of 0 means that the full virtual source path will always
 be tested for shadows if it is tested at all.
 .TP
 .BR \-dv
@@ -439,14 +439,14 @@ A value of zero is interpreted as unlimited resolution.
 Set the ambient accuracy to
 .I acc.
 This value will approximately equal the error
-from indirect illuminance interpolation.
+from indirect irradiance interpolation.
 A value of zero implies no interpolation.
 .TP
 .BI -ad \ N
 Set the number of ambient divisions to
 .I N.
 The error in the Monte Carlo calculation of indirect
-illuminance will be inversely proportional to the square
+irradiance will be inversely proportional to the square
 root of this number.
 A value of zero implies no indirect calculation.
 .TP
@@ -459,10 +459,10 @@ show a significant change.
 .BI -af \ fname
 Set the ambient file to
 .I fname.
-This is where indirect illuminance will be stored and retrieved.
-Normally, indirect illuminance values are kept in memory and
+This is where indirect irradiance will be stored and retrieved.
+Normally, indirect irradiance values are kept in memory and
 lost when the program finishes or dies.
-By using a file, different invocations can share illuminance
+By using a file, different invocations can share irradiance
 values, saving time in the computation.
 Also, by creating an ambient file during a low-resolution rendering,
 better results can be obtained in a second high-resolution pass.
@@ -886,7 +886,7 @@ rpict \-vp 10 5 3 \-vd 1 \-.5 0 scene.oct > scene.hdr
 .PP
 rpict \-S 1 \-o frame%02d.hdr scene.oct < keyframes.vf
 .PP
-To render ambient illuminance in photon mapping mode from a global photon 
+To render ambient irradiance in photon mapping mode from a global photon 
 map global.pm via one ambient bounce, and from a caustic photon map 
 caustic.pm:
 .IP "" .2i

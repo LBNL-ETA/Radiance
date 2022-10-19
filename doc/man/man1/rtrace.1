@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.34 2020/01/08 21:18:51 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.35 2022/10/19 18:23:14 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -188,7 +188,7 @@ though the
 .I \-dv
 option (below) may be used to override this.
 This option is especially useful in
-conjunction with ximage(1) for computing illuminance at scene points.
+conjunction with ximage(1) for computing irradiance at scene points.
 .TP
 .BR \-u
 Boolean switch to control uncorrelated random sampling.
@@ -317,21 +317,21 @@ change greater than the
 specification will be calculated.
 .TP
 .BI -dr \ N
-Set the number of relays for secondary sources to
+Set the number of relays for virtual sources to
 .I N.
-A value of 0 means that secondary sources will be ignored.
+A value of 0 means that virtual sources will be ignored.
 A value of 1 means that sources will be made into first generation
-secondary sources; a value of 2 means that first generation
-secondary sources will also be made into second generation secondary
+virtual sources; a value of 2 means that first generation
+virtual sources will also be made into second generation virtual
 sources, and so on.
 .TP
 .BI -dp \ D
-Set the secondary source presampling density to D.
+Set the virtual source presampling density to D.
 This is the number of samples per steradian 
 that will be used to determine ahead of time whether or not
 it is worth following shadow rays through all the reflections and/or
-transmissions associated with a secondary source path.
-A value of 0 means that the full secondary source path will always
+transmissions associated with a virtual source path.
+A value of 0 means that the full virtual source path will always
 be tested for shadows if it is tested at all.
 .TP
 .BR \-dv
@@ -444,14 +444,14 @@ option on the input octree.
 Set the ambient accuracy to
 .I acc.
 This value will approximately equal the error
-from indirect illuminance interpolation.
+from indirect irradiance interpolation.
 A value of zero implies no interpolation.
 .TP
 .BI -ad \ N
 Set the number of ambient divisions to
 .I N.
 The error in the Monte Carlo calculation of indirect
-illuminance will be inversely proportional to the square
+irradiance will be inversely proportional to the square
 root of this number.
 A value of zero implies no indirect calculation.
 .TP
@@ -464,10 +464,10 @@ show a significant change.
 .BI -af \ fname
 Set the ambient file to
 .I fname.
-This is where indirect illuminance will be stored and retrieved.
-Normally, indirect illuminance values are kept in memory and
+This is where indirect irradiance will be stored and retrieved.
+Normally, indirect irradiance values are kept in memory and
 lost when the program finishes or dies.
-By using a file, different invocations can share illuminance
+By using a file, different invocations can share irradiance
 values, saving time in the computation.
 The ambient file is in a machine-independent binary format
 which can be examined with
@@ -739,7 +739,7 @@ To compute radiance values for the rays listed in samples.inp:
 .IP "" .2i
 rtrace \-ov scene.oct < samples.inp > radiance.out
 .PP
-To compute illuminance values at locations selected with the 't'
+To compute irradiance values at locations selected with the 't'
 command of
 .I ximage(1):
 .IP "" .2i
@@ -754,7 +754,7 @@ To compute an image with an unusual view mapping:
 cnt 480 640 | rcalc \-e 'xr:640;yr:480' \-f unusual_view.cal | rtrace
 \-x 640 \-y 480 \-fac scene.oct > unusual.hdr
 .PP
-To compute ambient illuminance in photon mapping mode from a global photon 
+To compute ambient irradiance in photon mapping mode from a global photon 
 map global.pm via one ambient bounce, and from a caustic photon map 
 caustic.pm at sensor positions in samples.inp:
 .IP "" .2i

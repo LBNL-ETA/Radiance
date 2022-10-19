@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.19 2020/09/10 17:52:46 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.20 2022/10/19 18:23:14 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -324,7 +324,7 @@ density estimates results in omitted contributions, thus the bandwidth
 is clamped accordingly and a warning is issued. 
 .SH EXAMPLES
 To compute the proportional contributions from sources modified
-by "light1" vs. "light2" on a set of illuminance values:
+by "light1" vs. "light2" on a set of irradiance values:
 .IP "" .2i
 rcontrib \-I+ @render.opt \-o c_%s.dat \-m light1 \-m light2 scene.oct < test.dat
 .PP
@@ -340,7 +340,7 @@ of light1 and light2:
 .IP "" .2i
 pcomb \-c 100 90 75 c_light1.hdr \-c 50 55 57 c_light2.hdr > combined.hdr
 .PP
-To compute an array of illuminance contributions according to a Tregenza sky:
+To compute an array of irradiance contributions according to a Tregenza sky:
 .IP "" .2i
 rcontrib \-I+ \-f tregenza.cal \-b tbin \-bn Ntbins \-o sky.dat \-m skyglow
 \-b 0 \-o ground.dat \-m groundglow @render.opt scene.oct < test.dat
