@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.20 2022/04/05 03:02:15 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.21 2022/10/19 21:25:20 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -55,6 +55,19 @@ extern double  dblur;			/* depth-of-field blur parameter */
 static void onsig(int signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
+					/* rpict additional features */
+#ifdef PERSIST
+#define RPICT_FEATURES	"Persist\nParallelPersist\n" \
+			"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
+			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
+			"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
+			"SmallSourceDrawing\nViewSequence\nProgressReporting\n"
+#else
+#define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
+			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
+			"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
+			"SmallSourceDrawing\nViewSequence\nProgressReporting\n"
+#endif
 
 
 int
@@ -84,6 +97,10 @@ main(int  argc, char  *argv[])
 	tstart = time((time_t *)NULL);
 					/* global program name */
 	progname = argv[0] = fixargv0(argv[0]);
+					/* feature check only? */
+	strcat(RFeatureList, RPICT_FEATURES);
+	if (!strcmp(argv[1], "-features"))
+		return feature_status(argc-2, argv+2);
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -387,7 +404,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;

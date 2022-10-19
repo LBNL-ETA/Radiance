@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.18 2016/03/21 19:06:08 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.19 2022/10/19 21:25:20 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -12,6 +12,104 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.18 2016/03/21 19:06:08 greg E
 #include  "ray.h"
 #include  "paths.h"
 #include  "pmapopt.h"
+
+extern char	*progname;	/* global argv[0] */
+
+char	RFeatureList[2048] =	/* newline-separated feature list */
+		"AdaptiveShadowTesting\nVirtualSources\nSecondarySources\n"
+		"SourceSubsampling\nSourceVisibility\nAmbientModifierSelection\n"
+		"PathTracing\nBackFaceVisibility\nRussianRoulette\nLowDiscrepancySeq\n"
+		"SpecularSampling\nMaterialMixtures\nAntimatter\n"
+		"ParticipatingMedia=Mist\nScatteringModels=WGMD,Ashikhmin-Shirley\n"
+		"TabulatedBSDFs=DataFile,KlemsXML,TensorTreeXML,+ViewPeakExtraction\n"
+		"Instancing=Octree,TriangleMesh\nAliases\n"
+#if !defined(SHADCACHE) || SHADCACHE > 0
+		"ShadowCache\n"
+#endif
+#ifdef  DISPERSE
+		"DielectricDispersion\n"
+#endif
+/*		PMAP_FEATURES	XXX @Roland: need to define this in pmapopt.h */
+;
+
+
+static char *
+get_feature(		/* find a specific feature (with optional sublist) */
+	const char *feat
+)
+{
+	char	*cp = RFeatureList;
+	int	n = 0;
+
+	while ((feat[n] != '\0') & (feat[n] != '='))
+		n++;
+	if (!n)
+		return(NULL);
+	while (*cp) {
+		if (!strncmp(cp, feat, n) && (cp[n] == '\n') | !feat[n] | (cp[n] == feat[n]))
+			return(cp);
+		while (*cp++ != '\n')
+			;
+	}
+	return(NULL);
+}
+
+
+static int
+match_subfeatures(	/* check if subfeatures are supported */
+	char *mysublist,
+	char *reqs
+)
+{
+	if (mysublist)
+		mysublist = strchr(mysublist, '=');
+	if (!mysublist++ | !reqs)
+		return(0);		/* not a feature list */
+	while (*reqs) {			/* check each of their subfeature requests */
+		char	subfeat[64];
+		char	*cp = subfeat;
+		int	n;
+		while (*reqs && (*cp = *reqs++) != ',')
+			cp++;
+		*cp = '\0';
+		n = cp - subfeat;
+		if (!(cp = strstr(mysublist, subfeat)) ||
+				(cp[n] != ',') & (cp[n] != '\n'))
+			return(0);	/* missing this one! */
+	}
+	return(1);			/* matched them all */
+}
+
+
+int
+feature_status(		/* report active feature list / check specifics */
+	int  ac,
+	char  *av[]
+)
+{
+	if (ac <= 0)			/* report entire list? */
+		fputs(RFeatureList, stdout);
+
+	for ( ; ac-- > 0; av++) {	/* check each argument */
+		char	*cp;
+		if (!*av[0]) continue;
+		if ((cp = strchr(av[0], '=')) != NULL) {
+			if (!match_subfeatures(get_feature(av[0]), cp+1))
+				goto missing_feature;
+		} else if ((cp = get_feature(av[0])) != NULL) {
+			char	*tp = strchr(cp, '=');
+			if (tp && tp < strchr(cp, '\n'))
+				do
+					fputc(*cp, stdout);
+				while (*cp++ != '\n');
+		} else
+			goto missing_feature;
+	}
+	return(0);			/* return satisfactory status */
+missing_feature:			/* or report error */
+	fprintf(stderr, "%s: missing feature - %s\n", progname, av[0]);
+	return(1);
+}
 
 
 int

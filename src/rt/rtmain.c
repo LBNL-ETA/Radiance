@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.37 2022/10/18 18:07:50 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.38 2022/10/19 21:25:20 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -66,6 +66,15 @@ static void onsig(int  signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
 
+#ifdef PERSIST
+#define RTRACE_FEATURES	"Persist\nParallelPersist\nMultiProcessing\n" \
+			"IrradianceCalc\nImmediateIrradiance\nDistanceLimiting\n" \
+			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n"
+#else
+#define RTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
+			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n"
+#endif
+
 
 int
 main(int  argc, char  *argv[])
@@ -89,6 +98,10 @@ main(int  argc, char  *argv[])
 	int  i;
 					/* global program name */
 	progname = argv[0] = fixargv0(argv[0]);
+					/* feature check only? */
+	strcat(RFeatureList, RTRACE_FEATURES);
+	if (!strcmp(argv[1], "-features"))
+		return feature_status(argc-2, argv+2);
 					/* add trace notify function */
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;
@@ -410,7 +423,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;
@@ -465,7 +478,7 @@ sigdie(			/* set fatal signal */
 static void
 printdefaults(void)			/* print default values to stdout */
 {
-	register char  *cp;
+	char  *cp;
 
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.27 2022/10/19 18:23:14 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.28 2022/10/19 21:25:20 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -18,6 +18,8 @@ rpict - generate a RADIANCE picture
 ]
 .br
 .B "rpict [ options ] \-defaults"
+.br
+.B "rpict \-features [feat1 ..]"
 .SH DESCRIPTION
 .I Rpict
 generates a picture from the RADIANCE scene given in
@@ -40,6 +42,21 @@ replaced by the contents of the given file.
 In the second form shown above, the default values
 for the options (modified by those options present)
 are printed with a brief explanation.
+.PP
+In the third form, a list of supported features is sent
+to the standard output, one per line.
+If additional arguments follow, they are checked for presence in
+this list.
+If a feature includes subfeatures, these may be checked as well by
+specifying:
+.nf
+
+	rpict -features FeatName=subfeat1,subfeat2
+
+.fi
+If any named feature or subfeature is missing, an error is
+reported and the program returns an error status.
+If all of the named features are present, a zero status is returned.
 .PP
 Most options are followed by one or more arguments, which must be
 separated from the option and each other by white space.

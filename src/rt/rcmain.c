@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.21 2022/03/30 16:00:56 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.22 2022/10/19 21:25:20 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -53,6 +53,16 @@ void	(*addobjnotify[8])() = {ambnotify, NULL};
 
 char	RCCONTEXT[] = "RC.";		/* our special evaluation context */
 
+#if defined(_WIN32) || defined(_WIN64)
+#define RCONTRIB_FEATURES	"Accumulation\nSummation\nRAWrecovery\n" \
+				"ValueContribution\nImmediateIrradiance\n" \
+				"ProgressReporting\nDistanceLimiting\n"
+#else
+#define RCONTRIB_FEATURES	"Multiprocessing\n" \
+				"Accumulation\nSummation\nRAWrecovery\n" \
+				"ValueContribution\nImmediateIrradiance\n" \
+				"ProgressReporting\nDistanceLimiting\n"
+#endif
 
 static void
 printdefaults(void)			/* print default values to stdout */
@@ -183,6 +193,10 @@ main(int argc, char *argv[])
 	progname = argv[0] = fixargv0(argv[0]);
 	gargv = argv;
 	gargc = argc;
+					/* feature check only? */
+	strcat(RFeatureList, RCONTRIB_FEATURES);
+	if (!strcmp(argv[1], "-features"))
+		return feature_status(argc-2, argv+2);
 #if defined(_WIN32) || defined(_WIN64)
 	_setmaxstdio(2048);		/* increase file limit to maximum */
 #endif

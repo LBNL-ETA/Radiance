@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.46 2022/09/23 21:53:34 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.47 2022/10/19 21:25:20 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -80,7 +80,8 @@ typedef struct ray {
 
 #define  rayreorient(r)	if ((r)->rflips & 1) flipsurface(r); else
 
-extern char  VersionID[];	/* Radiance version ID string */
+extern char	VersionID[];	/* Radiance version ID string */
+extern char	RFeatureList[];	/* newline-separated feature list */
 
 extern CUBE	thescene;	/* our scene */
 extern OBJECT	nsceneobjs;	/* number of objects in our scene */
@@ -235,6 +236,7 @@ extern void	newrayxf(RAY *r);
 extern void	flipsurface(RAY *r);
 extern int	localhit(RAY *r, CUBE *scene);
 					/* defined in renderopts.c */
+extern int	feature_status(int ac, char *av[]);
 extern int	getrenderopt(int ac, char *av[]);
 extern void	print_rdefaults(void);
 					/* defined in srcdraw.c */

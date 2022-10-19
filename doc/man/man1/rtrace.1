@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.35 2022/10/19 18:23:14 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.36 2022/10/19 21:25:20 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -16,6 +16,8 @@ rtrace - trace rays in RADIANCE scene
 .B octree
 .br
 .B "rtrace [ options ] \-defaults"
+.br
+.B "rtrace \-features [feat1 ..]"
 .SH DESCRIPTION
 .I Rtrace
 traces rays from the standard input through the RADIANCE scene given by
@@ -35,9 +37,25 @@ value is one or zero.
 This may be useful for programs that run
 .I rtrace
 as a separate process.
-In the second form, the default values
+.PP
+In the second form shown above, the default values
 for the options (modified by those options present)
 are printed with a brief explanation.
+.PP
+In the third form, a list of supported features is sent
+to the standard output, one per line.
+If additional arguments follow, they are checked for presence in
+this list.
+If a feature includes subfeatures, these may be checked as well by
+specifying:
+.nf
+
+	rtrace -features FeatName=subfeat1,subfeat2
+
+.fi
+If any named feature or subfeature is missing, an error is
+reported and the program returns an error status.
+If all of the named features are present, a zero status is returned.
 .PP
 Options may be given on the command line and/or read from the
 environment and/or read from a file.
