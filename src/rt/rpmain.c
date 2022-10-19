@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.21 2022/10/19 21:25:20 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.22 2022/10/19 23:10:34 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -58,15 +58,17 @@ static void printdefaults(void);
 					/* rpict additional features */
 #ifdef PERSIST
 #define RPICT_FEATURES	"Persist\nParallelPersist\n" \
-			"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
-			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
-			"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
-			"SmallSourceDrawing\nViewSequence\nProgressReporting\n"
+		"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
+		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
+		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
+		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
+		"AdaptiveShadowTesting\n"
 #else
 #define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
-			"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
-			"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
-			"SmallSourceDrawing\nViewSequence\nProgressReporting\n"
+		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
+		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
+		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
+		"AdaptiveShadowTesting\n"
 #endif
 
 

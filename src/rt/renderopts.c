@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.19 2022/10/19 21:25:20 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.20 2022/10/19 23:10:34 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -16,10 +16,10 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.19 2022/10/19 21:25:20 greg E
 extern char	*progname;	/* global argv[0] */
 
 char	RFeatureList[2048] =	/* newline-separated feature list */
-		"AdaptiveShadowTesting\nVirtualSources\nSecondarySources\n"
-		"SourceSubsampling\nSourceVisibility\nAmbientModifierSelection\n"
-		"PathTracing\nBackFaceVisibility\nRussianRoulette\nLowDiscrepancySeq\n"
-		"SpecularSampling\nMaterialMixtures\nAntimatter\n"
+		"VirtualSources\nSecondarySources\nSourceSubsampling\n"
+		"SourceVisibility\nAmbientModifierSelection\n"
+		"PathTracing\nRussianRoulette\nLowDiscrepancySeq\n"
+		"SpecularSampling\nMaterialMixtures\nAntimatter\nBackFaceVisibility\n"
 		"ParticipatingMedia=Mist\nScatteringModels=WGMD,Ashikhmin-Shirley\n"
 		"TabulatedBSDFs=DataFile,KlemsXML,TensorTreeXML,+ViewPeakExtraction\n"
 		"Instancing=Octree,TriangleMesh\nAliases\n"
