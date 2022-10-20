@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.23 2022/10/19 23:10:34 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.24 2022/10/20 17:18:32 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -56,12 +56,14 @@ char	RCCONTEXT[] = "RC.";		/* our special evaluation context */
 #if defined(_WIN32) || defined(_WIN64)
 #define RCONTRIB_FEATURES	"Accumulation\nSummation\nRecovery\n" \
 				"ValueContribution\nImmediateIrradiance\n" \
-				"ProgressReporting\nDistanceLimiting\n"
+				"ProgressReporting\nDistanceLimiting\n" \
+				"Outputs=V,W\n"
 #else
 #define RCONTRIB_FEATURES	"Multiprocessing\n" \
 				"Accumulation\nSummation\nRecovery\n" \
 				"ValueContribution\nImmediateIrradiance\n" \
-				"ProgressReporting\nDistanceLimiting\n"
+				"ProgressReporting\nDistanceLimiting\n" \
+				"Outputs=V,W\n"
 #endif
 
 static void

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.39 2022/10/19 23:10:34 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.40 2022/10/20 17:18:33 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -70,11 +70,13 @@ static void printdefaults(void);
 #define RTRACE_FEATURES	"Persist\nParallelPersist\nMultiProcessing\n" \
 			"IrradianceCalc\nImmediateIrradiance\nDistanceLimiting\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
-			"AmbientValueSharing\nAdaptiveShadowTesting\n"
+			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
+			"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n"
 #else
 #define RTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
-			"AmbientValueSharing\nAdaptiveShadowTesting\n"
+			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
+			"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n"
 #endif
 
 
