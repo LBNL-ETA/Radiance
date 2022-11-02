@@ -146,7 +146,7 @@ jobs:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
-          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON'
+          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON'
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
@@ -239,7 +239,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
           cmake ..
           make -j8
 
@@ -324,7 +324,7 @@ jobs:
           export PATH=$PATH:$Qt5_DIR/bin
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake  -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j8
 
       - name: list files
