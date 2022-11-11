@@ -1,3 +1,4 @@
+# RCSid $Id: filefmts.md,v 1.2 2022/11/11 02:38:34 greg Exp $
 # *Radiance* File Formats
 This chapter discusses the standard file formats specific to *Radiance*, and gives their internal structure, with pointers to routines for reading and writing them. The following file formats (listed with their conventional suffixes) are covered:
 
@@ -49,7 +50,7 @@ An in-line command, which begins with an exclamation mark ('!') and continues to
 
     !xform -n chair1 -t 10 5 8 chair.rad
 
-The command is executed during file parsing, and its output is read as more input. Long commands may be continued on multiple lines by escaping the newline character with a backslash ('\'):
+The command is executed during file parsing, and its output is read as more input. Long commands may be continued on multiple lines by escaping the newline character with a backslash ('\\'):
 
 	!gensurf marble sink '15.5+x(theta(s),phi(t))' \
 		 '10.5+y(theta(s),phi(t))' \
@@ -257,7 +258,7 @@ Interaction with the renderer is achieved via special purpose variables and func
 : surface normal
 
 `Px, Py, Pz`
-:intersection point
+: intersection point
 
 `T`
 : distance from start
@@ -522,7 +523,7 @@ Program     | Read | Write | Function
 **Table 4.** Programs in the *Radiance* distribution that read and write font files.
 
 ### *Radiance* C Library
-Similar to data files, font files are usually read and stored in a lookup table. The data structures for fonts are in src/common/font.h, and the routines for reading and spacing them are in `src/common/font.c`. The main structure type is `FONT`. The routine `getfont(fname)` loads a font file from the *Radiance* library (set by the `RAYPATH` environment variable), and returns a pointer to the resulting `FONT` structure. If the file has been previously loaded, a pointer to the stored structure is returned. The `freefont(fname)` routine frees memory associated with the named font file and deletes it from the table, or frees all font data if `fname` is `NULL`.
+Similar to data files, font files are usually read and stored in a lookup table. The data structures for fonts are in `src/common/font.h`, and the routines for reading and spacing them are in `src/common/font.c`. The main structure type is `FONT`. The routine `getfont(fname)` loads a font file from the *Radiance* library (set by the `RAYPATH` environment variable), and returns a pointer to the resulting `FONT` structure. If the file has been previously loaded, a pointer to the stored structure is returned. The `freefont(fname)` routine frees memory associated with the named font file and deletes it from the table, or frees all font data if `fname` is `NULL`.
 
 Three different routines are available for text spacing. The `uniftext(sp,tp,f`) function takes the nul-terminated string `tp` and computes uniform per-character spacing for the font `f`, returned in the short integer array `sp`. (This is a fairly simple process, and all spacing values will be 255 unless a character has no corresponding glyph.) The `squeeztext(sp,tp,f,cis)` performs a similar function, but puts only `ci`s units between adjacent characters, based on the actual width of each font glyph. The most sophisticated spacing function is `proptext(sp,tp,f,cis,nsi)`, which produces a total line length equal to what it would be with uniform spacing, while maintaining equal inter-character spacing throughout (i.e., proportional spacing). The `nsi` argument is the number of spaces (zero-vertex glyphs) considered as an indent. That is, if this many or more adjacent spaces occur in `tp`, the indented text following will appear at the same point as it would have had the spacing been uniform. This maintains columns in tabulated text despite the proportional spacing. Tabs are not understood or interpreted by any of these routines, and must be expanded to the appropriate number of spaces via **expand**.
 
@@ -608,7 +609,7 @@ Program | Read | Write | Function
 **Table 5.** Programs in the *Radiance* distribution that read and write octree files.
 
 ### *Radiance* C Library
-Since reading an octree file also may involve reading a *Radiance* scene description, some of the same library routines are called indirectly. The header file `src/common/octree.h` is needed in addition to the `src/common/object.`h file. The module `src/ot/writeoct.c` contains the main routines for writing an octree to stdout, while `src/common/readoct.c` contains the corresponding routines for reading an octree from a file. Both modules access routines in `src/common/portio.c` for reading and writing portable binary data.
+Since reading an octree file also may involve reading a *Radiance* scene description, some of the same library routines are called indirectly. The header file `src/common/octree.h` is needed in addition to the `src/common/object.h` file. The module `src/ot/writeoct.c` contains the main routines for writing an octree to stdout, while `src/common/readoct.c` contains the corresponding routines for reading an octree from a file. Both modules access routines in `src/common/portio.c` for reading and writing portable binary data.
 
 Here is the main call for writing out an octree:
 
@@ -792,7 +793,7 @@ exposval(s)
 : Macro** | puts real exposure value `ex` to stream `fp`. 
 
 `iscolcor(s)`
-:Macro returns non-zero if the line `s` is a `COLORCORR` setting. 
+: Macro returns non-zero if the line `s` is a `COLORCORR` setting. 
 
 `colcorval(cc,s)`
 : Macro assign color correction value from line `s` in the `COLOR`

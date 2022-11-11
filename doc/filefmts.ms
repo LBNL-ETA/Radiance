@@ -1,3 +1,4 @@
+.\" RCSid $Id: filefmts.ms,v 1.2 2022/11/11 02:38:34 greg Exp $
 .EQ
 delim @@
 .EN
@@ -838,8 +839,10 @@ ray direction
 surface normal
 .RS 3
 .RE
-.LP
-\f[C]Px, Py, Pz\f[R] :intersection point
+.IP "\f[B]\f[CB]Px, Py, Pz\f[B]\f[R]" 3
+intersection point
+.RS 3
+.RE
 .IP "\f[B]\f[CB]T\f[B]\f[R]" 3
 distance from start
 .RS 3
@@ -1574,8 +1577,9 @@ read and write font files.
 .LP
 Similar to data files, font files are usually read and stored in a
 lookup table.
-The data structures for fonts are in src/common/font.h, and the routines
-for reading and spacing them are in \f[C]src/common/font.c\f[R].
+The data structures for fonts are in \f[C]src/common/font.h\f[R], and
+the routines for reading and spacing them are in
+\f[C]src/common/font.c\f[R].
 The main structure type is \f[C]FONT\f[R].
 The routine \f[C]getfont(fname)\f[R] loads a font file from the
 \f[I]Radiance\f[R] library (set by the \f[C]RAYPATH\f[R] environment
@@ -1921,7 +1925,7 @@ Since reading an octree file also may involve reading a
 \f[I]Radiance\f[R] scene description, some of the same library routines
 are called indirectly.
 The header file \f[C]src/common/octree.h\f[R] is needed in addition to
-the \f[C]src/common/object.\f[R]h file.
+the \f[C]src/common/object.h\f[R] file.
 The module \f[C]src/ot/writeoct.c\f[R] contains the main routines for
 writing an octree to stdout, while \f[C]src/common/readoct.c\f[R]
 contains the corresponding routines for reading an octree from a file.
@@ -2640,9 +2644,11 @@ Macro returns \f[B]double\f[R] exposure value from line \f[C]s\f[R].
 Macro** | puts real exposure value \f[C]ex\f[R] to stream \f[C]fp\f[R].
 .RS 3
 .RE
-.LP
-\f[C]iscolcor(s)\f[R] :Macro returns non-zero if the line \f[C]s\f[R] is
-a \f[C]COLORCORR\f[R] setting.
+.IP "\f[B]\f[CB]iscolcor(s)\f[B]\f[R]" 3
+Macro returns non-zero if the line \f[C]s\f[R] is a \f[C]COLORCORR\f[R]
+setting.
+.RS 3
+.RE
 .IP "\f[B]\f[CB]colcorval(cc,s)\f[B]\f[R]" 3
 Macro assign color correction value from line \f[C]s\f[R] in the
 \f[C]COLOR\f[R] variable \f[C]cc\f[R].
