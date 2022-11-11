@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.18 2022/11/11 02:50:26 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.19 2022/11/11 16:30:06 greg Exp $
 
 use warnings;
 use strict;
@@ -28,6 +28,8 @@ my $doposter = 0;              # Posterization: -cp
 my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
 my $showpal = 0;               # Show available colour palettes
+
+my @savedARGV = @ARGV;		# Save for final header
 
 while ($#ARGV >= 0) {
     $_ = shift;
@@ -118,7 +120,7 @@ if ($needfile == 1 && $picture eq '-') {
     close(FHpic);
 
     if ($cpict eq '-') {
-        $cpict = "$td/stdin.hdr";
+        $cpict = $picture;
     }
 }
 
@@ -314,7 +316,7 @@ if ($legwidth > 0) {
     system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $label > $tslabpic";
     my $loop = $ndivs+$haszero;
     my $hlegheight = $sheight * ($loop) + $sheight * .5;
-    my $pcompost = qq[pcompos -h -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
+    my $pcompost = qq[pcompos -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
     for (my $i=0; $i<$loop; $i++) {
         my $imap = ($ndivs - $i) / $ndivs;
         my $value = $scale;
@@ -363,7 +365,7 @@ if ($haszero < 1) {
 
     $cmd = qq[pcomb $pc0args $pc1args "$picture"];
     $cmd .= qq[ "$cpict"] if ($cpict);
-    $cmd .= qq[ | pcompos -b 0 0 0 $scolpic 0 $sh0 +t .1 $slabinvpic 2 -1 ];
+    $cmd .= qq[ | pcompos -h -b 0 0 0 $scolpic 0 $sh0 +t .1 $slabinvpic 2 -1 ];
     $cmd .= qq[ -t .5 $slabpic 0 0 - $legwidth 0];
 
 if ($doextrem == 1) {
@@ -397,8 +399,8 @@ if ($doextrem == 1) {
     $cmd .= qq[ $minvpic $minpos $maxvpic $lxmax $ymax];
 }
 
-
-
+# Clean up and simplify info header with this command
+$cmd .= qq[ | getinfo -r "pcompos " "falsecolor @savedARGV"];
 
 # Process image and combine with legend
 system "$cmd";
