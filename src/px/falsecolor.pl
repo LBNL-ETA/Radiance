@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.17 2020/10/14 02:39:10 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.18 2022/11/11 02:50:26 greg Exp $
 
 use warnings;
 use strict;
@@ -27,7 +27,7 @@ my $docont = '';               # Contours: -cl and -cb
 my $doposter = 0;              # Posterization: -cp
 my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
-my $showpal = 0;               # Show availabel colour palettes
+my $showpal = 0;               # Show available colour palettes
 
 while ($#ARGV >= 0) {
     $_ = shift;
@@ -164,10 +164,10 @@ or(a,b) : if(a,a,b);
 EPS : 1e-7;
 neq(a,b) : if(a-b-EPS,1,b-a-EPS);
 btwn(a,x,b) : if(a-x,-1,b-x);
-clip(x) : if(x-1,1,if(x,x,0));
+clip(x) : min(1,max(x,0));
 frac(x) : x - floor(x);
 boundary(a,b) : neq(floor(ndivs*a),floor(ndivs*b));
-round(x):if(x-floor(x)-0.5,ceil(x),floor(x));
+round(x) : floor(x+.5);
 
 spec_red(x) = 1.6*x - .6;
 spec_grn(x) = if(x-.375, 1.6-1.6*x, 8/3*x);
@@ -310,14 +310,11 @@ if ($legwidth > 0) {
     my $theight = floor($legwidth/(8/1.67));
     my $stheight = $sheight <= $theight ? $sheight : $theight;
     my $vlegheight = $sheight * $ndivs * (1+1.5/$ndivs);
-    my $text = "$label\n";
     my $tslabpic = "$td/slabT.hdr";
-    open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight > $tslabpic";
-    print PSIGN "$text";
-    close PSIGN;
+    system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $label > $tslabpic";
     my $loop = $ndivs+$haszero;
     my $hlegheight = $sheight * ($loop) + $sheight * .5;
-    my $pcompost = qq[pcompos -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
+    my $pcompost = qq[pcompos -h -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
     for (my $i=0; $i<$loop; $i++) {
         my $imap = ($ndivs - $i) / $ndivs;
         my $value = $scale;
@@ -328,11 +325,8 @@ if ($legwidth > 0) {
         }
         # Have no more than 3 decimal places
         $value =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
-        $text = "$value\n";
         $tslabpic = "$td/slab$i.hdr";
-        open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight > $tslabpic";
-        print PSIGN "$text";
-        close PSIGN;
+        system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $value > $tslabpic";
         $hlegheight = $sheight * ($loop - $i - 1) + $sheight * .5;
         $pcompost .= qq[=-0 $tslabpic 0 $hlegheight ];
     }
