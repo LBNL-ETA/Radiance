@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.14 2019/08/25 22:24:01 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.15 2022/11/12 20:51:47 greg Exp $"
 .TH "FALSECOLOR" "1" "12/12/11" "RADIANCE" ""
 .SH "NAME"
 falsecolor \- make a false color RADIANCE picture
@@ -9,7 +9,7 @@ falsecolor \- make a false color RADIANCE picture
 ][
 .B "\-p picture"
 ][
-.B "\-cb | \-cl | \-cp"
+.B "\-cb | \-cl | \-cp | \-c0"
 ][
 .B \-e
 ][
@@ -28,6 +28,10 @@ falsecolor \- make a false color RADIANCE picture
 .B "\-log decades"
 ][
 .B "\-m mult"
+][
+.B "\-odim ncols nrows
+][
+.B "\-orct xmin ymin xmax ymax
 ][
 .B "\-pal palette"
 ][
@@ -109,12 +113,35 @@ and
 .I \-lh
 options may be used to change the legend dimensions from the default width
 and height of 100x200.
-A value of zero in either eliminates the legend in the output.
-.PP 
+A value of zero for either dimension eliminates the legend in the output.
+.PP
+The
+.I \-c0
+option turns off false color output entirely, and is really only useful
+with the
+.I \-dim
+option to overlay a matrix of values, or the
+.I \-e
+option to print the extrema values, as described below.
+The
+.I \-c0
+option simultaneously removes the legend.
+.PP
+The
+.I \-odim
+option sets the number of columns and rows to overlay
+a value matrix on the false color output.
+The
+.I \-orct
+option may be used to specify a subrectangle of the image to overlay,
+where the minimum x and y picture coordinates for the lower-left
+corner are given before the maximum coordinates corresponding
+to the upper-right corner.
+.PP
 The
 .I \-e
 option causes extrema points to be printed on the brightest and
-darkest pixels of the input picture.
+darkest pixels of the input picture, on top of any matrix values.
 .PP 
 The
 .I "\-pal"
@@ -153,7 +180,7 @@ or
 .I \-ip
 option is used, input is taken from the standard input.
 The output image is always written to standard output, which should
-be redirected.
+be redirected, and is frequently converted to a non-HDR image format.
 .SH "EXAMPLES"
 To create a false color image directly from
 .I rpict(1):
@@ -167,20 +194,31 @@ falsecolor -palettes | ximage
 To create a logarithmic contour plot of illuminance values on a
 Radiance image:
 .IP "" .2i
-rpict \-i \-vf default.vp scene.oct > irrad.hdr
+rpict -i -vf default.vp scene.oct > irrad.hdr
 .br 
-rpict \-vf default.vp scene.oct > rad.hdr
+rpict -vf default.vp scene.oct > rad.hdr
 .br 
-falsecolor \-i irrad.hdr \-p rad.hdr \-cl \-log 2 \-l Lux > lux.hdr
+falsecolor -i irrad.hdr -p rad.hdr -cl -log 2 -l Lux > lux.hdr
+.PP
+To overlay a matrix of 3 columns by 4 rows on the image above:
+.IP "" .2i
+falsecolor -odim 3 4 -i irrad.hdr -p rad.hdr -cl -log 2 -l Lux > lux.hdr
+.PP
+The same but without false color lines:
+.IP "" .2i
+falsecolor -odim 3 4 -i irrad.hdr -p rad.hdr -c0 > lux.hdr
 .SH "AUTHOR"
 Greg Ward
 .br 
-Axel Jacobs (Perl translation and \-pal options)
+Axel Jacobs (Perl port and -pal options)
+.br
+Taoning Wang added the "turbo" palette.
 .br
 David Geisler-Moroder & Stephen Wasilewski (Legend additions and improvements)
 .SH "ACKNOWLEDGEMENT"
 Work on this program was initiated and sponsored by the LESO
-group at EPFL in Switzerland. The 'eco' palette was sponsored by Foster + Partners in London.
+group at EPFL in Switzerland.
+The 'eco' palette was sponsored by Foster + Partners in London.
 .SH "SEE ALSO"
 getinfo(1), pcomb(1), pcompos(1), pextrem(1), pfilt(1), pflip(1), protate(1),
-psign(1), rpict(1), ximage(1)
+psign(1), pvalue(1), ra_tiff(1), ra_bmp(1), rpict(1), ximage(1)

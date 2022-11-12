@@ -2582,3 +2582,6 @@ This addition was suggested by Peter Apian-Bennewitz as an easier
 way to determine which version of Radiance is installed and what
 it supports, and is timely as we begin our refactoring of the
 rendering code.  There are no current plans to add this to rvu.
+
+Added falsecolor -odim, -orct, and -c0 options to overlay grid of
+values on image.  This was requested by Rob Shakespeare.

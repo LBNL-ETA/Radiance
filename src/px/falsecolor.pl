@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.19 2022/11/11 16:30:06 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.20 2022/11/12 20:51:47 greg Exp $
 
 use warnings;
 use strict;
@@ -22,8 +22,10 @@ my $picture = '-';
 my $cpict = '';
 my $legwidth = 100;            # Legend width and height
 my $legheight = 200;
+my @overlayWH = (0,0);		# Overlay matrix width and height (default = none)
+my @overlayRect;		# Overlay rectangle (left, lower, right, upper)
 my $haszero = 1;               # print 0 in scale for falsecolor images only
-my $docont = '';               # Contours: -cl and -cb
+my $docont = '';               # Contours: -cl, -cb, and -c0
 my $doposter = 0;              # Posterization: -cp
 my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
@@ -41,7 +43,7 @@ while ($#ARGV >= 0) {
     } elsif (m/-m/) {          # Multiplier
         $mult = shift;
     } elsif (m/-spec/) {
-        die("depricated option '-spec'. Please use '-pal spec' instead.");
+        die("depricated option '-spec'. Please use '-pal spec' instead.\n");
     } elsif (m/-s/) {          # Scale
         $scale = shift;
         if ($scale =~ m/[aA].*/) {
@@ -76,6 +78,15 @@ while ($#ARGV >= 0) {
         $cpict = $picture;
     } elsif (m/-n/) {          # Number of contour lines
         $ndivs = shift;
+    } elsif (m/-odim$/) {	# Overlay width and height
+    	$overlayWH[0] = shift;
+    	$overlayWH[1] = shift;
+    	$needfile ||= $overlayWH[0] && $overlayWH[1];
+    } elsif (m/-orct/) {	# Overlay rectangle
+   	$overlayRect[0] = shift;
+    	$overlayRect[1] = shift;
+   	$overlayRect[2] = shift;
+    	$overlayRect[3] = shift;
 
     # Switches
     } elsif (m/-cl/) {         # Contour lines
@@ -84,9 +95,13 @@ while ($#ARGV >= 0) {
     } elsif (m/-cb/) {         # Contour bands
         $docont = 'b';
         $haszero = 0;
-    } elsif (m/-cp/) {              # Posterize
+    } elsif (m/-cp/) {         # Posterize
         $doposter = 1;
         $haszero = 0;
+    } elsif (m/-c0/) {		# Turn off falsecolor operation
+    	$docont = '0';
+    	$legwidth = 0;
+    	$legheight = 0;
     } elsif (m/-palettes/) {        # Show all available palettes
         $scale   = 45824;           # 256 * 179
         $showpal = 1;
@@ -108,7 +123,7 @@ if (($legwidth <= 20) || ($legheight <= 40)) {
 # Temporary directory. Will be removed upon successful program exit.
 my $td = tempdir( CLEANUP => 1 );
 
-if ($needfile == 1 && $picture eq '-') {
+if ($needfile && $picture eq '-') {
     # Pretend that $td/stdin.rad is the actual filename.
     $picture = "$td/stdin.hdr";
     open(FHpic, ">$picture") or
@@ -134,7 +149,15 @@ if ($scale =~ m/[aA].*/) {
     $scale = $mult / 179 * 10**$LogLmax;
 }
 
-if ($docont ne '') {
+if ($doposter) {
+    # -cp -> $doposter = 1
+    my $newv = join( "seg2(v)", split("v", $redv) );
+    $redv = $newv;
+    $newv = join( "seg2(v)", split("v", $bluv) );
+    $bluv = $newv;
+    $newv = join( "seg2(v)", split("v", $grnv) );
+    $grnv = $newv;
+} elsif ($docont) {
     # -cl -> $docont = a
     # -cb -> $docont = b
     my $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $redv) );
@@ -142,14 +165,6 @@ if ($docont ne '') {
     $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $bluv) );
     $bluv = $newv;
     $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $grnv) );
-    $grnv = $newv;
-} elsif ($doposter == 1) {
-    # -cp -> $doposter = 1
-    my $newv = join( "seg2(v)", split("v", $redv) );
-    $redv = $newv;
-    $newv = join( "seg2(v)", split("v", $bluv) );
-    $bluv = $newv;
-    $newv = join( "seg2(v)", split("v", $grnv) );
     $grnv = $newv;
 }
 
@@ -225,6 +240,7 @@ tbo_blu(x):interp_tbo(x,tbo_blup) ^ gamma;
 
 isconta = if(btwn(1/ndivs/2,v,1+1/ndivs/2),or(boundary(vleft,vright),boundary(vabove,vbelow)),-1);
 iscontb = if(btwn(1/ndivs/2,v,1+1/ndivs/2),-btwn(.1,frac(ndivs*v),.9),-1);
+iscont0 = -1;
 
 seg(x)=(floor(v*ndivs)+.5)/ndivs;
 seg2(x)=(seg(x)-1/ndivs)*ndivs/(ndivs-1);
@@ -255,7 +271,6 @@ vbelow = map(li(1,0,-1)*norm);
 
 map(x) = x;
 
-
 ra = ri(nfiles);
 ga = gi(nfiles);
 ba = bi(nfiles);
@@ -265,7 +280,7 @@ close FHpc1;
 my $pc0args = "-f $pc0";
 my $pc1args = "-f $pc1";
 
-if ($showpal == 1) {
+if ($showpal) {
     my $pc = "pcompos -a 1";
     foreach my $pal (@palettes) {
         my $fcimg = "$td/$pal.hdr";
@@ -282,14 +297,7 @@ if ($showpal == 1) {
     exit 0;
 }
 
-# Contours
-if ($docont ne '') {
-    # -cl -> $docont = a
-    # -cb -> $docont = b
-    $pc0args .= qq[ -e "in=iscont$docont"];
-}
-
-if ($cpict eq '') {
+if ($cpict eq '' && $docont ne '0') {
     $pc1args .= qq[ -e "ra=0;ga=0;ba=0"];
 } elsif ($cpict eq $picture) {
     $cpict = '';
@@ -300,6 +308,13 @@ if ($decades > 0) {
     $pc1args .= qq[ -e "map(x)=if(x-10^-$decades,log10(x)/$decades+1,0)"];
 }
 
+# Contours
+if ($docont ne '') {
+    # -cl -> $docont = a
+    # -cb -> $docont = b
+    # -c0 -> $docont = FALSE
+    $pc0args .= qq[ -e "in=iscont$docont"];
+}
 # Colours in the legend
 my $scolpic = "$td/scol.hdr";
 
@@ -325,8 +340,12 @@ if ($legwidth > 0) {
         } else {
             $value *= $imap;
         }
-        # Have no more than 3 decimal places
-        $value =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
+        # Limit decimal places
+        if ($scaledigits <= 0) {
+        	$value =~ s/\.[0-9]*//;
+        } else {
+        	$value =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
+	}
         $tslabpic = "$td/slab$i.hdr";
         system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $value > $tslabpic";
         $hlegheight = $sheight * ($loop - $i - 1) + $sheight * .5;
@@ -352,9 +371,7 @@ if ($legwidth > 0) {
 
 # Legend: Invert the text labels (for dropshadow)
 my $slabinvpic = "$td/slabinv.hdr";
-$cmd = qq[pcomb -e "lo=1-gi(1)" $slabpic > $slabinvpic];
-system $cmd;
-
+system qq[pcomb -e "lo=1-gi(1)" $slabpic > $slabinvpic];
 
 my $sh0 = -floor($legheight / $ndivs / 2);
 if ($haszero < 1) {
@@ -365,10 +382,97 @@ if ($haszero < 1) {
 
     $cmd = qq[pcomb $pc0args $pc1args "$picture"];
     $cmd .= qq[ "$cpict"] if ($cpict);
-    $cmd .= qq[ | pcompos -h -b 0 0 0 $scolpic 0 $sh0 +t .1 $slabinvpic 2 -1 ];
+    $cmd .= qq[ | pcompos -h -b 0 0 0 $scolpic 0 $sh0 +t .1 $slabinvpic 2 -1];
     $cmd .= qq[ -t .5 $slabpic 0 0 - $legwidth 0];
 
-if ($doextrem == 1) {
+my $cheight = 32;
+
+if ($overlayWH[0] && $overlayWH[1]) {
+    # Overlay picture  matrix values
+    my @picWH = split ' ', `getinfo -d < $picture`;
+    @picWH = ($picWH[3], $picWH[1]);
+    if ($#overlayRect != 3) {
+    	@overlayRect = (0, 0, @picWH);
+    }
+    if ($overlayRect[2] <= $overlayRect[0] ||
+    		$overlayRect[3] <= $overlayRect[1]) {
+	die("Illegal overlay rectangle\n");
+    }
+    # Compute spacing between values
+    my @cropWH = ($overlayRect[2]-$overlayRect[0], $overlayRect[3]-$overlayRect[1]);
+    my $ohspacing = $cropWH[0] / $overlayWH[0];
+    my $ovspacing = $cropWH[1] / $overlayWH[1];
+    # Compute character height from spacing
+    $cheight = int($ovspacing * 0.67 + 0.5);
+    if ($cheight >= 1.67/10 * $ohspacing) {
+    	$cheight = int(1.67/10 * $ohspacing);
+    }
+    if ($cheight < 10) {
+    	die "Overlay matrix spacing too tight\n";
+    }
+    my $cmd1 = qq[pcompos -x $cropWH[0] -y $cropWH[1] "$picture" @overlayRect[0..1]];
+    $cmd1 .= qq[ | pfilt -1 -b -x /$cheight -y /$cheight];
+    $cmd1 .= qq[ | pfilt -1 -r .5 -x $cropWH[0] -y $cropWH[1]];
+    $cmd1 .= qq[ | pvalue -o -h -H -b -d -e $mult];
+    # Compute matrix label center positions in subimage
+    my @xpos;
+    foreach (0 .. ($overlayWH[0]-1)) {
+	$xpos[$_] = int($ohspacing * ($_ + 0.5));
+    }
+    my @ypos;
+    foreach (0 .. ($overlayWH[1]-1)) {
+	$ypos[$_] = int($ovspacing * ($_ + 0.5));
+    }
+    open(FHsamp, "$cmd1 |");
+    $cmd1 = qq[pcompos -h -b 0 0 0 -x $cropWH[0] -y $cropWH[1]];
+    my $pscmd = qq[psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $cheight];
+    for (my $y = 0; $y < $cropWH[1]; $y++) {
+    	my $ymatch = grep /^$y$/, @ypos;
+	for (my $x = 0; $x < $cropWH[0]; $x++) {
+	    my $sampv = <FHsamp>;
+	    next if (! $ymatch);
+	    next if (! grep /^$x$/, @xpos);
+	    chomp $sampv;
+	    # Reformatting assumes %e from pvalue
+	    $sampv =~ /^\s*([0-9])\.([0-9]+)[eE]([-+]?[0-9]+)$/;
+	    my $manti = $1;
+	    my $mantf = $2;
+	    my $expi = $3;
+	    if ($expi < -4) {
+	    	# use exponent format
+	    } elsif ($expi < 0) {
+	    	my $pref = '0.';
+	    	for (my $i = $expi; ++$i < 0; ) {
+	    		$pref .= '0';
+		}
+		$sampv = $pref . $manti . $mantf;
+	    } elsif ($expi < length($mantf)) {
+	    	$sampv = sprintf("%g", $sampv);
+	    } elsif ($expi <= 8) {
+	    	$sampv = $manti . $mantf;
+	    	for (my $i = $expi - length($mantf); $i-- > 0; ) {
+	    		$sampv .= '0';
+		}
+	    } # else use exponent format
+	    $cmd1 .= qq[ =00 "!$pscmd $sampv" $x ] . ($cropWH[1]-1 - $y);
+	}
+    }
+    close(FHsamp);
+    my $overpic = "$td/overlay.hdr";
+    system "$cmd1 > $overpic";
+    die "Error creating overlay matrix image\n" if ($?);
+    my $overinvpic = "$td/overinv.hdr";
+    system qq[pcomb -e "lo=1-gi(1)" $overpic > $overinvpic];
+    my $xleft = $legwidth + $overlayRect[0];
+    my $ybottom = $overlayRect[1];
+    $cmd .= qq[ +t .1 $overinvpic $xleft $ybottom];
+    # Offset from drop shadow
+    $xleft -= 2;
+    $ybottom += 1;
+    $cmd .= qq[ -t .5 $overpic $xleft $ybottom];
+}
+
+if ($doextrem) {
     # Get min/max image luminance
     my $cmd1 = 'pextrem -o ' . $picture;
     my $retval = `$cmd1`;
@@ -383,26 +487,30 @@ if ($doextrem == 1) {
     $lxmax += $legwidth;
 
     # Weighted average of R,G,B
-    my $minpos = "$lxmin $ymin";
     my $minval = ($rmin * .27 + $gmin * .67 + $bmin * .06) * $mult;
-    $minval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
     my $maxval = ($rmax * .27 + $gmax * .67 + $bmax * .06) * $mult;
-    $maxval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
-
+    if ($scaledigits <= 0) {
+    	$minval =~ s/\.[0-9]*//;
+    	$maxval =~ s/\.[0-9]*//;
+    } else {
+	$minval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
+	$maxval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
+    }
     # Create the labels for min/max intensity
     my $minvpic = "$td/minv.hdr";
-    system "psign -s -.15 -a 2 -h 16 $minval > $minvpic";
+    system "psign -s -.15 -a 2 -h $cheight $minval > $minvpic";
     my $maxvpic = "$td/maxv.hdr";
-    system "psign -s -.15 -a 2 -h 16 $maxval > $maxvpic";
+    system "psign -s -.15 -a 2 -h $cheight $maxval > $maxvpic";
 
     # Add extrema labels to command line
-    $cmd .= qq[ $minvpic $minpos $maxvpic $lxmax $ymax];
+    $cmd .= qq[ =00 $minvpic $lxmin $ymin =00 $maxvpic $lxmax $ymax];
 }
 
-# Clean up and simplify info header with this command
+# Clean up and simplify info header with out command arguments
 $cmd .= qq[ | getinfo -r "pcompos " "falsecolor @savedARGV"];
 
 # Process image and combine with legend
 system "$cmd";
+exit $?;
 
 #EOF
