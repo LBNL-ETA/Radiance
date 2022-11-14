@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.21 2022/11/14 00:35:05 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.22 2022/11/14 18:45:38 greg Exp $
 
 use warnings;
 use strict;
@@ -387,7 +387,7 @@ if ($haszero < 1) {
 my $cheight = 32;
 
 if ($overlayWH[0] && $overlayWH[1]) {
-    # Overlay picture  matrix values
+    # Overlay picture matrix values
     my @picWH = split ' ', `getinfo -d < $picture`;
     @picWH = ($picWH[3], $picWH[1]);
     if ($#overlayRect != 3) {
@@ -438,7 +438,7 @@ if ($overlayWH[0] && $overlayWH[1]) {
 	    my $manti = $1;
 	    my $mantf = $2;
 	    my $expi = $3;
-	    if ($expi < -4) {
+	    if ($expi < -3) {
 	    	# use exponent format
 	    } elsif ($expi < 0) {
 	    	my $pref = '0.';
@@ -448,7 +448,7 @@ if ($overlayWH[0] && $overlayWH[1]) {
 		$sampv = $pref . $manti . $mantf;
 	    } elsif ($expi < length($mantf)) {
 	    	$sampv = sprintf("%g", $sampv);
-	    } elsif ($expi <= 8) {
+	    } elsif ($expi <= 6) {
 	    	$sampv = $manti . $mantf;
 	    	for (my $i = $expi - length($mantf); $i-- > 0; ) {
 	    		$sampv .= '0';
@@ -513,7 +513,6 @@ if ($doextrem) {
 $cmd .= qq[ | getinfo -r "pcompos " "falsecolor @savedARGV"];
 
 # Process image and combine with legend
-system "$cmd";
-exit $?;
+exec $cmd;
 
 #EOF
