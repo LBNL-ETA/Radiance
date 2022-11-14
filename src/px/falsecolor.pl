@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.20 2022/11/12 20:51:47 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.21 2022/11/14 00:35:05 greg Exp $
 
 use warnings;
 use strict;
@@ -286,7 +286,6 @@ if ($showpal) {
         my $fcimg = "$td/$pal.hdr";
         my $lbimg = "$td/${pal}_label.hdr";
         system "psign -cb 0 0 0 -cf 1 1 1 -h 20 $pal > $lbimg";
-
         my $cmd = qq[pcomb $pc0args -e "v=x/256"];
         $cmd .= qq[ -e "ro=clip(${pal}_red(v));go=clip(${pal}_grn(v));bo=clip(${pal}_blu(v))"];
         $cmd .= qq[ -x 256 -y 30 > $fcimg];
@@ -428,6 +427,7 @@ if ($overlayWH[0] && $overlayWH[1]) {
     my $pscmd = qq[psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $cheight];
     for (my $y = 0; $y < $cropWH[1]; $y++) {
     	my $ymatch = grep /^$y$/, @ypos;
+    	my $cmd2 = qq[pcompos -b 0 0 0 -x $cropWH[0]];
 	for (my $x = 0; $x < $cropWH[0]; $x++) {
 	    my $sampv = <FHsamp>;
 	    next if (! $ymatch);
@@ -454,13 +454,16 @@ if ($overlayWH[0] && $overlayWH[1]) {
 	    		$sampv .= '0';
 		}
 	    } # else use exponent format
-	    $cmd1 .= qq[ =00 "!$pscmd $sampv" $x ] . ($cropWH[1]-1 - $y);
+	    $cmd2 .= qq[ =0- "!$pscmd $sampv" $x 0];
 	}
+	next if (! $ymatch);
+	my $rowpic = "$td/mrow$y.hdr";
+	system "$cmd2 > $rowpic";
+	$cmd1 .= qq[ =-0 $rowpic 0 ] . ($cropWH[1]-1 - $y);
     }
     close(FHsamp);
     my $overpic = "$td/overlay.hdr";
     system "$cmd1 > $overpic";
-    die "Error creating overlay matrix image\n" if ($?);
     my $overinvpic = "$td/overinv.hdr";
     system qq[pcomb -e "lo=1-gi(1)" $overpic > $overinvpic];
     my $xleft = $legwidth + $overlayRect[0];
