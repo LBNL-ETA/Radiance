@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: rcode2bmp.pl,v 2.2 2020/01/21 18:00:17 greg Exp $
+# RCSid $Id: rcode2bmp.pl,v 2.3 2022/11/15 23:47:50 greg Exp $
 #
 # Convert one or more rtpict outputs into BMP for convenient viewing
 #
@@ -41,13 +41,13 @@ while ($#ARGV >= 0) {
 	my ($dest) = ("$ARGV[0]" =~ /^([^.]+)/);
 	$dest .= ".bmp";
 	my $cmd="";
-	if ("$format" =~ /^32-bit_rle_(rgb|xyz)e$/) {
+	if ("$format" =~ /^32-bit_rle_(rgb|xyz)e *$/) {
 		if ($pfilt) {
 			$cmd = $pfilt . " '$ARGV[0]' | ra_bmp -e auto - '$dest'";
 		} else {
 			$cmd = "ra_bmp -e auto '$ARGV[0]' '$dest'";
 		}
-	} elsif ("$format" eq "16-bit_encoded_depth") {
+	} elsif ("$format" =~ /^16-bit_encoded_depth *$/) {
 		$cmd = "rcode_depth -r -ff -ho -Ho '$ARGV[0]' ";
 		$cmd .= q{| rcalc -if -of -e 'cond=9e9-$1;$1=$1' | total -if -u};
 		my $dmax=`$cmd`;
@@ -58,14 +58,14 @@ while ($#ARGV >= 0) {
 		$cmd = "rcode_depth -r -ff '$ARGV[0]' | pvalue -r -df -b ";
 		$cmd .= "| $pfilt " if ($pfilt);
 		$cmd .= "| falsecolor -l '$unit' -m 1 -s $dmax | ra_bmp - '$dest'";
-	} elsif ("$format" =~ /[1-9][0-9]*-bit_indexed_name$/) {
+	} elsif ("$format" =~ /^[1-9][0-9]*-bit_indexed_name *$/) {
 		$cmd = "rcode_ident -r -n '$ARGV[0]' " .
 			"| getinfo +d -c rcalc -e 'cc(x):(.1+.8*rand(x))^2' " .
 			q{-e '$1=cc(.398*$1-11.2);$2=cc(-1.152*$1+41.7);$3=cc(8.571*$1-8.15)' } .
 			"| pvalue -r -d ";
 		$cmd .= "| $pfilt " if ($pfilt);
 		$cmd .= "| ra_bmp - '$dest'";
-	} elsif ("$format" eq "32-bit_encoded_normal") {
+	} elsif ("$format" =~ /^32-bit_encoded_normal *$/) {
 		$cmd = "rcode_norm -r -ff '$ARGV[0]' | getinfo +d -c " .
 			"rcalc -if3 -of -e `vwright v < '$ARGV[0]'` " .
 				q{-e 'dot(vx,vy,vz)=vx*$1+vy*$2+vz*$3' } .
