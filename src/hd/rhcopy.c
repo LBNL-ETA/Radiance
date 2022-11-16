@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.34 2022/11/16 00:12:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.35 2022/11/16 00:44:04 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -478,6 +478,21 @@ write_ray(RAYPAR *rp, FILE *fp)
 	return 0;			/* write error? */
 }
 
+static BEAMI	*beamdir;
+
+static int
+bpcmp(			/* compare beam positions on disk */
+	const void	*b1p,
+	const void	*b2p
+)
+{
+	off_t	pdif = beamdir[*(int *)b1p].fo - beamdir[*(int *)b2p].fo;
+
+	if (pdif > 0L) return(1);
+	if (pdif < 0L) return(-1);
+	return(0);
+}
+
 /* Write all rays from holodeck to stream */
 static void
 writerays(FILE *fp)
@@ -498,11 +513,18 @@ writerays(FILE *fp)
 #endif
 	for (sn = 0; sn < nholosects; sn++) {	/* write each holodeck section */
 		HOLO	*hp = hdlist[sn];
-		for (bi = nbeams(hp); bi > 0; bi--) {
-			BEAM	*bp = hdgetbeam(hp, bi);
+		int	nb = nbeams(hp);	/* sort beams by file location */
+		int	*bq = (int *)malloc(nb*sizeof(int));
+		if (!bq)
+			error(SYSTEM, "out of memory in writerays()");
+		for (bi = nb; bi--; ) bq[bi] = bi+1;
+		beamdir = hp->bi;
+		qsort(bq, nb, sizeof(*bq), bpcmp);
+		for (bi = 0; bi < nb; bi++) {
+			BEAM	*bp = hdgetbeam(hp, bq[bi]);
 			if (!bp)		/* empty beam? */
 				continue;
-			hdbcoord(gc, hp, bi);	/* else write rays */
+			hdbcoord(gc, hp, bq[bi]);
 			rv = hdbray(bp);
 			for (k = bp->nrm; k--; rv++) {
 				ryp.d = hdray(ryp.ro, ryp.rd, hp, gc, rv->r);
@@ -512,31 +534,19 @@ writerays(FILE *fp)
 					ryp.d = 0.;
 				ryp.d = hddepth(hp, rv->d) - ryp.d;
 				copycolr(ryp.cv, rv->v);
-				if (!write_ray(&ryp, fp))
+				if (!write_ray(&ryp, fp)) {
+					free(bq);
 					goto writError;
+				}
 			}
-			hdfreebeam(hp, bi);
+			hdfreebeam(hp, bq[bi]);
 		}
+		free(bq);
 	}
 	if (fflush(fp) != EOF)
 		return;
 writError:
 	error(SYSTEM, "error writing holodeck rays");
-}
-
-static BEAMI	*beamdir;
-
-static int
-bpcmp(			/* compare beam positions on disk */
-	const void	*b1p,
-	const void	*b2p
-)
-{
-	off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
-
-	if (pdif > 0L) return(1);
-	if (pdif < 0L) return(-1);
-	return(0);
 }
 
 static int
@@ -554,7 +564,7 @@ addclump(		/* transfer the given clump and free */
 	BEAM	*bp;
 					/* sort based on file position */
 	beamdir = hp->bi;
-	qsort((char *)bq, nb, sizeof(*bq), bpcmp);
+	qsort(bq, nb, sizeof(*bq), bpcmp);
 					/* transfer each beam */
 	for (i = 0; i < nb; i++) {
 		bp = hdgetbeam(hp, bq[i]);
