@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.35 2021/11/29 16:07:36 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.36 2022/11/16 01:59:43 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -1519,6 +1519,15 @@ makeshape(
  */
 #define CONVSGN(d) ((d) < 0 ? 1 : ((d) == 0 ? 2 : 3))
 
+/* 
+ * Generate the numeric key, the "thumbprint" for the various
+ * combinations of IES LM-63 version year, length, width, and height.
+ * This must be an integer constant expression so that it can be used
+ * in a case label.  See the header comments of makeiesshape() for
+ * additional information.
+ */
+#define TBPR(ver,l,w,h) ((ver) * 1000 + CONVSGN(l) * 100 + CONVSGN(w) * 10 + CONVSGN(h))
+
 /* makeiesshape - convert IES shape to Radiance shape
  * 
  * Some 34 cases in the various versions of the IES LM-63 standard are
@@ -1534,7 +1543,9 @@ makeshape(
  * positive.  These are then combined into a numeric key by the
  * following formula: 
  *
- *   version * 1000 + sgn(length) * 100 + sgn(width) * 10 + sgn(height).
+ *   version * 1000 + sgn(length) * 100 + sgn(width) * 10 + sgn(height)
+ *
+ * The macro TBPR implements this formula.
  *
  * Since the 1991 version uses the same encoding as the 1986 version,
  * and the 2019 version uses the same encoding as the 2002 version,
@@ -1555,9 +1566,14 @@ makeshape(
  * used throughout the function, this has a low cost and eliminates
  * the chance of sign errors.
  * 
- * There is one extension to the ies standard here, devised to
- * accomdate wall-mounted fixtures; vertical rectangles, not formally
- * supported by any version of LM-63, are treated as boxes.
+ * There are two extensions to the ies standard here:
+ *
+ *   1. devised to accomdate wall-mounted fixtures; vertical rectangles,
+ *   not formally supported by any version of LM-63, are treated as
+ *   boxes.
+ *
+ *   2. A 2002-flagged file with only a negative width will be
+ *   recognized as a disk.
  *
  * The code is complicated by the way that earlier versions of the
  * standard (1986 and 1991) prioritize width in their discussions, and
@@ -1586,41 +1602,40 @@ makeiesshape(SRCINFO *shp, double l, double w, double h) {
 		break;
 	}
 	
-	thumbprint =
-		ver * 1000 + CONVSGN(l) * 100 + CONVSGN(w) * 10 + CONVSGN(h);
+	thumbprint = TBPR(ver, l, w, h);
 	switch(thumbprint) {
-	case 86222: case 95222: case 2222:
+	case TBPR(86,0,0,0): case TBPR(95, 0, 0, 0): case TBPR(02, 0, 0, 0):
 		shp->iesshape = IESPT;
 		shp->type = SPHERE;
 		shp->w = shp->l = shp->h = MINDIM;
 		break;
-	case 86332: case 95332: case 2332:
+	case TBPR(86, 1, 1, 0): case TBPR(95, 1, 1, 0): case TBPR(02, 1, 1, 0):
 		shp->iesshape = IESRECT;
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 86333: case 86233: case 86323:
-	case 95333: case 95233: case 95323:
-	case 2333: case 2233: case 2323:
+	case TBPR(86, 1, 1, 1): case TBPR(86, 0, 1, 1): case TBPR(86, 1, 0, 1):
+	case TBPR(95, 1, 1, 1): case TBPR(95, 0, 1, 1): case TBPR(95, 1, 0, 1):
+	case TBPR(02, 1, 1, 1): case TBPR(02, 0, 1, 1): case TBPR(02, 1, 0, 1):
 		shp->iesshape = IESBOX;
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 86212: case 95212:
+	case TBPR(86,0,-1,0): case TBPR(95,0,-1,0): case TBPR(02,0,-1,0):
 		shp->iesshape = IESDISK;
 		makecylshape(shp, wp, hp);
 		break;
-	case 86213:
+	case TBPR(86, 0, -1, 1):
 		shp->iesshape = IESVCYL;
 		makecylshape(shp, wp, hp);
 		break;
-	case 86312:
+	case TBPR(86, 1, -1, 0):
 		shp->iesshape = IESELLIPSE;
 		makeecylshape(shp, lp, wp, 0);
 		break;
-	case 86313:
+	case TBPR(86, 1, -1, 1):
 		shp->iesshape = IESELLIPSOID;
 		makeelshape(shp, wp, lp, hp);
 		break;
-	case 95211:
+	case TBPR(95, 0, -1, -1):
 		shp->iesshape = FEQ(lp,hp) ? IESSPHERE : IESNONE;
 		if (shp->iesshape == IESNONE) {
 			shp->warn = "makeshape: cannot determine shape\n";
@@ -1630,43 +1645,43 @@ makeiesshape(SRCINFO *shp, double l, double w, double h) {
 		shp->type = SPHERE;
 		shp->w = shp->l = shp->h = wp;
 		break;
-	case 95213:
+	case TBPR(95, 0, -1, 1):
 		shp->iesshape = IESVCYL;
 		makecylshape(shp, wp, hp);
 		break;
-	case 95321:
+	case TBPR(95, 1, 0, -1):
 		shp->iesshape = IESHCYL_PH;
 		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 95231:
+	case TBPR(95, 0, 1, -1):
 		shp->iesshape = IESHCYL_PPH;
 		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 95133: case 95313:
+	case TBPR(95, -1, 1, 1): case TBPR(95, 1, -1, 1):
 		shp->iesshape = IESVECYL;
 		makeecylshape(shp, lp, wp, hp);
 		break;
-	case 95131: case 95311:
+	case TBPR(95, -1, 1, -1): case TBPR(95, 1, -1, -1):
 		shp->iesshape = IESELLIPSOID;
 		makeelshape(shp, lp, wp, hp);
 		break;
-	case 2112:
+	case TBPR(02, -1, -1, 0):
 		shp->iesshape = FEQ(l,w) ? IESDISK : IESELLIPSE;
 		if (shp->iesshape == IESDISK)
 			makecylshape(shp, wp, hp);
 		else
 			makeecylshape(shp, wp, lp, hp);
 		break;
-	case 2113:
+	case TBPR(02, -1, -1, 1):
 		shp->iesshape = FEQ(l,w) ? IESVCYL : IESVECYL;
 		if (shp->iesshape == IESVCYL)
 			makecylshape(shp, wp, hp);
 		else
 			makeecylshape(shp, wp, lp, hp);
 		break;
-	case 2111:
+	case TBPR(02, -1, -1, -1):
 		shp->iesshape = FEQ(l,w) && FEQ(l,h) ? IESSPHERE : IESELLIPSOID;
 		if (shp->iesshape == IESSPHERE) {
 			shp->type = SPHERE;
@@ -1675,17 +1690,17 @@ makeiesshape(SRCINFO *shp, double l, double w, double h) {
 		else
 			makeelshape(shp, lp, wp, hp);
 		break;
-	case 2311:
+	case TBPR(02, 1, -1, -1):
 		shp->iesshape = FEQ(w,h) ? IESHCYL_PH : IESHECYL_PH;
 		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 2131:
+	case TBPR(02, -1, 1, -1):
 		shp->iesshape = FEQ(l,h) ? IESHCYL_PPH : IESHECYL_PPH;
 		shp->warn = "makeshape: shape is a horizontal cylinder, which is not supported.\nmakeshape: replaced with box\n";
 		makeboxshape(shp, lp, wp, hp);
 		break;
-	case 2121:
+	case TBPR(02, -1, 0, -1):
 		shp->iesshape = FEQ(w,h) ? IESVDISK_PH : IESVEL_PH;
 		shp->warn = "makeshape: shape is a vertical ellipse, which is not supported.\nmakeshape: replaced with rectangle\n";
 		makeboxshape(shp, lp, wp, hp);
