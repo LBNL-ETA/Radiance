@@ -1,7 +1,7 @@
-.\" RCSid "$Id: rhcopy.1,v 1.5 2019/02/12 23:36:33 greg Exp $"
+.\" RCSid "$Id: rhcopy.1,v 1.6 2022/11/16 00:12:49 greg Exp $"
 .TH RHCOPY 1 1/15/99 RADIANCE
 .SH NAME
-rhcopy - copy ray information into a holodeck
+rhcopy - copy ray information to/from a holodeck
 .SH SYNOPSIS
 .B rhcopy
 .B dest_holo
@@ -21,20 +21,59 @@ or
 ][
 .B \-d
 ]
-.B "\-p src_pic src_zbf .."
+.B "\-p src_hdr src_dpt .."
+.br
+or
+.br
+.B rhcopy
+.B dest_holo
+[
+.B \-f{a|f|d}
+][
+.B \-u
+][
+.B \-d
+]
+.B "\-i[odplLv]
+.br
+or
+.br
+.B rhcopy
+.B src_holo
+[
+.B \-f{a|f|d}
+]
+.B "\-o[odplLv]
 .SH DESCRIPTION
 .I Rhcopy
-adds ray sample data to the existing holodeck
-.I dest_holo.
+typically adds ray sample data to an existing holodeck.
 In the first form, the ray samples are taken from one or more holodeck files
 given after the
 .I \-h
 option.
 In the second form, the ray samples are taken from one or more RADIANCE
-picture files and their depth buffers, which must be paired on the
-command line after the
+picture files and their corresponding
+depth buffers, which must be paired on the command line after the
 .I \-p
 option.
+In the third form, ray samples are read from the standard input
+based on parameters specified by the
+.I \-i
+option, which should match (for example) the corresponding
+.I \-o
+option of an
+.I rtrace(1)
+command.
+Note that a header is not expected on input, and some parameters
+are required for correct operation.
+A
+.I \-f
+option may be used to specify raw rather than ASCII data.
+.PP
+The final form reads rays from the given holodeck and writes
+them to the standard output according to the
+.I \-o
+specification.
 .PP
 The
 .I \-u
@@ -90,6 +129,10 @@ rholo new.hdk new.hif
 .br
 rhcopy new.hdk \-h old.hdk
 .PP
+A much less efficient way to copy the same data:
+.IP "" .2i
+rhcopy old.hdk -oodlv | rhcopy new.hdk -iodlv
+.PP
 To add ray samples from two pictures to the new holodeck:
 .IP "" .2i
 rhcopy new.hdk \-p view1.hdr view1.zbf view2.hdr view2.zbf
@@ -104,8 +147,9 @@ program once all runs of
 .I rhcopy
 are through.
 .SH AUTHOR
-Greg Ward Larson
+Greg Ward
 .SH ACKNOWLEDGMENT
 This work was supported by Silicon Graphics, Inc.
 .SH "SEE ALSO"
-getinfo(1), pfilt(1), rhinfo(1), rholo(1), rhoptimize(1), rpict(1)
+getinfo(1), pfilt(1), rcode_depth(1), rcontrib(1),
+rhinfo(1), rholo(1), rhoptimize(1), rpict(1), rtrace(1),

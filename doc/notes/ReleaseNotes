@@ -2585,3 +2585,7 @@ rendering code.  There are no current plans to add this to rvu.
 
 Added falsecolor -odim, -orct, and -c0 options to overlay grid of
 values on image.  This was requested by Rob Shakespeare.
+
+Added -i* and -o* options in rhcopy for reading rays from the
+standard input and writing rays from holodeck to standard output.
+This will hopefully be useful in combining rholo with rcontrib.

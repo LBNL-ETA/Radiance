@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.29 2018/10/05 19:46:26 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.30 2022/11/16 00:12:49 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -79,7 +79,7 @@ typedef struct holo {
 	double	tlin;		/* linear range for depth encoding */
 	FVECT	wg[3];		/* wall grid vectors (derived) */
 	int	wi[6];		/* wall super-indices (derived) */
-	char	*priv;		/* pointer to private client data */
+	void	*priv;		/* pointer to private client data */
 	BEAM	**bl;		/* beam pointers (memory cache) */
 	BEAMI	bi[1];		/* beam index (extends struct) */
 } HOLO;			/* holodeck section */
