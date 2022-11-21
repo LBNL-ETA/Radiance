@@ -389,7 +389,7 @@ jobs:
           rtrace -version
           cd ./test/util/
           make clean
-          make -j2
+          make
       
 
       - name: run tests -gen
@@ -401,7 +401,7 @@ jobs:
 
           cd ./test/gen/
           make clean
-          make -j2
+          make
 
       - name: run tests -cal
         shell: pwsh
@@ -412,7 +412,7 @@ jobs:
 
           cd ./test/cal/
           make clean
-          make -j2
+          make
 
       - name: run tests -px
         shell: cmd
@@ -423,7 +423,7 @@ jobs:
 
           cd ./test/px/
           make clean
-          make -j2
+          make
           
       - name: run tests -cv
         shell: cmd
@@ -434,7 +434,7 @@ jobs:
 
           cd ./test/cv/
           make clean
-          make -j2
+          make
 
       - name: run tests -renders 1
         shell: cmd
@@ -654,7 +654,7 @@ jobs:
           cd ./test/util/
           
           make clean
-          make -j3
+          make
       
       - name: run tests -gen
         run: |
@@ -664,7 +664,7 @@ jobs:
           cd ./test/gen/
           
           make clean
-          make -j3
+          make
 
       - name: run tests -cal
         run: |
@@ -674,7 +674,7 @@ jobs:
           cd ./test/cal/
           
           make clean
-          make -j3
+          make
 
       - name: run tests -px
         run: |
@@ -684,7 +684,7 @@ jobs:
           cd ./test/px/
           
           make clean
-          make -j3
+          make
 
       - name: run tests -cv
         run: |
@@ -694,7 +694,7 @@ jobs:
           cd ./test/cv/
           
           make clean
-          make -j3
+          make
 
       - name: run tests -renders 1
         run: |
@@ -925,7 +925,7 @@ jobs:
           cd ./test/util/
           
           make clean
-          make -j2
+          make
       
       - name: run tests -gen
         run: |
@@ -935,7 +935,7 @@ jobs:
           cd ./test/gen/
           
           make clean
-          make -j2
+          make
 
       - name: run tests -cal
         run: |
@@ -955,7 +955,7 @@ jobs:
           cd ./test/px/
           
           make clean
-          make -j2
+          make
 
       - name: run tests -cv
         run: |
@@ -965,7 +965,7 @@ jobs:
           cd ./test/cv/
           
           make clean
-          make -j2
+          make
 
       - name: run tests -renders 1
         run: |
