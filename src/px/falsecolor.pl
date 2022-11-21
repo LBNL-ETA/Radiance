@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.23 2022/11/21 20:21:36 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.24 2022/11/21 21:39:40 greg Exp $
 
 use warnings;
 use strict;
@@ -512,6 +512,6 @@ if ($doextrem) {
 $cmd .= qq[ | getinfo -r "EXPOSURE" "pcompos " "falsecolor @savedARGV"];
 
 # Process image and combine with legend
-exec $cmd;
+system $cmd;
 
 #EOF
