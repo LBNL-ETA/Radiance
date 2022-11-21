@@ -1,10 +1,9 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.22 2022/11/14 18:45:38 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.23 2022/11/21 20:21:36 greg Exp $
 
 use warnings;
 use strict;
 use File::Temp qw/ tempdir /;
-use POSIX qw/ floor /;
 
 my @palettes = ('def', 'spec', 'pm3d', 'hot', 'eco', 'tbo');
 
@@ -322,14 +321,14 @@ my $slabpic = "$td/slab.hdr";
 my $cmd;
 if ($legwidth > 0) {
     # Legend: Create the text labels
-    my $sheight = floor($legheight / $ndivs );
-    my $theight = floor($legwidth/(8/1.67));
+    my $sheight = int($legheight / $ndivs );
+    my $theight = int($legwidth/(8/1.67));
     my $stheight = $sheight <= $theight ? $sheight : $theight;
-    my $vlegheight = $sheight * $ndivs * (1+1.5/$ndivs);
+    my $vlegheight = int($sheight * $ndivs * (1+1.5/$ndivs));
     my $tslabpic = "$td/slabT.hdr";
     system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $label > $tslabpic";
     my $loop = $ndivs+$haszero;
-    my $hlegheight = $sheight * ($loop) + $sheight * .5;
+    my $hlegheight = int($sheight * ($loop) + $sheight * .5);
     my $pcompost = qq[pcompos -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
     for (my $i=0; $i<$loop; $i++) {
         my $imap = ($ndivs - $i) / $ndivs;
@@ -347,7 +346,7 @@ if ($legwidth > 0) {
 	}
         $tslabpic = "$td/slab$i.hdr";
         system "psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight $value > $tslabpic";
-        $hlegheight = $sheight * ($loop - $i - 1) + $sheight * .5;
+        $hlegheight = int($sheight * ($loop - $i - 1) + $sheight * .5);
         $pcompost .= qq[=-0 $tslabpic 0 $hlegheight ];
     }
     $pcompost .= qq[ > $slabpic];
@@ -372,9 +371,9 @@ if ($legwidth > 0) {
 my $slabinvpic = "$td/slabinv.hdr";
 system qq[pcomb -e "lo=1-gi(1)" $slabpic > $slabinvpic];
 
-my $sh0 = -floor($legheight / $ndivs / 2);
+my $sh0 = -int($legheight / $ndivs / 2);
 if ($haszero < 1) {
-    $sh0 = -floor($legheight / ($ndivs)*1.5);
+    $sh0 = -int($legheight / ($ndivs)*1.5);
 }
 
 # Command line without extrema
@@ -509,8 +508,8 @@ if ($doextrem) {
     $cmd .= qq[ =00 $minvpic $lxmin $ymin =00 $maxvpic $lxmax $ymax];
 }
 
-# Clean up and simplify info header with out command arguments
-$cmd .= qq[ | getinfo -r "pcompos " "falsecolor @savedARGV"];
+# Clean up and simplify info header without constituent commands
+$cmd .= qq[ | getinfo -r "EXPOSURE" "pcompos " "falsecolor @savedARGV"];
 
 # Process image and combine with legend
 exec $cmd;
