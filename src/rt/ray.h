@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.47 2022/10/19 21:25:20 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.48 2022/11/22 02:28:03 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #ifndef RNUMBER
-#define RNUMBER		unsigned long	/* ray counter (>= sizeof pointer) */
+#define RNUMBER		size_t		/* ray counter (>= sizeof pointer) */
 #endif
 
 #define  MAXDIM		32	/* maximum number of dimensions */
