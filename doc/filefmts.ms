@@ -1,4 +1,4 @@
-.\" RCSid $Id: filefmts.ms,v 1.2 2022/11/11 02:38:34 greg Exp $
+.\" RCSid $Id: filefmts.ms,v 1.3 2022/11/24 02:01:39 greg Exp $
 .EQ
 delim @@
 .EN
@@ -604,7 +604,7 @@ corresponds to an evaluation, statements in function files correspond to
 \f[I]definitions\f[R].
 Once a function or variable has been defined, it may be used in later
 definitions, along with predefined functions such as \f[C]sin(x)\f[R]
-and \f[C]cos(x)\f[R] and constants such as PI \**.
+and \f[C]cos(x)\f[R] and constants such as \f[C]PI\f[R]\**.
 .FS
 TBD - There once was a footnote here
 .FE
@@ -799,7 +799,7 @@ The same return value is guaranteed for the same argument.
 .RE
 .LP
 The following are sometimes defined, depending on the program:
-.IP "\f[B]PI\f[R]" 3
+.IP "\f[B]\f[CB]PI\f[B]\f[R]" 3
 The ratio of a circle\[cq]s circumference to its diameter.
 .RS 3
 .RE
@@ -1972,8 +1972,8 @@ range.\[rq]
 differ from standard computer graphics images inasmuch as they contain
 real physical data, namely radiance values at each pixel.
 To do this, it is necessary to maintain floating point information, and
-we use a 4-byte/pixel encoding described in Chapter II.5 of Graphics
-Gems II [Arvo91,p.80].
+we use a 4-byte/pixel encoding described in Chapter II.5 of
+\f[I]Graphics Gems II\f[R] [Arvo91,p.80].
 The basic idea is to store a 1-byte mantissa for each of three
 primaries, and a common 1-byte exponent.
 The accuracy of these values will be on the order of 1% (±1 in 200) over
@@ -2018,7 +2018,7 @@ Here are the most important variables for \f[I]Radiance\f[R] pictures:
 .IP "\f[B]\f[CB]FORMAT\f[B]\f[R]" 3
 A line indicating the file\[cq]s format.
 At most one \f[C]FORMAT\f[R] line is allowed, and it must be assigned a
-value of either \f[C]32- bit_rle_rgbe\f[R] or \f[C]32-bit_rle_xyze\f[R]
+value of either \f[C]32-bit_rle_rgbe\f[R] or \f[C]32-bit_rle_xyze\f[R]
 to be a valid \f[I]Radiance\f[R] picture.
 .RS 3
 .RE
@@ -2067,17 +2067,18 @@ Multiple assignments are cumulative inasmuch as new view options add to
 or override old ones.
 .RS 3
 .RE
-.LP
-\f[C]PRIMARIES\f[R] The CIE (x,y) chromaticity coordinates of the three
-(RGB) primaries and the white point used to standardize the
-picture\[cq]s color system.
+.IP "\f[B]\f[CB]PRIMARIES\f[B]\f[R]" 3
+The CIE (x,y) chromaticity coordinates of the three (RGB) primaries and
+the white point used to standardize the picture\[cq]s color system.
 This is used mainly by the \f[B]ra_xyze\f[R] program to convert between
 color systems.
 If no \f[C]PRIMARIES\f[R] line appears, we assume the standard primaries
 defined in \f[C]src/common/color.h\f[R], namely
 \f[C]0.640 0.330 0.290 0.600 0.150 0.060 0.333 0.333\f[R] for red,
 green, blue and white, respectively.
-.PP
+.RS 3
+.RE
+.LP
 As always, the end of the header is indicated by an empty line.
 .SH 4
 Resolution String
@@ -2170,8 +2171,8 @@ Consecutive repeat indicators contain higher-order bytes of the count.
 .IP "\f[B]New run-length encoded\f[R]" 3
 In this format, the four scanline components (three primaries and
 exponent) are separated for better compression using adaptive run-length
-encoding (described by Glassner in Chapter II.8 of Graphics Gems II
-[Arvo91,p.89]).
+encoding (described by Glassner in Chapter II.8 of \f[I]Graphics Gems
+II\f[R] [Arvo91,p.89]).
 The record begins with an unnormalized pixel having two bytes equal to
 2, followed by the upper byte and the lower byte of the scanline length
 (which must be less than 32768).
@@ -2205,7 +2206,7 @@ This and the other values above are defined in
 \f[C]luminance(col)\f[R].
 .PP
 If the \f[C]FORMAT\f[R] string indicates XYZ data, then the units of the
-Y primary are already lm/st/m\*{2\*}, so the above conversion is
+Y primary are already lm/sr/m\*{2\*}, so the above conversion is
 unnecessary.
 .SH 3
 \f[BI]Radiance\f[B] programs
@@ -2587,7 +2588,7 @@ with routines in \f[C]src/common/image.c\f[R].
 Here are the relevant calls for reading and copying information headers:
 .IP "\f[B]\f[CB]int checkheader(FILE *fin, char *fmt, FILE *fout);\f[B]\f[R]" 3
 Read the header information from \f[C]fin\f[R], copying to
-\f[C]fou\f[R]t (unless fout is \f[C]NULL\f[R]), checking any
+\f[C]fout\f[R] (unless fout is \f[C]NULL\f[R]), checking any
 \f[C]FORMAT\f[R] line against the string \f[C]fmt\f[R].
 The \f[C]FORMAT\f[R] line (if it exists) will not be copied to
 \f[C]fout\f[R].
@@ -2721,7 +2722,7 @@ stream fp.
 .RS 3
 .RE
 .IP "\f[B]\f[CB]scanlen(rs)\f[B]\f[R]" 3
-Macro to get the scanline length from the \f[C]RESOL\f[R]U structure
+Macro to get the scanline length from the \f[C]RESOLU\f[R] structure
 pointed to by \f[C]rs\f[R].
 .RS 3
 .RE
@@ -2731,7 +2732,7 @@ pointed to by \f[C]rs\f[R].
 .RS 3
 .RE
 .IP "\f[B]\f[CB]fscnresolu(slp,nsp,fp)\f[B]\f[R]" 3
-Macro to read in a resolution string from \f[C]f\f[R]p and assign the
+Macro to read in a resolution string from \f[C]fp\f[R] and assign the
 scanline length and number of scanlines to the integers pointed to by
 \f[C]slp\f[R] and \f[C]nsp\f[R], respectively.
 This call expects standard English-text ordered scanlines, and returns
@@ -3136,7 +3137,7 @@ for reading and writing ambient files, and these functions in turn
 access routines in \f[C]src/common/portio.c\f[R] for reading and writing
 portable binary data.
 The information header is handled by the routines in
-s\f[C]rc/common/header.c\f[R], similar to the method described for
+\f[C]src/common/header.c\f[R], similar to the method described for
 \f[I]Radiance\f[R] picture files.
 Here are the main calls from \f[C]src/rt/ambio.c\f[R]:
 .IP "\f[B]\f[CB]putambmagic(FILE *fp);\f[B]\f[R]" 3

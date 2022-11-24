@@ -1,4 +1,4 @@
-# RCSid $Id: filefmts.md,v 1.2 2022/11/11 02:38:34 greg Exp $
+# RCSid $Id: filefmts.md,v 1.3 2022/11/24 02:01:39 greg Exp $
 # *Radiance* File Formats
 This chapter discusses the standard file formats specific to *Radiance*, and gives their internal structure, with pointers to routines for reading and writing them. The following file formats (listed with their conventional suffixes) are covered:
 
@@ -153,7 +153,7 @@ Function file syntax is simple and should be familiar to most programmers, as it
 	y(th,p) = R(th,p)*sin(th)*sin(p);
 	z(th,p) = R(th,p)*cos(th);
 
-In contrast to the usual semantics in programs where each statement corresponds to an evaluation, statements in function files correspond to *definitions*. Once a function or variable has been defined, it may be used in later definitions, along with predefined functions such as `sin(x)` and `cos(x)` and constants such as PI [^2]. (All math functions use standard C conventions, hence trigonometry is done in radians rather than degrees.)
+In contrast to the usual semantics in programs where each statement corresponds to an evaluation, statements in function files correspond to *definitions*. Once a function or variable has been defined, it may be used in later definitions, along with predefined functions such as `sin(x)` and `cos(x)` and constants such as `PI`[^2]. (All math functions use standard C conventions, hence trigonometry is done in radians rather than degrees.)
 
 [^2]: TBD - There once was a footnote here
 
@@ -229,7 +229,7 @@ The following are always defined:
 
 The following are sometimes defined, depending on the program:
 
-PI
+`PI`
 : The ratio of a circle's circumference to its diameter.
 
 `erf(z), erfc(z)`
@@ -622,7 +622,7 @@ Here is the main call for reading in an octree:
 : Read the octree file fname into scene, saving scene file names in the ofn array. What is loaded depends on the flags in load,which may be one or more of `IO_CHECK`, `IO_INFO`, `IO_SCENE`, `IO_TREE`, `IO_FILES` and `IO_BOUNDS`. These correspond to checking file type and consistency, transferring the information header to stdout, loading the scene data, loading the octree structure, assigning the scene file names to ofn, and assigning the octree cube boundaries. The macro `IO_ALL` includes all of these flags, for convenience.
 
 ## Picture File Format (.hdr suffix)
-*Radiance* pictures[^pic] differ from standard computer graphics images inasmuch as they contain real physical data, namely radiance values at each pixel. To do this, it is necessary to maintain floating point information, and we use a 4-byte/pixel encoding described in Chapter II.5 of Graphics Gems II [Arvo91,p.80]. The basic idea is to store a 1-byte mantissa for each of three primaries, and a common 1-byte exponent. The accuracy of these values will be on the order of 1% (±1 in 200) over a dynamic range from 10^-38^ to 10^38^.
+*Radiance* pictures[^pic] differ from standard computer graphics images inasmuch as they contain real physical data, namely radiance values at each pixel. To do this, it is necessary to maintain floating point information, and we use a 4-byte/pixel encoding described in Chapter II.5 of *Graphics Gems II* [Arvo91,p.80]. The basic idea is to store a 1-byte mantissa for each of three primaries, and a common 1-byte exponent. The accuracy of these values will be on the order of 1% (±1 in 200) over a dynamic range from 10^-38^ to 10^38^.
 
 [^pic]: The picture filename extension used to be .pic, but that conflicted with too many other programs.  It was replaced with .hdr, an abbreviation of "high dynamic range."
 
@@ -635,7 +635,7 @@ Although *Radiance* pictures *may* contain physical data, they do not *necessari
 The information header begins with the usual `#?RADIANCE` identifier, followed by one or more lines containing the programs used to produce the picture. These commands may be interspersed with variables describing relevant information such as the view, exposure, color correction, and so on. Variable assignments begin on a new line, and the variable name (usually all upper case) is followed by an equals sign ('='), which is followed by the assigned value up until the end of line. Some variable assignments override previous assignments in the same header, where other assignments are cumulative. Here are the most important variables for *Radiance* pictures:
 
 `FORMAT`
-: A line indicating the file's format. At most one `FORMAT` line is allowed, and it must be assigned a value of either `32- bit_rle_rgbe` or `32-bit_rle_xyze` to be a valid *Radiance* picture.
+: A line indicating the file's format. At most one `FORMAT` line is allowed, and it must be assigned a value of either `32-bit_rle_rgbe` or `32-bit_rle_xyze` to be a valid *Radiance* picture.
 
 `EXPOSURE`
 : A single floating point number indicating a multiplier that has been applied to all the pixels in the file. `EXPOSURE` values are cumulative, so the original pixel values (i.e., radiances in w/sr/m^2^) must be derived by taking the values in the file and dividing by all the `EXPOSURE` settings multiplied together. No `EXPOSURE` setting implies that no exposure changes have taken place.
@@ -653,7 +653,7 @@ The information header begins with the usual `#?RADIANCE` identifier, followed b
 : The *Radiance* view parameters used to create this picture. Multiple assignments are cumulative inasmuch as new view options add to or override old ones.
 
 `PRIMARIES`
-The CIE (x,y) chromaticity coordinates of the three (RGB) primaries and the white point used to standardize the picture's color system. This is used mainly by the **ra_xyze** program to convert between color systems. If no `PRIMARIES` line appears, we assume the standard primaries defined in `src/common/color.h`, namely `0.640 0.330 0.290 0.600 0.150 0.060 0.333 0.333` for red, green, blue and white, respectively.
+: The CIE (x,y) chromaticity coordinates of the three (RGB) primaries and the white point used to standardize the picture's color system. This is used mainly by the **ra_xyze** program to convert between color systems. If no `PRIMARIES` line appears, we assume the standard primaries defined in `src/common/color.h`, namely `0.640 0.330 0.290 0.600 0.150 0.060 0.333 0.333` for red, green, blue and white, respectively.
 
 As always, the end of the header is indicated by an empty line.
 
@@ -705,7 +705,7 @@ Old run-length encoded
 : Repeated pixel values are indicated by an illegal (i.e., unnormalized) pixel that has 1's for all three mantissas, and an exponent that corresponds to the number of times the previous pixel is repeated. Consecutive repeat indicators contain higher-order bytes of the count.
 
 New run-length encoded
-: In this format, the four scanline components (three primaries and exponent) are separated for better compression using adaptive run-length encoding (described by Glassner in Chapter II.8 of Graphics Gems II [Arvo91,p.89]). The record begins with an unnormalized pixel having two bytes equal to 2, followed by the upper byte and the lower byte of the scanline length (which must be less than 32768). A run is indicated by a byte with its high-order bit set, corresponding to a count with excess 128. A non-run is indicated with a byte less than 128. The maximum compression ratio using this scheme is better than 100:1, but typical performance for *Radiance* pictures is more like 2:1.
+: In this format, the four scanline components (three primaries and exponent) are separated for better compression using adaptive run-length encoding (described by Glassner in Chapter II.8 of *Graphics Gems II* [Arvo91,p.89]). The record begins with an unnormalized pixel having two bytes equal to 2, followed by the upper byte and the lower byte of the scanline length (which must be less than 32768). A run is indicated by a byte with its high-order bit set, corresponding to a count with excess 128. A non-run is indicated with a byte less than 128. The maximum compression ratio using this scheme is better than 100:1, but typical performance for *Radiance* pictures is more like 2:1.
 
 The physical values these scanlines correspond to depend on the format and other information contained in the information header. If the `FORMAT` string indicates RGB data, then the units for each primary are spectral radiances over the corresponding waveband, such that a pixel value of $(1,1,1)$ corresponds to a total energy of 1 w/sr/m^2^ over the visible spectrum. The actual luminance value (in lm/sr/m^2^) can be computed from the following formula for the standard *Radiance* RGB primaries:
 
@@ -713,7 +713,7 @@ $$L_v = 179(0.265r + 0.670g + 0.065b)$$
 
 The value of 179 lm/w is the standard *luminous efficacy* of equal-energy white light that is defined and used by *Radiance* specifically for this conversion. This and the other values above are defined in `src/common/color.h`, and the above formula is given as a macro, `luminance(col)`.
 
-If the `FORMAT` string indicates XYZ data, then the units of the Y primary are already lm/st/m^2^, so the above conversion is unnecessary.
+If the `FORMAT` string indicates XYZ data, then the units of the Y primary are already lm/sr/m^2^, so the above conversion is unnecessary.
 
 ### *Radiance* programs
 Table 6 shows the many programs that read and write *Radiance* pictures.
@@ -768,7 +768,7 @@ Below we describe routines for reading and writing pictures, which rely heavily 
 Information headers are manipulated with the routines in `src/common/header.c` and the macros in `color.h`. Features for handing views are defined in `src/common/view.h` with routines in `src/common/image.c`. Here are the relevant calls for reading and copying information headers:
 
 `int checkheader(FILE *fin, char *fmt, FILE *fout);`
-: Read the header information from `fin`, copying to `fou`t (unless fout is `NULL`), checking any `FORMAT` line against the string `fmt`. The `FORMAT` line (if it exists) will not be copied to `fout`. The function returns 1 if the header was OK and the format matched, 0 if the header was OK but there was no format line, and -1 if the format line did not match or there was some problem reading the header. Wildcard characters ('\*' and '?') may appear in `fmt`, in which case a globbing match is applied, and the matching format value will be copied to fmt upon success. The normal `fmt` values for pictures are `COLRFMT` for *Radiance* RGB, `CIEFMT` for 4-byte XYZ pixels, or a copy of `PICFMT` for glob matches to either. (Do not pass `PICFMT` directly, as this will cause an illegal memory access on systems that store static strings in read-only memory.)
+: Read the header information from `fin`, copying to `fout` (unless fout is `NULL`), checking any `FORMAT` line against the string `fmt`. The `FORMAT` line (if it exists) will not be copied to `fout`. The function returns 1 if the header was OK and the format matched, 0 if the header was OK but there was no format line, and -1 if the format line did not match or there was some problem reading the header. Wildcard characters ('\*' and '?') may appear in `fmt`, in which case a globbing match is applied, and the matching format value will be copied to fmt upon success. The normal `fmt` values for pictures are `COLRFMT` for *Radiance* RGB, `CIEFMT` for 4-byte XYZ pixels, or a copy of `PICFMT` for glob matches to either. (Do not pass `PICFMT` directly, as this will cause an illegal memory access on systems that store static strings in read-only memory.)
 
 `int getheader(FILE *fp, int (*f)(), char *p);`
 : For those who need more control, `getheader` reads the header from `fp`, calling the function `f` (if not` NULL`) with each input line and the client data pointer `p`. A simple call to skip the header is `getheader(fp,NULL,NULL)`. To copy the header unconditionally to `stdout`, call `getheader(fp,fputs,stdout)`. More often, `getheader` is called with a client function, which checks each line for specific variable settings.
@@ -841,7 +841,7 @@ The header file `src/common/resolu.h` has macros for resolution strings, which a
 stream fp. 
 
 `scanlen(rs)`
-: Macro to get the scanline length from the `RESOL`U structure
+: Macro to get the scanline length from the `RESOLU` structure
 pointed to by `rs`. 
 
 `numscans(rs)`
@@ -849,7 +849,7 @@ pointed to by `rs`.
 structure pointed to by `rs`. 
 
 `fscnresolu(slp,nsp,fp)`
-: Macro to read in a resolution string from `f`p and assign the scanline length and number of scanlines to the integers pointed to by `slp` and `nsp`, respectively. This call expects standard English-text ordered scanlines, and returns non-zero only if the resolution string agrees.
+: Macro to read in a resolution string from `fp` and assign the scanline length and number of scanlines to the integers pointed to by `slp` and `nsp`, respectively. This call expects standard English-text ordered scanlines, and returns non-zero only if the resolution string agrees.
 
 `fprtresolu(sl,ns,fp)`
 : Macro to print out a resolution string for `ns` scanlines of length `sl` in standard English-text ordering to `fp`.
@@ -968,7 +968,7 @@ Program	     | Read | Write | Function
 **Table 8.** Programs in the *Radiance* distribution that read and write ambient files.
 
 ### *Radiance* C Library
-The `src/rt/ambient.h` file contains definitions of the `AMBVAL` structure and certain details of the ambient file format. The `src/rt/ambio.c` module contains the specialized routines for reading and writing ambient files, and these functions in turn access routines in `src/common/portio.c` for reading and writing portable binary data. The information header is handled by the routines in s`rc/common/header.c`, similar to the method described for *Radiance* picture files. Here are the main calls from `src/rt/ambio.c`:
+The `src/rt/ambient.h` file contains definitions of the `AMBVAL` structure and certain details of the ambient file format. The `src/rt/ambio.c` module contains the specialized routines for reading and writing ambient files, and these functions in turn access routines in `src/common/portio.c` for reading and writing portable binary data. The information header is handled by the routines in `src/common/header.c`, similar to the method described for *Radiance* picture files. Here are the main calls from `src/rt/ambio.c`:
 
 `putambmagic(FILE *fp);`
 : Put out the appropriate two-byte magic number for a *Radiance* ambient file to the stream `fp`.

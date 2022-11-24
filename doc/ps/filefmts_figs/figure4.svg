@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 350 210" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;">
+    <g transform="matrix(1,0,0,1,-128.519,-199.847)">
+        <text x="308.295px" y="394.8px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">x</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-143.201,-197.904)">
+        <text x="183.36px" y="393.84px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">0</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-139.201,-194.784)">
+        <text x="169.44px" y="382.8px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">0</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-137.201,-186.784)">
+        <text x="167.415px" y="287.76px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">y</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-139.201,-194.784)">
+        <text x="162.306px" y="211.68px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">n</text>
+        <text x="166.839px" y="211.68px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">−</text>
+        <text x="172.73px" y="211.68px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">1</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-139.201,-194.784)">
+        <text x="457.37px" y="390.72px" style="font-family:'TimesNewRomanPS-ItalicMT', 'Times New Roman', serif;font-style:italic;font-size:9.067px;">m−1</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-139.201,-398.544)">
+        <rect x="181.92" y="412.8" width="282.96" height="170.16" style="fill:none;stroke:black;stroke-width:0.96px;"/>
+    </g>
+</svg>
