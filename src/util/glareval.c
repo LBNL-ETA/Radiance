@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.18 2020/05/14 20:58:03 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.19 2022/11/29 20:45:21 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -70,7 +70,7 @@ claimscan(			/* claim scanline from buffers */
 {
 	int	hi = shash(y);
 	SCAN	*slast;
-	register SCAN	*sl;
+	SCAN	*sl;
 
 	for (sl = hashtab[hi]; sl != NULL; sl = sl->next)
 		if (sl->y == y)				/* active scanline */
@@ -97,8 +97,8 @@ getpictscan(			/* get picture scanline */
 	int	y
 )
 {
-	register SCAN	*sl;
-	register int	i;
+	SCAN	*sl;
+	int	i;
 					/* first check our buffers */
 	sl = claimscan(y);
 	if (sl == NULL)
@@ -184,7 +184,7 @@ pict_val(			/* find picture value for view direction */
 }
 
 
-extern double
+double
 getviewpix(		/* compute single view pixel */
 	int	vh,
 	int	vv
@@ -214,17 +214,17 @@ getviewpix(		/* compute single view pixel */
 }
 
 
-extern void
+void
 getviewspan(		/* compute a span of view pixels */
 	int	vv,
 	float	*vb
 )
 {
 	float	rt_buf[6*MAXPIX];	/* rtrace send/receive buffer */
-	register int	n;		/* number of pixels in buffer */
+	int	n;		/* number of pixels in buffer */
 	short	buf_vh[MAXPIX];		/* pixel positions */
 	FVECT	dir;
-	register int	vh;
+	int	vh;
 
 #ifdef DEBUG
 	if (verbose)
@@ -311,7 +311,7 @@ getexpos(			/* get exposure from header line */
 }
 
 
-extern void
+void
 open_pict(			/* open picture file */
 	char	*fn
 )
@@ -331,7 +331,7 @@ open_pict(			/* open picture file */
 }
 
 
-extern void
+void
 close_pict(void)			/* done with picture */
 {
 	if (pictfp == NULL)
@@ -342,7 +342,7 @@ close_pict(void)			/* done with picture */
 }
 
 
-extern void
+void
 fork_rtrace(			/* open pipe and start rtrace */
 	char	*av[]
 )
@@ -365,7 +365,7 @@ fork_rtrace(			/* open pipe and start rtrace */
 }
 
 
-extern void
+void
 done_rtrace(void)			/* wait for rtrace to finish */
 {
 	int	status;
@@ -385,8 +385,8 @@ scanretire(void)			/* retire old scanlines to free list */
 	SCAN	*sold[NRETIRE];
 	int	n;
 	int	h;
-	register SCAN	*sl;
-	register int	i;
+	SCAN	*sl;
+	int	i;
 					/* grab the NRETIRE oldest scanlines */
 	sold[n = 0] = NULL;
 	for (h = 0; h < HSIZE; h++)
@@ -427,8 +427,8 @@ static void
 initscans(void)				/* initialize scanline buffers */
 {
 	int	scansize;
-	register SCAN	*ptr;
-	register int	i;
+	SCAN	*ptr;
+	int	i;
 					/* initialize positions */
 	scanpos = (long *)bmalloc(pysiz*sizeof(long));
 	if (scanpos == NULL)

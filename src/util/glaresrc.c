@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glaresrc.c,v 2.6 2006/05/29 16:47:54 greg Exp $";
+static const char	RCSid[] = "$Id: glaresrc.c,v 2.7 2022/11/29 20:45:21 greg Exp $";
 #endif
 /*
  * Gather samples and compute glare sources.
@@ -17,17 +17,16 @@ struct source	*donelist = NULL;	/* finished sources */
 void	pict_stats(void);
 
 static struct srcspan * newspan(int	l, int	r, int	v, float	*sb);
-static struct srcspan * newspan(int	l, int	r, int	v, float	*sb);
 static void addindirect(int	h, int	v, double	br);
 static void addsrcspan(struct srcspan	*nss);
 static void mergesource(struct source	*sp, struct source	*ap);
 static void close_sources(int	v);
 static void close_allsrcs(void);
-static struct srcspan * splitspan(register struct srcspan	*sso, double	h, double	v, double	m);
+static struct srcspan * splitspan(struct srcspan	*sso, double	h, double	v, double	m);
 static struct source * splitsource(struct source	*so);
-static void donesource(register struct source	*sp);
-static struct source * findbuddy(register struct source	*s, register struct source	*l);
-static void absorb(register struct source	*s);
+static void donesource(struct source	*sp);
+static struct source * findbuddy(struct source	*s, struct source	*l);
+static void absorb(struct source	*s);
 static void freespans(struct source	*sp);
 
 
@@ -39,8 +38,8 @@ newspan(		/* allocate a new source span */
 	float	*sb
 )
 {
-	register struct srcspan	*ss;
-	register int	i;
+	struct srcspan	*ss;
+	int	i;
 
 	ss = (struct srcspan *)malloc(sizeof(struct srcspan));
 	if (ss == NULL)
@@ -55,7 +54,7 @@ newspan(		/* allocate a new source span */
 }
 
 
-extern void
+void
 analyze(void)			/* analyze our scene */
 {
 	int	h, v;
@@ -112,7 +111,7 @@ addindirect(		/* add brightness to indirect illuminances */
 {
 	double	tanb, d;
 	int	hl;
-	register int	i;
+	int	i;
 
 	hl = hlim(v);
 	if (h <= -hl) {			/* left region */
@@ -154,7 +153,7 @@ addindirect(		/* add brightness to indirect illuminances */
 }
 
 
-extern void
+void
 comp_thresh(void)			/* compute glare threshold */
 {
 	int	h, v;
@@ -200,7 +199,7 @@ addsrcspan(			/* add new source span to our list */
 )
 {
 	struct source	*last, *cs, *this;
-	register struct srcspan	*ss;
+	struct srcspan	*ss;
 
 	cs = NULL;
 	for (this = curlist; this != NULL; this = this->next) {
@@ -241,7 +240,7 @@ mergesource(		/* merge source ap into source sp */
 )
 {
 	struct srcspan	head;
-	register struct srcspan	*alp, *prev, *tp;
+	struct srcspan	*alp, *prev, *tp;
 
 	head.next = sp->first;
 	prev = &head;
@@ -277,7 +276,7 @@ close_sources(		/* close sources above v */
 )
 {
 	struct source	head;
-	register struct source	*last, *this;
+	struct source	*last, *this;
 
 	head.next = curlist;
 	last = &head;
@@ -295,7 +294,7 @@ close_sources(		/* close sources above v */
 static void
 close_allsrcs(void)			/* done with everything */
 {
-	register struct source	*this, *next;
+	struct source	*this, *next;
 
 	this = curlist;
 	while (this != NULL) {
@@ -309,13 +308,13 @@ close_allsrcs(void)			/* done with everything */
 
 static struct srcspan *
 splitspan(		/* divide source span at point */
-	register struct srcspan	*sso,
+	struct srcspan	*sso,
 	double	h,
 	double	v,
 	double	m
 )
 {
-	register struct srcspan	*ssn;
+	struct srcspan	*ssn;
 	double	d;
 	int	hs;
 
@@ -345,7 +344,7 @@ splitsource(			/* divide source in two if it's big and long */
 {
 	LRSUM	lr;
 	LRLIN	fit;
-	register struct srcspan	*ss, *ssn;
+	struct srcspan	*ss, *ssn;
 	struct srcspan	*ssl, *ssnl, head;
 	int	h;
 	double	mh, mv;
@@ -393,11 +392,11 @@ splitsource(			/* divide source in two if it's big and long */
 
 static void
 donesource(			/* finished with this source */
-	register struct source	*sp
+	struct source	*sp
 )
 {
 	struct source	*newsrc;
-	register struct srcspan	*ss;
+	struct srcspan	*ss;
 	int	h, n;
 	double	hsum, vsum, d;
 
@@ -436,8 +435,8 @@ donesource(			/* finished with this source */
 
 static struct source *
 findbuddy(			/* find close enough source to s in l*/
-	register struct source	*s,
-	register struct source	*l
+	struct source	*s,
+	struct source	*l
 )
 {
 	struct source	*bestbuddy = NULL;
@@ -455,11 +454,11 @@ findbuddy(			/* find close enough source to s in l*/
 }
 
 
-extern void
+void
 absorb_specks(void)			/* eliminate too-small sources */
 {
 	struct source	head, *buddy;
-	register struct source	*last, *this;
+	struct source	*last, *this;
 
 	if (verbose)
 		fprintf(stderr, "%s: absorbing small sources...\n", progname);
@@ -482,12 +481,12 @@ absorb_specks(void)			/* eliminate too-small sources */
 
 static void
 absorb(			/* absorb a source into indirect */
-	register struct source	*s
+	struct source	*s
 )
 {
 	FVECT	dir;
 	double	d;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < nglardirs; i++) {
 		spinvector(dir, ourview.vdir, ourview.vup, indirect[i].theta);
@@ -507,7 +506,7 @@ freespans(			/* free spans associated with source */
 	struct source	*sp
 )
 {
-	register struct srcspan	*ss;
+	struct srcspan	*ss;
 
 	while ((ss = sp->first) != NULL) {
 		sp->first = ss->next;

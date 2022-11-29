@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.15 2021/02/12 00:53:56 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.16 2022/11/29 20:45:21 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -243,7 +243,7 @@ angcmp(		/* compare two angles */
 	const void	*ap2
 )
 {
-	register int	a1, a2;
+	int	a1, a2;
 
 	a1 = *(ANGLE *)ap1;
 	a2 = *(ANGLE *)ap2;
@@ -260,7 +260,7 @@ static void
 init(void)				/* initialize global variables */
 {
 	double	d;
-	register int	i;
+	int	i;
 
 	if (verbose)
 		fprintf(stderr, "%s: initializing data structures...\n",
@@ -348,7 +348,7 @@ cleanup(void)				/* close files, wait for children */
 }
 
 
-extern int
+int
 compdir(			/* compute direction for x,y */
 	FVECT	vd,
 	int	x,
@@ -381,13 +381,13 @@ compdir(			/* compute direction for x,y */
 }
 
 
-extern double
+double
 pixsize(		/* return the solid angle of pixel at (x,y) */
 	int	x,
 	int	y
 )
 {
-	register int	hl, xo;
+	int	hl, xo;
 	double	disc;
 
 	hl = hlim(y);
@@ -404,7 +404,7 @@ pixsize(		/* return the solid angle of pixel at (x,y) */
 }
 
 
-extern void
+void
 memerr(			/* malloc failure */
 	char	*s
 )
@@ -417,7 +417,7 @@ memerr(			/* malloc failure */
 static void
 printsources(void)			/* print out glare sources */
 {
-	register struct source	*sp;
+	struct source	*sp;
 
 	printf("BEGIN glare source\n");
 	for (sp = donelist; sp != NULL; sp = sp->next)
@@ -431,7 +431,7 @@ printsources(void)			/* print out glare sources */
 static void
 printillum(void)			/* print out indirect illuminances */
 {
-	register int	i;
+	int	i;
 
 	printf("BEGIN indirect illuminance\n");
 	for (i = 0; i < nglardirs; i++)
