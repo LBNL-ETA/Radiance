@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<!-- RCSid $Id: filefmts.html,v 1.1 2022/12/01 17:01:49 greg Exp $ -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Radiance File Formats</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">body {
+font-family: Helvetica, arial, sans-serif;
+font-size: 14px;
+line-height: 1.6;
+padding-top: 10px;
+padding-bottom: 10px;
+background-color: white;
+padding: 30px; }
+body > *:first-child {
+margin-top: 0 !important; }
+body > *:last-child {
+margin-bottom: 0 !important; }
+a {
+color: #4183C4; }
+a.absent {
+color: #cc0000; }
+a.anchor {
+display: block;
+padding-left: 30px;
+margin-left: -30px;
+cursor: pointer;
+position: absolute;
+top: 0;
+left: 0;
+bottom: 0; }
+h1, h2, h3, h4, h5, h6 {
+margin: 20px 0 10px;
+padding: 0;
+font-weight: bold;
+-webkit-font-smoothing: antialiased;
+cursor: text;
+position: relative; }
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+text-decoration: none; }
+h1 tt, h1 code {
+font-size: inherit; }
+h2 tt, h2 code {
+font-size: inherit; }
+h3 tt, h3 code {
+font-size: inherit; }
+h4 tt, h4 code {
+font-size: inherit; }
+h5 tt, h5 code {
+font-size: inherit; }
+h6 tt, h6 code {
+font-size: inherit; }
+h1 {
+font-size: 28px;
+color: black; }
+h2 {
+font-size: 24px;
+border-bottom: 1px solid #cccccc;
+color: black; }
+h3 {
+font-size: 18px; }
+h4 {
+font-size: 16px; }
+h5 {
+font-size: 14px; }
+h6 {
+color: #777777;
+font-size: 14px; }
+p, blockquote, ul, ol, dl, li, table, pre {
+margin: 15px 0; }
+hr {
+background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+border: 0 none;
+color: #cccccc;
+height: 4px;
+padding: 0;
+}
+body > h2:first-child {
+margin-top: 0;
+padding-top: 0; }
+body > h1:first-child {
+margin-top: 0;
+padding-top: 0; }
+body > h1:first-child + h2 {
+margin-top: 0;
+padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+margin-top: 0;
+padding-top: 0; }
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+margin-top: 0;
+padding-top: 0; }
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+margin-top: 0; }
+li p.first {
+display: inline-block; }
+li {
+margin: 0; }
+ul, ol {
+padding-left: 30px; }
+ul :first-child, ol :first-child {
+margin-top: 0; }
+dl {
+padding: 0; }
+dl dt {
+font-size: 14px;
+font-weight: bold;
+font-style: italic;
+padding: 0;
+margin: 15px 0 5px; }
+dl dt:first-child {
+padding: 0; }
+dl dt > :first-child {
+margin-top: 0; }
+dl dt > :last-child {
+margin-bottom: 0; }
+dl dd {
+margin: 0 0 15px;
+padding: 0 15px; }
+dl dd > :first-child {
+margin-top: 0; }
+dl dd > :last-child {
+margin-bottom: 0; }
+blockquote {
+border-left: 4px solid #dddddd;
+padding: 0 15px;
+color: #777777; }
+blockquote > :first-child {
+margin-top: 0; }
+blockquote > :last-child {
+margin-bottom: 0; }
+table {
+padding: 0;border-collapse: collapse; }
+table tr {
+border-top: 1px solid #cccccc;
+background-color: white;
+margin: 0;
+padding: 0; }
+table tr:nth-child(2n) {
+background-color: #f8f8f8; }
+table tr th {
+font-weight: bold;
+border: 1px solid #cccccc;
+margin: 0;
+padding: 6px 13px; }
+table tr td {
+border: 1px solid #cccccc;
+margin: 0;
+padding: 6px 13px; }
+table tr th :first-child, table tr td :first-child {
+margin-top: 0; }
+table tr th :last-child, table tr td :last-child {
+margin-bottom: 0; }
+img {
+max-width: 100%; }
+span.frame {
+display: block;
+overflow: hidden; }
+span.frame > span {
+border: 1px solid #dddddd;
+display: block;
+float: left;
+overflow: hidden;
+margin: 13px 0 0;
+padding: 7px;
+width: auto; }
+span.frame span img {
+display: block;
+float: left; }
+span.frame span span {
+clear: both;
+color: #333333;
+display: block;
+padding: 5px 0 0; }
+span.align-center {
+display: block;
+overflow: hidden;
+clear: both; }
+span.align-center > span {
+display: block;
+overflow: hidden;
+margin: 13px auto 0;
+text-align: center; }
+span.align-center span img {
+margin: 0 auto;
+text-align: center; }
+span.align-right {
+display: block;
+overflow: hidden;
+clear: both; }
+span.align-right > span {
+display: block;
+overflow: hidden;
+margin: 13px 0 0;
+text-align: right; }
+span.align-right span img {
+margin: 0;
+text-align: right; }
+span.float-left {
+display: block;
+margin-right: 13px;
+overflow: hidden;
+float: left; }
+span.float-left span {
+margin: 13px 0 0; }
+span.float-right {
+display: block;
+margin-left: 13px;
+overflow: hidden;
+float: right; }
+span.float-right > span {
+display: block;
+overflow: hidden;
+margin: 13px auto 0;
+text-align: right; }
+code, tt {
+margin: 0 2px;
+padding: 0 5px;
+white-space: nowrap;
+border: 1px solid #eaeaea;
+background-color: #f8f8f8;
+border-radius: 3px; }
+pre code {
+margin: 0;
+padding: 0;
+white-space: pre;
+border: none;
+background: transparent; }
+.highlight pre {
+background-color: #f8f8f8;
+border: 1px solid #cccccc;
+font-size: 13px;
+line-height: 19px;
+overflow: auto;
+padding: 6px 10px;
+border-radius: 3px; }
+pre {
+background-color: #f8f8f8;
+border: 1px solid #cccccc;
+font-size: 13px;
+line-height: 19px;
+overflow: auto;
+padding: 6px 10px;
+border-radius: 3px; }
+pre code, pre tt {
+background-color: transparent;
+border: none; }
+sup {
+font-size: 0.83em;
+vertical-align: super;
+line-height: 0;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font-size: 11px;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb
+}
+* {
+-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+body {
+width: 854px;
+margin:0 auto;
+}
+}
+@media print {
+table, pre {
+page-break-inside: avoid;
+}
+pre {
+word-wrap: break-word;
+}
+body {
+padding: 2cm; }
+}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="radiance-file-formats"><em>Radiance</em> File Formats</h1>
+<p>This chapter discusses the standard file formats specific to
+<em>Radiance</em>, and gives their internal structure, with pointers to
+routines for reading and writing them. The following file formats
+(listed with their conventional suffixes) are covered:</p>
+<dl>
+<dt>Scene Description (.rad suffix)</dt>
+<dd>
+This is the main input file type, describing materials and geometry for
+the rendering programs, and must be compiled into an octree by oconv
+prior to ray-tracing. It is an ASCII text format, and is often
+translated from a CAD description, but may be created or edited by a
+text editor as well.
+</dd>
+<dt>Function File (.cal suffix)</dt>
+<dd>
+Also a text format, these files describe mathematical patterns,
+textures, and surface shapes. In the case of patterns and textures, the
+functions serve as input directly to the rendering programs. In the case
+of surfaces, the functions serve as input to one of the generator
+programs, <strong>gensurf</strong>, <strong>genrev</strong> or
+<strong>genworm</strong>. Additionally, <strong>pcomb</strong> may be
+used to perform math on <em>Radiance</em> pictures and the
+<strong>rcalc</strong> utility may be used in creative ways to
+manipulate data for scene generation and data analysis.
+</dd>
+<dt>Data File (.dat suffix)</dt>
+<dd>
+Another ASCII format, data files are used directly by the rendering
+programs to interpolate values for luminaire photometry, among other
+things.
+</dd>
+<dt>Font File (.fnt suffix)</dt>
+<dd>
+A simple, polygonal font representation for rendering text patterns.
+This ASCII format describes each character “glyph” as a sequence of
+vertices in rectangular, integer coordinates ranging from 0 to 255.
+</dd>
+<dt>Octree (.oct suffix)</dt>
+<dd>
+A binary data structure computed from one or more scene description
+files by the oconv program. It may contain frozen scene data in binary
+form, or merely references to the original scene files.
+</dd>
+<dt>Picture (.hdr suffix)</dt>
+<dd>
+A binary image file containing calibrated, real radiance values at each
+pixel. <em>Radiance</em> pictures may be displayed, analyzed, and
+converted to other image formats.
+</dd>
+<dt>Z-buffer (.zbf suffix)</dt>
+<dd>
+A binary file with the distances to each pixel in a corresponding
+picture.
+</dd>
+<dt>Ambient File (.amb suffix)</dt>
+<dd>
+A binary file used to store diffuse interreflection values, which are
+shared between cooperating rendering processes running sequentially or
+in parallel. Since these values are view-independent, sharing this
+information across multiple runs is highly economical.
+</dd>
+</dl>
+<p>We will discuss each of these formats in turn, giving examples and
+pointers to routines in the source code for reading and writing them,
+and the programs that use them. In general, the ASCII text formats have
+no standard routines for writing them, since they generally originate
+outside of <em>Radiance</em> or are created with simple
+<em>printf(3)</em> statements. Most binary file formats are machine and
+system independent, meaning they can be moved safely from one place to
+another and <em>Radiance</em> will still understand them (provided no
+unintentional character translation takes place along the way)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Most binary files also include a
+standard ASCII header at their beginning that may be read by the
+<strong>getinfo</strong> program. This offers a convenient method for
+identifying the file contents when the file name is ambiguous.</p>
+<h2 id="scene-description-format-.rad-suffix">Scene Description Format
+(.rad suffix)</h2>
+<p>The semantics of the <em>Radiance</em> scene description format are
+covered in the Reference Manual. We will therefore focus on the file
+syntax and structure, which are simple and straightforward. In fact,
+some would say that the <em>Radiance</em> scene description format is
+brain-dead, in the sense that it offers few language amenities and
+requires the awkward counting of string and real arguments (not to
+mention those non-existent integer arguments). We have little to offer
+in its defense.</p>
+<p>The truth is, the scene format was designed to grow with
+<em>Radiance</em>, and we wanted to keep it as simple as possible so as
+to encourage others to write translators to and from it. Specifically,
+we wanted to be able to read files using the <em>scanf(3)</em> library
+function and write files using <em>printf(3)</em>. Furthermore, we
+wanted everyone’s parsers to be stable over time, which meant no
+primitive-specific syntax. We also decided that a flat file structure
+was most practical, since hierarchies are typically lost on the first
+translation, and sufficient structure could be provided by the file
+system itself. Since we did not intend text editing to be the primary
+input method, we felt the effects of these programming decisions on the
+human readability and writability of the format were less important.</p>
+<p>Even so, the format is relatively easy to read and write once you get
+used to it, and with the <em>Radiance</em> generator programs and
+in-line command expansion, the text editor becomes a powerful modeling
+tool in the hands of an experienced user. Together with the need for
+editing material descriptions, our assumption that users would rarely
+edit these files turned out to be mistaken. Consequently, it is a good
+idea for all users to familiarize themselves with the scene description
+format, awkward or not.</p>
+<h3 id="basic-file-structure">Basic File Structure</h3>
+<p>There are four statement types in a scene description file: comments,
+commands, primitives and aliases. These may be interspersed in the file,
+and the only structural requirement is that modifiers precede the
+primitives they modify.</p>
+<h4 id="comments">Comments</h4>
+<p>The simplest statement type is a comment statement begins with a
+pound sign (‘#’) and continues to the end of line:</p>
+<pre><code># This is a comment.</code></pre>
+<h4 id="commands">Commands</h4>
+<p>An in-line command, which begins with an exclamation mark (‘!’) and
+continues to the end of line:</p>
+<pre><code>!xform -n chair1 -t 10 5 8 chair.rad</code></pre>
+<p>The command is executed during file parsing, and its output is read
+as more input. Long commands may be continued on multiple lines by
+escaping the newline character with a backslash (‘\’):</p>
+<pre><code>!gensurf marble sink &#39;15.5+x(theta(s),phi(t))&#39; \
+     &#39;10.5+y(theta(s),phi(t))&#39; \
+     &#39;30.75+z(theta(s),phi(t))&#39; \
+     8 29 -f basin.cal -s</code></pre>
+<p>Since the command is executed by the shell, pipes and other
+facilities are available as well. The following command creates a
+counter with a precisely cut hole for the sink basin just given:</p>
+<pre><code>!( echo marble polygon sink_top 0 0 108 31 \
+     10.5 30.75 31 22 30.75 0 22 30.75 0 0 \
+     30.75 31 0 30.75 31 10.5 30.75 ; \
+     cnt 30 | rcalc \
+          -e &#39;$1=15.5+x(theta(0),phi(1-$1/29))&#39; \
+          -e &#39;$2=10.5+y(theta(0),phi(1-$1/29))&#39; \
+          -e &#39;$3=30.75&#39; -f basin.cal )</code></pre>
+<p>Note in the above example that two commands are executed in sequence.
+The first creates the counter perimeter, and the second cuts the hole.
+The two commands are enclosed in parentheses, so if a final
+transformation is added by <strong>xform</strong> with the
+<strong>-c</strong> option, it will be applied to both commands, not
+just the last one.</p>
+<h4 id="primitives">Primitives</h4>
+<p>A primitive can be thought of as an indivisible unit of scene
+information. It can be a surface, material, pattern, texture or mixture.
+The basic structure of a primitive is as follows:</p>
+<pre><code>modifier type identifier
+n  S1  S2  S3  ..Sn
+0
+m  R1  R2  R3  ..Rm</code></pre>
+<p>The <code>modifier</code> is the <code>identifier</code> of a
+previously defined primitive, or <code>void</code> if no modifier is
+appropriate. The type is one of the supported <em>Radiance</em>
+primitive keywords, such as <em>polygon</em> or <em>plastic</em>.
+Following the <code>modifier</code>, type and identifier are the string
+arguments, preceded by the number of string arguments and separated by
+white space. If there are no string arguments, then 0 should be given
+for <code>n</code>. The string arguments are followed by the integer
+arguments in the same fashion. (Since there are no <em>Radiance</em>
+primitives currently using integer arguments, the count is always 0.)
+Finally, the number of real arguments is given, followed by the real
+arguments.</p>
+<p>The location of the primitive in the scene description has no
+importance, except that its modifier refers to the most recently defined
+primitive with that identifier. If no such modifier was defined, an
+error results. In fact, “undefined modifier” is the most frequently
+reported error when parsing an invalid scene description, since any
+random bit of junk encountered where a statement is expected will be
+interpreted as a modifier. One final note about modifiers — since
+surfaces never modify anything, their identifiers are neither stored nor
+referenced in the parser’s modifier list, and serve only for debugging
+purposes during editing and rendering.</p>
+<p>Within a primitive, white space serves only to separate words, and
+multiple spaces, tabs, form feeds, returns, and newlines are all
+considered as one separator. Consequently, it is not possible for a
+string argument to contain any white space, which is OK because no
+<em>Radiance</em> primitive needs this.</p>
+<h4 id="aliases">Aliases</h4>
+<p>An alias simply associates a new modifier and identifier with a
+previously defined primitive. The syntax is as follows:</p>
+<pre><code>modifier alias new_identifier old_identifier</code></pre>
+<p>The <code>old_identifier</code> should be associated with some
+modifier primitive (i.e., non-surface) given earlier. The
+<code>modifier</code>, if different from the original, will be used
+instead in later applications of <code>new_identifier</code>.</p>
+<p>Aliases are most often used to give new names to previously defined
+materials. They may also be used to associate different patterns or
+textures with the same material.</p>
+<h3 id="scene-hierarchy">Scene Hierarchy</h3>
+<p>Hierarchical scene descriptions are achieved through expansion of
+in-line <strong>xform</strong> commands. The <strong>xform</strong>
+command is used to read and place other <em>Radiance</em> scene
+description files in the calling file, and these other descriptions may
+in turn read others, and so on down the tree. No check is made to assure
+that none of the calling files is called again, even by itself. If this
+happens, commands open commands until the system runs out of processes,
+which is a very nasty business and to be avoided.</p>
+<h3 id="radiance-programs"><em>Radiance</em> Programs</h3>
+<p>The following table shows programs in the main <em>Radiance</em>
+distribution that read and write scene description files. Additionally,
+there are other translators that write scene files, which are available
+separately as free contributions or as part of other (CAD) programs.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>arch2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert Architrion text file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>genblinds</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate curved venetian blinds</td>
+</tr>
+<tr class="odd">
+<td><strong>genbox</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate parallelepiped</td>
+</tr>
+<tr class="even">
+<td><strong>genclock</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate analog clock</td>
+</tr>
+<tr class="odd">
+<td><strong>genprism</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate extruded polygon</td>
+</tr>
+<tr class="even">
+<td><strong>genrev</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate surface of revolution</td>
+</tr>
+<tr class="odd">
+<td><strong>gensky</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate CIE sky distribution</td>
+</tr>
+<tr class="even">
+<td><strong>gensurf</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate arbitrary surface patch</td>
+</tr>
+<tr class="odd">
+<td><strong>genworm</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate varying diameter curved path</td>
+</tr>
+<tr class="even">
+<td><strong>ies2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert IES luminaire file to <em>Radiance</em></td>
+</tr>
+<tr class="odd">
+<td><strong>mgf2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert MGF file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>mkillum</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Compute <em>illum</em> secondary sources</td>
+</tr>
+<tr class="odd">
+<td><strong>nff2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert NFF file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>objline</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate line drawing of <em>Radiance</em> file</td>
+</tr>
+<tr class="odd">
+<td><strong>objview</strong></td>
+<td></td>
+<td>X</td>
+<td>Quick view of <em>Radiance</em> object</td>
+</tr>
+<tr class="even">
+<td><strong>oconv</strong></td>
+<td></td>
+<td>X</td>
+<td>Compile <em>Radiance</em> scene description</td>
+</tr>
+<tr class="odd">
+<td><strong>obj2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert Wavefront .OBJ file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>rad</strong></td>
+<td>X</td>
+<td></td>
+<td>Render <em>Radiance</em> scene</td>
+</tr>
+<tr class="odd">
+<td><strong>rad2mgf</strong></td>
+<td>X</td>
+<td></td>
+<td>Convert <em>Radiance</em> file to MGF</td>
+</tr>
+<tr class="even">
+<td><strong>raddepend</strong></td>
+<td>X</td>
+<td></td>
+<td>Determine scene file dependencies</td>
+</tr>
+<tr class="odd">
+<td><strong>replmarks</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Replace triangular markers with objects</td>
+</tr>
+<tr class="even">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td></td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="odd">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="even">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td></td>
+<td>Interactive renderer</td>
+</tr>
+<tr class="odd">
+<td><strong>thf2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert GDS things file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>tmesh2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert triangle mesh file to <em>Radiance</em></td>
+</tr>
+<tr class="odd">
+<td><strong>xform</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Transform Radiance objects</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 1.</strong> Radiance programs that read and write scene
+descriptions.</p>
+<h3 id="radiance-c-library"><em>Radiance</em> C Library</h3>
+<p>The principal library function for reading scene description files is
+<code>readobj(inpspec)</code>, defined in
+<code>src/common/readobj.c</code>. This routine takes the name of a
+file, or command beginning with ‘!’, or <code>NULL</code> if standard
+input is to be read, and loads the <em>Radiance</em> data structures
+defined in <code>src/common/object.h</code>. If loading
+<em>Radiance</em> data structures is not the action desired, then a more
+custom approach is necessary, such as that used in
+<code>src/gen/xform.c</code>. If using <em>Radiance</em> data structures
+is acceptable, but the data need not remain resident in memory, then
+follow the lead in <code>src/ot/getbbox.c</code> and use
+<code>src/ot/readobj2.c</code> instead. In any case, the list of defined
+primitive types in <code>src/common/otypes.h</code> is crucial.</p>
+<h2 id="function-file-format-.cal-suffix">Function File Format (.cal
+suffix)</h2>
+<p>Function files are used throughout <em>Radiance</em> to specify
+mathematical formulas and relations for procedural textures, patterns
+and surfaces. They are also used by filter programs such as rcalc to
+manipulate data, and pcomb to manipulate pictures.</p>
+<p>Function file syntax is simple and should be familiar to most
+programmers, as it is based on fairly standard algebraic expressions.
+Here is an example, which corresponds to the in-line commands given in
+the previous section:</p>
+<pre><code>{
+basin.cal - calculate coordinates for basin sink.
+}
+
+theta(s) = PI*(0.5+0.5*s);
+phi(t) = 2*PI*t;
+
+R(th,p) = 5 + ( 3.25*cos(p)^2 +
+                1.75*sin(p)^2 ) * sin(th)^2;
+
+x(th,p) = R(th,p)*sin(th)*cos(p);
+y(th,p) = R(th,p)*sin(th)*sin(p);
+z(th,p) = R(th,p)*cos(th);</code></pre>
+<p>In contrast to the usual semantics in programs where each statement
+corresponds to an evaluation, statements in function files correspond to
+<em>definitions</em>. Once a function or variable has been defined, it
+may be used in later definitions, along with predefined functions such
+as <code>sin(x)</code> and <code>cos(x)</code> and constants such as
+<code>PI</code><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. (All math functions use standard C
+conventions, hence trigonometry is done in radians rather than
+degrees.)</p>
+<p>Evaluation order (operator precedence) follows standard rules of
+algebra. Exponentiation is performed first <code>(x^y)</code>, followed
+by multiplication and division <code>(x*y, x/y)</code>, then addition
+and subtraction <code>(x+y, x-y)</code>. Unary minus is most tightly
+associated <code>(-x)</code>, and parentheses override operator
+precedence in the usual way. Semicolons separate statements, and white
+space is generally ignored. Comments are enclosed by curly braces, which
+may be nested.</p>
+<p>The above file does not actually <em>do</em> anything, it merely
+defines functions that are useful by a program that does. Taking our
+<strong>gensurf</strong> example from the previous section:</p>
+<pre><code>!gensurf marble sink &#39;15.5+x(theta(s),phi(t))&#39; \
+     &#39;10.5+y(theta(s),phi(t))&#39; \
+     &#39;30.75+z(theta(s),phi(t))&#39; \
+     8 29 -f basin.cal -s</code></pre>
+<p>The <strong>-f</strong> option loads in our file, which is then used
+to evaluate expressions such as <code>15.5+x(theta(s),phi(t))</code> for
+specific values of <code>s</code> and <code>t</code>. These variables
+range from 0 to 1 over the surface patch in increments of <span class="math inline">1/8</span> and <span class="math inline">1/29</span>, respectively. (See the
+<strong>gensurf</strong> manual page for details.) The entire expression
+for each evaluation could have been written in the command line, but it
+is much more convenient to create a function file.</p>
+<h3 id="language-features">Language Features</h3>
+<p>Subtle features of the functional language provide much greater power
+than first meets the eye. One of these is the ability to define
+recursive functions. The following example defines the factorial
+function (<em>n!</em>):</p>
+<pre><code>fact(n) : if(n-1.5, n*fact(n-1), 1);</code></pre>
+<p>This uses the library function <code>if(cond,e1,e0)</code>, which
+returns <code>e1</code> if cond is greater than zero, and
+<code>e0</code> otherwise. Since only one of these expressions is
+evaluated, <code>fact(n)</code> will call itself until <code>n</code> is
+less than 2, when the <code>if</code> expression returns 1<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.
+The colon (‘:’) is used in place of the usual equals assignment (‘=’)
+because we want this function to have the constant attribute, which
+means any later appearance in an expression of <code>fact(ce)</code>
+where ce is also a constant expression will be replaced by its value.
+This can be an important savings in cases where an expression or
+subexpression is expensive to evaluate, and only needs to be computed
+once. All of the standard library functions have the constant attribute.
+(See the following section for a complete list.)</p>
+<p>Another handy language feature is the ability to pass function names
+as arguments. A simple example of this is the following function, which
+computes the numerical derivative of a function given as its first
+argument:</p>
+<pre><code>FTINY : 1e-7;
+d1(f,x) = (f(x+FTINY)-f(x-FTINY))/FTINY/2;</code></pre>
+<p>Evaluating <code>d1(sin,1.1)</code> using this formula yields 0.4536,
+which is fairly close to the true derivative, which is
+<code>cos(1.1)</code>.</p>
+<p>A third language feature, which is normally transparent to the user,
+is the notion of <em>contexts</em>. Identifiers may be composed of
+parts, starting with a name and continuing with one or more context
+names. Each name is delimited by a back-quote (‘`’). Names themselves
+begin with a letter and continue with any sequence of letters, digits,
+underscores and decimal points. The following are examples of valid
+identifiers:</p>
+<pre><code>v1, V.W, x_rand`local, `A_, Qa_5`</code></pre>
+<p>If a context mark appears at the beginning of the identifier, then
+its reference must be local. If it appears at the end, then its
+reference must be global. A local reference must be resolved in the
+local context, i.e., no contexts above this one will be searched. A
+global reference must correspond to the original context, ignoring any
+local redefinitions.</p>
+<p>The reason that contexts are normally transparent is that they are
+controlled by the calling program — there are no explicit language
+features for establishing contexts. A new context is established
+automatically for each function file loaded by the rendering programs.
+That way, it is safe to reuse variable names that have been used in
+other files, and even in the main initialization file,
+<code>rayinit.cal</code>.</p>
+<p>Although not strictly necessary, there are two good reasons to define
+variables and functions before referencing them in a function file. One
+is related to contexts. If a previous definition of a variable name is
+given in an enclosing context (e.g., <code>rayinit.cal</code>), then
+that reference will be used rather than a later one in the current
+context, unless the reference is made explicitly local by starting the
+identifier with a context mark. The second reason for defining before
+referencing is constant expressions. If a variable or function has the
+constant attribute (i.e., defined with ‘:’ instead of ‘=’), then a later
+subexpression referencing it can be replaced by its evaluated result
+during compilation. If the constant is not defined until after it is
+referenced, it remains as a reference, which takes time to evaluate each
+time.</p>
+<p>Other features of the language are truly transparent, but knowledge
+of them can help one to write more efficient function files:</p>
+<ul>
+<li><p>Once a variable has been evaluated, the result is cached and it
+is not reevaluated unless the client program changes an internal counter
+(<code>eclock</code>), which indicates that something has changed. This
+means that using variables to hold frequently used values will not only
+simplify the function file, it will save time during
+evaluation.</p></li>
+<li><p>An argument passed in a function call is not evaluated until the
+function calls for it specifically, and the result is also cached to
+avoid redundant calculation. The conditional evaluation feature is
+actually a requirement for recursive functions to work, but caching is
+not. Argument value caching means it is more efficient to pass an
+expensive-to-compute expression than to have the function compute it
+internally if it appears more than once in the function definition. This
+is especially true for recursive functions with deep call
+trees.</p></li>
+</ul>
+<h3 id="standard-definitions-library">Standard Definitions
+(Library)</h3>
+<p>The following are always defined:</p>
+<dl>
+<dt><code>if(a, b, c)</code></dt>
+<dd>
+Conditional expression. If a is positive, return b, else return c.
+</dd>
+<dt><code>select(N, a1, a2, ..)</code></dt>
+<dd>
+Return Nth argument. If N is 0, then return the count of arguments
+excluding the first. This provides basic array functionality.
+</dd>
+<dt><code>sqrt(x)</code></dt>
+<dd>
+Return square root of <code>x</code>, where <code>x &gt;= 0</code>.
+</dd>
+<dt><code>sin(x), cos(x), tan(x), asin(x), acos(x), atan(x), atan2(y,x)</code></dt>
+<dd>
+Standard trigonometry functions.
+</dd>
+<dt><code>floor(x), ceil(x)</code></dt>
+<dd>
+Greatest lower bound and least upper bound (integer).
+</dd>
+<dt><code>exp(x), log(x), log10(x)</code></dt>
+<dd>
+Exponent and logarithm functions.
+</dd>
+<dt><code>rand(x)</code></dt>
+<dd>
+Return pseudo-random number in the range [0,1) for any argument x. The
+same return value is guaranteed for the same argument.
+</dd>
+</dl>
+<p>The following are sometimes defined, depending on the program:</p>
+<dl>
+<dt><code>PI</code></dt>
+<dd>
+The ratio of a circle’s circumference to its diameter.
+</dd>
+<dt><code>erf(z), erfc(z)</code></dt>
+<dd>
+Error function and complimentary error function.
+</dd>
+<dt><code>j0(x), j1(x), jn(n,x), y0(x), y1(x), yn(n,x)</code></dt>
+<dd>
+Bessel functions.
+</dd>
+<dt><code>hermite(p0,p1,r0,r1,t)</code></dt>
+<dd>
+One-dimensional Hermite polynomial.
+</dd>
+</dl>
+<p>The rendering programs also define the following noise functions:</p>
+<dl>
+<dt><code>noise3(x,y,z), noise3x(x,y,z), noise3y(x,y,z), noise3z(x,y,z)</code></dt>
+<dd>
+Perlin noise function and its gradient [Perlin85][Arvo91,p.396].
+</dd>
+<dt><code>fnoise3(x,y,z)</code></dt>
+<dd>
+Fractal noise function, ranging from -1 to 1.
+</dd>
+</dl>
+<p>Interaction with the renderer is achieved via special purpose
+variables and functions whose values correspond to the current ray
+intersection and the calling primitive. Unlike the above functions, none
+of these have the constant attribute since their values change from one
+ray to the next:</p>
+<dl>
+<dt><code>Dx, Dy, Dz</code></dt>
+<dd>
+ray direction
+</dd>
+<dt><code>Nx, Ny, Nz</code></dt>
+<dd>
+surface normal
+</dd>
+<dt><code>Px, Py, Pz</code></dt>
+<dd>
+intersection point
+</dd>
+<dt><code>T</code></dt>
+<dd>
+distance from start
+</dd>
+<dt><code>Ts</code></dt>
+<dd>
+single ray (shadow) distance
+</dd>
+<dt><code>Rdot</code></dt>
+<dd>
+ray dot product
+</dd>
+<dt><code>S</code></dt>
+<dd>
+world scale
+</dd>
+<dt><code>Tx, Ty, Tz</code></dt>
+<dd>
+world origin
+</dd>
+<dt><code>Ix, Iy, Iz</code></dt>
+<dd>
+world i unit vector
+</dd>
+<dt><code>Jx, Jy, Jz</code></dt>
+<dd>
+world j unit vector
+</dd>
+<dt><code>Kx, Ky, Kz</code></dt>
+<dd>
+world k unit vector
+</dd>
+<dt><code>arg(n)</code></dt>
+<dd>
+real arguments, arg(0) is count
+</dd>
+</dl>
+<p>For BRDF primitives, the following variables are also available:</p>
+<dl>
+<dt><code>NxP, NyP, NzP</code></dt>
+<dd>
+perturbed surface normal
+</dd>
+<dt><code>RdotP</code></dt>
+<dd>
+perturbed ray dot product
+</dd>
+<dt><code>CrP, CgP, CbP</code></dt>
+<dd>
+perturbed material color
+</dd>
+</dl>
+<p>For prism1 and prism2 primitives, the following are available:</p>
+<dl>
+<dt><code>DxA, DyA, DzA</code></dt>
+<dd>
+direction to target light source
+</dd>
+</dl>
+<p>Other functions, variables and constants are defined as well in the
+file <code>src/rt/rayinit.cal</code>, which gets installed in the
+standard <em>Radiance</em> library directory and can be modified or
+appended as desired<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<h3 id="radiance-programs-1"><em>Radiance</em> Programs</h3>
+<p>Table 2 shows <em>Radiance</em> programs that read and write function
+files.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>calc</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Interactive calculator</td>
+</tr>
+<tr class="even">
+<td><strong>genrev</strong></td>
+<td>X</td>
+<td></td>
+<td>Generate surface of revolution</td>
+</tr>
+<tr class="odd">
+<td><strong>gensurf</strong></td>
+<td>X</td>
+<td></td>
+<td>Generate arbitrary surface patch</td>
+</tr>
+<tr class="even">
+<td><strong>genworm</strong></td>
+<td>X</td>
+<td></td>
+<td>Generate varying diameter curved path</td>
+</tr>
+<tr class="odd">
+<td><strong>macbethcal</strong></td>
+<td></td>
+<td>X</td>
+<td>Compute image color &amp; contrast correction</td>
+</tr>
+<tr class="even">
+<td><strong>pcomb</strong></td>
+<td>X</td>
+<td></td>
+<td>Perform arbitrary math on picture(s)</td>
+</tr>
+<tr class="odd">
+<td><strong>rcalc</strong></td>
+<td>X</td>
+<td></td>
+<td>Record stream calculator</td>
+</tr>
+<tr class="even">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td></td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="odd">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="even">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td></td>
+<td>Interactive renderer</td>
+</tr>
+<tr class="odd">
+<td><strong>tabfunc</strong></td>
+<td></td>
+<td>X</td>
+<td>Create function file from tabulated data</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 2.</strong> Programs in the <em>Radiance</em>
+distribution that read and write function files.</p>
+<p>In addition, the program <strong>ev</strong> evaluates expressions
+given as command line arguments, though it does not handle function
+files or definitions. There are also a number of 2-d plotting routines
+that use a slightly modified statement syntax, called
+<strong>bgraph</strong>, <strong>dgraph</strong>,
+<strong>gcomp</strong>, and <strong>igraph</strong>. Additional utility
+programs are useful in combination with rcalc for data analysis and
+scene generation. The program <strong>cnt</strong> generates simple
+records to drive <strong>rcalc</strong>, and the <strong>total</strong>
+program is handy for adding up results. The <strong>histo</strong>
+program computes histograms needed for certain types of statistical
+analysis. The <strong>lam</strong> program concatenates columns from
+multiple input files, and <strong>neat</strong> neatens up columns for
+better display.</p>
+<h3 id="radiance-c-library-1"><em>Radiance</em> C Library</h3>
+<p>The standard routines for loading and evaluating function files are
+divided into three modules, <code>src/common/calexpr.c</code> for
+expression parsing and evaluation, <code>src/common/caldefn.c</code> for
+variable and function storage and lookup, and
+<code>src/common/calfunc.c</code> for library function storage and
+function evaluation. There is a fourth module for writing out
+expressions called <code>src/common/calprnt.c</code>, which we will not
+discuss. They all use the header file <code>src/common/calcomp.h</code>,
+which defines common data structures and evaluation macros. Of these,
+the three most often used declarations for external routines are:</p>
+<dl>
+<dt><code>typedef struct epnode EPNODE;</code></dt>
+<dd>
+Expression parse tree node. Some routines return pointers to this
+structure type, and the main evaluation macro, <code>evalue(ep)</code>,
+takes an argument of this type.
+</dd>
+<dt><code>(double) evalue(ep);</code></dt>
+<dd>
+Evaluate an expression parse tree. Uses node type table to access
+appropriate function depending on root node type. (E.g., an addition
+node calls <code>eadd(ep)</code>.)
+</dd>
+<dt><code>extern unsigned long eclock;</code></dt>
+<dd>
+This is a counter used to determine when variable values need updating.
+The initial value is 0, which tells the routines always to reevaluate
+variables. Once incremented to 1, variable evaluations are cached and
+not recomputed until <code>eclock</code> is incremented again. Usually,
+client programs increment <code>eclock</code> each time definitions or
+internal states affecting returned values change. This assures the
+quickest evaluation of correct results.
+</dd>
+</dl>
+<p>The usual approach to handling definitions is to compile them into
+the central lookup table; variable and function references are later
+evaluated by traversing the stored parse trees. Syntax errors and
+undefined symbol errors during evaluation result in calls to the
+user-definable routine <code>eputs(s)</code> to report the error and
+<code>quit(status)</code> to exit the program. Domain and range errors
+during evaluation set <code>errno</code>, then call the user-definable
+routine <code>wputs(s)</code> to report the error and return zero as the
+expression result. Following are standard routines provided for parsing
+from a file and parsing from a string:</p>
+<dl>
+<dt><code>EPNODE *eparse(char *expr);</code></dt>
+<dd>
+Compile the string expr into a parse tree for later evaluation with
+evalue(ep).
+</dd>
+<dt><code>epfree(EPNODE *ep);</code></dt>
+<dd>
+Free memory associated with ep, including any variables referenced if
+they are no longer defined.
+</dd>
+<dt><code>double eval(char *expr);</code></dt>
+<dd>
+Immediately parse, evaluate and free the given string expression.
+</dd>
+<dt><code>fcompile(char *fname);</code></dt>
+<dd>
+Compile definitions from the given file, or standard input if fname is
+NULL.
+</dd>
+<dt><code>scompile(char *str, char *fn, int ln);</code></dt>
+<dd>
+Compile definitions from the string str, taken from file fn at line
+number ln. If no file is associated, fn can be NULL, and ln can be 0.
+</dd>
+</dl>
+<p>The following routines allow one to control the current context for
+definition lookup and storage:</p>
+<dl>
+<dt><code>char *setcontext(char *ctx);</code></dt>
+<dd>
+Set the current context to ctx. If ctx is NULL, then simply return the
+current context. An empty string sets the global context.
+</dd>
+<dt><code>char *pushcontext(char *name);</code></dt>
+<dd>
+Push another context onto the stack. Return the new (full) context.
+</dd>
+<dt><code>char *popcontext();</code></dt>
+<dd>
+Pop the top context name off the stack. Return the new (full) context.
+</dd>
+</dl>
+<p>The following functions permit the explicit setting of variable and
+function values:</p>
+<dl>
+<dt><code>varset(char *vname, int assign, double val);</code></dt>
+<dd>
+Set the specified variable to the given value, using a constant
+assignment if assign is ‘:’ or a regular one if it is ‘=’. This is
+always faster than compiling a string to do the same thing.
+</dd>
+<dt><code>funset(char *fname, int nargs, int assign, double (*fptr)(char *fn));</code></dt>
+<dd>
+Assign the specified library function, which takes a minimum of nargs
+arguments. The function will have the constant attribute if assign is
+‘:’, or not if it is ‘=’. The only argument to the referenced function
+pointer is the function name, which will equal fname. (This string must
+therefore be declared static.) This offers a convenient method to
+identify calls to an identical function assigned multiple tasks.
+Argument values are obtained with calls back to the argument(n) library
+function.
+</dd>
+</dl>
+<p>The following functions are provided for evaluating a function or
+variable in the current definition set:</p>
+<dl>
+<dt><code>double varvalue(char *vname);</code></dt>
+<dd>
+Evaluate the given variable and return the result. Since a hash lookup
+is necessary to resolve the reference, this is slightly less efficient
+than evaluating a compiled expression via evalue(ep), which uses soft
+links generated and maintained during compilation.
+</dd>
+<dt><code>double funvalue(char *fn, int n, double a);</code></dt>
+<dd>
+Evaluate the function fn, passing n real arguments in the array a. There
+is currently no mechanism for passing functions or function name
+arguments from client programs.
+</dd>
+</dl>
+<p>These routines can be used to check the existence of a specific
+function or variable:</p>
+<dl>
+<dt><code>int vardefined(char *vname);</code></dt>
+<dd>
+Return non-zero if the named variable is defined. (If the symbol is
+defined as a function, zero is returned.)
+</dd>
+<dt><code>int fundefined(char *fname);</code></dt>
+<dd>
+Return the number of required arguments for the named function if it is
+defined, or zero if it is not defined. (If the symbol is defined as a
+variable, zero is returned.)
+</dd>
+</dl>
+<p>These routines allow definitions to be cleared:</p>
+<dl>
+<dt><code>dclear(char *dname);</code></dt>
+<dd>
+Clear the given variable or function, unless it is a constant
+expression.
+</dd>
+<dt><code>dremove(char *dname);</code></dt>
+<dd>
+Clear the given variable or function, even if it is a constant
+expression. Library definitions cannot be removed, except by calling
+funset with a <code>NULL</code> pointer for the function argument.
+</dd>
+<dt><code>dcleanup(int level);</code></dt>
+<dd>
+Clear definitions. If level is 0, then just clear variable definitions.
+If level is 2, then clear constants as well. If the current context is
+local, then only local definitions will be affected. If global, all
+definitions in all contexts will be affected.
+</dd>
+</dl>
+<p>These routines may be used during library function evaluation:</p>
+<dl>
+<dt><code>int nargum();</code></dt>
+<dd>
+Determine the number of arguments available in the current function
+evaluation context.
+</dd>
+<dt><code>double argument(int n);</code></dt>
+<dd>
+Evaluate and return the nth argument.
+</dd>
+<dt><code>char *argfun(n);</code></dt>
+<dd>
+Get the name of the function passed as argument n. (Generates an error
+if the nth argument is not a function.)
+</dd>
+</dl>
+<p>Other, even more specialized routines are provided for controlling
+the parsing process, printing out expressions and sifting through stored
+definitions, but these are not accessed by most client programs. Worth
+noting are the various compile flags that affect which features of the
+expression language are included. The standard library sets the flags
+<code>-DVARIABLE</code>, <code>-DFUNCTION</code>, <code>-DRCONST</code>,
+and <code>-DBIGLIB</code>. Here is a list of compile flags and their
+meanings:</p>
+<dl>
+<dt><code>-DVARIABLE</code></dt>
+<dd>
+Allow user-defined variables and (if <code>-DFUNCTION</code>) user-
+defined functions.
+</dd>
+<dt><code>-DFUNCTION</code></dt>
+<dd>
+Compile in library functions and (if <code>-DVARIABLE</code>) allow
+user-supplied function definitions.
+</dd>
+<dt><code>-DBIGLIB</code></dt>
+<dd>
+Include larger library of standard functions, i.e., standard C math
+library. Otherwise, only minimal library is compiled in, and other
+functions may be added using <code>funset</code>.
+</dd>
+<dt><code>-DRCONST</code></dt>
+<dd>
+Reduce constant subexpressions during compilation. This can result in
+substantial savings during later evaluation, but the original
+user-supplied expressions are lost.
+</dd>
+<dt><code>-DREDEFW</code></dt>
+<dd>
+Issue a warning via <code>wputs(s)</code> if a new definition hides a
+constant definition or library function, or replaces an existing,
+distinct definition for the same symbol. (The <code>varset</code>
+routine never generates warnings, however.)
+</dd>
+<dt><code>-DINCHAN</code></dt>
+<dd>
+Provide for <code>\$N</code> syntax for input channels, which result in
+callbacks to client-supplied chanvalue(n) routine on each evaluation.
+</dd>
+<dt><code>-DOUTCHAN</code></dt>
+<dd>
+Provide for <code>\$N</code> lvalue syntax for output channels, which
+are evaluated via the chanout(cs) library function, which calls
+<code>(*cs)(n, value)</code>for each assigned channel definition.
+</dd>
+</dl>
+<h2 id="data-file-format-.dat-suffix">Data File Format (.dat
+suffix)</h2>
+<p>Although it is possible to store tabular data in a function file
+using the select library function, it is more convenient and efficient
+to devote a special file format to this purpose. <em>Radiance</em> data
+files store scalar values on an N-dimensional rectangular grid. Grid
+(independent) axes may be regularly or irregularly divided, as shown in
+Figure 1. This data is interpolated during rendering (using
+N-dimensional linear interpolation) to compute the desired values.</p>
+<figure>
+<img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDE2MCAxMTAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM6c2VyaWY9Imh0dHA6Ly93d3cuc2VyaWYuY29tLyIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDsiPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMjQ1Ljk2LC01MzQuNjQpIj4KICAgICAgICA8dGV4dCB4PSIyNjcuMTJweCIgeT0iNjM5LjZweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXNpemU6OC44OHB4OyI+MzwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTI0Ni45NiwtNTM0LjY0KSI+CiAgICAgICAgPHRleHQgeD0iMjg1LjEycHgiIHk9IjYzOS42cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zaXplOjguODhweDsiPjU8L3RleHQ+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yNDYuOTYsLTUzNC42NCkiPgogICAgICAgIDx0ZXh0IHg9IjMxMnB4IiB5PSI2MzkuNnB4IiBzdHlsZT0iZm9udC1mYW1pbHk6J1RpbWVzTmV3Um9tYW5QU01UJywgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmO2ZvbnQtc2l6ZTo4Ljg4cHg7Ij4xMDwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTI0Ni45NiwtNTM0LjY0KSI+CiAgICAgICAgPHRleHQgeD0iMzUwLjE2cHgiIHk9IjYzOS42cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zaXplOjguODhweDsiPjE2PC90ZXh0PgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMjQ2Ljk2LC01MzQuNjQpIj4KICAgICAgICA8dGV4dCB4PSIzODAuMTZweCIgeT0iNjM5LjZweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXNpemU6OC44OHB4OyI+MjA8L3RleHQ+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yNDQuOTYsLTUzNC42NCkiPgogICAgICAgIDx0ZXh0IHg9IjI1MS4wNHB4IiB5PSI1NTAuNTZweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXNpemU6OC44OHB4OyI+MC41PC90ZXh0PgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMjQ0Ljk2LC01MzQuNjQpIj4KICAgICAgICA8dGV4dCB4PSIyNDkuMTJweCIgeT0iNjI2LjY0cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zaXplOjguODhweDsiPjAuMTwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTI0NC45NiwtMTU2LjE2KSI+CiAgICAgICAgPHJlY3QgeD0iMjY4LjU2IiB5PSIxNjguNzIiIHdpZHRoPSIxMTQiIGhlaWdodD0iNzYuMDgiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yNDQuOTYsLTE5Ny4yKSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDEiPgogICAgICAgICAgICA8cmVjdCB4PSIyNjguMDgiIHk9IjIyNi41NiIgd2lkdGg9IjExNCIgaGVpZ2h0PSIxLjY4IiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDEpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTE1My44NCwyMjcuMjhMNDk2LjA4LDIyNy4yOCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yNDQuOTYsLTE1OS4yOCkiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXAyIj4KICAgICAgICAgICAgPHJlY3QgeD0iMjY4LjA4IiB5PSIyMDcuNiIgd2lkdGg9IjExNCIgaGVpZ2h0PSIxLjY4IiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDIpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTE1My44NCwyMDguMzJMNDk2LjA4LDIwOC4zMiIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yNDQuOTYsLTExOS40NCkiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXAzIj4KICAgICAgICAgICAgPHJlY3QgeD0iMjY4LjA4IiB5PSIxODcuNjgiIHdpZHRoPSIxMTQiIGhlaWdodD0iMS45MiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXAzKSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNTMuODQsMTg4LjRMNDk2LjA4LDE4OC40IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDAsMSwxLDAsLTE2Ny4yLC0yMzUuMTIpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwNCI+CiAgICAgICAgICAgIDxyZWN0IHg9IjI0Ny40NCIgeT0iMjA2LjE2IiB3aWR0aD0iNzUuODQiIGhlaWdodD0iMi4xNiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA0KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNzEuMTIsMjA3LjM2TDM5OS4xMiwyMDcuMzYiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMCwxLDEsMCwtMTM3LjIsLTI2NS4xMikiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXA1Ij4KICAgICAgICAgICAgPHJlY3QgeD0iMjc3LjQ0IiB5PSIyMDYuMTYiIHdpZHRoPSI3NS44NCIgaGVpZ2h0PSIyLjE2IiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDUpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTIwMS4xMiwyMDcuMzZMNDI5LjEyLDIwNy4zNiIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLDEsMSwwLC05OS4yOCwtMzAzLjA0KSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDYiPgogICAgICAgICAgICA8cmVjdCB4PSIzMTUuMzYiIHk9IjIwNi40IiB3aWR0aD0iNzUuODQiIGhlaWdodD0iMS45MiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA2KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0yMzkuMDQsMjA3LjM2TDQ2Ny4wNCwyMDcuMzYiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4K" alt="Division of axes in .dat file" />
+<figcaption aria-hidden="true">Division of axes in .dat
+file</figcaption>
+</figure>
+<p><strong>Figure 1.</strong> A 2-dimensional grid with one regularly
+divided axis and one irregularly divided axis. Each intersection
+corresponds to a data value that appears in the file.</p>
+<p>Data files are broken into two sections, the header and the body. The
+header specifies the grid, and the body contains the data values in a
+standard order. The first value in the file is a positive integer
+indicating the number of dimensions. Next comes that number of axis
+specifications, in one of two formats. For a regularly divided axis, the
+starting and ending value is given, followed by the number of divisions.
+For an irregularly divided axis, two zeros are followed by the number of
+divisions then that number of division values. The two zeros are merely
+there to indicate an irregular spacing is being specified. Once all the
+axes have been given, the header is done and the body of the file
+begins, which consists of one data value after another. The ordering of
+the data is such that the last axis given is the one being traversed
+most rapidly, similar to a static array assignment in C.</p>
+<p>A file corresponding to the topology shown in Figure 1 is:</p>
+<pre><code>######### Header ########
+2                   # Two-dimensional data array
+0.5 0.1 5           # The regularly spaced axis
+0 0 5 3 5 10 16 20  # The irregularly spaced axis
+########## Body #########
+# The data values, starting with the
+# upper left, moving right then down:
+ 19.089   7.001  14.647   6.3671  8.0003
+  3.8388 11.873  19.294  16.605   2.7435
+ 16.699   6.387   2.8123 16.195  17.615
+ 14.36   14.413  16.184  15.635   4.5403
+  3.6740 14.550  10.332  15.932   1.2678</code></pre>
+<p>Comments begin with a pound sign (‘#’) and continue to the end of the
+line. White space is ignored except as a data separator, thus the
+position of header and data values on each line is irrelevant except to
+improve readability.</p>
+<h3 id="radiance-programs-2"><em>Radiance</em> Programs</h3>
+<p>Table 3 shows <em>Radiance</em> programs that read and write data
+files.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>ies2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert IES luminaire file to <em>Radiance</em></td>
+</tr>
+<tr class="even">
+<td><strong>mgf2rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Convert MGF file to <em>Radiance</em></td>
+</tr>
+<tr class="odd">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td></td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="odd">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td></td>
+<td>Interactive renderer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 3.</strong> Programs in the <em>Radiance</em>
+distribution that read and write data files.</p>
+<h3 id="radiance-c-library-2"><em>Radiance</em> C Library</h3>
+<p>The header file <code>src/rt/data.h</code> gives the standard data
+structures used by the routines in <code>src/rt/data.c</code> for
+reading and interpolating data files. The main data type is
+<code>DATARRAY</code>, which is a structure containing the grid
+specification and a pointer to the data array, which is of the type
+<code>DATATYPE</code> (normally <strong>float</strong> to save
+space).</p>
+<p>The main routine for reading data files is
+<code>getdata(dname)</code>, which searches the standard
+<em>Radiance</em> library locations set by the <code>RAYPATH</code>
+environment variable. The return value is a pointer to the loaded
+<code>DATARRAY</code>, which may have been loaded by a previous call.
+(The routine keeps a hash table of loaded files to minimize time and
+memory requirements.) The <code>freedata(dname)</code> routine frees
+memory associated with the named data file, or all data arrays if
+<code>dname</code> is <code>NULL</code>.</p>
+<p>The routine that interpolates data values is
+<code>datavalue(dp,pt)</code>, which takes a <code>DATARRAY</code>
+pointer and an array of <strong>double</strong>s of the appropriate
+length (the number of dimensions in <code>dp</code>). The
+<strong>double</strong> returned is the interpolated value at that point
+in the scalar field. If the requested point lies outside the data’s
+grid, it is extrapolated from the perimeter values up to a distance of
+one division in each dimension, and falls off harmonically to zero
+outside of that. This was selected as the most robust compromise, but to
+be safe it is generally best to avoid giving out-of-domain points to
+<code>datavalue</code>.</p>
+<h2 id="font-file-format-.fnt-suffix">Font File Format (.fnt
+suffix)</h2>
+<p>Font files are used for text patterns and mixtures, and by the
+<strong>psign</strong> program to generate simple text labels. Each
+character glyph is set up on a simple rectangular coordinate system
+running from [0,255] in x and y, and the glyph itself is a polygon.
+Figure 2 shows an example of the letter “A”.</p>
+<figure>
+<img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDI1MCAyNDAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM6c2VyaWY9Imh0dHA6Ly93d3cuc2VyaWYuY29tLyIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDsiPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMjExLjQsLTE1Ny42OCkiPgogICAgICAgIDx0ZXh0IHg9IjI0MS45MnB4IiB5PSIzNzIuMjRweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXNpemU6OC44OHB4OyI+MDwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTIwOS40LC0xNTEuNjgpIj4KICAgICAgICA8dGV4dCB4PSIyMjguOTZweCIgeT0iMzU1LjJweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXNpemU6OC44OHB4OyI+MDwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTIwOS40LC0xNTEuNjgpIj4KICAgICAgICA8dGV4dCB4PSI0MjcuOTJweCIgeT0iMzY2LjI0cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zaXplOjguODhweDsiPjI1NTwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTIwOS40LC0xNTUuNjgpIj4KICAgICAgICA8dGV4dCB4PSIyMTcuOTJweCIgeT0iMTg4LjE2cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zaXplOjguODhweDsiPjI1NTwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTE5NS41ODYsLTE2NC42OCkiPgogICAgICAgIDx0ZXh0IHg9IjMyMi44cHgiIHk9IjM3NS4xMnB4IiBzdHlsZT0iZm9udC1mYW1pbHk6J1RpbWVzTmV3Um9tYW5QUy1JdGFsaWNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXN0eWxlOml0YWxpYztmb250LXNpemU6OC44OHB4OyI+eDwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTE5Mi40LC0xNTcuMDM2KSI+CiAgICAgICAgPHRleHQgeD0iMjE2cHgiIHk9IjI3My4xMnB4IiBzdHlsZT0iZm9udC1mYW1pbHk6J1RpbWVzTmV3Um9tYW5QUy1JdGFsaWNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXN0eWxlOml0YWxpYztmb250LXNpemU6OC44OHB4OyI+eTwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTIwOC40NCwtNDEwLjE2KSI+CiAgICAgICAgPHJlY3QgeD0iMjQxLjQ0IiB5PSI0NDAuMTYiIHdpZHRoPSIxOTIiIGhlaWdodD0iMTcwLjE2IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMC41MDE1MTgsLTAuODY1MTQ3LC0wLjg2NTE0NywtMC41MDE1MTgsMzg5LjM1MSw2MjAuODUpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwMSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0yMTMuNTUsNTI5LjMwOUwyNDguMjE1LDQ2OS41MUwzNTAuOTk1LDUyOS4wOUwzMTYuMzMsNTg4Ljg4OUwyMTMuNTUsNTI5LjMwOVoiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMSkiPgogICAgICAgICAgICA8cGF0aCBkPSJNNzYuMjI2LDUyOS4zMkw0ODguNzM0LDUyOS4zMiIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yMDkuNCwtNTM5LjA0KSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDIiPgogICAgICAgICAgICA8cmVjdCB4PSIzMTcuMDQiIHk9IjU4OC45NiIgd2lkdGg9IjM2Ljk2IiBoZWlnaHQ9IjEuNjgiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMikiPgogICAgICAgICAgICA8cGF0aCBkPSJNMjc5Ljg0LDU4OS42OEwzOTAuOTYsNTg5LjY4IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDAuNTIzODA1LDAuODUxODM4LDAuODUxODM4LC0wLjUyMzgwNSwtNDc2LjM3NCw1NS4xNzQyKSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDMiPgogICAgICAgICAgICA8cGF0aCBkPSJNNDIwLjk3LDQ3MC4xMjJMNDU4LjY4Myw1MzEuNDU0TDM1OS4zMjUsNTkyLjU1MUwzMjEuNjExLDUzMS4yMTlMNDIwLjk3LDQ3MC4xMjJaIiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDMpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTE4My45MjUsNTMxLjM2TDU5NS44MzUsNTMxLjM2IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KC0xLDAsMCwxLDYwNi4zNiwtMzA1LjI4KSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDQiPgogICAgICAgICAgICA8cmVjdCB4PSIzODkuNzYiIHk9IjQ3Mi4wOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjEuNjgiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwNCkiPgogICAgICAgICAgICA8cGF0aCBkPSJNMzU0LDQ3Mi44TDQ2MS43Niw0NzIuOCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMC41Mjc2ODMsLTAuODQ5NDQxLC0wLjg0OTQ0MSwwLjUyNzY4Myw3ODQuNDYxLDIxMC4zNzkpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwNSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0zNjcuNzE4LDUxMC43MTVMMzU1LjY4Nyw0OTEuMzQ4TDM4Ni44NzgsNDcxLjk3MUwzOTguOTA5LDQ5MS4zMzlMMzY3LjcxOCw1MTAuNzE1WiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA1KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0zMTIuMTM0LDQ5MS4yOEw0NDIuNjY2LDQ5MS4yOCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMSwwLDAsMSw0NjUuNDgsLTM3OS4yKSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDYiPgogICAgICAgICAgICA8cmVjdCB4PSIzMDguODgiIHk9IjUwOS4wNCIgd2lkdGg9IjU3LjEyIiBoZWlnaHQ9IjEuNjgiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwNikiPgogICAgICAgICAgICA8cGF0aCBkPSJNMjUyLDUwOS43Nkw0MjIuODgsNTA5Ljc2IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KC0wLjQ4MTkxOSwwLjg3NjIxNiwwLjg3NjIxNiwwLjQ4MTkxOSwtMTk3LjA1MywtMzQ2LjY2KSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDciPgogICAgICAgICAgICA8cGF0aCBkPSJNMzIwLjg4Nyw0ODkuOTg3TDMxMC4zNjIsNTA5LjEyNEwyNzUuNDU0LDQ4OS45MjRMMjg1Ljk3OSw0NzAuNzg4TDMyMC44ODcsNDg5Ljk4N1oiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwNykiPgogICAgICAgICAgICA8cGF0aCBkPSJNMjI5LjQ4NCw0ODkuODRMMzY2LjQzNiw0ODkuODQiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoLTEsMCwwLDEsMzIzLjQsLTI5OS4wNCkiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXA4Ij4KICAgICAgICAgICAgPHJlY3QgeD0iMjQ1Ljc2IiB5PSI0NjguNzIiIHdpZHRoPSI0MS4wNCIgaGVpZ2h0PSIxLjkyIiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDgpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTIwNC45Niw0NjkuNjhMMzI3Ljg0LDQ2OS42OCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0yMDkuNCwtNDE1LjIpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwOSI+CiAgICAgICAgICAgIDxyZWN0IHg9IjMxNS44NCIgeT0iNTI3LjA0IiB3aWR0aD0iNDIuOTYiIGhlaWdodD0iMS42OCIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA5KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0yNzIuODgsNTI3Ljc2TDQwMiw1MjcuNzYiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNDQ3MjE0LC0wLjg5NDQyNywtMC44OTQ0MjcsMC40NDcyMTQsNzg1LjQ4LDE1OS44MjkpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwMTAiPgogICAgICAgICAgICA8cGF0aCBkPSJNMzM1LjY1MSw1NjUuNjA0TDMyNi43NDIsNTQ3Ljc4N0wzNjIuMzc2LDUyOS45N0wzNzEuMjg1LDU0Ny43ODdMMzM1LjY1MSw1NjUuNjA0WiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXAxMCkiPgogICAgICAgICAgICA8cGF0aCBkPSJNMjgxLjg3OCw1NDcuNjhMNDE2LjA0Miw1NDcuNjgiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMC40NDcyMTQsLTAuODk0NDI3LC0wLjg5NDQyNywtMC40NDcyMTQsNDYwLjYyNCw2MjkuMDgyKSI+CiAgICAgICAgPGNsaXBQYXRoIGlkPSJfY2xpcDExIj4KICAgICAgICAgICAgPHBhdGggZD0iTTMwMy41OTUsNTQ3Ljc4N0wzMTIuNjExLDUyOS43NTZMMzQ4LjI0NSw1NDcuNTczTDMzOS4yMjksNTY1LjYwNEwzMDMuNTk1LDU0Ny43ODdaIiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDExKSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0yNTguODM4LDU0Ny42OEwzOTMuMDAyLDU0Ny42OCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjU2NDM2MSwtMC44MjU1MjgsLTAuODI1NTI4LC0wLjU2NDM2MSw0MTguNDE3LDY3Mi41MDEpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwMTIiPgogICAgICAgICAgICA8cGF0aCBkPSJNMzMxLjE4Niw1NzguNzM5TDMzOS41ODQsNTY2LjQ1NUwzNTcuNDE1LDU3OC42NDVMMzQ5LjAxOCw1OTAuOTI5TDMzMS4xODYsNTc4LjczOVoiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMTIpIj4KICAgICAgICAgICAgPHBhdGggZD0iTTMwNC40MjYsNTc4Ljc2TDM4NC4zNzQsNTc4Ljc2IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg==" alt="Drawing of an A, based on coordinates" />
+<figcaption aria-hidden="true">Drawing of an A, based on
+coordinates</figcaption>
+</figure>
+<p><strong>Figure 2.</strong> A glyph for an “A” character in standard
+font coordinates. Note that the hole is made via a seam, just as with
+<em>Radiance</em> scene polygons. The actual aspect and spacing of the
+character will be determined by the client program.</p>
+<p>Each glyph begins with the decimal value of that character’s index,
+which is 65 for “A” according to the ASCII standard. This is followed by
+the number of vertices, then the vertices themselves in <span class="math inline">(<em>x</em><sub>1</sub>,<em>y</em><sub>1</sub>), (<em>x</em><sub>2</sub>,<em>y</em><sub>2</sub>)</span>
+order. White space again serves as a separator, and comments may begin
+with a pound sign (‘#’) and continue to the end of line. Here is the
+glyph entry for the letter “A” corresponding to Figure 2:</p>
+<pre><code>65   15        # Helvetica &quot;A&quot;
+     155  222  242  48   185  48   168  86
+     83   86   65   48   12   48   101  222
+     155  222  128  179  126  179  97   116
+     155  116  128  179  155  222</code></pre>
+<p>If the number of vertices given is zero, then the character is a
+space. This is not the same as no entry, which means there is no valid
+glyph for that character. Glyphs may appear in any order, with indices
+ranging from 0 to 255. The maximum number of vertices for a single glyph
+is 32767.</p>
+<p>Two standard font files are provided, <code>helvet.fnt</code> and
+<code>hexbit4x1.fnt</code>. The former is a Helvetica font from the
+public domain Hershey font set. The second is a simple bit pattern font
+for hexadecimal encodings of bitmaps.</p>
+<h3 id="radiance-programs-3"><em>Radiance</em> Programs</h3>
+<p>Table 4 shows <em>Radiance</em> programs that read and write font
+files.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>pcompos</strong></td>
+<td>X</td>
+<td></td>
+<td>Compose <em>Radiance</em> pictures</td>
+</tr>
+<tr class="even">
+<td><strong>psign</strong></td>
+<td>X</td>
+<td></td>
+<td>Generate <em>Radiance</em> picture label</td>
+</tr>
+<tr class="odd">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td></td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="odd">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td></td>
+<td>Interactive renderer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 4.</strong> Programs in the <em>Radiance</em>
+distribution that read and write font files.</p>
+<h3 id="radiance-c-library-3"><em>Radiance</em> C Library</h3>
+<p>Similar to data files, font files are usually read and stored in a
+lookup table. The data structures for fonts are in
+<code>src/common/font.h</code>, and the routines for reading and spacing
+them are in <code>src/common/font.c</code>. The main structure type is
+<code>FONT</code>. The routine <code>getfont(fname)</code> loads a font
+file from the <em>Radiance</em> library (set by the <code>RAYPATH</code>
+environment variable), and returns a pointer to the resulting
+<code>FONT</code> structure. If the file has been previously loaded, a
+pointer to the stored structure is returned. The
+<code>freefont(fname)</code> routine frees memory associated with the
+named font file and deletes it from the table, or frees all font data if
+<code>fname</code> is <code>NULL</code>.</p>
+<p>Three different routines are available for text spacing. The
+<code>uniftext(sp,tp,f</code>) function takes the nul-terminated string
+<code>tp</code> and computes uniform per-character spacing for the font
+<code>f</code>, returned in the short integer array <code>sp</code>.
+(This is a fairly simple process, and all spacing values will be 255
+unless a character has no corresponding glyph.) The
+<code>squeeztext(sp,tp,f,cis)</code> performs a similar function, but
+puts only <code>ci</code>s units between adjacent characters, based on
+the actual width of each font glyph. The most sophisticated spacing
+function is <code>proptext(sp,tp,f,cis,nsi)</code>, which produces a
+total line length equal to what it would be with uniform spacing, while
+maintaining equal inter-character spacing throughout (i.e., proportional
+spacing). The <code>nsi</code> argument is the number of spaces
+(zero-vertex glyphs) considered as an indent. That is, if this many or
+more adjacent spaces occur in <code>tp</code>, the indented text
+following will appear at the same point as it would have had the spacing
+been uniform. This maintains columns in tabulated text despite the
+proportional spacing. Tabs are not understood or interpreted by any of
+these routines, and must be expanded to the appropriate number of spaces
+via <strong>expand</strong>.</p>
+<h3 id="octree-format-.oct-suffix">Octree Format (.oct suffix)</h3>
+<p>In <em>Radiance</em>, octrees are used to accelerate ray intersection
+calculations as described by Glassner [Glassner84]. This data structure
+is computed by the <strong>oconv</strong> program, which produces a
+binary file as its output. An octree file contains a list of
+<em>Radiance</em> scene description files (which may be empty), some
+information to guarantee portability between systems and different
+versions of the code, followed by the octree data itself. If the octree
+file is “frozen,” then it will also contain the scene data, compiled
+into a binary format for quick loading. This is most convenient for
+octrees that are used in <em>instance</em> primitives, which may be
+moved to a different (library) location from the originating scene
+files.</p>
+<p>An octree recursively subdivides 3-dimensional space into 8 subtrees,
+hence its name. Each “leaf” node contains between zero and
+<code>MAXSET</code> surface primitives, indicating that section of space
+contains part or all of those surfaces. (Surface primitives may appear
+more than once in the octree.) The goal of <strong>oconv</strong> is to
+build an octree that contains no more than N surfaces in each leaf node,
+where N is set by the <strong>-n</strong> option (5 by default). It may
+allow more surfaces in places where the octree has reached its maximum
+resolution (depth), set by the <strong>-r</strong> option (1024 — depth
+10 by default). Figure 3 shows a quadtree dividing 2-dimensional space,
+analogous to our 3-dimensional octree.</p>
+<figure>
+<img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDQwMCA0MDAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM6c2VyaWY9Imh0dHA6Ly93d3cuc2VyaWYuY29tLyIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDsiPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTI5LjQsLTMzMi44KSI+CiAgICAgICAgPHJlY3QgeD0iMTYwLjgiIHk9IjM2NC4zMiIgd2lkdGg9IjMzOC4xNiIgaGVpZ2h0PSIzMzguMTYiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlOnJnYigyLDE3MSwyMzQpO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLDEsMSwwLC0zMzMuODgsLTEyOS41MikiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXAxIj4KICAgICAgICAgICAgPHJlY3QgeD0iMTYwLjgiIHk9IjUzMi44IiB3aWR0aD0iMzM3LjkyIiBoZWlnaHQ9IjIuMTYiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMSkiPgogICAgICAgICAgICA8cGF0aCBkPSJNLTE3Ny42LDUzNEw4MzYuNjQsNTM0IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpyZ2IoMiwxNzEsMjM0KTtzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTEyOS40LC0zMzQpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwMiI+CiAgICAgICAgICAgIDxyZWN0IHg9IjE2MC4zMiIgeT0iNTMzLjI4IiB3aWR0aD0iMzM4LjE2IiBoZWlnaHQ9IjEuNjgiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMikiPgogICAgICAgICAgICA8cGF0aCBkPSJNLTE3Ny42LDUzNEw4MzYuNCw1MzQiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOnJnYigyLDE3MSwyMzQpO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMCwxLDEsMCwtMzM0LjM2LC0yOTgpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwMyI+CiAgICAgICAgICAgIDxyZWN0IHg9IjMyOS4yOCIgeT0iNjE3LjI4IiB3aWR0aD0iMTY4LjcyIiBoZWlnaHQ9IjIuMTYiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwMykiPgogICAgICAgICAgICA8cGF0aCBkPSJNMTU5Ljg0LDYxOC40OEw2NjcuMiw2MTguNDgiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOnJnYigyLDE3MSwyMzQpO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTI5LjQsLTUwNy43NikiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXA0Ij4KICAgICAgICAgICAgPHJlY3QgeD0iMTYwLjMyIiB5PSI2MTkuOTIiIHdpZHRoPSIzMzguMTYiIGhlaWdodD0iMS45MiIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA0KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0tMTc3LjYsNjIwLjg4TDgzNi40LDYyMC44OCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6cmdiKDIsMTcxLDIzNCk7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLDEsMSwwLC01MDYuNDQsLTEyNS45MikiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXA1Ij4KICAgICAgICAgICAgPHJlY3QgeD0iMTU3LjIiIHk9IjYxNy41MiIgd2lkdGg9IjE2OC43MiIgaGVpZ2h0PSIxLjkyIiBjbGlwLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8L2NsaXBQYXRoPgogICAgICAgIDxnIGNsaXAtcGF0aD0idXJsKCNfY2xpcDUpIj4KICAgICAgICAgICAgPHBhdGggZD0iTS0xMi4yNCw2MTguNDhMNDk1LjEyLDYxOC40OCIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6cmdiKDIsMTcxLDIzNCk7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgICAgICA8L2c+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLDEsMSwwLC0zMzguNDQsLTIxMS44NCkiPgogICAgICAgIDxjbGlwUGF0aCBpZD0iX2NsaXA2Ij4KICAgICAgICAgICAgPHJlY3QgeD0iMzI1LjIiIHk9IjU3Ni40OCIgd2lkdGg9Ijg2LjY0IiBoZWlnaHQ9IjEuOTIiIGNsaXAtcnVsZT0ibm9uemVybyIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICAgICAgPGcgY2xpcC1wYXRoPSJ1cmwoI19jbGlwNikiPgogICAgICAgICAgICA8cGF0aCBkPSJNMjM3Ljg0LDU3Ny40NEw0OTguOTYsNTc3LjQ0IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpyZ2IoMiwxNzEsMjM0KTtzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgICAgIDwvZz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTEyOS40LC00MTkuOTIpIj4KICAgICAgICA8Y2xpcFBhdGggaWQ9Il9jbGlwNyI+CiAgICAgICAgICAgIDxyZWN0IHg9IjMyOS41MiIgeT0iNTc2LjI0IiB3aWR0aD0iODQiIGhlaWdodD0iMS42OCIgY2xpcC1ydWxlPSJub256ZXJvIi8+CiAgICAgICAgPC9jbGlwUGF0aD4KICAgICAgICA8ZyBjbGlwLXBhdGg9InVybCgjX2NsaXA3KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0yNDUuNTIsNTc2Ljk2TDQ5Ny41Miw1NzYuOTYiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOnJnYigyLDE3MSwyMzQpO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMCwtMSwtMSwwLDY0OC41Niw0MTUuNjQpIj4KICAgICAgICA8cGF0aCBkPSJNMjI5LjgsNTAxLjI0QzI0Ny42ODUsNTAxLjI0IDI2Mi4yLDUyMi4yNiAyNjIuMiw1NDguMTZDMjYyLjIsNTc0LjA2IDI0Ny42ODUsNTk1LjA4IDIyOS44LDU5NS4wOEMyMTEuOTE1LDU5NS4wOCAxOTcuNCw1NzQuMDYgMTk3LjQsNTQ4LjE2QzE5Ny40LDUyMi4yNiAyMTEuOTE1LDUwMS4yNCAyMjkuOCw1MDEuMjQiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMC4wMDA5MTc0MzEsLTEsLTEsMC4wMDA5MTc0MzEsNjQ1LjYzNyw2NDkuMzY2KSI+CiAgICAgICAgPHBhdGggZD0iTTM0NS4zLDM2NC4wOEMzNjcuNzY4LDM2NC4wNTkgMzg2LjEyNywzOTMuMzQyIDM4Ni4xNiw0MjkuNDQyQzM4Ni4xOTMsNDY1LjU0MyAzNjcuODg4LDQ5NC44NTkgMzQ1LjMsNDk0Ljg4QzMyMi43MTIsNDk0LjkwMSAzMDQuMzUzLDQ2NS42MTggMzA0LjMyLDQyOS41MThDMzA0LjI4NywzOTMuNDE3IDMyMi41OTIsMzY0LjEwMSAzNDUuMTgsMzY0LjA4IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMCwtMSwtMSwwLDc4OCw0MTAuMTIpIj4KICAgICAgICA8cGF0aCBkPSJNMjk2Ljc2LDYwOC43NkMzMjEuNTM0LDYwOC43NiAzNDEuNjQsNjE0LjA4MiAzNDEuNjQsNjIwLjY0QzM0MS42NCw2MjcuMTk4IDMyMS41MzQsNjMyLjUyIDI5Ni43Niw2MzIuNTJDMjcxLjk4Niw2MzIuNTIgMjUxLjg4LDYyNy4xOTggMjUxLjg4LDYyMC42NEMyNTEuODgsNjE0LjA4MiAyNzEuOTg2LDYwOC43NiAyOTYuNzYsNjA4Ljc2IiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoLTAuMDAxMTkwNDgsLTAuOTk5OTk5LC0wLjk5OTk5OSwwLjAwMTE5MDQ4LDkxNy4zNTgsNDkxLjQzMykiPgogICAgICAgIDxwYXRoIGQ9Ik00MDIuMyw1OTMuNjRDNDI1LjAzMyw1OTMuNjEzIDQ0My42MDcsNjE2LjE3IDQ0My42NCw2NDMuOTkxQzQ0My42NzMsNjcxLjgxMiA0MjUuMTUzLDY5NC40MTMgNDAyLjMsNjk0LjQ0QzM3OS40NDcsNjk0LjQ2NyAzNjAuODczLDY3MS45MSAzNjAuODQsNjQ0LjA4OUMzNjAuODA3LDYxNi4yNjkgMzc5LjMyNyw1OTMuNjY3IDQwMi4xOCw1OTMuNjQiIHN0eWxlPSJmaWxsOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMC4wMDA5ODYxOTMsLTEsLTEsMC4wMDA5ODYxOTMsODU3Ljg4OSw1NzYuMjM2KSI+CiAgICAgICAgPHBhdGggZD0iTTQxNC45LDUxMS4yQzQyMC41NDMsNTExLjE5NCA0MjUuMjQ3LDUzOC40NDYgNDI1LjI4LDU3Mi4wM0M0MjUuMzEzLDYwNS42MTMgNDIwLjY2Myw2MzIuODc0IDQxNC45LDYzMi44OEM0MDkuMTM3LDYzMi44ODYgNDA0LjQzMyw2MDUuNjM0IDQwNC40LDU3Mi4wNUM0MDQuMzY3LDUzOC40NjcgNDA5LjAxNyw1MTEuMjA2IDQxNC43OCw1MTEuMiIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KC0wLjAxMjE5NDIsLTAuOTk5OTI2LC0wLjk5OTkyNiwwLjAxMjE5NDIsODI1LjIzMyw0NzcuNzgyKSI+CiAgICAgICAgPHBhdGggZD0iTTM1MC44Miw1OTQuNzE5QzM1Ni43MjcsNTk0LjY0NyAzNjEuNjQ2LDU5Ni43OTEgMzYxLjY3OSw1OTkuNTA3QzM2MS43MTIsNjAyLjIyMiAzNTYuODQ3LDYwNC40ODYgMzUwLjgyLDYwNC41NkMzNDQuNzkzLDYwNC42MzMgMzM5Ljg3NCw2MDIuNDg5IDMzOS44NDEsNTk5Ljc3M0MzMzkuODA4LDU5Ny4wNTcgMzQ0LjY3Myw1OTQuNzk0IDM1MC43LDU5NC43MiIgc3R5bGU9ImZpbGw6bm9uZTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6YmxhY2s7c3Ryb2tlLXdpZHRoOjAuOTZweDsiLz4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDAsLTEsLTEsMCw3NzEuNDQsNTcwLjY4KSI+CiAgICAgICAgPHBhdGggZD0iTTM2OC43Niw1MDguMkMzODEuMDgxLDUwOC4yIDM5MS4wOCw1MTguODk4IDM5MS4wOCw1MzIuMDhDMzkxLjA4LDU0NS4yNjIgMzgxLjA4MSw1NTUuOTYgMzY4Ljc2LDU1NS45NkMzNTYuNDM5LDU1NS45NiAzNDYuNDQsNTQ1LjI2MiAzNDYuNDQsNTMyLjA4QzM0Ni40NCw1MTguODk4IDM1Ni40MzksNTA4LjIgMzY4Ljc2LDUwOC4yIiBzdHlsZT0iZmlsbDpub25lO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MC45NnB4OyIvPgogICAgPC9nPgo8L3N2Zz4K" alt="A quadtree dividing two-dimensional space" />
+<figcaption aria-hidden="true">A quadtree dividing two-dimensional
+space</figcaption>
+</figure>
+<p><strong>Figure 3.</strong> An example quadtree divided so that no
+leaf node contains more than 2 objects. A three-dimensional octree works
+the same way. Each leaf node is either empty, or contains a list of
+intersecting surfaces.</p>
+<h3 id="basic-file-structure-1">Basic File Structure</h3>
+<p>An octree file is divided into five sections: the information header,
+the scene boundaries, the scene file names, the octree data structure,
+and the compiled scene data. If the octree is frozen, then the compiled
+scene data is included and the scene file names are not. Otherwise, the
+scene data is left off.</p>
+<h4 id="information-header">Information Header</h4>
+<p>As with other binary <em>Radiance</em> formats, the beginning of an
+octree file is the information header. The first line is “#?RADIANCE” to
+aid in identification by the UNIX <strong>file</strong> program.
+Following this is the <strong>oconv</strong> command (or commands) used
+to produce the octree, then a line indicating the format,
+<code>FORMAT=Radiance_octree</code>. The end of the information header
+is always an empty line. Here is an example of an octree information
+header, as reported by <strong>getinfo</strong>:</p>
+<pre><code>#?RADIANCE
+oconv model.b90 desk misc
+oconv -f -i modelb.oct window blinds lights lamp
+FORMAT=Radiance_octree</code></pre>
+<p>The actual content of this header is ignored when an octree is read
+except for the <code>FORMAT</code> line, which if it appears must match
+the one shown above.</p>
+<h4 id="scene-boundaries">Scene Boundaries</h4>
+<p>After the information header, there is a magic number indicating the
+format version and the size of object indices (in bytes per index). This
+is a two-byte quantity, which must be one of the following in the
+current release:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>285</td>
+<td>Two-byte object indices.</td>
+</tr>
+<tr class="even">
+<td>287</td>
+<td>Four-byte object indices.</td>
+</tr>
+<tr class="odd">
+<td>291</td>
+<td>Eight-byte object indices. (Only supported on architectures with
+64-bit <strong>longs</strong>.)</td>
+</tr>
+</tbody>
+</table>
+<p>Technically, the code will also support odd-sized integers, but they
+are not found on any existing machine architectures so we can forget
+about them.</p>
+<p>Following the octree magic number, we have the enclosing cube for the
+scene, which defines the dimensions of the octree’s root node. The cube
+is aligned along the world coordinate axes, so may be defined by one
+corner (the 3-dimensional minimum) and the side length. For historical
+reasons, these four values are stored as ASCII-encoded real values in
+nul-terminated strings. (The octree boundaries may also be read using
+<strong>getinfo</strong> with the <strong>-d</strong> option.)</p>
+<h4 id="scene-file-names">Scene File Names</h4>
+<p>Following the octree dimensions, the names of the scene description
+files are given, each stored a nul-terminated string. The end of this
+file list is indicated by an empty string. If the octree is “frozen,”
+meaning it contains the compiled scene information as well, then no file
+names will be present (i.e., the first string will be empty).</p>
+<h4 id="octree-data-structure">Octree Data Structure</h4>
+<p>After the scene description files, an N-byte integer indicates the
+total number of primitives given to <strong>oconv</strong>, where N is
+the size derived from the magic number as we described. This object
+count will be used to verify that the files have not changed
+significantly since the octree was written<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<p>After the primitive count, the actual octree is stored, using the
+following recursive procedure:</p>
+<pre><code>puttree(ot) begin
+if ot is a tree then
+               write the character &#39;\002&#39;
+call puttree on each child node (0-7) else if ot is empty then
+               write the character &#39;\000&#39;
+          else
+               write the character &#39;\001&#39;
+               write out the number of surfaces
+               write out each surface&#39;s index
+end
+end puttree</code></pre>
+<p>The number of surfaces and the surface indices are each N-byte
+integers, and the tree node types are single bytes. Reading the octree
+is accomplished with a complementary procedure.</p>
+<h4 id="compiled-scene-data">Compiled Scene Data</h4>
+<p>If the octree is frozen, then this data structure is followed by a
+compiled version of the scene. This avoids the problems of changes to
+scene files, and allows an octree to be moved conveniently from one
+location and one system to another without worrying about the associated
+scene files.</p>
+<p>The scene data begins with a listing of the defined primitive types.
+This list consists of the name of each type as a nul-terminated string,
+followed by an empty string once the list has been exhausted. This
+permits the indexing of primitive types with a single byte later on,
+without concern about changes to <em>Radiance</em> involving
+<code>src/common/otypes.h</code>.</p>
+<p>The scene primitives are written one at a time. First is a single
+byte with the primitive type index, as determined from the list given
+above. Second is the N-byte modifier index, followed by the primitive’s
+identifier as a nul-terminated string. String arguments start with a
+2-byte integer indicating the argument count, followed by the strings
+themselves, which are nul-terminated. Real arguments next have a 2-byte
+count followed by the real values, each stored as a 4-byte mantissa
+followed by a 1-byte (signed) exponent. (The mantissa is the numerator
+of a fraction of <span class="math inline">2<sup>31</sup> − 1</span>.)
+The end of data is indicated with a -1 value for the object type
+(byte=255).</p>
+<h3 id="radiance-programs-4"><em>Radiance</em> Programs</h3>
+<p>Table 5 shows <em>Radiance</em> programs that read and write octree
+files.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>getinfo</strong></td>
+<td>X</td>
+<td></td>
+<td>Print information header from binary file</td>
+</tr>
+<tr class="even">
+<td><strong>oconv</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Compile <em>Radiance</em> scene description</td>
+</tr>
+<tr class="odd">
+<td><strong>rad</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Render <em>Radiance</em> scene</td>
+</tr>
+<tr class="even">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td></td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="odd">
+<td><strong>rpiece</strong></td>
+<td>X</td>
+<td></td>
+<td>Parallel batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="odd">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td></td>
+<td>Interactive renderer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 5.</strong> Programs in the <em>Radiance</em>
+distribution that read and write octree files.</p>
+<h3 id="radiance-c-library-4"><em>Radiance</em> C Library</h3>
+<p>Since reading an octree file also may involve reading a
+<em>Radiance</em> scene description, some of the same library routines
+are called indirectly. The header file <code>src/common/octree.h</code>
+is needed in addition to the <code>src/common/object.h</code> file. The
+module <code>src/ot/writeoct.c</code> contains the main routines for
+writing an octree to stdout, while <code>src/common/readoct.c</code>
+contains the corresponding routines for reading an octree from a file.
+Both modules access routines in <code>src/common/portio.c</code> for
+reading and writing portable binary data.</p>
+<p>Here is the main call for writing out an octree:</p>
+<dl>
+<dt><code>writeoct(int store, CUBE *scene, char *ofn[]);</code></dt>
+<dd>
+Write the octree stored in scene to stdout, assuming the header has
+already been written. The flags in store determine what will be
+included. Normally, this variable is one of <code>IO_ALL</code> or
+<code>(IO_ALL &amp; ~IO_FILES)</code> correspondingto writing a normal
+or a frozen octree, respectively.
+</dd>
+</dl>
+<p>Here is the main call for reading in an octree:</p>
+<dl>
+<dt><code>readoct(char *fname, int load, CUBE *scene, char *ofn[]);</code></dt>
+<dd>
+Read the octree file fname into scene, saving scene file names in the
+ofn array. What is loaded depends on the flags in load,which may be one
+or more of <code>IO_CHECK</code>, <code>IO_INFO</code>,
+<code>IO_SCENE</code>, <code>IO_TREE</code>, <code>IO_FILES</code> and
+<code>IO_BOUNDS</code>. These correspond to checking file type and
+consistency, transferring the information header to stdout, loading the
+scene data, loading the octree structure, assigning the scene file names
+to ofn, and assigning the octree cube boundaries. The macro
+<code>IO_ALL</code> includes all of these flags, for convenience.
+</dd>
+</dl>
+<h2 id="picture-file-format-.hdr-suffix">Picture File Format (.hdr
+suffix)</h2>
+<p><em>Radiance</em> pictures<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> differ from standard
+computer graphics images inasmuch as they contain real physical data,
+namely radiance values at each pixel. To do this, it is necessary to
+maintain floating point information, and we use a 4-byte/pixel encoding
+described in Chapter II.5 of <em>Graphics Gems II</em> [Arvo91,p.80].
+The basic idea is to store a 1-byte mantissa for each of three
+primaries, and a common 1-byte exponent. The accuracy of these values
+will be on the order of 1% (±1 in 200) over a dynamic range from
+10<sup>-38</sup> to 10<sup>38</sup>.</p>
+<p>Although <em>Radiance</em> pictures <em>may</em> contain physical
+data, they do not <em>necessarily</em> contain physical data. If the
+rendering did not use properly modeled light sources, or the picture was
+converted from some other format, or custom filtering was applied, then
+the physical data will be invalid. Table 6 lists programs that read and
+write <em>Radiance</em> pictures, with pluses next to the X-marks
+indicating where physical data is preserved (or at least understood).
+Specifically, if the picture file read or written by a program has an
+“X+”, then it has maintained the physical validity of the pixels by
+keeping track of any exposure or color corrections in the appropriate
+header variables, described below.</p>
+<h3 id="basic-file-structure-2">Basic File Structure</h3>
+<p><em>Radiance</em> picture files are divided into three sections: the
+information header, the resolution string, and the scanline records. All
+of these must be present or the file is incomplete.</p>
+<h4 id="information-header-1">Information Header</h4>
+<p>The information header begins with the usual <code>#?RADIANCE</code>
+identifier, followed by one or more lines containing the programs used
+to produce the picture. These commands may be interspersed with
+variables describing relevant information such as the view, exposure,
+color correction, and so on. Variable assignments begin on a new line,
+and the variable name (usually all upper case) is followed by an equals
+sign (‘=’), which is followed by the assigned value up until the end of
+line. Some variable assignments override previous assignments in the
+same header, where other assignments are cumulative. Here are the most
+important variables for <em>Radiance</em> pictures:</p>
+<dl>
+<dt><code>FORMAT</code></dt>
+<dd>
+A line indicating the file’s format. At most one <code>FORMAT</code>
+line is allowed, and it must be assigned a value of either
+<code>32-bit_rle_rgbe</code> or <code>32-bit_rle_xyze</code> to be a
+valid <em>Radiance</em> picture.
+</dd>
+<dt><code>EXPOSURE</code></dt>
+<dd>
+A single floating point number indicating a multiplier that has been
+applied to all the pixels in the file. <code>EXPOSURE</code> values are
+cumulative, so the original pixel values (i.e., radiances in
+w/sr/m<sup>2</sup>) must be derived by taking the values in the file and
+dividing by all the <code>EXPOSURE</code> settings multiplied together.
+No <code>EXPOSURE</code> setting implies that no exposure changes have
+taken place.
+</dd>
+<dt><code>COLORCORR</code></dt>
+<dd>
+A color correction multiplier that has been applied to this picture.
+Similar to the <code>EXPOSURE</code> variable except given in three
+parts for the three primaries. In general, the value should have a
+brightness of unity, so that it does not affect the actual brightness of
+pixels, which should be tracked by <code>EXPOSURE</code> changes
+instead. (This variable is also cumulative.)
+</dd>
+<dt><code>SOFTWARE</code></dt>
+<dd>
+The software version used to create the picture, usually something like
+<code>RADIANCE 3.04 official release July 16, 1996</code>.
+</dd>
+<dt><code>PIXASPECT</code></dt>
+<dd>
+The pixel aspect ratio, expressed as a decimal fraction of the height of
+each pixel to its width. This is not to be confused with the image
+aspect ratio, which is the total height over width. (The image aspect
+ratio is actually equal to the height in pixels over the width in
+pixels, <em>multiplied</em> by the pixel aspect ratio.) These
+assignments are cumulative, so the actual pixel aspect ratio is all
+ratios multiplied together. If no <code>PIXASPECT</code> assignment
+appears, the ratio is assumed to be 1.
+</dd>
+<dt><code>VIEW</code></dt>
+<dd>
+The <em>Radiance</em> view parameters used to create this picture.
+Multiple assignments are cumulative inasmuch as new view options add to
+or override old ones.
+</dd>
+<dt><code>PRIMARIES</code></dt>
+<dd>
+The CIE (x,y) chromaticity coordinates of the three (RGB) primaries and
+the white point used to standardize the picture’s color system. This is
+used mainly by the <strong>ra_xyze</strong> program to convert between
+color systems. If no <code>PRIMARIES</code> line appears, we assume the
+standard primaries defined in <code>src/common/color.h</code>, namely
+<code>0.640 0.330 0.290 0.600 0.150 0.060 0.333 0.333</code> for red,
+green, blue and white, respectively.
+</dd>
+</dl>
+<p>As always, the end of the header is indicated by an empty line.</p>
+<h4 id="resolution-string">Resolution String</h4>
+<p>All <em>Radiance</em> pictures have a standard coordinate system,
+which is shown in Figure 4. The origin is always at the lower left
+corner, with the X coordinate increasing to the right, and the Y
+coordinate increasing in the upward direction. The actual ordering of
+pixels in the picture file, however, is addressed by the resolution
+string.</p>
+<figure>
+<img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDM1MCAyMTAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM6c2VyaWY9Imh0dHA6Ly93d3cuc2VyaWYuY29tLyIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDsiPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTI4LjUxOSwtMTk5Ljg0NykiPgogICAgICAgIDx0ZXh0IHg9IjMwOC4yOTVweCIgeT0iMzk0LjhweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFMtSXRhbGljTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zdHlsZTppdGFsaWM7Zm9udC1zaXplOjkuMDY3cHg7Ij54PC90ZXh0PgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTQzLjIwMSwtMTk3LjkwNCkiPgogICAgICAgIDx0ZXh0IHg9IjE4My4zNnB4IiB5PSIzOTMuODRweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFMtSXRhbGljTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zdHlsZTppdGFsaWM7Zm9udC1zaXplOjkuMDY3cHg7Ij4wPC90ZXh0PgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTM5LjIwMSwtMTk0Ljc4NCkiPgogICAgICAgIDx0ZXh0IHg9IjE2OS40NHB4IiB5PSIzODIuOHB4IiBzdHlsZT0iZm9udC1mYW1pbHk6J1RpbWVzTmV3Um9tYW5QUy1JdGFsaWNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXN0eWxlOml0YWxpYztmb250LXNpemU6OS4wNjdweDsiPjA8L3RleHQ+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0xMzcuMjAxLC0xODYuNzg0KSI+CiAgICAgICAgPHRleHQgeD0iMTY3LjQxNXB4IiB5PSIyODcuNzZweCIgc3R5bGU9ImZvbnQtZmFtaWx5OidUaW1lc05ld1JvbWFuUFMtSXRhbGljTVQnLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWY7Zm9udC1zdHlsZTppdGFsaWM7Zm9udC1zaXplOjkuMDY3cHg7Ij55PC90ZXh0PgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMSwwLDAsMSwtMTM5LjIwMSwtMTk0Ljc4NCkiPgogICAgICAgIDx0ZXh0IHg9IjE2Mi4zMDZweCIgeT0iMjExLjY4cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTLUl0YWxpY01UJywgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmO2ZvbnQtc3R5bGU6aXRhbGljO2ZvbnQtc2l6ZTo5LjA2N3B4OyI+bjwvdGV4dD4KICAgICAgICA8dGV4dCB4PSIxNjYuODM5cHgiIHk9IjIxMS42OHB4IiBzdHlsZT0iZm9udC1mYW1pbHk6J1RpbWVzTmV3Um9tYW5QUy1JdGFsaWNNVCcsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZjtmb250LXN0eWxlOml0YWxpYztmb250LXNpemU6OS4wNjdweDsiPuKIkjwvdGV4dD4KICAgICAgICA8dGV4dCB4PSIxNzIuNzNweCIgeT0iMjExLjY4cHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTLUl0YWxpY01UJywgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmO2ZvbnQtc3R5bGU6aXRhbGljO2ZvbnQtc2l6ZTo5LjA2N3B4OyI+MTwvdGV4dD4KICAgIDwvZz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTEzOS4yMDEsLTE5NC43ODQpIj4KICAgICAgICA8dGV4dCB4PSI0NTcuMzdweCIgeT0iMzkwLjcycHgiIHN0eWxlPSJmb250LWZhbWlseTonVGltZXNOZXdSb21hblBTLUl0YWxpY01UJywgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmO2ZvbnQtc3R5bGU6aXRhbGljO2ZvbnQtc2l6ZTo5LjA2N3B4OyI+beKIkjE8L3RleHQ+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwxLC0xMzkuMjAxLC0zOTguNTQ0KSI+CiAgICAgICAgPHJlY3QgeD0iMTgxLjkyIiB5PSI0MTIuOCIgd2lkdGg9IjI4Mi45NiIgaGVpZ2h0PSIxNzAuMTYiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlOmJsYWNrO3N0cm9rZS13aWR0aDowLjk2cHg7Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=" alt="Radiance picture coordinate system" />
+<figcaption aria-hidden="true">Radiance picture coordinate
+system</figcaption>
+</figure>
+<p><strong>Figure 4.</strong> The standard coordinate system for an MxN
+picture.</p>
+<p>The resolution string is given as one of the following:</p>
+<dl>
+<dt><code>-Y N +X M</code></dt>
+<dd>
+The standard orientation produced by the renderers, indicating that Y is
+decreasing in the file, and X is increasing. X positions are increasing
+in each scanline, starting with the upper left position in the picture
+and moving to the upper right initially, then on down the picture. Some
+programs will only handle pictures with this ordering.
+</dd>
+<dt><code>-Y N -X M</code></dt>
+<dd>
+The X ordering has been reversed, effectively flipping the image left to
+right from the standard ordering.
+</dd>
+<dt><code>+Y N -X M</code></dt>
+<dd>
+The image has been flipped left to right and also top to bottom, which
+is the same as rotating it by 180 degrees.
+</dd>
+<dt><code>+Y N +X M</code></dt>
+<dd>
+The image has been flipped top to bottom from the standard ordering.
+</dd>
+<dt><code>+X M +Y N</code></dt>
+<dd>
+The image has been rotated 90 degrees clockwise.
+</dd>
+<dt><code>-X M +Y N</code></dt>
+<dd>
+The image has been rotated 90 degrees clockwise, then flipped top to
+bottom.
+</dd>
+<dt><code>-X M -Y N</code></dt>
+<dd>
+The image has been rotated 90 degrees counter-clockwise.
+</dd>
+<dt><code>+X M -Y N</code></dt>
+<dd>
+The image has been rotate 90 degrees counter-clockwise, then flipped top
+to bottom.
+</dd>
+</dl>
+<p>The reason for tracking all these changes in picture orientation is
+so programs that compute ray origin and direction from the
+<code>VIEW</code> variable in the information header will work despite
+such changes. Also, it can reduce memory requirements on converting from
+other image formats that have a different scanline ordering, such as
+Targa.</p>
+<h4 id="scanline-records">Scanline Records</h4>
+<p><em>Radiance</em> scanlines come in one of three flavors, described
+below:</p>
+<dl>
+<dt>Uncompressed</dt>
+<dd>
+Each scanline is represented by M pixels with 4 bytes per pixel, for a
+total length of 4xM bytes. This is the simplest format to read and
+write, since it has a one-to-one correspondence to an array of
+<code>COLR</code> values.
+</dd>
+<dt>Old run-length encoded</dt>
+<dd>
+Repeated pixel values are indicated by an illegal (i.e., unnormalized)
+pixel that has 1’s for all three mantissas, and an exponent that
+corresponds to the number of times the previous pixel is repeated.
+Consecutive repeat indicators contain higher-order bytes of the count.
+</dd>
+<dt>New run-length encoded</dt>
+<dd>
+In this format, the four scanline components (three primaries and
+exponent) are separated for better compression using adaptive run-length
+encoding (described by Glassner in Chapter II.8 of <em>Graphics Gems
+II</em> [Arvo91,p.89]). The record begins with an unnormalized pixel
+having two bytes equal to 2, followed by the upper byte and the lower
+byte of the scanline length (which must be less than 32768). A run is
+indicated by a byte with its high-order bit set, corresponding to a
+count with excess 128. A non-run is indicated with a byte less than 128.
+The maximum compression ratio using this scheme is better than 100:1,
+but typical performance for <em>Radiance</em> pictures is more like 2:1.
+</dd>
+</dl>
+<p>The physical values these scanlines correspond to depend on the
+format and other information contained in the information header. If the
+<code>FORMAT</code> string indicates RGB data, then the units for each
+primary are spectral radiances over the corresponding waveband, such
+that a pixel value of <span class="math inline">(1,1,1)</span>
+corresponds to a total energy of 1 w/sr/m<sup>2</sup> over the visible
+spectrum. The actual luminance value (in lm/sr/m<sup>2</sup>) can be
+computed from the following formula for the standard <em>Radiance</em>
+RGB primaries:</p>
+<p><span class="math display"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="35.741ex" height="2.843ex" style="vertical-align: -0.838ex;" viewBox="0 -863.1 15388.2 1223.9" role="img" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<path stroke-width="1" id="E1-MJMATHI-4C" d="M228 637Q194 637 192 641Q191 643 191 649Q191 673 202 682Q204 683 217 683Q271 680 344 680Q485 680 506 683H518Q524 677 524 674T522 656Q517 641 513 637H475Q406 636 394 628Q387 624 380 600T313 336Q297 271 279 198T252 88L243 52Q243 48 252 48T311 46H328Q360 46 379 47T428 54T478 72T522 106T564 161Q580 191 594 228T611 270Q616 273 628 273H641Q647 264 647 262T627 203T583 83T557 9Q555 4 553 3T537 0T494 -1Q483 -1 418 -1T294 0H116Q32 0 32 10Q32 17 34 24Q39 43 44 45Q48 46 59 46H65Q92 46 125 49Q139 52 144 61Q147 65 216 339T285 628Q285 635 228 637Z"></path>
+<path stroke-width="1" id="E1-MJMATHI-76" d="M173 380Q173 405 154 405Q130 405 104 376T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Q21 294 29 316T53 368T97 419T160 441Q202 441 225 417T249 361Q249 344 246 335Q246 329 231 291T200 202T182 113Q182 86 187 69Q200 26 250 26Q287 26 319 60T369 139T398 222T409 277Q409 300 401 317T383 343T365 361T357 383Q357 405 376 424T417 443Q436 443 451 425T467 367Q467 340 455 284T418 159T347 40T241 -11Q177 -11 139 22Q102 54 102 117Q102 148 110 181T151 298Q173 362 173 380Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-37" d="M55 458Q56 460 72 567L88 674Q88 676 108 676H128V672Q128 662 143 655T195 646T364 644H485V605L417 512Q408 500 387 472T360 435T339 403T319 367T305 330T292 284T284 230T278 162T275 80Q275 66 275 52T274 28V19Q270 2 255 -10T221 -22Q210 -22 200 -19T179 0T168 40Q168 198 265 368Q285 400 349 489L395 552H302Q128 552 119 546Q113 543 108 522T98 479L95 458V455H55V458Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-39" d="M352 287Q304 211 232 211Q154 211 104 270T44 396Q42 412 42 436V444Q42 537 111 606Q171 666 243 666Q245 666 249 666T257 665H261Q273 665 286 663T323 651T370 619T413 560Q456 472 456 334Q456 194 396 97Q361 41 312 10T208 -22Q147 -22 108 7T68 93T121 149Q143 149 158 135T173 96Q173 78 164 65T148 49T135 44L131 43Q131 41 138 37T164 27T206 22H212Q272 22 313 86Q352 142 352 280V287ZM244 248Q292 248 321 297T351 430Q351 508 343 542Q341 552 337 562T323 588T293 615T246 625Q208 625 181 598Q160 576 154 546T147 441Q147 358 152 329T172 282Q197 248 244 248Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-28" d="M94 250Q94 319 104 381T127 488T164 576T202 643T244 695T277 729T302 750H315H319Q333 750 333 741Q333 738 316 720T275 667T226 581T184 443T167 250T184 58T225 -81T274 -167T316 -220T333 -241Q333 -250 318 -250H315H302L274 -226Q180 -141 137 -14T94 250Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-30" d="M96 585Q152 666 249 666Q297 666 345 640T423 548Q460 465 460 320Q460 165 417 83Q397 41 362 16T301 -15T250 -22Q224 -22 198 -16T137 16T82 83Q39 165 39 320Q39 494 96 585ZM321 597Q291 629 250 629Q208 629 178 597Q153 571 145 525T137 333Q137 175 145 125T181 46Q209 16 250 16Q290 16 318 46Q347 76 354 130T362 333Q362 478 354 524T321 597Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-2E" d="M78 60Q78 84 95 102T138 120Q162 120 180 104T199 61Q199 36 182 18T139 0T96 17T78 60Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-36" d="M42 313Q42 476 123 571T303 666Q372 666 402 630T432 550Q432 525 418 510T379 495Q356 495 341 509T326 548Q326 592 373 601Q351 623 311 626Q240 626 194 566Q147 500 147 364L148 360Q153 366 156 373Q197 433 263 433H267Q313 433 348 414Q372 400 396 374T435 317Q456 268 456 210V192Q456 169 451 149Q440 90 387 34T253 -22Q225 -22 199 -14T143 16T92 75T56 172T42 313ZM257 397Q227 397 205 380T171 335T154 278T148 216Q148 133 160 97T198 39Q222 21 251 21Q302 21 329 59Q342 77 347 104T352 209Q352 289 347 316T329 361Q302 397 257 397Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-35" d="M164 157Q164 133 148 117T109 101H102Q148 22 224 22Q294 22 326 82Q345 115 345 210Q345 313 318 349Q292 382 260 382H254Q176 382 136 314Q132 307 129 306T114 304Q97 304 95 310Q93 314 93 485V614Q93 664 98 664Q100 666 102 666Q103 666 123 658T178 642T253 634Q324 634 389 662Q397 666 402 666Q410 666 410 648V635Q328 538 205 538Q174 538 149 544L139 546V374Q158 388 169 396T205 412T256 420Q337 420 393 355T449 201Q449 109 385 44T229 -22Q148 -22 99 32T50 154Q50 178 61 192T84 210T107 214Q132 214 148 197T164 157Z"></path>
+<path stroke-width="1" id="E1-MJMATHI-72" d="M21 287Q22 290 23 295T28 317T38 348T53 381T73 411T99 433T132 442Q161 442 183 430T214 408T225 388Q227 382 228 382T236 389Q284 441 347 441H350Q398 441 422 400Q430 381 430 363Q430 333 417 315T391 292T366 288Q346 288 334 299T322 328Q322 376 378 392Q356 405 342 405Q286 405 239 331Q229 315 224 298T190 165Q156 25 151 16Q138 -11 108 -11Q95 -11 87 -5T76 7T74 17Q74 30 114 189T154 366Q154 405 128 405Q107 405 92 377T68 316T57 280Q55 278 41 278H27Q21 284 21 287Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-2B" d="M56 237T56 250T70 270H369V420L370 570Q380 583 389 583Q402 583 409 568V270H707Q722 262 722 250T707 230H409V-68Q401 -82 391 -82H389H387Q375 -82 369 -68V230H70Q56 237 56 250Z"></path>
+<path stroke-width="1" id="E1-MJMATHI-67" d="M311 43Q296 30 267 15T206 0Q143 0 105 45T66 160Q66 265 143 353T314 442Q361 442 401 394L404 398Q406 401 409 404T418 412T431 419T447 422Q461 422 470 413T480 394Q480 379 423 152T363 -80Q345 -134 286 -169T151 -205Q10 -205 10 -137Q10 -111 28 -91T74 -71Q89 -71 102 -80T116 -111Q116 -121 114 -130T107 -144T99 -154T92 -162L90 -164H91Q101 -167 151 -167Q189 -167 211 -155Q234 -144 254 -122T282 -75Q288 -56 298 -13Q311 35 311 43ZM384 328L380 339Q377 350 375 354T369 368T359 382T346 393T328 402T306 405Q262 405 221 352Q191 313 171 233T151 117Q151 38 213 38Q269 38 323 108L331 118L384 328Z"></path>
+<path stroke-width="1" id="E1-MJMATHI-62" d="M73 647Q73 657 77 670T89 683Q90 683 161 688T234 694Q246 694 246 685T212 542Q204 508 195 472T180 418L176 399Q176 396 182 402Q231 442 283 442Q345 442 383 396T422 280Q422 169 343 79T173 -11Q123 -11 82 27T40 150V159Q40 180 48 217T97 414Q147 611 147 623T109 637Q104 637 101 637H96Q86 637 83 637T76 640T73 647ZM336 325V331Q336 405 275 405Q258 405 240 397T207 376T181 352T163 330L157 322L136 236Q114 150 114 114Q114 66 138 42Q154 26 178 26Q211 26 245 58Q270 81 285 114T318 219Q336 291 336 325Z"></path>
+<path stroke-width="1" id="E1-MJMAIN-29" d="M60 749L64 750Q69 750 74 750H86L114 726Q208 641 251 514T294 250Q294 182 284 119T261 12T224 -76T186 -143T145 -194T113 -227T90 -246Q87 -249 86 -250H74Q66 -250 63 -250T58 -247T55 -238Q56 -237 66 -225Q221 -64 221 250T66 725Q56 737 55 738Q55 746 60 749Z"></path>
+</defs>
+<g stroke="currentColor" fill="currentColor" stroke-width="0" transform="matrix(1 0 0 -1 0 0)">
+ <use xlink:href="#E1-MJMATHI-4C" x="0" y="0"></use>
+ <use transform="scale(0.707)" xlink:href="#E1-MJMATHI-76" x="963" y="-213"></use>
+ <use xlink:href="#E1-MJMAIN-3D" x="1402" y="0"></use>
+<g transform="translate(2458,0)">
+ <use xlink:href="#E1-MJMAIN-31"></use>
+ <use xlink:href="#E1-MJMAIN-37" x="500" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-39" x="1001" y="0"></use>
+</g>
+ <use xlink:href="#E1-MJMAIN-28" x="3960" y="0"></use>
+<g transform="translate(4349,0)">
+ <use xlink:href="#E1-MJMAIN-30"></use>
+ <use xlink:href="#E1-MJMAIN-2E" x="500" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-32" x="779" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-36" x="1279" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-35" x="1780" y="0"></use>
+</g>
+ <use xlink:href="#E1-MJMATHI-72" x="6630" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-2B" x="7304" y="0"></use>
+<g transform="translate(8304,0)">
+ <use xlink:href="#E1-MJMAIN-30"></use>
+ <use xlink:href="#E1-MJMAIN-2E" x="500" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-36" x="779" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-37" x="1279" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-30" x="1780" y="0"></use>
+</g>
+ <use xlink:href="#E1-MJMATHI-67" x="10585" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-2B" x="11288" y="0"></use>
+<g transform="translate(12288,0)">
+ <use xlink:href="#E1-MJMAIN-30"></use>
+ <use xlink:href="#E1-MJMAIN-2E" x="500" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-30" x="779" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-36" x="1279" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-35" x="1780" y="0"></use>
+</g>
+ <use xlink:href="#E1-MJMATHI-62" x="14569" y="0"></use>
+ <use xlink:href="#E1-MJMAIN-29" x="14998" y="0"></use>
+</g>
+</svg>
+</span></p>
+<p>The value of 179 lm/w is the standard <em>luminous efficacy</em> of
+equal-energy white light that is defined and used by <em>Radiance</em>
+specifically for this conversion. This and the other values above are
+defined in <code>src/common/color.h</code>, and the above formula is
+given as a macro, <code>luminance(col)</code>.</p>
+<p>If the <code>FORMAT</code> string indicates XYZ data, then the units
+of the Y primary are already lm/sr/m<sup>2</sup>, so the above
+conversion is unnecessary.</p>
+<h3 id="radiance-programs-5"><em>Radiance</em> programs</h3>
+<p>Table 6 shows the many programs that read and write <em>Radiance</em>
+pictures.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>falsecolor</strong></td>
+<td>X+</td>
+<td>X</td>
+<td>Create false color image</td>
+</tr>
+<tr class="even">
+<td><strong>findglare</strong></td>
+<td>X+</td>
+<td></td>
+<td>Find sources of discomfort glare</td>
+</tr>
+<tr class="odd">
+<td><strong>getinfo</strong></td>
+<td>X</td>
+<td></td>
+<td>Print information header from binary file</td>
+</tr>
+<tr class="even">
+<td><strong>macbethcal</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Compute image color &amp; contrast correction</td>
+</tr>
+<tr class="odd">
+<td><strong>normpat</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Normalize picture for use as pattern tile</td>
+</tr>
+<tr class="even">
+<td><strong>objpict</strong></td>
+<td></td>
+<td>X</td>
+<td>Generate composite picture of object</td>
+</tr>
+<tr class="odd">
+<td><strong>pcomb</strong></td>
+<td>X+</td>
+<td>X</td>
+<td>Perform arbitrary math on picture(s)</td>
+</tr>
+<tr class="even">
+<td><strong>pcond</strong></td>
+<td>X+</td>
+<td>X</td>
+<td>Condition a picture for display</td>
+</tr>
+<tr class="odd">
+<td><strong>pcompos</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Composite pictures</td>
+</tr>
+<tr class="even">
+<td><strong>pextrem</strong></td>
+<td>X+</td>
+<td></td>
+<td>Find minimum and maximum pixels</td>
+</tr>
+<tr class="odd">
+<td><strong>pfilt</strong></td>
+<td>X+</td>
+<td>X+</td>
+<td>Filter and anti-alias picture</td>
+</tr>
+<tr class="even">
+<td><strong>pflip</strong></td>
+<td>X+</td>
+<td>X+</td>
+<td>Flip picture left-right and/or top-bottom</td>
+</tr>
+<tr class="odd">
+<td><strong>pinterp</strong></td>
+<td>X+</td>
+<td>X+</td>
+<td>Interpolate/extrapolate picture views</td>
+</tr>
+<tr class="even">
+<td><strong>protate</strong></td>
+<td>X+</td>
+<td>X+</td>
+<td>Rotate picture 90 degrees clockwise</td>
+</tr>
+<tr class="odd">
+<td><strong>psign</strong></td>
+<td></td>
+<td>X</td>
+<td>Create text picture</td>
+</tr>
+<tr class="even">
+<td><strong>pvalue</strong></td>
+<td>X+</td>
+<td>X+</td>
+<td>Convert picture to/from simpler formats</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_avs</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from AVS image format</td>
+</tr>
+<tr class="even">
+<td><strong>ra_pict</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Macintosh PICT2 format</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_ppm</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Poskanzer Port. Pixmap</td>
+</tr>
+<tr class="even">
+<td><strong>ra_pr</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Sun 8-bit rasterfile</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_pr24</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Sun 24-bit rasterfile</td>
+</tr>
+<tr class="even">
+<td><strong>ra_ps</strong></td>
+<td>X</td>
+<td></td>
+<td>Convert to B&amp;W or color PostScript</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_rgbe</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from uncompressed picture</td>
+</tr>
+<tr class="even">
+<td><strong>ra_t8</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Targa 8-bit format</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_t16</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from Targa 16-bit and 24-bit</td>
+</tr>
+<tr class="even">
+<td><strong>ra_tiff</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from TIFF 8-bit and 24-bit</td>
+</tr>
+<tr class="odd">
+<td><strong>ra_xyze</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert to/from CIE primary picture</td>
+</tr>
+<tr class="even">
+<td><strong>rad</strong></td>
+<td></td>
+<td>X+</td>
+<td>Render Radiance scene</td>
+</tr>
+<tr class="odd">
+<td><strong>ranimate</strong></td>
+<td></td>
+<td>X+</td>
+<td>Animate Radiance scene</td>
+</tr>
+<tr class="even">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td>X+</td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="odd">
+<td><strong>rpiece</strong></td>
+<td>X</td>
+<td>X+</td>
+<td>Parallel batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td>X+</td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="odd">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td>X+</td>
+<td>Interactive renderer</td>
+</tr>
+<tr class="even">
+<td><strong>vwright</strong></td>
+<td>X</td>
+<td></td>
+<td>Get view parameters and shift them</td>
+</tr>
+<tr class="odd">
+<td><strong>xglaresrc</strong></td>
+<td>X</td>
+<td></td>
+<td>Display glare sources from <strong>findglare</strong></td>
+</tr>
+<tr class="even">
+<td><strong>ximage</strong></td>
+<td>X+</td>
+<td></td>
+<td>Display <em>Radiance</em> picture under <em>X11</em></td>
+</tr>
+<tr class="odd">
+<td><strong>xshowtrace</strong></td>
+<td>X</td>
+<td></td>
+<td>Show ray traces on <em>X11</em> display</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 6.</strong> <em>Radiance</em> programs that read and
+write picture files. Pluses indicate when a program makes use of or
+preserves physical pixel values.</p>
+<h3 id="radiance-c-library-5"><em>Radiance</em> C Library</h3>
+<p>There are a fair number of routines for reading, writing and
+manipulating <em>Radiance</em> pictures. If you want to write a
+converter to or from a 24-bit image format, you can follow the skeletal
+example in <code>src/px/ra_skel.c</code>. This has all of the basic
+functionality of the other <strong>ra_*</strong> image conversion
+programs, with the actual code for the destination type removed (or
+simplified). The method in <code>ra_skel</code> uses the routines in
+<code>src/common/colrops.c</code> to avoid conversion to machine
+floating point, which can slow things down and is not necessary in this
+case.</p>
+<p>Below we describe routines for reading and writing pictures, which
+rely heavily on definitions in <code>src/common/color.h</code>. We start
+with the calls for manipulating information headers, followed by the
+calls for resolution strings, then the calls for scanline records.</p>
+<p>Information headers are manipulated with the routines in
+<code>src/common/header.c</code> and the macros in <code>color.h</code>.
+Features for handing views are defined in <code>src/common/view.h</code>
+with routines in <code>src/common/image.c</code>. Here are the relevant
+calls for reading and copying information headers:</p>
+<dl>
+<dt><code>int checkheader(FILE *fin, char *fmt, FILE *fout);</code></dt>
+<dd>
+Read the header information from <code>fin</code>, copying to
+<code>fout</code> (unless fout is <code>NULL</code>), checking any
+<code>FORMAT</code> line against the string <code>fmt</code>. The
+<code>FORMAT</code> line (if it exists) will not be copied to
+<code>fout</code>. The function returns 1 if the header was OK and the
+format matched, 0 if the header was OK but there was no format line, and
+-1 if the format line did not match or there was some problem reading
+the header. Wildcard characters (‘*’ and ‘?’) may appear in
+<code>fmt</code>, in which case a globbing match is applied, and the
+matching format value will be copied to fmt upon success. The normal
+<code>fmt</code> values for pictures are <code>COLRFMT</code> for
+<em>Radiance</em> RGB, <code>CIEFMT</code> for 4-byte XYZ pixels, or a
+copy of <code>PICFMT</code> for glob matches to either. (Do not pass
+<code>PICFMT</code> directly, as this will cause an illegal memory
+access on systems that store static strings in read-only memory.)
+</dd>
+<dt><code>int getheader(FILE *fp, int (*f)(), char *p);</code></dt>
+<dd>
+For those who need more control, <code>getheader</code> reads the header
+from <code>fp</code>, calling the function <code>f</code> (if
+not<code>NULL</code>) with each input line and the client data pointer
+<code>p</code>. A simple call to skip the header is
+<code>getheader(fp,NULL,NULL)</code>. To copy the header unconditionally
+to <code>stdout</code>, call <code>getheader(fp,fputs,stdout)</code>.
+More often, <code>getheader</code> is called with a client function,
+which checks each line for specific variable settings.
+</dd>
+<dt><code>int isformat(char *s);</code></dt>
+<dd>
+Returns non-zero if the line <code>s</code> is a <code>FORMAT</code>
+assignment.
+</dd>
+<dt><code>int formatval(char *r, char *s);</code></dt>
+<dd>
+Returns the <code>FORMAT</code> value from line <code>s</code> in the
+string <code>r</code>. Returns non-zero if <code>s</code> is a valid
+format line.
+</dd>
+<dt><code>fputformat(char *s, FILE *fp);</code></dt>
+<dd>
+Put format assignment <code>s</code> to the stream <code>fp</code>.
+</dd>
+<dt><code>isexpos(s)</code></dt>
+<dd>
+Macro returns non-zero if the line <code>s</code> is an
+<code>EXPOSURE</code> setting.
+</dd>
+<dt>exposval(s)</dt>
+<dd>
+Macro returns <strong>double</strong> exposure value from line
+<code>s</code>.
+</dd>
+<dt><code>fputexpos(ex,fp)</code></dt>
+<dd>
+Macro** | puts real exposure value <code>ex</code> to stream
+<code>fp</code>.
+</dd>
+<dt><code>iscolcor(s)</code></dt>
+<dd>
+Macro returns non-zero if the line <code>s</code> is a
+<code>COLORCORR</code> setting.
+</dd>
+<dt><code>colcorval(cc,s)</code></dt>
+<dd>
+Macro assign color correction value from line <code>s</code> in the
+<code>COLOR</code> variable <code>cc</code>.
+</dd>
+<dt><code>fputcolcor(cc,fp)</code></dt>
+<dd>
+Macro puts correction <code>COLOR</code> <code>cc</code> to stream
+<code>fp</code>.
+</dd>
+<dt><code>isaspect(s)</code></dt>
+<dd>
+Macro returns non-zero if the line <code>s</code> is a
+<code>PIXASPECT</code> setting.
+</dd>
+<dt><code>aspectval(s)</code></dt>
+<dd>
+Macro returns double pixel aspect value from line <code>s</code>.
+</dd>
+<dt><code>fputaspect(pa,fp)</code></dt>
+<dd>
+Macro puts real pixel aspect value <code>pa</code> to stream
+<code>fp</code>.
+</dd>
+<dt><code>int isview(char *s);</code></dt>
+<dd>
+Returns non-zero if header line <code>s</code> contains view parameters.
+Note that `<code>s</code> could be either a <code>VIEW</code> assignment
+or a rendering command.
+</dd>
+<dt><code>int sscanview(VIEW *vp, char *s);</code></dt>
+<dd>
+Scan view options from the string <code>s</code> into the
+<code>VIEW</code> structure pointed to by <code>vp</code>.
+</dd>
+<dt><code>fprintview(VIEW *vp, FILE *fp);</code></dt>
+<dd>
+Print view options in <code>vp</code> to the stream <code>fp</code>.
+Note that this does not print out “VIEW=” first, or end the line.
+Therefore, one usually calls <code>fputs(VIEWSTR,fp)</code> followed by
+<code>fprintview(vp,fp)</code>, then <code>putc(&#39;\n&#39;,fp)</code>.
+</dd>
+<dt><code>isprims(s)</code></dt>
+<dd>
+Macro returns non-zero if the line <code>s</code> is a
+<code>PRIMARIES</code> setting.
+</dd>
+<dt><code>primsval(p,s)</code></dt>
+<dd>
+Macro assign color primitives from line <code>s</code> in the
+<code>RGBPRIMS</code> variable <code>p</code>.
+</dd>
+<dt><code>fputprims(p,fp)</code></dt>
+<dd>
+Macro puts color primitives <code>p</code> to stream <code>fp</code>.
+</dd>
+</dl>
+<p>The header file <code>src/common/resolu.h</code> has macros for
+resolution strings, which are handled by routines in
+<code>src/common/resolu.c</code>. Here are the relevant calls:</p>
+<dl>
+<dt><code>fgetsresolu(rs,fp)</code></dt>
+<dd>
+Macro to get a resolution string from the stream <code>fp</code> and put
+it in the <code>RESOLU</code> structure pointed to by <code>rs</code>.
+The return value is non-zero if the resolution was successfully loaded.
+</dd>
+<dt><code>fputsresolu(rs,fp)</code></dt>
+<dd>
+Macro to write the <code>RESOLU</code> structure pointed to by rs to the
+stream fp.
+</dd>
+<dt><code>scanlen(rs)</code></dt>
+<dd>
+Macro to get the scanline length from the <code>RESOLU</code> structure
+pointed to by <code>rs</code>.
+</dd>
+<dt><code>numscans(rs)</code></dt>
+<dd>
+Macro to get the number of scanlines from the <code>RESOLU</code>
+structure pointed to by <code>rs</code>.
+</dd>
+<dt><code>fscnresolu(slp,nsp,fp)</code></dt>
+<dd>
+Macro to read in a resolution string from <code>fp</code> and assign the
+scanline length and number of scanlines to the integers pointed to by
+<code>slp</code> and <code>nsp</code>, respectively. This call expects
+standard English-text ordered scanlines, and returns non-zero only if
+the resolution string agrees.
+</dd>
+<dt><code>fprtresolu(sl,ns,fp)</code></dt>
+<dd>
+Macro to print out a resolution string for <code>ns</code> scanlines of
+length <code>sl</code> in standard English-text ordering to
+<code>fp</code>.
+</dd>
+</dl>
+<p>The file <code>src/common/color.c</code> contains the essential
+routines for reading and writing scanline records. Here are the relevant
+calls and macros:</p>
+<dl>
+<dt><code>int freadcolrs(COLR *scn, int sl, FILE *fp);</code></dt>
+<dd>
+Read a scanline record of length <code>sl</code> from stream
+<code>fp</code> into the <code>COLR</code> array <code>scn</code>.
+Interprets uncompressed, old, and new run-length encoded records.
+Returns 0 on success, -1 on failure.
+</dd>
+<dt><code>int fwritecolrs(COLR *scn, int sl, FILE *fp);</code></dt>
+<dd>
+Write the scanline record stored in the <code>COLR</code> array
+<code>scn</code>, length <code>sl</code>, to the stream <code>fp</code>.
+Uses the new run-length encoding unless <code>sl</code> is less than 8
+or greater than 32767, when an uncompressed record is written. Returns 0
+on success, -1 if there was an error.
+</dd>
+<dt><code>int freadscan(COLOR *fscn, int sl, FILE *fp);</code></dt>
+<dd>
+Reads a scanline of length <code>sl</code> from the stream
+<code>fp</code> and converts to machine floating-point format in the
+array <code>fscn</code>. Recognizes all scanline record encodings.
+Returns 0 on success, or -1 on failure.
+</dd>
+<dt><code>int fwritescan(COLOR *fscn, int sl, FILE *fp);</code></dt>
+<dd>
+Write the floating-point scanline of length <code>sl</code> stored in
+the array fscn to the stream <code>fp</code>. Converts to 4-byte/pixel
+scanline format and calls <code>fwritecolrs</code> to do the actual
+write. Returns 0 on success, or -1 if there was an error.
+</dd>
+<dt><code>colval(col,p)</code></dt>
+<dd>
+Macro to get primary p from the floating-point <code>COLOR col</code>.
+The primary index may be one of <code>RED</code>, <code>GRN</code> or
+<code>BLU</code> for RGB colors, or CIEX, CIEY or CIEZ for XYZ colors.
+This macro is a valid lvalue, so can be used on the left of assignment
+statements as well.
+</dd>
+<dt><code>colrval(clr,p)</code></dt>
+<dd>
+Macro to get primary <code>p</code> from the 4-byte <code>COLR</code>
+pixel <code>clr</code>. The primary index may be one of RED, GRN or BLU
+for RGB colors, or CIEX, CIEY or CIEZ for XYZ colors. Unless just one
+primary is needed, it is more efficient to call <code>colr_color</code>
+and use the <code>colval</code> macro on the result.
+</dd>
+<dt><code>colr_color(COLOR col, COLR clr);</code></dt>
+<dd>
+Convert the 4-byte pixel <code>clr</code> to a machine floating-point
+representation and store the result in <code>col</code>.
+</dd>
+<dt><code>setcolr(COLR clr, double p1, p2, p3);</code></dt>
+<dd>
+Assign the 4-byte pixel <code>clr</code> according to the three primary
+values <code>p1</code>, <code>p2</code> and <code>p3</code>. These can
+be either <em>Radiance</em> RGB values or CIE XYZ values.
+</dd>
+</dl>
+<h2 id="z-buffer-format-.zbf-suffix">Z-buffer Format (.zbf suffix)</h2>
+<p>The Z-buffer format used in <em>Radiance</em> hardly qualifies as a
+format at all. It is in fact a straight copy on the 4-byte machine
+floating point values of each pixel in standard scanline order. There is
+no information header or resolution string that would make the file
+independently useful. This is usually OK, because Z-buffer files are
+almost always created and used in conjunction with a picture file, which
+has this identifying information.</p>
+<p>The major shortcoming of this format is that the machine
+representation and byte ordering is not always the same from one system
+to another, which limits the portability of Z-buffer files. Since they
+are primarily used for interpolating animation frames, and this usually
+occurs on networks with similar architectures, there is usually no
+problem. Also, since the adoption of IEEE standard floating-point
+calculations, different machine representations are becoming quite rare.
+[TBD: is this necessary at this point?]</p>
+<h3 id="radiance-programs-6"><em>Radiance</em> programs</h3>
+<p>Table 7 shows the programs that read and write <em>Radiance</em>
+Z-buffer files. The pvalue program may be used to convert Z-buffer files
+to <em>Radiance</em> pictures for the purpose of visualizing the values
+using falsecolor. For example, the following command converts the
+Z-buffer file <code>frame110.zbf</code> associated with the picture
+<code>frame110.hdr</code> to a viewable image:</p>
+<pre><code>% pvalue -h `getinfo -d &lt; frame110.hdr` -r -b -df
+frame110.zbf | falsecolor -m 1 -s 40 -l Meters &gt;
+frame110z.hdr</code></pre>
+<p>The <strong>getinfo</strong> program appearing in back-quotes was
+used to get the dimensions associated with the Z-buffer from its
+corresponding picture file.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>pinterp</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Interpolate/extrapolate picture views</td>
+</tr>
+<tr class="even">
+<td><strong>pvalue</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert picture to/from simpler formats</td>
+</tr>
+<tr class="odd">
+<td><strong>rad</strong></td>
+<td></td>
+<td>X</td>
+<td>Render Radiance scene</td>
+</tr>
+<tr class="even">
+<td><strong>ranimate</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Animate Radiance scene</td>
+</tr>
+<tr class="odd">
+<td><strong>rpict</strong></td>
+<td></td>
+<td>X</td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td></td>
+<td>X</td>
+<td>Customizable ray-tracer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 7.</strong> <em>Radiance</em> programs that read and
+write Z-buffer files.</p>
+<h3 id="radiance-c-library-6"><em>Radiance</em> C Library</h3>
+<p>There are no library functions devoted to reading and writing
+Z-buffer files in particular. The normal method is to read and write
+Z-buffer scanlines with the standard <code>fread</code> and
+<code>fwrite</code> library functions using an appropriate float
+array.</p>
+<h2 id="ambient-file-format-.amb-suffix">Ambient File Format (.amb
+suffix)</h2>
+<p><em>Radiance</em> can store its diffuse interreflection cache in an
+<em>ambient file</em> for reuse by other processes. This file is in a
+system-independent binary format, similar to an octree or picture file,
+with an information header that can be read using
+<strong>getinfo</strong>. Following the header, there is a magic number
+specific to this file type, then the ambient value records themselves in
+encoded form.</p>
+<h4 id="information-header-2">Information Header</h4>
+<p>The information header begins with the usual “#?RADIANCE” identifier,
+followed by the originating program and the ambient calculation
+parameters (and octree name). After this is the line:</p>
+<pre><code> FORMAT=Radiance_ambval</code></pre>
+<p>This identifies the general file type, followed by an empty line
+ending the header. As with most information headers, this exact sequence
+need not be followed, so long as there is no inconsistent
+<code>FORMAT</code> setting.</p>
+<h4 id="magic-number">Magic Number</h4>
+<p>Following the information header is the two-byte magic number, which
+for the current ambient file format is 557. This number may change later
+should the file format be altered in incompatible ways.</p>
+<h4 id="ambient-value-records">Ambient Value Records</h4>
+<p>Ambient values are written to the file in no particular order. Each
+diffuse interreflection value in <em>Radiance</em> has the following
+members:</p>
+<dl>
+<dt>Level</dt>
+<dd>
+The number of reflections between the primary (eye) ray and this
+surface. A value with fewer reflections may be used in place of one with
+more, but not the other way around.
+</dd>
+<dt>Weight</dt>
+<dd>
+The weighting value associated with this ray or ambient value. Similar
+to the level to avoid using inappropriate values from the cache.
+</dd>
+<dt>Position</dt>
+<dd>
+The origin point of this interreflection calculation.
+</dd>
+<dt>Direction</dt>
+<dd>
+The surface normal indicating the zenith of the sample hemisphere for
+this value.
+</dd>
+<dt>Value</dt>
+<dd>
+The calculated indirect irradiance at this point, in w/m<sup>2</sup>
+(RGB color).
+</dd>
+<dt>Radius</dt>
+<dd>
+The cosine-weighted, harmonic mean distance to other surfaces visible
+from this point, used to decide point spacing.
+</dd>
+<dt>Posgradient</dt>
+<dd>
+The position-based gradient vector, indicating how brightness changes as
+a function of position in the sample plane.
+</dd>
+<dt>Dirgradient</dt>
+<dd>
+The direction-based gradient vector, indicating how brightness changes
+as a function of surface orientation.
+</dd>
+</dl>
+<p>The members are stored one after the other in the above order using
+system-independent binary representations. The Level member takes 1
+byte, Weight takes 5, Position takes 15, Direction another 15, Value is
+4 bytes (using the same color format as <em>Radiance</em> pictures),
+Radius takes 5 bytes, and Posgradient and Dirgradient each take 15
+bytes, for a total size of 75 bytes per record.</p>
+<h3 id="radiance-programs-7"><em>Radiance</em> Programs</h3>
+<p>Table 8 shows <em>Radiance</em> programs that read and write ambient
+files. The program <strong>lookamb</strong> is especially useful for
+examining the contents of ambient files and debugging problems in the
+calculation.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Program</th>
+<th>Read</th>
+<th>Write</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>getinfo</strong></td>
+<td>X</td>
+<td></td>
+<td>Print information header from binary file</td>
+</tr>
+<tr class="even">
+<td><strong>lookamb</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Convert <em>Radiance</em> ambient file</td>
+</tr>
+<tr class="odd">
+<td><strong>rad</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Render <em>Radiance</em> scene</td>
+</tr>
+<tr class="even">
+<td><strong>rpict</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Batch rendering program</td>
+</tr>
+<tr class="odd">
+<td><strong>rpiece</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Parallel batch rendering program</td>
+</tr>
+<tr class="even">
+<td><strong>rtrace</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Customizable ray-tracer</td>
+</tr>
+<tr class="odd">
+<td><strong>rview</strong></td>
+<td>X</td>
+<td>X</td>
+<td>Interactive renderer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 8.</strong> Programs in the <em>Radiance</em>
+distribution that read and write ambient files.</p>
+<h3 id="radiance-c-library-7"><em>Radiance</em> C Library</h3>
+<p>The <code>src/rt/ambient.h</code> file contains definitions of the
+<code>AMBVAL</code> structure and certain details of the ambient file
+format. The <code>src/rt/ambio.c</code> module contains the specialized
+routines for reading and writing ambient files, and these functions in
+turn access routines in <code>src/common/portio.c</code> for reading and
+writing portable binary data. The information header is handled by the
+routines in <code>src/common/header.c</code>, similar to the method
+described for <em>Radiance</em> picture files. Here are the main calls
+from <code>src/rt/ambio.c</code>:</p>
+<dl>
+<dt><code>putambmagic(FILE *fp);</code></dt>
+<dd>
+Put out the appropriate two-byte magic number for a <em>Radiance</em>
+ambient file to the stream <code>fp</code>.
+</dd>
+<dt><code>int hasambmagic(FILE *fp);</code></dt>
+<dd>
+Read the next two bytes from the stream <code>fp</code> and return
+non-zero if they match an ambient file’s magic number.
+</dd>
+<dt><code>int writeambval(AMBVAL *av, FILE *fp);</code></dt>
+<dd>
+Write out the ambient value structure <code>av</code> to the stream
+<code>fp</code>, returning -1 if a file error occurred, or 0 normally.
+</dd>
+<dt><code>int readambval(AMBVAL *av, FILE *fp);</code></dt>
+<dd>
+Read in the next ambient value structure from the stream <code>fp</code>
+and put the result in <code>av</code>. Return 1 if the read was
+successful, 0 if the end of file was reached or there was an error. The
+<code>ambvalOK</code> function is used to check the consistency of the
+value read.
+</dd>
+<dt><code>int ambvalOK(AMBVAL *av);</code></dt>
+<dd>
+Return non-zero if the member values of the <code>av</code> structure
+are not too outlandish. This is handy as insurance against a corrupted
+ambient file.
+</dd>
+</dl>
+<h2 id="conclusion">Conclusion</h2>
+<p>We have described the main file formats native to <em>Radiance</em>
+and shown how even the binary formats can be reliably shared in
+heterogeneous computing environments. This corresponds to one of the
+basic philosophies of UNIX software, which is system independence. A
+more detailed understanding of the formats may still require some use of
+binary dump programs and delving into the <em>Radiance</em> source
+code.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The single exception to this rule is the Z-buffer file,
+whose contents are dictated by the floating point representation and
+byte order of the originating machine. This choice was made for economic
+reasons, and is rarely a problem.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>TBD - There once was a footnote here<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Note that we compare <code>n</code> to 1.5, so as to
+avoid any round-off problems caused by floating point math. Caution is
+advised because all expressions are evaluated as double-precision real,
+and comparisons to zero are unreliable.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>It is usually a good idea to store any such customized
+files in a personal library location and set the <code>RAYPATH</code>
+environment variable to search there first. This way, it does not affect
+other users or get overwritten during the next system installation.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Small changes that do not affect geometry will not cause
+problems, but if the primitive count changes, so does the indexing of
+surfaces, and with that the octree data structure becomes invalid. A
+second check is made to insure that no non-surface primitives appear in
+any leaf nodes, and this at least guarantees that the renderer will not
+dump core from an outdated octree, even if the results are wrong.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>The picture filename extension used to be .pic, but that
+conflicted with too many other programs. It was replaced with .hdr, an
+abbreviation of “high dynamic range.”<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>
