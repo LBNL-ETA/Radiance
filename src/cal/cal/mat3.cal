@@ -1,7 +1,11 @@
-{ RCSid $Id: mat3.cal,v 1.2 2009/03/24 01:41:40 greg Exp $ }
+{ RCSid $Id: mat3.cal,v 1.3 2022/12/02 02:04:49 greg Exp $ }
 {
 	3x3 Matrix operations
+
+	i's are rows, j's are columns, indexed from 0
 }
+
+sq(x) : x*x;
 
 MatDot(A,B,i,j) : A(i,0)*B(0,j) + A(i,1)*B(1,j) + A(i,2)*B(2,j);
 
@@ -18,3 +22,19 @@ Det(M) : M(0,0)*MinorDet(M,0,0) +
 
 Inv(M,i,j) : MinorDet(M,j,i) / Det(M);
 
+NormV(v,i) : v(i) / sqrt(sq(v(0))+sq(v(1))+sq(v(2)));
+
+{ Rotation matrix computed from normalized quaternion [W X Y Z] }
+
+NormQ(q,i) : q(i) / sqrt(sq(q(0))+sq(q(1))+sq(q(2))+sq(q(3)));
+
+RotMatQ(q,i,j) : select(3*i+j+1,
+	1 - 2*(sq(q(2))+sq(q(3))),
+		2*(q(1)*q(2) - q(0)*q(3)),
+		2*(q(0)*q(2) + q(1)*q(3)),
+	2*(q(1)*q(2) + q(0)*q(3)),
+		1 - 2*(sq(q(1))+sq(q(3))),
+		2*(q(2)*q(3) - q(0)*q(1)),
+	2*(q(1)*q(3) - q(0)*q(2)),
+		2*(q(0)*q(1) + q(2)*q(3)),
+		1 - 2*(sq(q(1))+sq(q(2))) );
