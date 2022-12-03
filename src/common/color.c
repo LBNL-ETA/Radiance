@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.22 2022/03/05 17:18:02 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.23 2022/12/03 21:37:26 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -108,7 +108,16 @@ fwritecolrs(			/* write out a colr scanline */
 	return(ferror(fp) ? -1 : 0);
 }
 
-
+/*
+ * An old-format scanline is either a stream of valid RGBE or XYZE real
+ * pixels or at least one real pixel followed by some number of
+ * invalid real pixels of the form (1,1,1,n), where n is a count.
+ * These can themselves be repeated to create a multibyte repeat
+ * count, with the least significant byte first (little-endian order.)
+ * Repeat counts are limited by the size of an int; if a repetition
+ * leads to an overrun, the rest of the the repetition will be
+ * silently ignored.
+ */
 static int
 oldreadcolrs(			/* read in an old-style colr scanline */
 	COLR  *scanline,
@@ -146,7 +155,26 @@ oldreadcolrs(			/* read in an old-style colr scanline */
 	return(0);
 }
 
-
+/* 
+ * There are two scanline formats: old and new.  The old format
+ * compresses runs of RGBE or XYZE four-byte real pixels; the new
+ * format breaks the pixels into R, G, B, and E lines (or XYZE lines)
+ * which are individually run-length encoded.
+ *
+ * An old-format scanline always begins with a valid real pixel; at
+ * least one of the RGB (or XYZ) values will have its high-order bit
+ * set.  A new-format scanline begins with four bytes which are not a
+ * valid real pixel: (2, 2, lenhigh, lenlow) where lenhigh is always
+ * less than 128 and hence never has a high-order bit set.
+ *
+ * A new-format scanline is broken into its RGBE or XYZE components.
+ * Each is output and run-length encoded separately so that a scanline
+ * is broken into four records.  In turn, each record is organized
+ * into chunks of up to 128 characters, which begin with a count byte.
+ * If the count byte is greater than 128, the following data byte is
+ * repeated (count-128) times.  If not, the count byte is followed by
+ * that many data bytes.
+ */
 int
 freadcolrs(			/* read in an encoded colr scanline */
 	COLR  *scanline,
