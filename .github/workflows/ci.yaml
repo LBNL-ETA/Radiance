@@ -146,7 +146,7 @@ jobs:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
-          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON'
+          cmakeAppendedArgs: '-DBUILD_PABOPTO_UTILS=ON'
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
