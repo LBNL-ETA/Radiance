@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.35 2022/04/27 01:31:56 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.36 2022/12/04 16:58:08 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -214,7 +214,7 @@ CMATRIX *
 cm_load(const char *inspec, int nrows, int ncols, int dtype)
 {
 	const int	ROWINC = 2048;
-	int		rowsOK = (dtype == DTascii) | (nrows > 0);
+	int		dimsOK = (dtype == DTascii) | (nrows > 0) && ncols;
 	int		swap = 0;
 	FILE		*fp;
 	COLOR		scale;
@@ -241,13 +241,14 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 #endif
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
-	if (!dtype | !rowsOK | !ncols) {	/* expecting header? */
+	if (!dtype | !dimsOK) {			/* expecting header? */
 		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, scale, fp);
 		if (err)
 			error(USER, err);
-		rowsOK = (nrows > 0);
+		dimsOK = ncols > 0 && ( nrows > 0 ||
+				(dtype != DTrgbe) & (dtype != DTxyze) );
 	}
-	if (!rowsOK | !ncols && !fscnresolu(&ncols, &nrows, fp))
+	if (!dimsOK && !fscnresolu(&ncols, &nrows, fp))
 		error(USER, "unspecified matrix size");
 	switch (dtype) {
 	case DTascii:
