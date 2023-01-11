@@ -110,6 +110,7 @@ jobs:
           choco uninstall strawberryperl
           choco install strawberryperl --version 5.30.3.1 --force
           perl -version
+          ls c:\strawberry\c\lib
 
       - name: install perl pp
         run: |
