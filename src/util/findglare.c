@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.16 2022/11/29 20:45:21 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.17 2023/01/15 16:38:10 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -421,7 +421,7 @@ printsources(void)			/* print out glare sources */
 
 	printf("BEGIN glare source\n");
 	for (sp = donelist; sp != NULL; sp = sp->next)
-		printf("\t%f %f %f\t%f\t%f\n",
+		printf("\t%f %f %f\t%e\t%e\n",
 				sp->dir[0], sp->dir[1], sp->dir[2],
 				sp->dom, sp->brt);
 	printf("END glare source\n");
