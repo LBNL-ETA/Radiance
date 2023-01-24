@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.17 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.18 2023/01/24 21:54:49 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 	specthresh = .3;
 	specjitter = 1.;
 	maxdepth = 6;
-	minweight = 1e-2;
+	minweight = 1e-3;
 	ambacc = 0.3;
 	ambres = 32;
 	ambdiv = 256;

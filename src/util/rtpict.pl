@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.25 2022/04/12 00:30:58 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.26 2023/01/24 21:54:49 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -26,7 +26,7 @@ my %vwraysC = ('-vf',1, '-vtv',0, '-vtl',0, '-vth',0, '-vta',0, '-vts',0, '-vtc'
 my %ignoreC = ('-t',1, '-ps',1, '-pt',1, '-pm',1,);
 # Starting options for rtrace (rpict values)
 my @rtraceA = split(' ', 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 ' .
-				'-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03');
+				'-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-04');
 my @vwraysA = ('vwrays', '-pj', '.67');
 my @vwrightA = ('vwright', '-vtv');
 my @rpictA = ('rpict', '-ps', '1');
