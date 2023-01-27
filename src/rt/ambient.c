@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.115 2022/04/25 03:38:30 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.116 2023/01/27 19:57:08 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -456,7 +456,7 @@ sumambient(		/* get interpolated ambient value */
 		 */
 		VSUB(ck0, r->rop, av->pos);
 		d = DOT(ck0, uvw[2]);
-		if (d < -minarad*ambacc-.001)
+		if (d < -minarad*ambacc)
 			continue;
 		d /= av->rad[0];
 		delta_t2 = d*d;
