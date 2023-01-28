@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.116 2023/01/27 19:57:08 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.117 2023/01/28 19:08:56 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -46,7 +46,7 @@ static long  lastpos = -1;		/* last flush position */
 
 #define	 newambval()	(AMBVAL *)malloc(sizeof(AMBVAL))
 
-#define  tfunc(lwr, x, upr)	(((x)-(lwr))/((upr)-(lwr)))
+#define  tfunc(x0, x, x1)	(((x)-(x0))/((x1)-(x0)))
 
 static void initambfile(int creat);
 static void avsave(AMBVAL *av);
@@ -424,7 +424,7 @@ sumambient(		/* get interpolated ambient value */
 							at->kid+i, ck0, s);
 		}
 					/* good enough? */
-		if (wsum >= 0.05 && s > minarad*10.0)
+		if ((wsum >= 0.05) & (s*ambacc > minarad))
 			return(wsum);
 	}
 					/* adjust maximum angle */
