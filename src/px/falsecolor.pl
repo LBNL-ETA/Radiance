@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.24 2022/11/21 21:39:40 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.25 2023/02/01 18:18:10 greg Exp $
 
 use warnings;
 use strict;
@@ -391,8 +391,7 @@ if ($overlayWH[0] && $overlayWH[1]) {
     @picWH = ($picWH[3], $picWH[1]);
     if ($#overlayRect != 3) {
     	@overlayRect = (0, 0, @picWH);
-    }
-    if ($overlayRect[2] <= $overlayRect[0] ||
+    } elsif ($overlayRect[2] <= $overlayRect[0] ||
     		$overlayRect[3] <= $overlayRect[1]) {
 	die("Illegal overlay rectangle\n");
     }
@@ -408,7 +407,8 @@ if ($overlayWH[0] && $overlayWH[1]) {
     if ($cheight < 10) {
     	die "Overlay matrix spacing too tight\n";
     }
-    my $cmd1 = qq[pcompos -x $cropWH[0] -y $cropWH[1] "$picture" @overlayRect[0..1]];
+    my $cmd1 = qq[pcompos -x $cropWH[0] -y $cropWH[1] "$picture"] .
+    		qq[ -$overlayRect[0] -$overlayRect[1]];
     $cmd1 .= qq[ | pfilt -1 -b -x /$cheight -y /$cheight];
     $cmd1 .= qq[ | pfilt -1 -r .5 -x $cropWH[0] -y $cropWH[1]];
     $cmd1 .= qq[ | pvalue -o -h -H -b -d -e $mult];
