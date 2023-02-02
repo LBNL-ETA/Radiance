@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.40 2022/10/20 17:18:33 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.41 2023/02/02 18:55:09 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -328,7 +328,8 @@ main(int  argc, char  *argv[])
 	if (outform != 'a')
 		SET_FILE_BINARY(stdout);
 	rval = setrtoutput();
-	readoct(octname = octnm, loadflags, &thescene, NULL);
+	octname = savqstr(octnm);
+	readoct(octname, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;
 
 	if (loadflags & IO_INFO) {	/* print header */
