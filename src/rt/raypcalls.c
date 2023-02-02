@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.34 2020/06/16 17:58:11 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.35 2023/02/02 20:32:59 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -510,13 +510,13 @@ ray_pclose(		/* close one or more child processes */
 	static int	inclose = 0;
 	RAY		res;
 	int		i, status = 0;
+					/* check no child / in child */
+	if (ray_pnprocs <= 0)
+		return;
 					/* check recursion */
 	if (inclose)
 		return;
 	inclose++;
-					/* check no child / in child */
-	if (ray_pnprocs <= 0)
-		return;
 					/* check argument */
 	if ((nsub <= 0) | (nsub > ray_pnprocs))
 		nsub = ray_pnprocs;
