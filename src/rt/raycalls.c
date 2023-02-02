@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.28 2023/02/02 18:55:09 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.29 2023/02/02 19:13:13 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -347,7 +347,7 @@ ray_restore(			/* restore parameter settings */
 	ambincl = rp->ambincl;
 					/* update ambient calculation */
 	ambnotify(OVOID);
-	if (thescene.cutree != EMPTY) {
+	if ((thescene.cutree != EMPTY) & !castonly) {
 		int	newamb = (ambfile == NULL) ?  rp->ambfile[0] :
 					strcmp(ambfile, rp->ambfile) ;
 
