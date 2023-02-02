@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.104 2022/04/30 15:13:42 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.105 2023/02/02 18:45:23 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -45,7 +45,7 @@ extern int  traincl;			/* include == 1, exclude == 0 */
 extern int  hresolu;			/* horizontal resolution */
 extern int  vresolu;			/* vertical resolution */
 
-int  castonly = 0;			/* only doing ray-casting? */
+extern int  castonly;			/* only doing ray-casting? */
 
 #ifndef  MAXTSET
 #define	 MAXTSET	8191		/* maximum number in trace set */

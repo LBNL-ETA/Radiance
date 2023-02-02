@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.26 2023/01/24 21:54:49 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.27 2023/02/02 18:45:23 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -119,6 +119,8 @@ void	(*trace)() = NULL;		/* trace call */
 
 void	(*addobjnotify[8])() = {ambnotify, NULL};
 
+int	castonly = 0;			/* only doing ray-casting? */
+
 int	do_irrad = 0;			/* compute irradiance? */
 
 int	rand_samp = 1;			/* pure Monte Carlo sampling? */
@@ -181,16 +183,20 @@ ray_init(			/* initialize ray-tracing calculation */
 		initotypes();
 					/* initialize urand */
 	reset_random();
-					/* read scene octree */
-	readoct(octname = otnm, ~(IO_FILES|IO_INFO), &thescene, NULL);
+
+	octname = savqstr(otnm);	/* read scene octree */
+	readoct(octname, ~(IO_FILES|IO_INFO), &thescene, NULL);
 	nsceneobjs = nobjects;
-					/* PMAP: Init & load photon maps */
-	ray_init_pmap();
-					/* find and mark sources */
-	marksources();
-					/* initialize ambient calculation */
-	setambient();
-					/* ready to go... (almost) */
+
+	if (!castonly) {		/* any actual ray traversal to do? */
+
+		ray_init_pmap();	/* PMAP: set up & load photon maps */
+
+		marksources();		/* find and mark sources */
+
+		setambient();		/* initialize ambient calculation */
+	} else
+		distantsources();	/* else mark only distant sources */
 }
 
 
@@ -382,8 +388,8 @@ ray_defaults(		/* get default parameter values */
 	rp->do_irrad = 0;
 	rp->rand_samp = 1;
 	rp->dstrsrc = 0.0;
-	rp->shadthresh = .03;
-	rp->shadcert = .75;
+	rp->shadthresh = 0.03;
+	rp->shadcert = 0.75;
 	rp->directrelay = 2;
 	rp->vspretest = 512;
 	rp->directvis = 1;
@@ -392,16 +398,16 @@ ray_defaults(		/* get default parameter values */
 	setcolor(rp->salbedo, 0., 0., 0.);
 	rp->seccg = 0.;
 	rp->ssampdist = 0.;
-	rp->specthresh = .15;
+	rp->specthresh = 0.15;
 	rp->specjitter = 1.;
 	rp->backvis = 1;
 	rp->maxdepth = -10;
-	rp->minweight = 2e-3;
+	rp->minweight = 1e-4;
 	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
 	setcolor(rp->ambval, 0., 0., 0.);
 	rp->ambvwt = 0;
 	rp->ambres = 256;
-	rp->ambacc = 0.15;
+	rp->ambacc = 0.1;
 	rp->ambdiv = 1024;
 	rp->ambssamp = 512;
 	rp->ambounce = 0;
