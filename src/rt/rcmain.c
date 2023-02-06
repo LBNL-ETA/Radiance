@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.26 2023/02/06 20:37:06 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.27 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -402,7 +402,7 @@ badopt:
 
 void
 wputs(				/* warning output function */
-	char	*s
+	const char	*s
 )
 {
 	int  lasterrno = errno;
@@ -413,7 +413,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

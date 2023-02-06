@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.48 2022/11/22 02:28:03 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.49 2023/02/06 22:40:21 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -92,7 +92,7 @@ extern RNUMBER	nrays;		/* total rays traced so far */
 extern OBJREC  Lamb;		/* a Lambertian surface */
 extern OBJREC  Aftplane;	/* aft clipping object */
 
-extern void	(*trace)();	/* global trace reporting callback */
+extern void	(*trace)(RAY*);	/* global trace reporting callback */
 
 extern int	dimlist[];	/* dimension list for distribution */
 extern int	ndims;		/* number of dimensions so far */
@@ -247,7 +247,7 @@ extern void	init_drawsources(int rad);
 extern void	initotypes(void);
 					/* module main procedures */
 extern void	rtrace(char *fname, int nproc);
-extern char	*formstr(int  f);
+extern const char	*formstr(int  f);
 extern void	rview(void);
 extern void	rpict(int seq, char *pout, char *zout, char *prvr);
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.25 2023/02/06 20:37:06 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.26 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -395,7 +395,7 @@ badopt:
 
 void
 wputs(				/* warning output function */
-	char	*s
+	const char	*s
 )
 {
 	int  lasterrno = errno;
@@ -406,7 +406,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.21 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.22 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -317,8 +317,7 @@ initialize(void)			/* initialize holodeck and buffers */
 
 
 void
-eputs(s)			/* put error message to stderr */
-char  *s;
+eputs(const char *s)		/* put error message to stderr */
 {
 	static int  midline = 0;
 

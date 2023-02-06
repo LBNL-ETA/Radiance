@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.18 2023/01/24 21:54:49 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.19 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -257,7 +257,7 @@ badopt:
 
 void
 wputs(				/* warning output function */
-	char	*s
+	const char	*s
 )
 {
 	int  lasterrno = errno;
@@ -268,7 +268,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gcomp.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: gcomp.c,v 1.4 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  gcomp.c - program to calculate things from graph files.
@@ -91,7 +91,7 @@ dofile(		/* plot a file */
 
 void
 eputs(				/* print error message */
-	char  *msg
+	const char  *msg
 )
 {
 	fputs(msg, stderr);

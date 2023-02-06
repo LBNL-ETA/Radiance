@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.23 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.24 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -248,8 +248,7 @@ copysect(		/* copy holodeck section from ifd to ofd */
 
 
 void
-eputs(s)			/* put error message to stderr */
-char  *s;
+eputs(const char *s)			/* put error message to stderr */
 {
 	static int  midline = 0;
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.36 2022/03/13 16:11:48 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.37 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -963,14 +963,14 @@ advinp(int skip)		/* advance home to current position */
 
 
 void
-eputs(char *msg)
+eputs(const char *msg)
 {
 	fputs(msg, stderr);
 }
 
 
 void
-wputs(char *msg)
+wputs(const char *msg)
 {
 	if (!nowarn)
 		eputs(msg);

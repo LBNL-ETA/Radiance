@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.41 2021/02/21 17:18:41 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.42 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -74,7 +74,7 @@ LUTAB	modconttab = LU_SINIT(NULL,mcfree);	/* modifier lookup table */
 
 /************************** INITIALIZATION ROUTINES ***********************/
 
-char *
+const char *
 formstr(				/* return format identifier */
 	int  f
 )

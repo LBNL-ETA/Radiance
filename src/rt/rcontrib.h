@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.17 2021/02/16 20:06:06 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.18 2023/02/06 22:40:21 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -94,8 +94,6 @@ extern int		nmods;			/* number of modifiers */
 extern int		modasiz;		/* allocated modifier array size */
 
 extern char		RCCONTEXT[];		/* special evaluation context */
-
-extern char		*formstr(int f);	/* return format identifier */
 
 extern void		process_rcontrib(void);	/* trace ray contributions */
 

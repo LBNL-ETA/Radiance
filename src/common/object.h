@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.24 2022/08/10 20:44:34 greg Exp $ */
+/* RCSid $Id: object.h,v 2.25 2023/02/06 22:40:21 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -83,7 +83,7 @@ extern OBJECT  nobjects;		/* # of objects */
 
 #define setfree(os)	free((void *)(os))
 
-extern void  (*addobjnotify[])();        /* people to notify of new objects */
+extern void  (*addobjnotify[])(OBJECT);	/* people to notify of new objects */
 
 					/* defined in modobject.c */
 extern OBJECT	objndx(OBJREC *op);

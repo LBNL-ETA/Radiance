@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.54 2022/03/22 15:14:42 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.55 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -681,7 +681,7 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 
 
 extern void
-wputs(char	*msg)
+wputs(const char *msg)
 {
 	if (!nowarn)
 		eputs(msg);
@@ -689,7 +689,7 @@ wputs(char	*msg)
 
 
 extern void
-eputs(char *msg)
+eputs(const char *msg)
 {
 	fputs(msg, stderr);
 }

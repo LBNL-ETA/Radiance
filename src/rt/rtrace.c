@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.105 2023/02/02 18:45:23 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.106 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -106,7 +106,7 @@ quit(			/* quit program */
 }
 
 
-char *
+const char *
 formstr(				/* return format identifier */
 	int  f
 )

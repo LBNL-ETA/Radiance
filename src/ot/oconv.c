@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.22 2014/06/17 18:18:50 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.23 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -178,7 +178,7 @@ cputs(void)					/* interactive error */
 
 void
 wputs(				/* warning message */
-	char  *s
+	const char  *s
 )
 {
 	if (!nowarn)
@@ -188,7 +188,7 @@ wputs(				/* warning message */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	const char  *s
 )
 {
 	static int  inln = 0;
@@ -217,7 +217,7 @@ eputs(				/* put string to stderr */
 
 static void
 addobject(			/* add an object to a cube */
-	register CUBE  *cu,
+	CUBE  *cu,
 	OBJECT	obj
 )
 {
@@ -257,7 +257,7 @@ addobject(			/* add an object to a cube */
 
 static void
 add2full(			/* add object to full node */
-	register CUBE  *cu,
+	CUBE  *cu,
 	OBJECT	obj,
 	int  inc
 )
@@ -266,7 +266,7 @@ add2full(			/* add object to full node */
 	OBJECT	oset[MAXSET+1];
 	CUBE  cukid;
 	unsigned char  inflg[(MAXSET+7)/8], volflg[(MAXSET+7)/8];
-	register int  i, j;
+	int  i, j;
 
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;

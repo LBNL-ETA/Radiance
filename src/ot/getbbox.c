@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getbbox.c,v 2.6 2004/03/27 12:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: getbbox.c,v 2.7 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  getbbox.c - compute bounding box for scene files
@@ -98,7 +98,7 @@ cputs(void)					/* interactive error */
 
 void
 wputs(				/* warning message */
-	char  *s
+	const char  *s
 )
 {
 	if (!nowarn)
@@ -108,7 +108,7 @@ wputs(				/* warning message */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	const char  *s
 )
 {
 	static int  inln = 0;

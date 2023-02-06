@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.35 2022/11/16 00:44:04 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.36 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -746,7 +746,7 @@ addpicz(		/* add a picture + depth-buffer */
 
 void
 eputs(			/* put error message to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

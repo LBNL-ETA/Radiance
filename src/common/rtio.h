@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.26 2023/02/04 17:24:30 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.27 2023/02/06 22:40:21 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -65,7 +65,7 @@ extern int	checkheader(FILE *fin, char fmt[MAXFMTLEN], FILE *fout);
 					/* defined in fltdepth.c */
 extern int	open_float_depth(const char *fname, long expected_length);
 					/* defined in badarg.c */
-extern int	badarg(int ac, char **av, char *fl);
+extern int	badarg(int ac, char **av, const char *fl);
 					/* defined in expandarg.c */
 extern int	envexpchr, filexpchr;
 extern int	expandarg(int *acp, char ***avp, int n);

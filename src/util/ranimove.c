@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.19 2020/07/20 15:54:29 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.20 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -170,7 +170,7 @@ userr:
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

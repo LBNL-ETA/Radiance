@@ -1,4 +1,4 @@
-/* RCSid $Id: rterror.h,v 3.3 2017/05/08 16:58:52 greg Exp $ */
+/* RCSid $Id: rterror.h,v 3.4 2023/02/06 22:40:21 greg Exp $ */
 /*
  * Header for Radiance error-handling routines
  */
@@ -23,7 +23,7 @@ extern "C" {
 				/* error struct */
 extern struct erract {
 	char	pre[16];		/* prefix message */
-	void	(*pf)(char *s);		/* put function (resettable) */
+	void	(*pf)(const char *s);	/* put function (resettable) */
 	int	ec;			/* exit code (0 means non-fatal) */
 } erract[NERRS];	/* list of error actions */
 
@@ -44,10 +44,10 @@ extern char  errmsg[];			/* global buffer for error messages */
 #define  DCHECK(be,et,em)	(void)0
 #endif
 					/* defined in error.c */
-extern void	error(int etype, char *emsg);
+extern void	error(int etype, const char *emsg);
 					/* error & warning output & exit */
-extern void	eputs(char *s);
-extern void	wputs(char *s);
+extern void	eputs(const char *s);
+extern void	wputs(const char *s);
 extern void	quit(int code);
 
 #ifdef __cplusplus

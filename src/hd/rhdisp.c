@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.55 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.56 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -607,7 +607,7 @@ serv_request(	/* send a request to the server process */
 
 void
 eputs(			/* put error message to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;

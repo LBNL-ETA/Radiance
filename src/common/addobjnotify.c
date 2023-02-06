@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: addobjnotify.c,v 3.3 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: addobjnotify.c,v 3.4 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Dummy declaration of addobjnotify[]
@@ -7,4 +7,9 @@ static const char	RCSid[] = "$Id: addobjnotify.c,v 3.3 2003/02/25 02:47:21 greg 
 
 #include "copyright.h"
 
-void  (*addobjnotify[1])() = {0};
+#include <stdio.h>
+#include "tiff.h"
+#include "fvect.h"
+#include "object.h"
+
+void  (*addobjnotify[1])(OBJECT) = {0};

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: eputs.c,v 2.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: eputs.c,v 2.5 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Default error output function.
@@ -12,8 +12,7 @@ static const char	RCSid[] = "$Id: eputs.c,v 2.4 2003/07/17 09:21:29 schorsch Exp
 #include "rterror.h"
 
 void
-eputs(s)			/* error message */
-char  *s;
+eputs(const char *s)			/* error message */
 {
 	fputs(s, stderr);
 }

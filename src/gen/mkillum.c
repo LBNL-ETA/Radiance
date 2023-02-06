@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.43 2020/07/20 15:54:29 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.44 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -148,7 +148,7 @@ init(char *octnm, int np)		/* start rendering process(es) */
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;
@@ -164,8 +164,7 @@ eputs(				/* put string to stderr */
 
 
 void
-wputs(s)			/* print warning if enabled */
-char  *s;
+wputs(const char *s)			/* print warning if enabled */
 {
 	if (warnings)
 		eputs(s);
@@ -173,8 +172,7 @@ char  *s;
 
 
 void
-quit(ec)			/* make sure exit is called */
-int	ec;
+quit(int ec)			/* make sure exit is called */
 {
 	if (ray_pnprocs > 0)	/* close children if any */
 		ray_pclose(0);

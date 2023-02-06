@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.16 2021/07/28 22:16:43 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.17 2023/02/06 22:40:21 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -142,7 +142,7 @@ cputs(void)					/* interactive error */
 
 void
 wputs(				/* warning message */
-	char  *s
+	const char  *s
 )
 {
 	if (!nowarn)
@@ -152,7 +152,7 @@ wputs(				/* warning message */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	const char  *s
 )
 {
 	static int  inln = 0;
@@ -169,7 +169,7 @@ eputs(				/* put string to stderr */
 
 static void
 addface(			/* add a face to a cube */
-	register CUBE  *cu,
+	CUBE  *cu,
 	OBJECT	obj
 )
 {
@@ -206,14 +206,14 @@ addface(			/* add a face to a cube */
 
 static void
 add2full(			/* add object to full node */
-	register CUBE  *cu,
+	CUBE  *cu,
 	OBJECT	obj
 )
 {
 	OCTREE	ot;
 	OBJECT	oset[MAXSET+1];
 	CUBE  cukid;
-	register int  i, j;
+	int  i, j;
 
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;
