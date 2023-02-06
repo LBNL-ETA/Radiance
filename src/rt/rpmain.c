@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.24 2023/02/06 20:34:17 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.25 2023/02/06 20:37:06 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -101,7 +101,7 @@ main(int  argc, char  *argv[])
 	progname = argv[0] = fixargv0(argv[0]);
 					/* feature check only? */
 	strcat(RFeatureList, RPICT_FEATURES);
-	if (argc == 2 && !strcmp(argv[1], "-features"))
+	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
 					/* option city */
 	for (i = 1; i < argc; i++) {
