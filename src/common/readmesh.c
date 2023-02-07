@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.18 2021/07/12 17:42:51 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.19 2023/02/07 20:28:16 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -250,6 +250,9 @@ int	flags;
 		error(SYSTEM, errmsg);
 	}
 	SET_FILE_BINARY(meshfp);
+#ifdef getc_unlocked			/* avoid stupid semaphores */
+	flockfile(meshfp);
+#endif
 					/* read header */
 	checkheader(meshfp, MESHFMT, flags&IO_INFO ? stdout : (FILE *)NULL);
 					/* read format number */
@@ -292,6 +295,10 @@ int	flags;
 					/* clean up */
 	if (meshfp != stdin)
 		fclose(meshfp);
+#ifdef getc_unlocked
+	else
+		funlockfile(meshfp);
+#endif
 	mp->ldflags |= flags;
 					/* verify data */
 	if ((err = checkmesh(mp)) != NULL)

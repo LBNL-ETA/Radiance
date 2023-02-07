@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.31 2019/05/04 00:32:47 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.32 2023/02/07 20:28:16 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -63,6 +63,9 @@ readoct(				/* read in octree file or stream */
 			error(SYSTEM, errmsg);
 		}
 	}
+#ifdef getc_unlocked			/* avoid stupid semaphores */
+	flockfile(infp);
+#endif
 	SET_FILE_BINARY(infp);
 					/* get header */
 	if (checkheader(infp, OCTFMT, load&IO_INFO ? stdout : (FILE *)NULL) < 0)
@@ -120,6 +123,10 @@ readoct(				/* read in octree file or stream */
 		pclose(infp);
 	else if (infp != stdin)
 		fclose(infp);
+#ifdef getc_unlocked
+	else
+		funlockfile(infp);
+#endif
 	return(nf);
 }
 

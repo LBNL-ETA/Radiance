@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.33 2022/04/08 23:32:25 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.34 2023/02/07 20:28:16 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -78,11 +78,18 @@ fcompile(			/* get definitions from a file */
 	eputs(": cannot open\n");
 	quit(1);
     }
-    initfile(fp, fname, 0);
+#ifdef getc_unlocked			/* avoid stupid semaphores */
+    flockfile(fp);
+#endif
+   initfile(fp, fname, 0);
     while (nextc != EOF)
 	getstatement();
     if (fname != NULL)
 	fclose(fp);
+#ifdef getc_unlocked
+    else
+	funlockfile(fp);
+#endif
 }
 
 

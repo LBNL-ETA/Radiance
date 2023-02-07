@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.9 2022/01/15 02:00:21 greg Exp $";
+static const char RCSid[] = "$Id: readwfobj.c,v 2.10 2023/02/07 20:28:16 greg Exp $";
 #endif
 /*
  *  readobj.c
@@ -192,6 +192,9 @@ loadOBJ(Scene *sc, const char *fspec)
 		error(SYSTEM, errmsg);
 		return(NULL);
 	}
+#ifdef getc_unlocked			/* avoid stupid semaphores */
+	flockfile(fp);
+#endif
 	if (sc == NULL)
 		sc = newScene();
 	lineno = 0;
@@ -287,6 +290,10 @@ loadOBJ(Scene *sc, const char *fspec)
 #endif
 	if (fp != stdin)
 		fclose(fp);
+#ifdef getc_unlocked
+	else
+		funlockfile(fp);
+#endif
 	if (verbose)
 		fprintf(stderr, "Read %d statements\n", nstats);
 	if (strlen(fspec) < sizeof(buf)-32)

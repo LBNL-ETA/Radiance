@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.24 2020/10/17 16:39:23 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.25 2023/02/07 20:28:16 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -47,6 +47,9 @@ readobj(				/* read in an object file or stream */
 		sprintf(errmsg, "cannot open scene file \"%s\"", inpspec);
 		error(SYSTEM, errmsg);
 	}
+#ifdef getc_unlocked			/* avoid stupid semaphores */
+	flockfile(infp);
+#endif
 	while ((c = getc(infp)) != EOF) {
 		if (isspace(c))
 			continue;
@@ -65,6 +68,10 @@ readobj(				/* read in an object file or stream */
 		pclose(infp);
 	else if (infp != stdin)
 		fclose(infp);
+#ifdef getc_unlocked
+	else
+		funlockfile(infp);
+#endif
 	if (nobjects == lastobj) {
 		sprintf(errmsg, "(%s): empty file", inpspec);
 		error(WARNING, errmsg);
