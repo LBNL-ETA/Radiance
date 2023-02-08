@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.87 2021/01/19 23:31:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.88 2023/02/08 17:41:48 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -6,8 +6,10 @@
 OPT = -O
 MACH = -DBSD
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
+CXXFLAGS = $(CFLAGS) -std=c++11
 SPECIAL = 
 CC = cc
+CXX = c++
 AR = ar
 MLIB = -lm
 LINT = lint
@@ -58,6 +60,9 @@ RVSRC = rvmain.c rview.c rv2.c rv3.c $(DSRC)
 RCOBJS = rcmain.o rcontrib.o rc2.o rc3.o
 RCSRC = rcmain.c rcontrib.c rc2.c rc3.c
 
+RATOBJS = ratmain.o ratrace.o RtraceSimulManager.o
+RATSRC = ratmain.cpp ratrace.cpp RtraceSimulManager.cpp
+
 RLOBJS = raycalls.o raypcalls.o rayfifo.o
 RLSRC = raycalls.c raypcalls.c rayfifo.c
 
@@ -105,7 +110,7 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 #
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/rcontrib \
-$(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump
+$(DESTDIR)/ratrace $(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
@@ -138,6 +143,10 @@ $(RLIB) $(LIBS) $(DLIBS)
 
 $(DESTDIR)/rcontrib:      $(RCOBJS) $(RLIB)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/rcontrib $(RCOBJS) $(RLIB) $(LIBS)
+
+$(DESTDIR)/ratrace:	$(RATOBJS) $(RCLIB) $(RLIB)
+	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/ratrace $(RATOBJS) $(RCLIB) \
+$(RLIB) $(LIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
