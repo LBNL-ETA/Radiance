@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.4 2021/03/12 18:32:33 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.5 2023/02/09 21:54:10 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -237,7 +237,7 @@ userr:
 }
 
 void
-eputs(char *s)				/* put string to stderr */
+eputs(const char *s)			/* put string to stderr */
 {
 	static int  midline = 0;
 

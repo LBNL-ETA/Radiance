@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devmain.c,v 2.5 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: devmain.c,v 2.6 2023/02/09 21:54:11 greg Exp $";
 #endif
 /*
  *  devmain.c - main for independent drivers.
@@ -127,6 +127,27 @@ r_getcur()				/* get and return cursor position */
 }
 
 
+void
+mygets(char *s, FILE *fp)			/* get string from file (with nul) */
+{
+	int	c;
+
+	while ((c = getc(fp)) != EOF)
+		if ((*s++ = c) == '\0')
+			return;
+	*s = '\0';
+}
+
+
+void
+myputs(const char *s, FILE *fp)			/* put string to file (with nul) */
+{
+	do
+		putc(*s, fp);
+	while (*s++);
+}
+
+
 r_comout()				/* print string to command line */
 {
 	char	str[256];
@@ -155,32 +176,8 @@ r_comin()				/* read string from command line */
 }
 
 
-mygets(s, fp)				/* get string from file (with nul) */
-register char	*s;
-register FILE	*fp;
-{
-	register int	c;
-
-	while ((c = getc(fp)) != EOF)
-		if ((*s++ = c) == '\0')
-			return;
-	*s = '\0';
-}
-
-
-myputs(s, fp)				/* put string to file (with nul) */
-register char	*s;
-register FILE	*fp;
-{
-	do
-		putc(*s, fp);
-	while (*s++);
-}
-
-
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(const char *s)				/* put string to stderr */
 {
 	static int  midline = 0;
 

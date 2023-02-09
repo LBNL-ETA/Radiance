@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: arch2rad.c,v 2.4 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: arch2rad.c,v 2.5 2023/02/09 21:54:10 greg Exp $";
 #endif
 /*
  * Convert Architrion file to Radiance
@@ -230,7 +230,7 @@ getfhead(			/* get file header */
 {
 	char	buf[MAXSTR];
 	int	i, n;
-	register int	c;
+	int	c;
 					/* get file name */
 	if (fgets(buf, MAXSTR, fp) == NULL)
 		goto readerr;
@@ -285,7 +285,7 @@ puthead(			/* put out header information */
 	FILE	*fp
 )
 {
-	register int	i;
+	int	i;
 	
 	fprintf(fp, "# File created by: %s\n", progname);
 	fprintf(fp, "# Input file: %s\n", fhead.filename);
@@ -300,7 +300,7 @@ puthead(			/* put out header information */
 
 int
 getblock(			/* get an Architrion block */
-	register BLOCK	*bp,
+	BLOCK	*bp,
 	FILE	*fp
 )
 {
@@ -343,11 +343,11 @@ memerr:
 
 int
 getopening(		/* read in opening from fp */
-	register OPNG	*op,
+	OPNG	*op,
 	FILE	*fp
 )
 {
-	register int	c;
+	int	c;
 	char	word[32];
 
 	if (fgets(word, sizeof(word), fp) == NULL)
@@ -384,10 +384,10 @@ getopening(		/* read in opening from fp */
 
 void
 doneblock(			/* free data associated with bp */
-	register BLOCK	*bp
+	BLOCK	*bp
 )
 {
-	register int	i;
+	int	i;
 
 	if (bp->nopenings > 0) {
 		for (i = 0; i < bp->nopenings; i++)
@@ -400,7 +400,7 @@ doneblock(			/* free data associated with bp */
 
 void
 add2quals(			/* add to qualifier lists */
-	register BLOCK	*bp
+	BLOCK	*bp
 )
 {
 	ID	tmpid;
@@ -468,7 +468,7 @@ putopenmod(		/* put out opening modifier */
 )
 {
 	int	rept, nrepts;
-	register int	i, j;
+	int	i, j;
 	
 	if (sm == NULL) {		/* if no sill modifier, use list */
 		sm = *ml++;
@@ -506,9 +506,9 @@ putopening(			/* put out an opening */
 {
 	static int	nopens = 0;
 	char	buf[32];
-	register PRISM	*p = &op->p;
+	PRISM	*p = &op->p;
 	PRISM	newp;
-	register int	i;
+	int	i;
 					/* copy original prism */
 	for (i = 0; i < 4; i++) {
 		newp.x[i] = p->x[i];
@@ -552,11 +552,11 @@ putopening(			/* put out an opening */
 
 int
 matchrule(			/* see if block matches this rule */
-	register BLOCK	*bp,
-	register RULEHD	*rp
+	BLOCK	*bp,
+	RULEHD	*rp
 )
 {
-	register int	i;
+	int	i;
 	ID	tmpid;
 	
 	if (rp->qflg & FL(Q_LAY)) {		/* check layer */
@@ -589,7 +589,7 @@ void
 putfaces(			/* put out faces */
 	char	*m,
 	BLOCK	*bp,
-	register int	ff,
+	int	ff,
 	FILE	*fp
 )
 {
@@ -615,13 +615,13 @@ putfaces(			/* put out faces */
 
 char *
 blkname(		/* think up a good name for this block */
-	register BLOCK	*bp
+	BLOCK	*bp
 )
 {
 	static char	nambuf[32];
 	static int	blkcnt = 0;
-	register char	*nam;
-	register int	i, j;
+	char	*nam;
+	int	i, j;
 
 	sprintf(nambuf, "l%d.", bp->layer);
 	i = strlen(nambuf);
@@ -696,9 +696,9 @@ putface(	/* put out a face */
 
 void
 lcross(			/* compute cross product */
-	register long	vr[3],
-	register long	v1[3],
-	register long	v2[3]
+	long	vr[3],
+	long	v1[3],
+	long	v2[3]
 )
 {
 	vr[0] = v1[1]*v2[2] - v1[2]*v2[1];
@@ -712,7 +712,7 @@ lcross(			/* compute cross product */
 
 int
 checkface(		/* check a face for validity */
-	register PRISM	*p,
+	PRISM	*p,
 	int	a,
 	int b,
 	int c,
@@ -767,7 +767,7 @@ checkface(		/* check a face for validity */
 
 void
 putpoint(			/* put out a point */
-	register PRISM	*p,
+	PRISM	*p,
 	int	n,
 	FILE	*fp
 )
@@ -781,7 +781,7 @@ putpoint(			/* put out a point */
 
 void
 eputs(
-	char	*s
+	const char	*s
 )
 {
 	fputs(s, stderr);

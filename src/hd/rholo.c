@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.82 2019/11/07 23:17:58 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.83 2023/02/09 21:54:11 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -632,8 +632,7 @@ badvalue(			/* report bad variable value and exit */
 
 
 void
-eputs(s)			/* put error message to stderr */
-char  *s;
+eputs(const char *s)		/* put error message to stderr */
 {
 	static int  midline = 0;
 
@@ -652,8 +651,7 @@ char  *s;
 
 
 void
-quit(ec)			/* exit program gracefully */
-int	ec;
+quit(int ec)			/* exit program gracefully */
 {
 	int	status = 0;
 

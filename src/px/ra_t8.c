@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.16 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.17 2023/02/09 21:54:11 greg Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -152,10 +152,10 @@ userr:
 
 static int
 getint2(			/* get a 2-byte positive integer */
-	register FILE	*fp
+	FILE	*fp
 )
 {
-	register int  b1, b2;
+	int  b1, b2;
 
 	if ((b1 = getc(fp)) == EOF || (b2 = getc(fp)) == EOF)
 		quiterr("read error");
@@ -166,8 +166,8 @@ getint2(			/* get a 2-byte positive integer */
 
 static void
 putint2(			/* put a 2-byte positive integer */
-	register int  i,
-	register FILE	*fp
+	int  i,
+	FILE	*fp
 )
 {
 	putc(i&0xff, fp);
@@ -189,16 +189,14 @@ quiterr(		/* print message and exit */
 
 
 void
-eputs(s)
-char *s;
+eputs(const char *s)
 {
 	fputs(s, stderr);
 }
 
 
 void
-quit(code)
-int code;
+quit(int code)
 {
 	exit(code);
 }
@@ -208,7 +206,7 @@ static int
 getthead(		/* read header from input */
 	struct hdStruct	 *hp,
 	char  *ip,
-	register FILE  *fp
+	FILE  *fp
 )
 {
 	int	nidbytes;
@@ -243,7 +241,7 @@ static int
 putthead(		/* write header to output */
 	struct hdStruct	 *hp,
 	char  *ip,
-	register FILE  *fp
+	FILE  *fp
 )
 {
 	if (ip != NULL)
@@ -271,7 +269,7 @@ putthead(		/* write header to output */
 
 static int
 getrhead(			/* load RADIANCE input file header */
-	register struct hdStruct  *h,
+	struct hdStruct  *h,
 	FILE  *fp
 )
 {
@@ -312,7 +310,7 @@ tg2ra(			/* targa file to RADIANCE file */
 	} map;
 	COLR  ctab[256];
 	COLR  *scanline;
-	register int  i, j;
+	int  i, j;
 
 					/* get color table */
 	if ((hp->CMapBits==24 ? fread((char *)(map.c3+hp->mapOrig),
@@ -359,7 +357,7 @@ getmapped(		/* read in and quantize image */
 )
 {
 	long  fpos;
-	register int  y;
+	int  y;
 
 	setcolrgam(gamv);
 	fpos = ftell(stdin);
@@ -408,8 +406,8 @@ getgrey(			/* read in and convert to greyscale image */
 )
 {
 	int  y;
-	register uby8  *dp;
-	register int  x;
+	uby8  *dp;
+	int  x;
 
 	setcolrgam(gamv);
 	dp = tarData+xmax*ymax;;
@@ -443,7 +441,7 @@ writetarga(		/* write out targa data */
 	FILE  *fp
 )
 {
-	register int  i, j;
+	int  i, j;
 
 	for (i = 0; i < h->mapLength; i++)	/* write color map */
 		for (j = 2; j >= 0; j--)
@@ -464,8 +462,8 @@ readtarga(		/* read in targa data */
 	FILE  *fp
 )
 {
-	register int  cnt, c;
-	register uby8	*dp;
+	int  cnt, c;
+	uby8	*dp;
 
 	if (h->dataType == IM_CMAP) {		/* uncompressed */
 		if (fread((char *)data,h->x*sizeof(uby8),h->y,fp) != h->y)

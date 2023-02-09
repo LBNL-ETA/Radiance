@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.8 2013/12/19 16:56:31 greg Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.9 2023/02/09 21:54:10 greg Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -25,9 +25,7 @@ int  recover = 0;
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(int argc, char *argv[])
 {
 	char  expr[2048];
 	char  *epos;
@@ -155,24 +153,21 @@ int  n;
 
 
 void
-eputs(msg)
-char  *msg;
+eputs(const char *msg)
 {
 	fputs(msg, stderr);
 }
 
 
 void
-wputs(msg)
-char  *msg;
+wputs(const char *msg)
 {
 	eputs(msg);
 }
 
 
 void
-quit(code)
-int  code;
+quit(int code)
 {
 	if (recover)			/* a cavalier approach */
 		longjmp(env, 1);

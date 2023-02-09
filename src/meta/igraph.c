@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: igraph.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: igraph.c,v 1.5 2023/02/09 21:54:11 greg Exp $";
 #endif
 /*
  *  igraph.c - interactive graphing program.
@@ -101,16 +101,14 @@ char  *argv[];
 	return 0; /* pro forma return */
 }
 
-extern void
-eputs(msg)				/* print error message */
-char  *msg;
+void
+eputs(const char *msg)			/* print error message */
 {
 	fputs(msg, stderr);
 }
 
-extern void
-quit(code)				/* recover or quit */
-int  code;
+void
+quit(int code)				/* recover or quit */
 {
 	if (code && recover--)
 		longjmp(env, 1);
