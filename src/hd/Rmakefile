@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.37 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.38 2023/02/09 00:18:05 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -17,6 +17,8 @@ LN = ln
 
 SPECIAL =
 
+INSTALL = cp
+
 INSTDIR = /usr/local/bin
 DEVDIR = $(INSTDIR)
 
@@ -29,7 +31,7 @@ DEVS = $(DEVDIR)/x11.hdi $(DEVDIR)/x11h.hdi
 all:	$(PROGS)
 
 install:	all $(DEVS) $(SPECIAL)
-	cp $(PROGS) $(INSTDIR)
+	$(INSTALL) $(PROGS) $(INSTDIR)
 
 clean:
 	set nonomatch; rm -f *.o $(PROGS) Version.c

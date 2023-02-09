@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.11 2022/04/21 02:52:40 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.12 2023/02/09 00:18:05 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -15,6 +15,8 @@ CFLAGS = $(OPT) $(MACH) $(DEFS) -I../common -L../lib
 
 MLIB = -lm
 
+INSTALL = cp
+
 INSTDIR = /usr/local/bin
 
 PROGS = icalc ev rcalc total cnt neaten rlam rsplit tabfunc histo
@@ -22,7 +24,7 @@ PROGS = icalc ev rcalc total cnt neaten rlam rsplit tabfunc histo
 all:	$(PROGS)
 
 install:	$(PROGS)
-	cp $(PROGS) $(INSTDIR)
+	$(INSTALL) $(PROGS) $(INSTDIR)
 
 clean:
 	set nonomatch; rm -f *.o $(PROGS)

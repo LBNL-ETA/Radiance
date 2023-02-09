@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.41 2021/09/12 16:41:32 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.42 2023/02/09 00:18:05 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -8,6 +8,8 @@ MACH = -DBSD
 CFLAGS = -I../common -I../rt -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
+
+INSTALL = cp
 
 INSTDIR = /usr/local/bin
 
@@ -22,7 +24,7 @@ LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
 all:	$(PROGS)
 
 install:	$(PROGS) $(LIBFILES) glaze.csh
-	cp $(PROGS) $(INSTDIR)
+	$(INSTALL) $(PROGS) $(INSTDIR)
 	cp glaze.csh $(INSTDIR)/glaze
 	chmod 755 $(INSTDIR)/glaze
 	cd $(LIBDIR) && rm -f $(LIBFILES)

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.74 2020/01/03 20:05:14 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.75 2023/02/09 00:18:05 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -10,6 +10,8 @@ SPECIAL =
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
+
+INSTALL = cp
 
 INSTDIR = /usr/local/bin
 
@@ -30,7 +32,7 @@ sun:
 install:	$(PROGS) $(SPECIAL) normpat.csh falsecolor.pl \
 pdfblur.csh pmblur.csh pmdblur.csh xyzimage.csh pgblur.csh ra_pfm.csh \
 pbilat.csh
-	cp $(PROGS) $(INSTDIR)
+	$(INSTALL) $(PROGS) $(INSTDIR)
 	cp normpat.csh $(INSTDIR)/normpat
 	cp falsecolor.pl $(INSTDIR)/falsecolor
 	cp pdfblur.csh $(INSTDIR)/pdfblur
