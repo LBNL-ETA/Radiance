@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: error.c,v 2.11 2021/02/10 18:28:00 greg Exp $";
+static const char	RCSid[] = "$Id: error.c,v 2.12 2023/02/09 18:34:31 greg Exp $";
 #endif
 /*
  *  error.c - standard error reporting function
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: error.c,v 2.11 2021/02/10 18:28:00 greg Exp $"
 
 #include  "rterror.h"
 
-extern char	*strerror();
+extern char	*strerror(int);
 				/* global list of error actions */
 struct erract	erract[NERRS] = ERRACT_INIT;
 
@@ -22,11 +22,9 @@ char  errmsg[2048];		/* global error message buffer */
 
 
 void
-error(etype, emsg)		/* report error, quit if necessary */
-int  etype;
-char  *emsg;
+error(int etype, const char *emsg)	/* report error, quit if necessary */
 {
-	register struct erract	*ep;
+	struct erract	*ep;
 
 	if ((etype < 0) | (etype >= NERRS))
 		return;
