@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fdate.c,v 2.10 2019/02/27 21:30:01 greg Exp $";
+static const char	RCSid[] = "$Id: fdate.c,v 2.11 2023/02/10 18:29:46 greg Exp $";
 #endif
 /*
  * Return file date (UNIX seconds as returned by time(2) call)
@@ -20,22 +20,35 @@ static const char	RCSid[] = "$Id: fdate.c,v 2.10 2019/02/27 21:30:01 greg Exp $"
 
 time_t
 fdate(				/* get file date */
-char  *fname
+	const char  *fname
 )
 {
 	struct stat  sbuf;
 
-	if (stat(fname, &sbuf) == -1)
+	if (stat(fname, &sbuf) < 0)
 		return(0);
 
 	return(sbuf.st_mtime);
 }
 
 
+time_t
+fddate(				/* get file descriptor date */
+	int  fd
+)
+{
+	struct stat  sbuf;
+
+	if (fstat(fd, &sbuf) < 0)
+		return(0);
+
+	return(sbuf.st_mtime);
+}
+
 int
 setfdate(			/* set file date */
-char  *fname,
-long  ftim
+	const char  *fname,
+	long  ftim
 )
 {
 	struct utimbuf utb;

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.27 2023/02/06 22:40:21 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.28 2023/02/10 18:29:46 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -70,8 +70,9 @@ extern int	badarg(int ac, char **av, const char *fl);
 extern int	envexpchr, filexpchr;
 extern int	expandarg(int *acp, char ***avp, int n);
 					/* defined in fdate.c */
-extern time_t	fdate(char *fname);
-extern int	setfdate(char *fname, long ftim);
+extern time_t	fdate(const char *fname);
+extern time_t	fddate(int fd);
+extern int	setfdate(const char *fname, long ftim);
 					/* defined in fgetline.c */
 extern char	*fgetline(char *s, int n, FILE *fp);
 					/* defined in fgetval.c */
