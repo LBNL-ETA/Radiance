@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetword.c,v 2.8 2017/08/10 19:10:44 greg Exp $";
+static const char	RCSid[] = "$Id: fgetword.c,v 2.9 2023/02/10 04:32:19 greg Exp $";
 #endif
 /*
  * Read white space separated words from stream
@@ -12,6 +12,9 @@ static const char	RCSid[] = "$Id: fgetword.c,v 2.8 2017/08/10 19:10:44 greg Exp 
 #include  "rtio.h"
 
 #include  <ctype.h>
+
+
+#define isquote(c)	(((c) == '"') | ((c) == '\''))
 
 
 char *
@@ -32,23 +35,27 @@ fgetword(			/* get (quoted) word up to n-1 characters */
 		c = getc(fp);
 	while (isspace(c));
 					/* check for quote */
-	if ((c == '"') | (c == '\'')) {
+	if (isquote(c)) {
 		quote = c;
 		c = getc(fp);
 	}
-					/* get actual word */
-	cp = s;
-	while (c != EOF && !(quote ? c==quote : isspace(c))) {
-		if (--n <= 0)		/* check length limit */
-			break;
-		*cp++ = c;
-		c = getc(fp);
+	cp = s;				/* get actual word */
+	while (c != EOF) {
+		if (c == quote)		/* end quote? */
+			quote = '\0';
+		else if (!quote && isquote(c))
+			quote = c;	/* started new quote */
+		else {
+			if (!quote && isspace(c))
+				break;	/* end of word */
+			if (--n <= 0)
+				break;	/* hit length limit */
+			*cp++ = c;
+		}
+		c = getc(fp);		/* get next character */
 	}
 	*cp = '\0';
-	if (c == EOF) {			/* hit end-of-file? */
-		if (cp == s)		/* and got nothing? */
-			return(NULL);
-	} else if (!quote)		/* replace white character */
-		ungetc(c, fp);
+	if ((c == EOF) & (cp == s))	/* hit end-of-file? */
+		return(NULL);
 	return(s);
 }
