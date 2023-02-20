@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.85 2021/06/09 18:21:10 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.86 2023/02/20 04:05:43 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -217,8 +217,10 @@ raytirrad(			/* irradiance hack */
 			raytrans(r);
 			return(1);
 		}
-		if (!islight(m->otype))
+		if (!islight(m->otype)) {
+			setcolor(r->pcol, 1.0, 1.0, 1.0);
 			return((*ofun[Lamb.otype].funp)(&Lamb, r));
+		}
 	}
 	return(0);		/* not a qualifying surface */
 }
