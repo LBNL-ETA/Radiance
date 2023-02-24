@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.27 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.28 2023/02/24 18:25:36 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -200,7 +200,11 @@ main(int argc, char *argv[])
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
 #if defined(_WIN32) || defined(_WIN64)
-	_setmaxstdio(2048);		/* increase file limit to maximum */
+
+#if defined(_WIN32) || defined(_WIN64) 	/* increase file limit to maximum */
+	for (i = 8192; i > _IOB_ENTRIES; i >>= 1)
+		if (_setmaxstdio(i) == 0)
+			break;
 #endif
 					/* initialize calcomp routines early */
 	initfunc();
