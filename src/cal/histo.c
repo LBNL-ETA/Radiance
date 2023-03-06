@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: histo.c,v 1.5 2008/04/18 16:32:27 greg Exp $";
+static const char	RCSid[] = "$Id: histo.c,v 1.6 2023/03/06 19:31:30 greg Exp $";
 #endif
 /*
  * Compute a histogram from input data
@@ -50,7 +50,7 @@ readinp(void)			/* gather statistics on input */
 			d = atof(cp);
 			while (*cp && !isspace(*cp))
 				cp++;
-			if (d <= minv)
+			if (d < minv)
 				outrange[c][0]++;
 			else if (d >= maxv)
 				outrange[c][1]++;
