@@ -1,0 +1,52 @@
+{ RCSid $Id: glass3.cal,v 1.1 2023/03/07 01:55:07 greg Exp $ }
+{
+	Approximated triple-glazing model using BRTDfunc.
+
+	void BRTDfunc glaze3
+	10
+	   sr_red sr_grn sr_blu
+	   st_red st_grn st_blu
+	   0     0     0
+	   glass3.cal
+	0
+	18 0 0 0 0 0 0 0 0 0
+		rfspc gfspc bfspc
+		rbspc gbspc bbspc
+		rtspc gtspc btspc
+
+	where:
+		rfspc, gfspc, bfspc	- front specular RGB at normal
+		rbspc, gbspc, bbspc	- back specular RGB at normal
+		rtspc, gtspc, btspc	- transmitted RGB at normal
+
+	You can use the first 9 arguments to get diffuse components,
+	but the glazing model won't work very well if you do.
+	Also, if the transmission plus reflection on either side
+	adds up to greater than 1.0, you will be violating physics.
+
+	G.Ward for LBNL
+}
+Rexp : -2.5;		{ exponent found to work well for Fresnel }
+
+Tsr = CrP*arg(16);
+Tsg = CgP*arg(17);
+Tsb = CbP*arg(18);
+			{ specular flux transfer, front }
+Sfr = arg(10) + Tsr;
+Sfg = arg(11) + Tsg;
+Sfb = arg(12) + Tsb;
+			{ specular flux transfer, back }
+Sbr = arg(13) + Tsr;
+Sbg = arg(14) + Tsg;
+Sbb = arg(15) + Tsb;
+			{ Fresnel reflection estimator for triple-glazing }
+FresR = exp(Rexp*abs(RdotP)) - exp(Rexp);
+specAdj(s) = s + (1-s)*FresR;
+			{ Specular reflection, front & back }
+sr_red = specAdj(if(Rdot, arg(10) , arg(13)));
+sr_grn = specAdj(if(Rdot, arg(11) , arg(14)));
+sr_blu = specAdj(if(Rdot, arg(12) , arg(15)));
+			{ Specular transmission }
+st_red = if(Rdot, Sfr, Sbr) - sr_red;
+st_grn = if(Rdot, Sfg, Sbg) - sr_grn;
+st_blu = if(Rdot, Sfb, Sbb) - sr_blu;
