@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.31 2022/05/27 17:27:53 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.32 2023/03/08 19:59:48 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -615,9 +615,12 @@ compare_text()
 						/* compare non-empty lines */
 		if (!equiv_string(l1buf.str, l2buf.str)) {
 			if (report != REP_QUIET) {
-				printf("%s: inputs '%s' and '%s' differ at line %d|%d\n",
-						progname, f1name, f2name,
-						lin1cnt, lin2cnt);
+				printf("%s: inputs '%s' and '%s' differ at line %d",
+						progname, f1name, f2name, lin1cnt);
+				if (lin1cnt != lin2cnt)
+					printf("|%d\n", lin2cnt);
+				else
+					putchar('\n');
 				if ( report >= REP_VERBOSE &&
 						(l1buf.len < 256) &
 						(l2buf.len < 256) ) {
