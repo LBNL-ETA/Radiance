@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.37 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.38 2023/03/10 17:38:01 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -155,6 +155,7 @@ char *argv[]
 			break;
 		case 'n':
 			noinput = 1;
+			esupport &= ~E_RCONST;
 			break;
 		case 'i':
 			switch (argv[i][2]) {
