@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.86 2023/02/20 04:05:43 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.87 2023/03/16 00:25:24 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -523,7 +523,8 @@ int
 rayreject(		/* check if candidate hit is worse than current */
 	OBJREC *o,
 	RAY *r,
-	double t
+	double t,
+	double rod
 )
 {
 	OBJREC	*mnew, *mray;
@@ -541,16 +542,22 @@ rayreject(		/* check if candidate hit is worse than current */
 	mray = findmaterial(r->ro);	/* check material transparencies */
 	if (mnew == NULL) {
 		if (mray != NULL)
-			return(1);	/* new has no material */
+			return(1);	/* old has material, new does not */
 	} else if (mray == NULL) {
-		return(0);		/* old has no material(!) */
+		return(0);		/* new has material, old does not */
 	} else if (istransp(mnew->otype)) {
 		if (!istransp(mray->otype))
-			return(1);	/* new is transparent */
+			return(1);	/* new is transparent, old is not */
 	} else if (istransp(mray->otype)) {
-		return(0);		/* old is transparent */
+		return(0);		/* old is transparent, new is not */
 	}
-			/* weakest priority to later modifier definition */
+	if (rod <= 0) {			/* check which side we hit */
+		if (r->rod > 0)
+			return(1);	/* old hit front, new did not */
+	} else if (r->rod <= 0) {
+		return(0);		/* new hit front, old did not */
+	}
+			/* earlier modifier definition wins tie */
 	return (r->ro->omod >= o->omod);
 }
 

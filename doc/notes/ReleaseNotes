@@ -2589,3 +2589,11 @@ values on image.  This was requested by Rob Shakespeare.
 Added -i* and -o* options in rhcopy for reading rays from the
 standard input and writing rays from holodeck to standard output.
 This will hopefully be useful in combining rholo with rcontrib.
+
+Added further checking for coincident (overlapping) flat surfaces,
+preferring front sides to back sides in the ray intersection
+calculation.  This only applies to rings and faces, as the other
+surface types would have required additional calculations to
+make them work.  Material transparency is still the primary
+consideration, now followed by ray hit side, followed by
+modifier definition order in the input.

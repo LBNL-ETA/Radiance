@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_face.c,v 2.8 2021/01/31 18:08:04 greg Exp $";
+static const char RCSid[] = "$Id: o_face.c,v 2.9 2023/03/16 00:25:24 greg Exp $";
 #endif
 /*
  *  o_face.c - compute ray intersection with faces.
@@ -41,7 +41,7 @@ o_face(		/* compute intersection with polygonal face */
 
 	t = (DOT(r->rorg, f->norm) - f->offset) / rdot;
 	
-	if (rayreject(o, r, t))			/* previous hit is better? */
+	if (rayreject(o, r, t, rdot))		/* previous hit is better? */
 		return(0);
 						/* compute intersection */
 	VSUM(pisect, r->rorg, r->rdir, t);
