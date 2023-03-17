@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.34 2020/04/08 20:35:11 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.35 2023/03/17 18:43:45 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -27,7 +27,7 @@ static const char	RCSid[] = "$Id: data.c,v 2.34 2020/04/08 20:35:11 greg Exp $";
 #endif
 
 #ifndef TABSIZ
-#define TABSIZ		97		/* table size (prime) */
+#define TABSIZ		997		/* table size (prime) */
 #endif
 
 #define hash(s)		(shash(s)%TABSIZ)
