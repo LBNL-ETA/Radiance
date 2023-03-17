@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.25 2023/02/06 22:40:21 greg Exp $ */
+/* RCSid $Id: object.h,v 2.26 2023/03/17 18:27:18 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -58,9 +58,9 @@ typedef struct {
 
 #ifndef  MAXOBJBLK
 #ifdef  SMLMEM
-#define  MAXOBJBLK	1023		/* maximum number of object blocks */
+#define  MAXOBJBLK	16383		/* maximum number of object blocks */
 #else
-#define  MAXOBJBLK	131071		/* maximum number of object blocks */
+#define  MAXOBJBLK	1048503		/* maximum number of object blocks */
 #endif
 #endif
 
