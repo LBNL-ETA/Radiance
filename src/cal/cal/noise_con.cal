@@ -1,0 +1,9 @@
+{ RCSid $Id: noise_con.cal,v 1.1 2023/03/28 17:45:38 greg Exp $ }
+{
+	Conformal transformation based on noise model,
+	where: var(X) = m*X + b
+}
+C(X,m,b) : if(X, 2/m*(sqrt(b + m*X) - sqrt(b)),
+		-2/m*(sqrt(b - m*X) - sqrt(b)));
+
+X(C,m,b) : if(C, sqrt(b) + .25*m*C, sqrt(b) - .25*m*C) * C;
