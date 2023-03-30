@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.28 2020/07/25 19:18:01 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.29 2023/03/30 20:19:05 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -289,7 +289,7 @@ printsky(void)			/* print out sky */
 	if (dosun) {
 		printf("\nvoid light solar\n");
 		printf("0\n0\n");
-		printf("3 %.2e %.2e %.2e\n", solarbr, solarbr, solarbr);
+		printf("3 %.3e %.3e %.3e\n", solarbr, solarbr, solarbr);
 		printf("\nsolar source sun\n");
 		printf("0\n0\n");
 		printf("4 %f %f %f 0.5\n", sundir[0], sundir[1], sundir[2]);
@@ -299,9 +299,9 @@ printsky(void)			/* print out sky */
 	printf("2 skybr skybright.cal\n");
 	printf("0\n");
 	if (overcast)
-		printf("3 %d %.2e %.2e\n", skytype, zenithbr, groundbr);
+		printf("3 %d %.3e %.3e\n", skytype, zenithbr, groundbr);
 	else
-		printf("7 %d %.2e %.2e %.2e %f %f %f\n",
+		printf("7 %d %.3e %.3e %.3e %f %f %f\n",
 				skytype, zenithbr, groundbr, F2,
 				sundir[0], sundir[1], sundir[2]);
 }
