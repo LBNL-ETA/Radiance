@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.30 2017/07/10 20:15:18 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.31 2023/04/07 19:06:18 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -23,7 +23,7 @@
   /* The windows _popen with the native shell breaks '\\\n' escapes.
    * RT_WINPROC (used by SCons) enables our replacement functions to fix that.
    * XXX This should really not depend on the compiler used! */
-  #if defined(_MSC_VER) && !defined(RT_WINPROC)
+  #if 1 /* defined(_MSC_VER) && !defined(RT_WINPROC) */
     #define popen(cmd,mode)	_popen(cmd,mode)
     #define pclose(p)		_pclose(p)
   #else
