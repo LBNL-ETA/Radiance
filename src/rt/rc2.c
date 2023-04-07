@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.24 2019/09/04 20:19:51 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.25 2023/04/07 00:03:26 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -143,7 +143,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 	LUENT			*lep;
 	STREAMOUT		*sop;
 	char			*cp;
-	
+
+	info[0] = '\0';
 	if (ospec == NULL) {			/* use stdout? */
 		if (!noopen & !using_stdout) {
 			if (outfmt != 'a')
