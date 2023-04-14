@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.36 2022/03/05 17:18:02 greg Exp $ */
+/* RCSid $Id: color.h,v 2.37 2023/04/14 15:49:32 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -153,7 +153,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  LEXPOSSTR		9
 #define  isexpos(hl)		(!strncmp(hl,EXPOSSTR,LEXPOSSTR))
 #define  exposval(hl)		atof((hl)+LEXPOSSTR)
-#define  fputexpos(ex,fp)	fprintf(fp,"%s%e\n",EXPOSSTR,ex)
+#define  fputexpos(ex,fp)	fprintf(fp,"%s%.4e\n",EXPOSSTR,ex)
 
 				/* macros for pixel aspect ratios */
 #define  ASPECTSTR		"PIXASPECT="
