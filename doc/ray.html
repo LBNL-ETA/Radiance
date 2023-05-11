@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.30 2021/11/16 23:12:22 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.31 2023/05/11 17:18:39 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 5.4 Synthetic Imaging System
@@ -822,6 +822,8 @@ unless the line integrals consider enclosed geometry.
 	Also, rather than roughness, specular power is used, which has no
 	physical meaning other than larger numbers are equivalent to a smoother
 	surface.
+	Unlike other material types, total reflectance is the sum of
+	diffuse and specular colors, and should be adjusted accordingly.
 <pre>
 	mod ashik2 id
 	4+ ux uy uz funcfile transform
