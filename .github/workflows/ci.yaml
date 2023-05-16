@@ -222,10 +222,10 @@ jobs:
         shell: bash
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           version: '5.12.8'
-          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
+          # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
 
       - name: Install XQuartz
