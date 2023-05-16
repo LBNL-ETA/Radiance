@@ -147,7 +147,7 @@ jobs:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
-          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON'
+          cmakeAppendedArgs: '-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON'
           buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
@@ -220,13 +220,6 @@ jobs:
           cp ../checkVersion.py checkVersion.py
           python checkVersion.py
         shell: bash
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '5.15.2'
-          # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
-
 
       - name: Install XQuartz
         run: |
@@ -304,12 +297,6 @@ jobs:
           python checkVersion.py
         shell: bash
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v2
-        with:
-          version: '5.12.8'
-          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
-
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
       
@@ -321,7 +308,6 @@ jobs:
 
       - name: Compile
         run: |
-          export PATH=$PATH:$Qt5_DIR/bin
           mkdir build
           cd build
           cmake  -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
@@ -335,8 +321,6 @@ jobs:
 
       - name: Build installer
         run: |
-          export PATH=$PATH:$Qt5_DIR/bin
-          export PATH=$PATH:$Qt5_DIR/lib
           cd build
           make package -j8
 
