@@ -201,7 +201,7 @@ jobs:
 
   build_OSX:
     name: "Build for OSX"
-    runs-on: macos-11
+    runs-on: macos-10.15
     timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
