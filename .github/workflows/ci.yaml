@@ -224,7 +224,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '5.12.8'
+          version: '5.15.2'
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
 
@@ -241,8 +241,7 @@ jobs:
           mkdir build
           cd build
           cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
-          cmake ..
-          make
+          make -j8
 
       - name: Run CPack
         run: |
