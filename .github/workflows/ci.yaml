@@ -241,12 +241,7 @@ jobs:
           mkdir build
           cd build
           cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
-          cmake ..
-          cd src/rt
-          make Version.o
-          cat Version.c
-          cd ../..
-          make -j8
+          make
 
       - name: Run CPack
         run: |
