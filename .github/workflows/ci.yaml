@@ -242,7 +242,10 @@ jobs:
           cd build
           cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
           cmake ..
-          cat src/rt/Version.c
+          cd src/rt
+          make Version.o
+          cat Version.c
+          cd ../..
           make -j8
 
       - name: Run CPack
