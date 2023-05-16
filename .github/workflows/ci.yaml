@@ -241,6 +241,7 @@ jobs:
           mkdir build
           cd build
           cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake ..
           make
 
       - name: Run CPack
