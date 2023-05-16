@@ -14,7 +14,7 @@ if(TIFF_LIBRARY)
   endif()
 endif()
 
-if(NOT BUILD_HEADLESS)
+if(NOT BUILD_HEADLESS AND BUILD_QT)
   #plugins loaded by rvu at runtime
   get_target_property(GIF_PLUGIN Qt5::QGifPlugin LOCATION)
   get_target_property(ICO_PLUGIN Qt5::QICOPlugin LOCATION)

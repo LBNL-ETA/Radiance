@@ -50,7 +50,7 @@ add_subdirectory(ot)
 add_subdirectory(px)
 add_subdirectory(rt)
 add_subdirectory(util)
-if(NOT BUILD_HEADLESS AND Qt5Widgets_DIR)
+if(NOT BUILD_HEADLESS AND BUILD_QT)
   # only use qtrvu if qt5 is found
   add_subdirectory(qtrvu)
 endif()

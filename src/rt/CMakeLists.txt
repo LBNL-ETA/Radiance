@@ -105,12 +105,12 @@ if(X11_FOUND)
   set(X11_SOURCES x11.c x11twind.c)
   add_definitions(-DHAS_X11)
 endif()
-if(Qt5Widgets_DIR)
+if(Qt5Widgets_FOUND AND BUILD_QT)
   include_directories(${Qt5Widgets_INCLUDE_DIRS})
   add_definitions(-DHAS_QT)
 endif()
 if(NOT BUILD_HEADLESS)
-  if(X11_FOUND OR Qt5Widgets_DIR)
+  if(X11_FOUND OR BUILD_QT)
     add_executable(rvu
       colortab.c
       devcomm.c
@@ -126,7 +126,7 @@ if(NOT BUILD_HEADLESS)
     list(APPEND targets_to_install rvu)
 
     # only link to rvu-qt-lib if qt is found
-    if(Qt5Widgets_DIR)
+    if(BUILD_QT)
       target_link_libraries(rvu qtrvu)
     endif()
   endif()
@@ -147,7 +147,7 @@ file(COPY rayinit.cal
 )
 
 #install qt.conf & Qt plugins loaded by rvu at runtime. Ignore if we are building as headless
-if(NOT BUILD_HEADLESS)
+if(NOT BUILD_HEADLESS AND BUILD_QT)
   get_target_property(GIF_PLUGIN Qt5::QGifPlugin LOCATION)
   get_target_property(ICO_PLUGIN Qt5::QICOPlugin LOCATION)
   get_target_property(JPEG_PLUGIN Qt5::QJpegPlugin LOCATION)
