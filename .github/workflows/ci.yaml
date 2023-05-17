@@ -238,9 +238,6 @@ jobs:
 
       - name: Run CPack
         run: |
-          export PATH=$PATH:$Qt5_DIR/bin
-          export PATH=$PATH:$Qt5_DIR/lib
-
           cd build
           sudo cpack -G ZIP .
           echo "=============================="
