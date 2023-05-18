@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.57 2022/03/14 23:28:14 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.58 2023/05/18 23:55:10 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -32,6 +32,7 @@ rmx_new(int nr, int nc, int n)
 		dnew->nrows = nr;
 		dnew->ncols = nc;
 		dnew->ncomp = n;
+		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
 	}
 	return(dnew);
 }
@@ -301,7 +302,6 @@ rmx_load(const char *inspec, RMPref rmp)
 		return(NULL);
 	}
 	dnew->dtype = DTascii;			/* assumed w/o FORMAT */
-	dnew->cexp[0] = dnew->cexp[1] = dnew->cexp[2] = 1.f;
 	if (getheader(fp, get_dminfo, dnew) < 0) {
 		fclose(fp);
 		return(NULL);
@@ -338,16 +338,6 @@ rmx_load(const char *inspec, RMPref rmp)
 	case DTxyze:
 		if (!rmx_load_rgbe(dnew, fp))
 			goto loaderr;
-						/* undo exposure? */
-		if ((dnew->cexp[0] != 1.f) | (dnew->cexp[1] != 1.f) |
-				(dnew->cexp[2] != 1.f)) {
-			double	cmlt[3];
-			cmlt[0] = 1./dnew->cexp[0];
-			cmlt[1] = 1./dnew->cexp[1];
-			cmlt[2] = 1./dnew->cexp[2];
-			rmx_scale(dnew, cmlt);
-		}
-		dnew->swapin = 0;
 		break;
 	default:
 		goto loaderr;
@@ -362,6 +352,16 @@ rmx_load(const char *inspec, RMPref rmp)
 	else
 		funlockfile(fp);
 #endif
+						/* undo exposure? */
+	if (dnew->ncomp == 3 && (dnew->cexp[0] != 1.f) |
+			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
+		double	cmlt[3];
+		cmlt[0] = 1./dnew->cexp[0];
+		cmlt[1] = 1./dnew->cexp[1];
+		cmlt[2] = 1./dnew->cexp[2];
+		rmx_scale(dnew, cmlt);
+		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
+	}
 	return(dnew);
 loaderr:					/* should report error? */
 	if (inspec[0] == '!')
@@ -488,6 +488,13 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
+	if (rm->ncomp == 3) {			/* write exposure? */
+		if ((rm->cexp[RED] != rm->cexp[GRN]) |
+				(rm->cexp[GRN] != rm->cexp[BLU]))
+			fputcolcor(rm->cexp, fp);
+		else if (rm->cexp[GRN] != 1.f)
+			fputexpos(rm->cexp[GRN], fp);
+	}
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
 		fprintf(fp, "NROWS=%d\n", rm->nrows);
 		fprintf(fp, "NCOLS=%d\n", rm->ncols);

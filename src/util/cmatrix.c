@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.36 2022/12/04 16:58:08 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.37 2023/05/18 23:55:10 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -177,18 +177,14 @@ cm_getheader(int *dt, int *nr, int *nc, int *swp, COLOR scale, FILE *fp)
 
 /* Allocate and load image data into matrix */
 static CMATRIX *
-cm_load_rgbe(FILE *fp, int nrows, int ncols, COLOR scale)
+cm_load_rgbe(FILE *fp, int nrows, int ncols)
 {
-	int	doscale;
 	CMATRIX	*cm;
 	COLORV	*mp;
 						/* header already loaded */
 	cm = cm_alloc(nrows, ncols);
 	if (!cm)
 		return(NULL);
-	doscale = (scale[0] < .99) | (scale[0] > 1.01) |
-			(scale[1] < .99) | (scale[1] > 1.01) |
-			(scale[2] < .99) | (scale[2] > 1.01) ;
 	mp = cm->cmem;
 	while (nrows--) {
 		if (freadscan((COLOR *)mp, ncols, fp) < 0) {
@@ -196,15 +192,7 @@ cm_load_rgbe(FILE *fp, int nrows, int ncols, COLOR scale)
 			cm_free(cm);
 			return(NULL);
 		}
-		if (doscale) {
-			int	i = ncols;
-			while (i--) {
-				*mp++ *= scale[0];
-				*mp++ *= scale[1];
-				*mp++ *= scale[2];
-			}
-		} else
-			mp += 3*ncols;
+		mp += 3*ncols;
 	}					/* caller closes stream */
 	return(cm);
 }
@@ -257,7 +245,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		break;
 	case DTrgbe:
 	case DTxyze:
-		cm = cm_load_rgbe(fp, nrows, ncols, scale);
+		cm = cm_load_rgbe(fp, nrows, ncols);
 		goto cleanup;
 	default:
 		error(USER, "unexpected data type in cm_load()");
@@ -394,6 +382,17 @@ cleanup:
 	else
 		funlockfile(fp);
 #endif
+	if ((scale[0] < .99) | (scale[0] > 1.01) |
+			(scale[1] < .99) | (scale[1] > 1.01) |
+			(scale[2] < .99) | (scale[2] > 1.01)) {
+		size_t	n = (size_t)ncols*nrows;
+		COLORV	*mp = cm->cmem;
+		while (n--) {		/* apply exposure scaling */
+			*mp++ *= scale[0];
+			*mp++ *= scale[1];
+			*mp++ *= scale[2];
+		}
+	}
 	return(cm);
 EOFerror:
 	sprintf(errmsg, "unexpected EOF reading %s", inspec);
