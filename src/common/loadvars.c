@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.17 2023/06/05 16:09:55 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.18 2023/06/05 16:32:42 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -62,7 +62,7 @@ loadvars(			/* load variables into vv from file */
 int
 setvariable(			/* assign variable according to string */
 	const char	*ass,
-	VARIABLE	*(*mv)(char*)
+	VARIABLE	*(*mv)(const char*)
 )
 {
 	char	varname[32];
