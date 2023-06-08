@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.32 2023/02/07 20:28:16 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.33 2023/06/08 17:39:13 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -41,6 +41,8 @@ readoct(				/* read in octree file or stream */
 	char  *ofn[]
 )
 {
+	time_t  oct_t = 0;
+	time_t	last_it = 0;
 	char  sbuf[512];
 	int  nf;
 	int  i;
@@ -62,6 +64,7 @@ readoct(				/* read in octree file or stream */
 					inpspec);
 			error(SYSTEM, errmsg);
 		}
+		oct_t = fddate(fileno(infp));
 	}
 #ifdef getc_unlocked			/* avoid stupid semaphores */
 	flockfile(infp);
@@ -90,6 +93,11 @@ readoct(				/* read in octree file or stream */
 			readobj(sbuf);
 		if (load & IO_FILES)
 			ofn[nf] = savqstr(sbuf);
+		if (oct_t > last_it) {
+			time_t	t = fdate(sbuf);
+			if (t > last_it)
+				last_it = t;
+		}
 		nf++;
 	}
 	if (load & IO_FILES)
@@ -114,7 +122,7 @@ readoct(				/* read in octree file or stream */
 		if (nobjects != objorig+fnobjects)
 			octerror(USER, "bad object count; octree stale?");
 				/* check for non-surfaces */
-		if (nonsurfintree(scene->cutree))
+		if (oct_t <= last_it && nonsurfintree(scene->cutree))
 			octerror(USER, "modifier in tree; octree stale?");
 	    }
 	}
