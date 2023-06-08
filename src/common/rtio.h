@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.28 2023/02/10 18:29:46 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.29 2023/06/08 17:48:01 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -108,9 +108,9 @@ extern char	*expsave(void);
 extern void	expset(char *ep);
 extern char	*eindex(char *sp);
 					/* defined in savestr.c */
-extern char	*savestr(char *str);
+extern char	*savestr(const char *str);
 extern void	freestr(char *s);
-extern int	shash(char *s);
+extern int	shash(const char *s);
 					/* defined in savqstr.c */
 extern char	*savqstr(char *s);
 extern void	freeqstr(char *s);

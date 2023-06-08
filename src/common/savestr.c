@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.13 2021/05/07 03:09:45 greg Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.14 2023/06/08 17:48:01 greg Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -46,7 +46,7 @@ static S_HEAD  *stab[NHASH];
 
 
 char *
-savestr(char *str)				/* save a string */
+savestr(const char *str)			/* save a string */
 {
 	int  hval;
 	S_HEAD  *sp;
@@ -97,7 +97,7 @@ freestr(char *s)				/* free a string */
 
 
 int
-shash(char *s)
+shash(const char *s)
 {
 	int  h = 0;
 
