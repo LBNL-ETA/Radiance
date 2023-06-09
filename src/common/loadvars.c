@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.18 2023/06/05 16:32:42 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.19 2023/06/09 22:52:47 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -65,6 +65,7 @@ setvariable(			/* assign variable according to string */
 	VARIABLE	*(*mv)(const char*)
 )
 {
+	int	quote = '\0';
 	char	varname[32];
 	int	n;
 	char	*cp;
@@ -106,14 +107,20 @@ setvariable(			/* assign variable according to string */
 		perror(progname);
 		quit(1);
 	}
-	cp = vp->value+i;		/* copy value, squeezing spaces */
+	cp = vp->value+i;		/* copy value */
 	*cp = *ass;
 	for (i = 1; i <= n; i++) {
 		if (ass[i] == NOCHAR)
 			continue;
-		if (isspace(*cp))
-			while (isspace(ass[i]))
-				i++;
+		if (quote) {		/* don't change quoted parts */
+			quote *= (ass[i] != quote);
+		} else {		/* otherwise, squeeze spaces */
+			if (isspace(*cp))
+				while (isspace(ass[i]))
+					i++;
+			if ((ass[i] == '"') | (ass[i] == '\''))
+				quote = ass[i];
+		}
 		*++cp = ass[i];
 	}
 	if (isspace(*cp))		/* remove trailing space */

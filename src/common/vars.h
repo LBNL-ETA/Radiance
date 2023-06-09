@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.8 2023/06/05 16:09:55 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.9 2023/06/09 22:52:47 greg Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -27,9 +27,6 @@ extern char	*progname;	/* global argv[0] from main */
 extern int	nowarn;		/* global boolean to turn warnings off */
 
 /**** The rest is declared in loadvars.c ****/
-
-extern VARIABLE	*matchvar();
-extern char	*nvalue();
 
 #define UPPER(c)	((c)&~0x20)	/* ASCII trick */
 
