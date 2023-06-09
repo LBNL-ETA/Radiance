@@ -1,4 +1,4 @@
-/* RCSid: $Id: trans.h,v 2.4 2003/11/15 17:54:06 schorsch Exp $ */
+/* RCSid: $Id: trans.h,v 2.5 2023/06/09 15:19:19 greg Exp $ */
 /*
  * Translator definitions
  *
@@ -50,7 +50,7 @@ typedef struct rule {
 
 
 	/* defined in common/savestr.c - XXX one of several declarations */
-char	*savestr(char *str);
+char	*savestr(const char *str);
 	/* defined in trans.c */
 RULEHD	*getmapping(char *file, QLIST *qlp);
 
