@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: syscalls.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: syscalls.c,v 1.5 2023/06/09 15:25:49 greg Exp $";
 #endif
 /*
  *  System calls for meta-file routines
@@ -11,12 +11,12 @@ static const char	RCSid[] = "$Id: syscalls.c,v 1.4 2003/08/01 14:14:24 schorsch 
 
 
 FILE *
-efopen(fname, mode)		/* open a file, report errors */
-
-char  *fname, *mode;
-
+efopen(		/* open a file, report errors */
+const char  *fname,
+const char  *mode
+)
 {
- register FILE  *fp;
+ FILE  *fp;
  FILE  *fopen();
 
  if ((fp = fopen(fname, mode)) == NULL)  {
@@ -30,11 +30,10 @@ char  *fname, *mode;
 
 
 FILE *
-mfopen(fname, mode)		/* open a program metafile */
-
-char  *fname;
-char  *mode;
-
+mfopen(		/* open a program metafile */
+const char  *fname,
+const char  *mode
+)
 {
     char  *mdir, stemp[MAXFNAME];
     char  *getenv();

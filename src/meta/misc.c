@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: misc.c,v 1.5 2005/09/23 19:22:37 greg Exp $";
+static const char	RCSid[] = "$Id: misc.c,v 1.6 2023/06/09 15:25:49 greg Exp $";
 #endif
 /*
  *   Miscellaneous functions for meta-files
@@ -18,11 +18,11 @@ char  coms[] = COML;
 
 int
 comndx(		/* return index for command */
-	register int  c
+	int  c
 )
 
 {
- register char  *cp;
+ char  *cp;
 
  if (!isalpha(c))
     return(-1);
@@ -41,11 +41,11 @@ comndx(		/* return index for command */
 
 PRIMITIVE  *
 pop(			/* pop top off plist */
-	register PLIST  *pl
+	PLIST  *pl
 )
 
 {
- register PRIMITIVE  *p;
+ PRIMITIVE  *p;
 
  if ((p = pl->ptop) != NULL)  {
     if ((pl->ptop = p->pnext) == NULL)
@@ -60,8 +60,8 @@ pop(			/* pop top off plist */
 
 void
 push(		/* push primitive onto plist */
-	register PRIMITIVE  *p,
-	register PLIST  *pl
+	PRIMITIVE  *p,
+	PLIST  *pl
 )
 
 {
@@ -76,8 +76,8 @@ push(		/* push primitive onto plist */
 
 void
 add(		/* add primitive to plist */
-	register PRIMITIVE  *p,
-	register PLIST  *pl
+	PRIMITIVE  *p,
+	PLIST  *pl
 )
 {
 
@@ -94,8 +94,8 @@ add(		/* add primitive to plist */
 
 void
 append(		/* append pl1 to the end of pl2 */
-	register PLIST  *pl1,
-	register PLIST  *pl2
+	PLIST  *pl1,
+	PLIST  *pl2
 )
 
 {
@@ -114,7 +114,7 @@ append(		/* append pl1 to the end of pl2 */
 
 void
 fargs(		/* free any arguments p has */
-register PRIMITIVE  *p
+PRIMITIVE  *p
 )
 
 {
@@ -130,7 +130,7 @@ register PRIMITIVE  *p
 
 char *
 nextscan(		/* scan and advance through string */
-	register char  *start,
+	char  *start,
 	char  *format,
 	char  *result
 )
@@ -151,9 +151,9 @@ nextscan(		/* scan and advance through string */
 
 void
 mcopy(	/* copy p2 into p1 size n */
-register char  *p1,
-register char  *p2,
-register int  n
+char  *p1,
+char  *p2,
+int  n
 )
 
 {

@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.11 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid: $Id: meta.h,v 1.12 2023/06/09 15:25:49 greg Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -120,11 +120,12 @@ typedef struct plist  PLIST;
  *   External declarations
  */
 
-char  *savestr();
+char  *savestr(const char *str);
 
-PRIMITIVE *pop();
+PRIMITIVE *pop(PLIST *pl);
 
-FILE  *efopen(), *mfopen();
+FILE  *efopen(const char *fn, const char *mode);
+FILE  *mfopen(const char *fn, const char *mode);
 
 extern char  coms[];
 extern char  errmsg[];
