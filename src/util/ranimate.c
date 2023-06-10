@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.57 2022/06/01 17:08:24 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.58 2023/06/10 15:49:55 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -67,28 +67,28 @@ int	NVARS = 24;		/* total number of variables */
 VARIABLE	vv[] = {		/* variable-value pairs */
 	{"ANIMATE",	2,	0,	NULL,	onevalue},
 	{"ARCHIVE",	2,	0,	NULL,	onevalue},
-	{"BASENAME",	3,	0,	NULL,	onevalue},
+	{"BASENAME",	3,	0,	NULL,	strvalue},
 	{"DBLUR",	2,	0,	NULL,	onevalue},
-	{"DIRECTORY",	3,	0,	NULL,	onevalue},
+	{"DIRECTORY",	3,	0,	NULL,	strvalue},
 	{"DISKSPACE",	3,	0,	NULL,	fltvalue},
 	{"END",		2,	0,	NULL,	intvalue},
 	{"EXPOSURE",	3,	0,	NULL,	onevalue},
 	{"host",	4,	0,	NULL,	NULL},
 	{"INTERPOLATE",	3,	0,	NULL,	intvalue},
 	{"MBLUR",	2,	0,	NULL,	onevalue},
-	{"NEXTANIM",	3,	0,	NULL,	onevalue},
-	{"OCTREE",	3,	0,	NULL,	onevalue},
+	{"NEXTANIM",	3,	0,	NULL,	strvalue},
+	{"OCTREE",	3,	0,	NULL,	strvalue},
 	{"OVERSAMPLE",	2,	0,	NULL,	fltvalue},
 	{"pfilt",	2,	0,	NULL,	catvalues},
 	{"pinterp",	2,	0,	NULL,	catvalues},
 	{"render",	3,	0,	NULL,	catvalues},
 	{"RESOLUTION",	3,	0,	NULL,	onevalue},
-	{"RIF",		3,	0,	NULL,	onevalue},
+	{"RIF",		3,	0,	NULL,	strvalue},
 	{"RSH",		3,	0,	NULL,	onevalue},
 	{"RTRACE",	2,	0,	NULL,	boolvalue},
 	{"START",	2,	0,	NULL,	intvalue},
 	{"TRANSFER",	2,	0,	NULL,	onevalue},
-	{"VIEWFILE",	2,	0,	NULL,	onevalue},
+	{"VIEWFILE",	2,	0,	NULL,	strvalue},
 };
 
 #define SFNAME	"STATUS"		/* status file name */

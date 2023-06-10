@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.9 2023/06/09 22:52:47 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.10 2023/06/10 15:49:55 greg Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -54,6 +54,7 @@ extern void	catvalues(VARIABLE *vp);
 extern int	badmatch(char *tv, char *cv);
 extern void	boolvalue(VARIABLE *vp);
 extern void	qualvalue(VARIABLE *vp);
+extern void	strvalue(VARIABLE *vp);
 extern void	intvalue(VARIABLE *vp);
 extern void	fltvalue(VARIABLE *vp);
 extern void	printvars(FILE *fp);

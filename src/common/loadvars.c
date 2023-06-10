@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.19 2023/06/09 22:52:47 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.20 2023/06/10 15:49:55 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -264,6 +264,22 @@ qualvalue(			/* check qualitative var. for legal values */
 	fprintf(stderr, "%s: illegal value for qualitative variable '%s'\n",
 			progname, vp->name);
 	quit(1);
+}
+
+void
+strvalue(				/* check for single (quoted) string value */
+	VARIABLE	*vp
+)
+{
+	if (!vp->nass) return;
+	onevalue(vp);
+	if ((vp->value[0] == '"') | (vp->value[0] == '\'')) {
+		char	*cp = vp->value + strlen(vp->value+1);
+		if ((cp != vp->value) & (*cp == vp->value[0])) {
+			vp->value++;	/* elide quotation marks */
+			*cp = '\0';
+		}
+	}
 }
 
 

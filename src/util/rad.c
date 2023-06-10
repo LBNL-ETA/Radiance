@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.130 2023/01/24 21:54:49 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.131 2023/06/10 15:49:55 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -64,7 +64,7 @@ static const char	RCSid[] = "$Id: rad.c,v 2.130 2023/01/24 21:54:49 greg Exp $";
 int NVARS = 31;
 
 VARIABLE	vv[] = {		/* variable-value pairs */
-	{"AMBFILE",	3,	0,	NULL,	onevalue},
+	{"AMBFILE",	3,	0,	NULL,	strvalue},
 	{"DETAIL",	3,	0,	NULL,	qualvalue},
 	{"EXPOSURE",	3,	0,	NULL,	fltvalue},
 	{"EYESEP",	3,	0,	NULL,	fltvalue},
@@ -75,15 +75,15 @@ VARIABLE	vv[] = {		/* variable-value pairs */
 	{"mkpmap",	3,	0,	NULL,	catvalues},
 	{"objects",	3,	0,	NULL,	catvalues},
 	{"oconv",	3,	0,	NULL,	catvalues},
-	{"OCTREE",	3,	0,	NULL,	onevalue},
-	{"OPTFILE",	3,	0,	NULL,	onevalue},
-	{"PCMAP",	2,	0,	NULL,	onevalue},
+	{"OCTREE",	3,	0,	NULL,	strvalue},
+	{"OPTFILE",	3,	0,	NULL,	strvalue},
+	{"PCMAP",	2,	0,	NULL,	strvalue},
 	{"PENUMBRAS",	3,	0,	NULL,	boolvalue},
 	{"pfilt",	2,	0,	NULL,	catvalues},
-	{"PGMAP",	2,	0,	NULL,	onevalue},
-	{"PICTURE",	3,	0,	NULL,	onevalue},
+	{"PGMAP",	2,	0,	NULL,	strvalue},
+	{"PICTURE",	3,	0,	NULL,	strvalue},
 	{"QUALITY",	3,	0,	NULL,	qualvalue},
-	{"RAWFILE",	3,	0,	NULL,	onevalue},
+	{"RAWFILE",	3,	0,	NULL,	strvalue},
 	{"render",	3,	0,	NULL,	catvalues},
 	{"REPORT",	3,	0,	NULL,	onevalue},
 	{"RESOLUTION",	3,	0,	NULL,	onevalue},
@@ -93,7 +93,7 @@ VARIABLE	vv[] = {		/* variable-value pairs */
 	{"UP",		2,	0,	NULL,	onevalue},
 	{"VARIABILITY",	3,	0,	NULL,	qualvalue},
 	{"view",	2,	0,	NULL,	NULL},
-	{"ZFILE",	2,	0,	NULL,	onevalue},
+	{"ZFILE",	2,	0,	NULL,	strvalue},
 	{"ZONE",	2,	0,	NULL,	onevalue},
 };
 
