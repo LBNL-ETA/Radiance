@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: pgblur.csh,v 1.2 2008/11/10 19:08:19 greg Exp $
+# RCSid $Id: pgblur.csh,v 1.3 2023/06/21 15:43:16 greg Exp $
 #
 # Apply Gaussian blur without resizing image
 # More efficient than straight pfilt for large blurs
@@ -20,9 +20,9 @@ if ( $reduc <= 1 ) then
 	exec pfilt -1 -r $rad $inp:q
 endif
 set filt = `ev "$rad/$reduc"`
-set pr=`getinfo -d < $inp:q | sed 's/^-Y \([1-9][0-9]*\) +X \([1-9][0-9]*\)$/\2 \1/'`
+set pr=`getinfo -d < $inp:q`
 pfilt -1 -x /$reduc -y /$reduc $inp:q \
-	| pfilt -1 -r $filt -x $pr[1] -y $pr[2]
+	| pfilt -1 -r $filt -x $pr[4] -y $pr[2]
 exit 0
 userr:
 echo Usage: "$0 -r radius input.hdr"
