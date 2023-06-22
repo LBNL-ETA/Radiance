@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: pacuity.csh,v 3.6 2008/11/10 19:08:19 greg Exp $
+# RCSid: $Id: pacuity.csh,v 3.7 2023/06/22 16:40:11 greg Exp $
 #
 # Adjust picture acuity according to human visual abilities
 #
@@ -35,7 +35,8 @@ tabfunc -i acuity > $tfc1 << EOF
 3.148	51.06
 3.550	51.09
 EOF
-set pres=(`getinfo -d < $ifile | sed 's/^-Y \([1-9][0-9]*\) +X \([1-9][0-9]*\)$/\2 \1/'`)
+set pres=`getinfo -d < $ifile`
+set pres=($pres[4] $pres[2])
 set vp=`vwright V < $ifile`
 set aext=(`pextrem -o $ifile | rcalc -f $tfc1 -e 'max(a,b):if(a-b,a,b);$1=acuity(log10(max(179*(.265*$3+.67*$4+.065*$5),1e-4)))'`)
 ( rcalc -e "$vp" -e "A:3438*sqrt(Vhn/$pres[1]*Vvn/$pres[2])" \

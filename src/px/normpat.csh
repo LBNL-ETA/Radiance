@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: normpat.csh,v 2.7 2008/08/25 04:50:32 greg Exp $
+# RCSid: $Id: normpat.csh,v 2.8 2023/06/22 16:40:11 greg Exp $
 #
 # Normalize a pattern for tiling (-b option blends edges) by removing
 # lowest frequencies from image (-f option) and reducing to
@@ -87,7 +87,8 @@ $ha
 w
 q
 _EOF_
-	set resolu=`getinfo -d < $td/pf | sed 's/-Y \([1-9][0-9]*\) +X \([1-9][0-9]*\)/\2 \1/'`
+	set resolu=`getinfo -d < $td/pf`
+	set resolu=($resolu[4] $resolu[2])
 	if ( ! $?dofsub ) then
 		mv $td/pf $td/hf
 		goto donefsub

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: vlpic.csh,v 3.4 2008/08/25 04:50:32 greg Exp $
+# RCSid: $Id: vlpic.csh,v 3.5 2023/06/22 16:40:11 greg Exp $
 #
 # Compute falsecolor image of visibility level
 # using the wacky formulas of Werner Adrian.
@@ -30,7 +30,8 @@ set tp8=`mktemp /tmp/vlr8pic.XXXXXX`
 set tf=($tc $tp1 $tp2 $tp4 $tp8)
 set inpic=$argv[1]
 onintr quit
-set pr=(`getinfo -d < $inpic | sed 's/^-Y \([1-9][0-9]*\) +X \([1-9][0-9]*\)$/\2 \1/'`)
+set pr=`getinfo -d < $inpic`
+set pr=($pr[4] $pr[2])
 # ( vwright V < $inpic ; cat ) > $tc << _EOF_
 cat > $tc << _EOF_
 { A : 3438 * sqrt(Vhn/xmax*Vvn/ymax);	{ pixel size (in minutes) } }
