@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.24 2023/06/30 00:58:47 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.25 2023/06/30 15:00:32 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -125,7 +125,7 @@ oldreadcolrs(			/* read in an old-style colr scanline */
 	FILE  *fp
 )
 {
-	int  rshift = -1;
+	int  rshift = 0;
 	int  i;
 	
 	while (len > 0) {
@@ -137,8 +137,7 @@ oldreadcolrs(			/* read in an old-style colr scanline */
 			return(-1);
 		if (scanline[0][GRN] == 1 &&
 				(scanline[0][RED] == 1) &
-				(scanline[0][BLU] == 1) &&
-				rshift >= 0) {
+				(scanline[0][BLU] == 1)) {
 			i = scanline[0][EXP] << rshift;
 			while (i--) {
 				copycolr(scanline[0], scanline[-1]);
