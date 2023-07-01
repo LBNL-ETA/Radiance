@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.25 2023/06/30 15:00:32 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.26 2023/07/01 01:31:17 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -185,20 +185,17 @@ freadcolrs(			/* read in an encoded colr scanline */
 	int  i, j;
 	int  code, val;
 					/* determine scanline type */
-	if ((len < MINELEN) | (len > MAXELEN))
-		return(oldreadcolrs(scanline, len, fp));
+	if (len <= 0)
+		return(0);
 	if ((i = getc(fp)) == EOF)
 		return(-1);
-	if (i != 2) {
-		ungetc(i, fp);
-		return(oldreadcolrs(scanline, len, fp));
-	}
+	scanline[0][RED] = i;
 	scanline[0][GRN] = getc(fp);
 	scanline[0][BLU] = getc(fp);
 	if ((i = getc(fp)) == EOF)
 		return(-1);
-	if ((scanline[0][GRN] != 2) | ((scanline[0][BLU] & 0x80) != 0)) {
-		scanline[0][RED] = 2;
+	if ((scanline[0][RED] != 2) | (scanline[0][GRN] != 2) |
+			(scanline[0][BLU] & 0x80)) {
 		scanline[0][EXP] = i;
 		return(oldreadcolrs(scanline+1, len-1, fp));
 	}
