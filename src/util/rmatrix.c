@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.58 2023/05/18 23:55:10 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.59 2023/07/01 15:25:26 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -119,7 +119,7 @@ get_dminfo(char *s, void *p)
 	char	fmt[MAXFMTLEN];
 	int	i;
 
-	if (headidval(fmt, s))
+	if (headidval(NULL, s))
 		return(0);
 	if (!strncmp(s, "NCOMP=", 6)) {
 		ip->ncomp = atoi(s+6);
