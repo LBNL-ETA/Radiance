@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.59 2022/01/12 21:07:39 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.60 2023/07/11 02:22:30 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -302,6 +302,7 @@ init(			/* set up output file and start rpict */
 		fputnow(fp);
 		if (pixaspect < .99 || pixaspect > 1.01)
 			fputaspect(pixaspect, fp);
+		fputprims(stdprims, fp);
 		fputformat(COLRFMT, fp);
 		fputc('\n', fp);
 		fprtresolu(hres*hmult, vres*vmult, fp);
