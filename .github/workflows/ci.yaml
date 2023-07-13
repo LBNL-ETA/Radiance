@@ -132,10 +132,10 @@ jobs:
 
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
-          version: '5.12.8'
-          mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
+          version: '5.15.2'
+          # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
       - name: Install CMake 
         uses: ilammy/msvc-dev-cmd@v1
