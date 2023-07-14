@@ -1,7 +1,7 @@
-# RCSid $Id: illum_trans2.rad,v 1.2 2021/02/20 07:56:29 greg Exp $
+# RCSid $Id: illum_trans2.rad,v 1.3 2023/07/14 15:03:47 greg Exp $
 # A trans2 window to turn into an llum with mkillum
 
-#@mkillum l- f=trans2_ill c=a d=100 s=128 i=void
+#@mkillum l- f=trans2_ill c=a d=200 s=256 i=void
 
 void trans2 trans2_mat
 4 0 0 1 .
