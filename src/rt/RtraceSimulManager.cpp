@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.1 2023/02/08 17:41:48 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.2 2023/07/26 23:27:44 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -28,6 +28,13 @@ RadSimulManager::LoadOctree(const char *octn)
 
 	ray_init((char *)octn);
 	return true;
+}
+
+// How many processors are there?
+int
+RadSimulManager::GetNCores()
+{
+	return 1;		// XXX temporary
 }
 
 // Set number of computation threads (0 => #cores)

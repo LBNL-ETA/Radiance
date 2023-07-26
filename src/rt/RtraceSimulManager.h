@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.1 2023/02/08 17:41:48 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.2 2023/07/26 23:27:44 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -22,6 +22,9 @@ typedef void	RayReportCall(RAY *r, void *cd);
 /// Multi-threaded simulation manager base class
 class RadSimulManager {
 	int			nThreads;	// number of active threads
+protected:
+				/// How many cores are there?
+	static int		GetNCores();
 public:
 				RadSimulManager(const char *octn = NULL) {
 					LoadOctree(octn);
@@ -74,6 +77,13 @@ public:
 					traceCall = NULL; tcData = NULL;
 				}
 				~RtraceSimulManager() {}
+				/// Set number of computation threads (0 => #cores)
+	int			SetThreadCount(int nt = 0) {
+					if (nt <= 0) nt = GetNCores();
+					if (nt == NThreads()) return nt;
+					FlushQueue();
+					return RadSimulManager::SetThreadCount(nt);
+				}
 				/// Add ray bundle to queue w/ optional 1st ray ID
 	int			EnqueueBundle(const FVECT orig_direc[], int n,
 						RNUMBER rID0 = 0);
