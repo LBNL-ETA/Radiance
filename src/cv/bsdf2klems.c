@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.34 2021/12/07 23:55:02 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.35 2023/07/26 15:50:03 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -639,7 +639,7 @@ main(int argc, char *argv[])
 			single_plane_incident = 0;
 			break;
 		case 'f':
-			if (!argv[i][2]) {
+			if ((argv[i][0] == '-') & !argv[i][2]) {
 				if (strchr(argv[++i], '=') != NULL) {
 					add_wbsdf("-f", 1);
 					add_wbsdf(argv[i], 1);
