@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ratrace.cpp,v 2.1 2023/02/08 17:41:48 greg Exp $";
+static const char	RCSid[] = "$Id: ratrace.cpp,v 2.2 2023/07/31 23:14:02 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -190,16 +190,16 @@ rtrace(				/* trace rays from stdin or file */
 	if (castonly || every_out[0] != NULL)
 		nproc = 1;		/* don't bother multiprocessing */
 	else if (nproc <= 0)		// need to get default for system?
-		nproc = myRTmanager.SetThreadCount();
-	if (ray_out[0])
-		myRTmanager.SetCookedCall(printvals);
-	if (every_out[0])
-		myRTmanager.SetTraceCall(ourtrace);
+		nproc = myRTmanager.GetNCores();
 	if ((flushIntvl > 0) & (nproc > flushIntvl)) {
 		error(WARNING, "reducing number of processes to match flush interval");
 		nproc = flushIntvl;
 	}
 	nproc = myRTmanager.SetThreadCount(nproc);
+	if (ray_out[0])
+		myRTmanager.SetCookedCall(printvals);
+	if (every_out[0])
+		myRTmanager.SetTraceCall(ourtrace);
 	myRTmanager.rtFlags |= RTdoFIFO;
 	if (hresolu > 0) {		// print resolution string if appropriate
 		if (vresolu > 0)
@@ -214,7 +214,7 @@ rtrace(				/* trace rays from stdin or file */
 			error(WARNING, "extra ray(s) past end of input");
 			n = vcount;
 		}			// put ray(s) into queue
-		if (myRTmanager.EnqueueBundle(ivbuf, n) < 0)
+		if (myRTmanager.EnqueueBundle(ivbuf, n) < n)
 			error(USER, "ray queuing failure");
 		pending |= (n > 1);	// time to flush output?
 		bool	atZero = IsZeroVec(ivbuf[2*n-1]);

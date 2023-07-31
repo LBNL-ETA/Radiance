@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.2 2023/07/26 23:27:44 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.3 2023/07/31 23:14:02 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -22,9 +22,6 @@ typedef void	RayReportCall(RAY *r, void *cd);
 /// Multi-threaded simulation manager base class
 class RadSimulManager {
 	int			nThreads;	// number of active threads
-protected:
-				/// How many cores are there?
-	static int		GetNCores();
 public:
 				RadSimulManager(const char *octn = NULL) {
 					LoadOctree(octn);
@@ -35,6 +32,8 @@ public:
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn);
+				/// How many cores are there?
+	static int		GetNCores();
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0);
 				/// Check thread count (1 means no multi-threading)
@@ -48,7 +47,7 @@ public:
 					return (octname && nsceneobjs > 0);
 				}
 				/// Close octree, free data, return status
-	int			Cleanup();
+	int			Cleanup(bool everything = false);
 };
 
 /// Flags to control rendering operations
@@ -76,7 +75,9 @@ public:
 					SetCookedCall(cb, cd);
 					traceCall = NULL; tcData = NULL;
 				}
-				~RtraceSimulManager() {}
+				~RtraceSimulManager() {
+					FlushQueue();
+				}
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0) {
 					if (nt <= 0) nt = GetNCores();
@@ -91,10 +92,10 @@ public:
 	bool			EnqueueRay(const FVECT org, const FVECT dir,
 						RNUMBER rID = 0) {
 					if (dir == org+1)
-						return EnqueueBundle((const FVECT *)org, 1, rID);
+						return(EnqueueBundle((const FVECT *)org, 1, rID) > 0);
 					FVECT	orgdir[2];
 					VCOPY(orgdir[0], org); VCOPY(orgdir[1], dir);
-					return EnqueueBundle(orgdir, 1, rID);
+					return(EnqueueBundle(orgdir, 1, rID) > 0);
 				}
 				/// Set/change cooked ray callback & FIFO flag
 	void			SetCookedCall(RayReportCall *cb, void *cd = NULL) {
@@ -116,13 +117,13 @@ public:
 				/// Finish pending rays and complete callbacks
 	bool			FlushQueue();
 				/// Close octree, free data, return status
-	int			Cleanup() {
+	int			Cleanup(bool everything = false) {
 					SetCookedCall(NULL);
 					SetTraceCall(NULL);
 					rtFlags = 0;
 					UpdateMode();
 					lastRayID = 0;
-					return RadSimulManager::Cleanup();
+					return RadSimulManager::Cleanup(everything);
 				}
 };
 

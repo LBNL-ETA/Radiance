@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.88 2023/02/08 17:41:48 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.89 2023/07/31 23:14:02 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -440,3 +440,5 @@ oocsort.o: oocsort.c oocsort.h ../common/fvect.h
 oocbuild.o: oocbuild.c oocbuild.h oocsort.h oococt.h
 
 oocnn.o: oocnn.c oocnn.h oococt.h oocsort.h
+
+RtraceSimulManager.o ratrace.o:	RtraceSimulManager.h

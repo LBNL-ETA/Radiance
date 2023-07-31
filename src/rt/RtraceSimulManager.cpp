@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.2 2023/07/26 23:27:44 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.3 2023/07/31 23:14:02 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -21,7 +21,7 @@ RadSimulManager::LoadOctree(const char *octn)
 	if (octname) {		// already running?
 		if (octn && !strcmp(octn, octname))
 			return true;
-		Cleanup();
+		Cleanup(false);
 	}
 	if (!octn)
 		return false;
@@ -46,9 +46,9 @@ RadSimulManager::SetThreadCount(int nt)
 
 // Close octree, free data, return status
 int
-RadSimulManager::Cleanup()
+RadSimulManager::Cleanup(bool everything)
 {
-	ray_done(0);
+	ray_done(everything);
 	return 0;
 }
 
@@ -173,12 +173,12 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 				res.rmax = d;
 			samplendx++;
 			rayvalue(&res);		// XXX single-threaded for now
-			++nqueued;
 		} else if (ThreadsAvailable() < NThreads() &&
 				!FlushQueue())
 			return -1;
 		if (cookedCall)
 			(*cookedCall)(&res, ccData);
+		nqueued++;
 	}
 	return nqueued;
 }
