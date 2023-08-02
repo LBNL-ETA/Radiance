@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.3 2023/07/31 23:14:02 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.4 2023/08/02 00:04:31 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -22,6 +22,9 @@ typedef void	RayReportCall(RAY *r, void *cd);
 /// Multi-threaded simulation manager base class
 class RadSimulManager {
 	int			nThreads;	// number of active threads
+protected:
+				// Assign ray to subthread (fails if NThreads()<2)
+	bool			SplitRay(RAY *r);
 public:
 				RadSimulManager(const char *octn = NULL) {
 					LoadOctree(octn);
@@ -46,6 +49,10 @@ public:
 	bool			Ready() const {
 					return (octname && nsceneobjs > 0);
 				}
+				/// Process a ray (in subthread), optional result
+	bool			ProcessRay(RAY *r);
+				/// Wait for next result (or fail)
+	bool			WaitResult(RAY *r);
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false);
 };
@@ -65,6 +72,8 @@ class RtraceSimulManager : public RadSimulManager {
 				// Check for changes to render flags, etc.
 	bool			UpdateMode();
 protected:
+				// Add a ray result to FIFO, flushing what we can
+	int			QueueResult(const RAY &ra);
 	RNUMBER			lastRayID;	// last ray ID assigned
 public:
 	int			rtFlags;	// operation (RT*) flags
@@ -114,8 +123,8 @@ public:
 					return (cookedCall != NULL) | (traceCall != NULL) &&
 						RadSimulManager::Ready();
 				}
-				/// Finish pending rays and complete callbacks
-	bool			FlushQueue();
+				/// Finish pending rays and complete callbacks (return #sent)
+	int			FlushQueue();
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {
 					SetCookedCall(NULL);

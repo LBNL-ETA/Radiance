@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.3 2023/07/31 23:14:02 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.4 2023/08/02 00:04:31 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -42,6 +42,44 @@ int
 RadSimulManager::SetThreadCount(int nt)
 {
 	return nThreads = 1;	// XXX temporary
+}
+
+// Assign ray to subthread (fails if NThreads()<2)
+bool
+RadSimulManager::SplitRay(RAY *r)
+{
+	if (NThreads() < 2 || ThreadsAvailable() < 1)
+		return false;
+
+	return false;	// UNIMPLEMENTED
+}
+
+// Process a ray (in subthread), optional result
+bool
+RadSimulManager::ProcessRay(RAY *r)
+{
+	if (!r || !Ready()) return false;
+	if (NThreads() < 2) {	// single-threaded mode?
+		samplendx++;
+		rayvalue(r);
+		return true;
+	}
+	if (ThreadsAvailable() >= 1) {
+		SplitRay(r);	// queue not yet full
+		return false;
+	}
+	RAY	toDo = *r;
+	if (!WaitResult(r))	// need a free thread
+		return false;
+	SplitRay(&toDo);	// queue up new ray
+	return true;		// return older result
+}
+
+// Wait for next result (or fail)
+bool
+RadSimulManager::WaitResult(RAY *r)
+{
+	return false;	// UNIMPLEMENTED
 }
 
 // Close octree, free data, return status
@@ -89,10 +127,8 @@ RtraceSimulManager::UpdateMode()
 		} else		// cannot undo this...
 			rtFlags |= RTtraceSources;
 	}
-	if (misMatch & RTdoFIFO) {
-		if (!FlushQueue())
-			return false;
-	}
+	if (misMatch & RTdoFIFO && FlushQueue() < 0)
+		return false;
 	curFlags = rtFlags;
 				// update trace callback
 	if (traceCall) {
@@ -139,6 +175,13 @@ raycast(RAY *r)
 	}
 }
 
+// Add a ray result to FIFO, flushing what we can
+int
+RtraceSimulManager::QueueResult(const RAY &ra)
+{
+	return 0;	// UNIMPLEMENTED
+}
+
 // Add ray bundle to queue w/ optional 1st ray ID
 int
 RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
@@ -156,7 +199,6 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 		return -1;
 
 	while (n-- > 0) {		// queue each ray
-		double	d;
 		VCOPY(res.rorg, orig_direc[0]);
 		VCOPY(res.rdir, orig_direc[1]);
 		orig_direc += 2;
@@ -167,16 +209,21 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 			res.revf = rayirrad;
 		else if (castonly)
 			res.revf = raycast;
-		d = normalize(res.rdir);
+		double	d = normalize(res.rdir);
+		bool	sendRes = (cookedCall != NULL);
 		if (d > 0) {		// direction vector is valid?
 			if (curFlags & RTlimDist)
 				res.rmax = d;
-			samplendx++;
-			rayvalue(&res);		// XXX single-threaded for now
+			if ((sendRes &= ProcessRay(&res)) &&
+					rtFlags & RTdoFIFO && NThreads() > 1) {
+				if (QueueResult(res) < 0)
+					return -1;
+				sendRes = false;
+			}
 		} else if (ThreadsAvailable() < NThreads() &&
-				!FlushQueue())
+				FlushQueue() < 0)
 			return -1;
-		if (cookedCall)
+		if (sendRes)		// may be dummy ray
 			(*cookedCall)(&res, ccData);
 		nqueued++;
 	}
@@ -184,8 +231,22 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 }
 
 // Finish pending rays and complete callbacks
-bool
+int
 RtraceSimulManager::FlushQueue()
 {
-	return true;		// XXX no-op for now
+	int	nsent = 0;
+	RAY	res;
+
+	while (WaitResult(&res)) {
+		if (!cookedCall) continue;
+		if (rtFlags & RTdoFIFO) {
+			int	ns = QueueResult(res);
+			if (ns < 0) return ns;
+			nsent += ns;
+		} else {
+			(*cookedCall)(&res, ccData);
+			nsent++;
+		}
+	}
+	return nsent;
 }
