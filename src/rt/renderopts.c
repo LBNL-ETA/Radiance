@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.20 2022/10/19 23:10:34 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.21 2023/08/14 23:45:41 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -74,6 +74,7 @@ match_subfeatures(	/* check if subfeatures are supported */
 		*cp = '\0';
 		n = cp - subfeat;
 		if (!(cp = strstr(mysublist, subfeat)) ||
+				(cp[-1] != ',') & (cp[-1] != '=') ||
 				(cp[n] != ',') & (cp[n] != '\n'))
 			return(0);	/* missing this one! */
 	}
