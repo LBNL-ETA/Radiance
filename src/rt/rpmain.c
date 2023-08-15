@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.26 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.27 2023/08/15 01:19:37 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -58,6 +58,7 @@ static void printdefaults(void);
 					/* rpict additional features */
 #ifdef PERSIST
 #define RPICT_FEATURES	"Persist\nParallelPersist\n" \
+		"ParticipatingMedia=Mist\n" \
 		"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
@@ -65,6 +66,7 @@ static void printdefaults(void);
 		"AdaptiveShadowTesting\nOutputs=v,l\n"
 #else
 #define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
+		"ParticipatingMedia=Mist\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
