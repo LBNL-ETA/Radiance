@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.15 2022/11/12 20:51:47 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.16 2023/08/15 23:39:58 greg Exp $"
 .TH "FALSECOLOR" "1" "12/12/11" "RADIANCE" ""
 .SH "NAME"
 falsecolor \- make a false color RADIANCE picture
@@ -119,7 +119,7 @@ The
 .I \-c0
 option turns off false color output entirely, and is really only useful
 with the
-.I \-dim
+.I \-odim
 option to overlay a matrix of values, or the
 .I \-e
 option to print the extrema values, as described below.
@@ -137,6 +137,8 @@ option may be used to specify a subrectangle of the image to overlay,
 where the minimum x and y picture coordinates for the lower-left
 corner are given before the maximum coordinates corresponding
 to the upper-right corner.
+The input picture must still cover the entire image area and match
+the underlying background dimensions.
 .PP
 The
 .I \-e
