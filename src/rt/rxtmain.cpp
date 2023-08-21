@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ratmain.cpp,v 2.1 2023/02/08 17:41:48 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.1 2023/08/21 22:39:05 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program

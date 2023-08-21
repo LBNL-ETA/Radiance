@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ratrace.cpp,v 2.2 2023/07/31 23:14:02 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.1 2023/08/21 22:39:05 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
