@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: checkBSDF.c,v 2.9 2022/08/12 23:55:00 greg Exp $";
+static const char RCSid[] = "$Id: checkBSDF.c,v 2.10 2023/09/11 18:43:36 greg Exp $";
 #endif
 /*
  *  checkBSDF.c
@@ -95,7 +95,7 @@ detailComponent(const char *nm, const SDValue *lamb, const SDSpectralDF *df)
 		printf("%5.1f%%\t\t%.2f deg\n", 100.*(Lamb+df->maxHemi),
 				sqrt(df->minProjSA/M_PI)*(360./M_PI));
 	else
-		printf("%5.1f%%\t\t180 deg", Lamb);
+		printf("%5.1f%%\t\t180 deg\n", Lamb);
 }
 
 /* Add a value to stats */
