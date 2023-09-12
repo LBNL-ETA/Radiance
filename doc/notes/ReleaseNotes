@@ -2600,3 +2600,6 @@ modifier definition order in the input.
 
 Increased octree and object limits to allow scenes with billions
 of primitives.
+
+Made reciprocity averaging default to "off" in bsdf2ttree, as it seems
+to create more problems than it solves.
