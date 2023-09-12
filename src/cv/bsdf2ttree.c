@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.59 2023/07/26 15:50:03 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.60 2023/09/12 16:40:57 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -20,7 +20,7 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.59 2023/07/26 15:50:03 greg E
 				/* global argv[0] */
 char			*progname;
 				/* reciprocity averaging option */
-static const char	*recip = " -a";
+static const char	*recip = "";
 				/* percentage to cull (<0 to turn off) */
 static double		pctcull = 90.;
 				/* sampling order */

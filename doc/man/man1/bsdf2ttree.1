@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.11 2021/12/12 20:17:02 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.12 2023/09/12 16:40:57 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -64,11 +64,11 @@ by an immediately following integer argument.
 (The default progress bar length is 79 characters.)\0
 .PP
 The
-.I \-a
-option turns off reciprocity averaging for isotropic scattering or anisotropic reflection.
-Normally on (+a), this ensures that each tensor-tree hemisphere follows symmetry
+.I \+a
+option turns on reciprocity averaging for isotropic scattering or anisotropic reflection.
+Normally off (-a), this enforces each tensor-tree hemisphere to follow symmetry
 implied by Helmholtz reciprocity, and is designed to reduce noise in measured data.
-However, for some data, reciprocity averaging can actually make the output worse.
+However, for some data, reciprocity averaging can make the output worse.
 .PP
 The maximum resolution of the tensor tree may be controlled by the
 .I \-g
