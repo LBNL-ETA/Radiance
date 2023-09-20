@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf_context.c,v 3.2 2012/05/17 17:10:23 greg Exp $";
+static const char	RCSid[] = "$Id: mgf_context.c,v 3.3 2023/09/20 21:56:13 greg Exp $";
 #endif
 /*
  * Context handlers
@@ -59,8 +59,8 @@ c_hcolor(int ac, char **av)		/* handle color entity */
 			return(MG_EMEM);
 		c_ccname = lp->key;
 		c_ccolor = (C_COLOR *)lp->data;
-		if (ac == 2) {		/* reestablish previous context */
-			if (c_ccolor == NULL)
+		if (ac == 2 || (ac == 4 && !strcmp(av[1], av[3]))) {
+			if (c_ccolor == NULL)	/* reestablish context */
 				return(MG_EUNDEF);
 			return(MG_OK);
 		}
@@ -172,8 +172,8 @@ c_hmaterial(int ac, char **av)		/* handle material entity */
 			return(MG_EMEM);
 		c_cmname = lp->key;
 		c_cmaterial = (C_MATERIAL *)lp->data;
-		if (ac == 2) {		/* reestablish previous context */
-			if (c_cmaterial == NULL)
+		if (ac == 2 || (ac == 4 && !strcmp(av[1], av[3]))) {
+			if (c_cmaterial == NULL) /* reestablish context */
 				return(MG_EUNDEF);
 			return(MG_OK);
 		}
@@ -318,8 +318,8 @@ c_hvertex(int ac, char **av)		/* handle a vertex entity */
 			return(MG_EMEM);
 		c_cvname = lp->key;
 		c_cvertex = (C_VERTEX *)lp->data;
-		if (ac == 2) {		/* reestablish previous context */
-			if (c_cvertex == NULL)
+		if (ac == 2 || (ac == 4 && !strcmp(av[1], av[3]))) {
+			if (c_cvertex == NULL)	/* reestablish context */
 				return(MG_EUNDEF);
 			return(MG_OK);
 		}
