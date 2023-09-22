@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.89 2022/03/02 21:15:18 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.90 2023/09/22 18:01:32 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -13,7 +13,7 @@ sub userror {
 	exit 1;
 }
 my ($td,$radscn,$mgfscn,$octree,$fsender,$bsender,$receivers,$facedat,$behinddat,$rmtmp);
-my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz,$cph);
+my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz);
 my ($curphase, $recovery);
 if ($#ARGV == 1 && "$ARGV[0]" =~ /^-rec/) {
 	$td = $ARGV[1];
@@ -57,7 +57,6 @@ if ($windoz) {
 	$rfz = "$td\\rfz.dat";
 	$tbz = "$td\\tbz.dat";
 	$rbz = "$td\\rbz.dat";
-	$cph = "$td\\phase.txt";
 	$rmtmp = "rd /S /Q $td";
 } else {
 	$radscn = "$td/device.rad";
@@ -80,7 +79,6 @@ if ($windoz) {
 	$rfz = "$td/rfz.dat";
 	$tbz = "$td/tbz.dat";
 	$rbz = "$td/rbz.dat";
-	$cph = "$td/phase.txt";
 	$rmtmp = "rm -rf $td";
 }
 my @savedARGV = @ARGV;
