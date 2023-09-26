@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.23 2022/03/30 16:00:56 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.24 2023/09/26 18:33:14 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -57,6 +57,10 @@ typedef struct vardef  VARDEF;	/* a variable definition */
 
 #define	 evalue(ep)	(*eoper[(ep)->type])(ep)
 
+#define	 dfn_name(ep)	((ep)->v.kid->type == SYM ? \
+			(ep)->v.kid->v.name : \
+			(ep)->v.kid->v.kid->v.name)
+
 					/* flags to set in esupport */
 #define  E_VARIABLE	001
 #define  E_FUNCTION	002
@@ -71,10 +75,8 @@ extern unsigned int  esupport;
 extern EPNODE	*curfunc;
 extern int  nextc;
 extern int  eofc;
-
 					/* defined in biggerlib.c */
 extern void biggerlib(void);
-
 					/* defined in caldefn.c */
 extern void	fcompile(char *fname);
 extern void	scompile(char *str, char *fname, int ln);
@@ -145,7 +147,6 @@ extern void	eprint(EPNODE *ep, FILE *fp);
 extern void	dprint(char *name, FILE *fp);
 					/* defined by client */
 extern double	chanvalue(int n);
-
 
 #ifdef __cplusplus
 }

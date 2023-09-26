@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.35 2023/09/26 00:14:02 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.36 2023/09/26 18:33:14 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -59,9 +59,6 @@ static EPNODE  *ochpos;			/* ...dnext */
 static EPNODE  *outchan;
 
 EPNODE	*curfunc = NULL;
-#define	 dname(ep)	((ep)->v.kid->type == SYM ? \
-			(ep)->v.kid->v.name : \
-			(ep)->v.kid->v.kid->v.name)
 
 
 void
@@ -295,12 +292,11 @@ qualname(		/* get qualified name */
     static char	 nambuf[RMAXWORD+1];
     char  *cp = nambuf, *cpp;
 				/* check for explicit local */
-    if (*nam == CNTXMARK)
+    if (*nam == CNTXMARK) {
 	if (lvl > 0)		/* only action is to refuse search */
 	    return(NULL);
-	else
-	    nam++;
-    else if (nam == nambuf)	/* check for repeat call */
+	nam++;
+    } else if (nam == nambuf)	/* check for repeat call */
 	return(lvl > 0 ? NULL : nam);
 				/* copy name to static buffer */
     while (*nam) {
@@ -594,7 +590,7 @@ getstatement(void)			/* get next statement */
 	addchan(ep);
     } else {				/* ordinary definition */
 	ep = getdefn();
-	qname = qualname(dname(ep), 0);
+	qname = qualname(dfn_name(ep), 0);
 	if (esupport&E_REDEFW && (vdef = varlookup(qname)) != NULL) {
 	    if (vdef->def != NULL && epcmp(ep, vdef->def)) {
 		wputs(qname);
