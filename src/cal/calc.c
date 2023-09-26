@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.9 2023/02/09 21:54:10 greg Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.10 2023/09/26 18:09:08 greg Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -63,6 +63,8 @@ main(int argc, char *argv[])
 			epos[-1] = ' ';
 			continue;		/* escaped newline */
 		}
+		while (epos > expr && isspace(epos[-1]))
+			epos--;			/* eliminate end spaces */
 		*epos = '\0';
 		epos = expr;
 		switch (expr[0]) {
@@ -71,6 +73,8 @@ main(int argc, char *argv[])
 		case '?':
 			for (cp = expr+1; isspace(*cp); cp++)
 				;
+			if (*calcontext(NULL))
+				printf("context is: %s\n", calcontext(NULL));
 			if (*cp)
 				dprint(cp, stdout);
 			else
@@ -105,6 +109,22 @@ main(int argc, char *argv[])
 			}
 			fcompile(cp);
 			eclock++;
+			continue;
+		case '[':
+			for (cp = expr+1; isspace(*cp); cp++)
+				;
+			if (!isalpha(*cp)) {
+				eputs("context name required\n");
+				continue;
+			}
+			printf("context now: %s\n", pushcontext(cp));
+			continue;
+		case ']':
+			cp = popcontext();
+			if (*cp)
+				printf("context now: %s\n", cp);
+			else
+				printf("at global context\n");
 			continue;
 		}
 		if ((cp = strchr(expr, '=')) != NULL ||
