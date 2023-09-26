@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.34 2023/02/07 20:28:16 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.35 2023/09/26 00:14:02 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -376,11 +376,13 @@ dcleanup(		/* clear definitions (0->vars,1->output,2->consts) */
 		else
 		    dclear(vp->name);
 	    }
-    if (lvl >= 1) {
-	for (ep = outchan; ep != NULL; ep = ep->sibling)
+    if (lvl >= 1)
+    	while (outchan != NULL) {
+    	    ep = outchan;
+    	    outchan = ep->sibling;
+    	    ep->sibling = NULL;
 	    epfree(ep);
-	outchan = NULL;
-    }
+	}
 }
 
 
@@ -476,7 +478,7 @@ varfree(				/* release link to variable */
 	vp->next = ln->next;
     }
     freestr(ln->name);
-    efree((char *)ln);
+    efree(ln);
 }
 
 

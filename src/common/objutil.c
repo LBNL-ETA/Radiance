@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.21 2022/01/15 02:00:21 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.22 2023/09/26 00:14:02 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -506,7 +506,7 @@ deleteFaces(Scene *sc, int flreq, int flexc)
 				}
 			}
 			f->next = ftst->next;   /* remove from scene list */
-			efree((char *)ftst);
+			efree(ftst);
 			sc->nfaces--;
 		} else
 			f = f->next;
@@ -572,7 +572,7 @@ clearComments(Scene *sc)
 {
 	while (sc->ndescr > 0)
 		freeqstr(sc->descr[--sc->ndescr]);
-	efree((char *)sc->descr);
+	efree(sc->descr);
 	sc->descr = NULL;
 	sc->ndescr = 0;
 }
@@ -744,7 +744,7 @@ getVertexNeighbors(Scene *sc, int vid)
 		}
 	}
 	if (!varr[0]) {
-		efree((char *)varr);		/* something went awry */
+		efree(varr);			/* something went awry */
 		return(NULL);
 	}
 						/* tighten array & return */
