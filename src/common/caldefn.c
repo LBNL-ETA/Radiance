@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.36 2023/09/26 18:33:14 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.37 2023/10/01 18:02:23 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -175,14 +175,14 @@ dclear(			/* delete variable definitions of name */
 	char  *name
 )
 {
-    EPNODE  *ep;
+    VARDEF  *vp;
+    EPNODE  *dp;
 
-    while ((ep = dpop(name)) != NULL) {
-	if (ep->type == ':') {
-	    dpush(name, ep);		/* don't clear constants */
-	    return;
-	}
-	epfree(ep);
+    while ((vp = varlookup(name)) != NULL &&
+    		(dp = vp->def) != NULL && dp->type == '=') {
+	vp->def = dp->sibling;
+	epfree(dp);
+	varfree(vp);
     }
 }
 
@@ -318,7 +318,7 @@ qualname(		/* get qualified name */
 	while (*++cpp && *cpp != CNTXMARK)
 	    ;
     }
-    while (*cpp) {		/* copy context to static buffer */
+    while (*cpp) {		/* add remaining context to name */
 	if (cp >= nambuf+RMAXWORD)
 	    goto toolong;
 	*cp++ = *cpp++;
