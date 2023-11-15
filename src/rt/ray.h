@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.50 2023/03/16 00:25:24 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.51 2023/11/15 18:02:53 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -19,7 +19,7 @@ extern "C" {
 #define RNUMBER		size_t		/* ray counter (>= sizeof pointer) */
 #endif
 
-#define  MAXDIM		32	/* maximum number of dimensions */
+#define  MAXDIM		32	/* maximum number of sampling dimensions */
 
 				/* ray type flags */
 #define  PRIMARY	01		/* original ray */
@@ -61,10 +61,10 @@ typedef struct ray {
 	int	rsrc;		/* source we're aiming for */
 	float	rweight;	/* cumulative weight (for termination) */
 	float	gecc;		/* scattering eccentricity coefficient */
-	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
-	COLOR	pcol;		/* pattern color */
-	COLOR	mcol;		/* mirrored color contribution */
-	COLOR	rcol;		/* returned radiance value */
+	SCOLOR	rcoef;		/* contribution coefficient w.r.t. parent */
+	SCOLOR	pcol;		/* pattern color */
+	SCOLOR	mcol;		/* mirrored color contribution */
+	SCOLOR	rcol;		/* returned radiance value */
 	COLOR	cext;		/* medium extinction coefficient */
 	COLOR	albedo;		/* medium scattering albedo */
 	short	rflips;		/* surface orientation has been reversed */
@@ -75,7 +75,7 @@ typedef struct ray {
 
 #define  rayvalue(r)	(*(r)->revf)(r)
 
-#define  raydistance(r)	(bright((r)->mcol) > 0.5*bright((r)->rcol) ? \
+#define  raydistance(r)	(pbright((r)->mcol) > 0.5*pbright((r)->rcol) ? \
 				(r)->rmt : (r)->rxt)
 
 #define  rayreorient(r)	if ((r)->rflips & 1) flipsurface(r); else
@@ -217,7 +217,7 @@ extern int	(*ray_fifo_out)(RAY *r);
 extern int	ray_fifo_in(RAY *r);
 extern int	ray_fifo_flush(void);
 					/* defined in raytrace.c */
-extern int	rayorigin(RAY *r, int rt, const RAY *ro, const COLOR rc);
+extern int	rayorigin(RAY *r, int rt, const RAY *ro, const SCOLOR rc);
 extern void	rayclear(RAY *r);
 extern void	raytrace(RAY *r);
 extern int	rayreject(OBJREC *o, RAY *r, double t, double rod);
@@ -229,7 +229,7 @@ extern int	rayshade(RAY *r, int mod);
 extern void	rayparticipate(RAY *r);
 extern void	raytexture(RAY *r, OBJECT mod);
 extern int	raymixture(RAY *r, OBJECT fore, OBJECT back, double coef);
-extern void	raycontrib(RREAL rc[3], const RAY *r, int flags);
+extern void	raycontrib(SCOLOR rc, const RAY *r, int flags);
 extern double	raydist(const RAY *r, int flags);
 extern double	raynormal(FVECT norm, RAY *r);
 extern void	newrayxf(RAY *r);

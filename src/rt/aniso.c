@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.61 2015/09/02 18:59:01 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.62 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -47,8 +47,8 @@ typedef struct {
 	OBJREC  *mp;		/* material pointer */
 	RAY  *rp;		/* ray pointer */
 	short  specfl;		/* specularity flags, defined above */
-	COLOR  mcolor;		/* color of this material */
-	COLOR  scolor;		/* color of specular component */
+	SCOLOR  mcolor;		/* color of this material */
+	SCOLOR  scolor;		/* color of specular component */
 	FVECT  vrefl;		/* vector in reflected direction */
 	FVECT  prdir;		/* vector in transmitted direction */
 	FVECT  u, v;		/* u and v vectors orienting anisotropy */
@@ -67,7 +67,7 @@ static void agaussamp(ANISODAT  *np);
 
 static void
 diraniso(		/* compute source contribution */
-	COLOR  cval,			/* returned coefficient */
+	SCOLOR  scval,			/* returned coefficient */
 	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
 	double  omega			/* light source size */
@@ -78,9 +78,9 @@ diraniso(		/* compute source contribution */
 	double  dtmp, dtmp1, dtmp2;
 	FVECT  h;
 	double  au2, av2;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 
-	setcolor(cval, 0.0, 0.0, 0.0);
+	scolorblack(scval);
 
 	ldot = DOT(np->pnorm, ldir);
 
@@ -93,20 +93,20 @@ diraniso(		/* compute source contribution */
 		 *  color.  The diffuse reflected component will always be
 		 *  modified by the color of the material.
 		 */
-		copycolor(ctmp, np->mcolor);
+		copyscolor(sctmp, np->mcolor);
 		dtmp = ldot * omega * np->rdiff * (1.0/PI);
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 
 	if ((ldot < -FTINY) & (np->tdiff > FTINY)) {
 		/*
 		 *  Compute diffuse transmission.
 		 */
-		copycolor(ctmp, np->mcolor);
+		copyscolor(sctmp, np->mcolor);
 		dtmp = -ldot * omega * np->tdiff * (1.0/PI);
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 	
 	if (ambRayInPmap(np->rp))
@@ -139,10 +139,10 @@ diraniso(		/* compute source contribution */
 				(PI * dtmp*dtmp * sqrt(au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
-			copycolor(ctmp, np->scolor);
+			copyscolor(sctmp, np->scolor);
 			dtmp *= ldot * omega;
-			scalecolor(ctmp, dtmp);
-			addcolor(cval, ctmp);
+			scalescolor(sctmp, dtmp);
+			saddscolor(scval, sctmp);
 		}
 	}
 	
@@ -174,10 +174,10 @@ diraniso(		/* compute source contribution */
 		dtmp = exp(-dtmp) * (1.0/PI) * sqrt(-ldot/(np->pdot*au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
-			copycolor(ctmp, np->mcolor);
+			copyscolor(sctmp, np->mcolor);
 			dtmp *= np->tspec * omega;
-			scalecolor(ctmp, dtmp);
-			addcolor(cval, ctmp);
+			scalescolor(sctmp, dtmp);
+			saddscolor(scval, sctmp);
 		}
 	}
 }
@@ -190,7 +190,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 )
 {
 	ANISODAT  nd;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 	int  i;
 						/* easy shadow test */
 	if (r->crtype & SHADOW)
@@ -211,7 +211,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 						/* get material color */
 	nd.mp = m;
 	nd.rp = r;
-	setcolor(nd.mcolor, m->oargs.farg[0],
+	setscolor(nd.mcolor, m->oargs.farg[0],
 			   m->oargs.farg[1],
 			   m->oargs.farg[2]);
 						/* get roughness */
@@ -224,16 +224,16 @@ m_aniso(			/* shade ray that hit something anisotropic */
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for diraniso() */
-	multcolor(nd.mcolor, r->pcol);		/* modify material color */
+	smultscolor(nd.mcolor, r->pcol);	/* modify material color */
 						/* get specular component */
 	if ((nd.rspec = m->oargs.farg[3]) > FTINY) {
 		nd.specfl |= SP_REFL;
 						/* compute specular color */
 		if (m->otype == MAT_METAL2)
-			copycolor(nd.scolor, nd.mcolor);
+			copyscolor(nd.scolor, nd.mcolor);
 		else
-			setcolor(nd.scolor, 1.0, 1.0, 1.0);
-		scalecolor(nd.scolor, nd.rspec);
+			setscolor(nd.scolor, 1.0, 1.0, 1.0);
+		scalescolor(nd.scolor, nd.rspec);
 						/* check threshold */
 		if (specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
@@ -278,12 +278,12 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		agaussamp(&nd);
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
-		copycolor(ctmp, nd.mcolor);	/* modified by material color */
-		scalecolor(ctmp, nd.rdiff);
+		copyscolor(sctmp, nd.mcolor);	/* modified by material color */
+		scalescolor(sctmp, nd.rdiff);
 		if (nd.specfl & SP_RBLT)	/* add in specular as well? */
-			addcolor(ctmp, nd.scolor);
-		multambient(ctmp, r, nd.pnorm);
-		addcolor(r->rcol, ctmp);	/* add to returned color */
+			saddscolor(sctmp, nd.scolor);
+		multambient(sctmp, r, nd.pnorm);
+		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
@@ -293,13 +293,14 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
-		copycolor(ctmp, nd.mcolor);	/* modified by color */
-		if (nd.specfl & SP_TBLT)
-			scalecolor(ctmp, nd.trans);
-		else
-			scalecolor(ctmp, nd.tdiff);
-		multambient(ctmp, r, bnorm);
-		addcolor(r->rcol, ctmp);
+		copyscolor(sctmp, nd.mcolor);	/* modified by color */
+		if (nd.specfl & SP_TBLT) {
+			scalescolor(sctmp, nd.trans);
+		} else {
+			scalescolor(sctmp, nd.tdiff);
+		}
+		multambient(sctmp, r, bnorm);
+		saddscolor(r->rcol, sctmp);
 		flipsurface(r);
 	}
 					/* add direct component */
@@ -347,7 +348,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	FVECT  h;
 	double  rv[2];
 	double  d, sinp, cosp;
-	COLOR	scol;
+	SCOLOR	scol;
 	int  maxiter, ntrials, nstarget, nstaken;
 	int  i;
 					/* compute reflection */
@@ -365,7 +366,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			} else
 				nstarget = 1;
 		}
-		setcolor(scol, 0., 0., 0.);
+		scolorblack(scol);
 		dimlist[ndims++] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; nstaken < nstarget &&
@@ -402,26 +403,26 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 				if (nstaken) rayclear(&sr);
 				rayvalue(&sr);
 				d = 2./(1. + np->rp->rod/d);
-				scalecolor(sr.rcol, d);
-				addcolor(scol, sr.rcol);
+				scalescolor(sr.rcol, d);
+				saddscolor(scol, sr.rcol);
 			} else {
 				rayvalue(&sr);
-				multcolor(sr.rcol, sr.rcoef);
-				addcolor(np->rp->rcol, sr.rcol);
+				smultscolor(sr.rcol, sr.rcoef);
+				saddscolor(np->rp->rcol, sr.rcol);
 			}
 			++nstaken;
 		}
 		if (nstarget > 1) {		/* final W-G-M-D weighting */
-			multcolor(scol, sr.rcoef);
+			smultscolor(scol, sr.rcoef);
 			d = (double)nstarget/ntrials;
-			scalecolor(scol, d);
-			addcolor(np->rp->rcol, scol);
+			scalescolor(scol, d);
+			saddscolor(np->rp->rcol, scol);
 		}
 		ndims--;
 	}
 					/* compute transmission */
-	copycolor(sr.rcoef, np->mcolor);		/* modify by material color */
-	scalecolor(sr.rcoef, np->tspec);
+	copyscolor(sr.rcoef, np->mcolor);		/* modify by material color */
+	scalescolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
 			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
@@ -468,8 +469,8 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			if (nstaken)		/* multi-sampling */
 				rayclear(&sr);
 			rayvalue(&sr);
-			multcolor(sr.rcol, sr.rcoef);
-			addcolor(np->rp->rcol, sr.rcol);
+			smultscolor(sr.rcol, sr.rcoef);
+			saddscolor(np->rp->rcol, sr.rcol);
 			++nstaken;
 		}
 		ndims--;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.39 2019/04/19 19:01:32 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.40 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -67,9 +67,9 @@ typedef struct {
 	OBJREC  *mp;		/* material pointer */
 	RAY  *pr;		/* intersected ray */
 	DATARRAY  *dp;		/* data array for PDATA, MDATA or TDATA */
-	COLOR  mcolor;		/* material (or pattern) color */
-	COLOR  rdiff;		/* diffuse reflection */
-	COLOR  tdiff;		/* diffuse transmission */
+	SCOLOR  mcolor;		/* material (or pattern) color */
+	SCOLOR  rdiff;		/* diffuse reflection */
+	SCOLOR  tdiff;		/* diffuse transmission */
 	double  rspec;		/* specular reflectance (1 for BRDTF) */
 	double  trans;		/* transmissivity (.5 for BRDTF) */
 	double  tspec;		/* specular transmittance (1 for BRDTF) */
@@ -83,8 +83,8 @@ static int setbrdfunc(BRDFDAT *np);
 
 static void
 dirbrdf(		/* compute source contribution */
-	COLOR  cval,			/* returned coefficient */
-	void  *nnp,		/* material data */
+	SCOLOR  scval,			/* returned coefficient */
+	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
 	double  omega			/* light source size */
 )
@@ -92,14 +92,15 @@ dirbrdf(		/* compute source contribution */
 	BRDFDAT *np = nnp;
 	double  ldot;
 	double  dtmp;
+	SCOLOR  sctmp;
 	COLOR  ctmp;
 	FVECT  ldx;
-	static double  vldx[5], pt[MAXDIM];
+	static double  vldx[5], pt[MAXDDIM];
 	char	**sa;
 	int	i;
 #define lddx (vldx+1)
 
-	setcolor(cval, 0.0, 0.0, 0.0);
+	scolorblack(scval);
 	
 	ldot = DOT(np->pnorm, ldir);
 
@@ -115,18 +116,18 @@ dirbrdf(		/* compute source contribution */
 		 *  color.  The diffuse reflected component will always be
 		 *  modified by the color of the material.
 		 */
-		copycolor(ctmp, np->rdiff);
+		copyscolor(sctmp, np->rdiff);
 		dtmp = ldot * omega / PI;
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	} else {
 		/*
 		 *  Diffuse transmitted component.
 		 */
-		copycolor(ctmp, np->tdiff);
+		copyscolor(sctmp, np->tdiff);
 		dtmp = -ldot * omega / PI;
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 	if ((ldot > 0.0 ? np->rspec <= FTINY : np->tspec <= FTINY) ||
 			ambRayInPmap(np->pr))
@@ -177,24 +178,25 @@ dirbrdf(		/* compute source contribution */
 	}
 	if (dtmp <= FTINY)
 		return;
+	setscolor(sctmp, colval(ctmp,RED), colval(ctmp,GRN), colval(ctmp,BLU));
 	if (ldot > 0.0) {
 		/*
 		 *  Compute reflected non-diffuse component.
 		 */
 		if ((np->mp->otype == MAT_MFUNC) | (np->mp->otype == MAT_MDATA))
-			multcolor(ctmp, np->mcolor);
+			smultscolor(sctmp, np->mcolor);
 		dtmp = ldot * omega * np->rspec;
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	} else {
 		/*
 		 *  Compute transmitted non-diffuse component.
 		 */
 		if ((np->mp->otype == MAT_TFUNC) | (np->mp->otype == MAT_TDATA))
-			multcolor(ctmp, np->mcolor);
+			smultscolor(sctmp, np->mcolor);
 		dtmp = -ldot * omega * np->tspec;
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 #undef lddx
 }
@@ -211,7 +213,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	RAY  sr;
 	int  hasrefl, hastrans;
 	int  hastexture;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 	FVECT  vtmp;
 	double  d;
 	MFUNC  *mf;
@@ -226,15 +228,15 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	nd.trans = 0.5;
 						/* diffuse reflectance */
 	if (r->rod > 0.0)
-		setcolor(nd.rdiff, m->oargs.farg[0],
+		setscolor(nd.rdiff, m->oargs.farg[0],
 				m->oargs.farg[1],
 				m->oargs.farg[2]);
 	else
-		setcolor(nd.rdiff, m->oargs.farg[3],
+		setscolor(nd.rdiff, m->oargs.farg[3],
 				m->oargs.farg[4],
 				m->oargs.farg[5]);
 						/* diffuse transmittance */
-	setcolor(nd.tdiff, m->oargs.farg[6],
+	setscolor(nd.tdiff, m->oargs.farg[6],
 			m->oargs.farg[7],
 			m->oargs.farg[8]);
 						/* get modifiers */
@@ -254,23 +256,23 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		}
 		hitfront = 0;
 	}
-	copycolor(nd.mcolor, r->pcol);		/* get pattern color */
-	multcolor(nd.rdiff, nd.mcolor);		/* modify diffuse values */
-	multcolor(nd.tdiff, nd.mcolor);
-	hasrefl = (bright(nd.rdiff) > FTINY);
-	hastrans = (bright(nd.tdiff) > FTINY);
+	copyscolor(nd.mcolor, r->pcol);		/* get pattern color */
+	smultscolor(nd.rdiff, nd.mcolor);	/* modify diffuse values */
+	smultscolor(nd.tdiff, nd.mcolor);
+	hasrefl = (sintens(nd.rdiff) > FTINY);
+	hastrans = (sintens(nd.tdiff) > FTINY);
 						/* load cal file */
 	nd.dp = NULL;
 	mf = getfunc(m, 9, 0x3f, 0);
 						/* compute transmitted ray */
 	setbrdfunc(&nd);
 	errno = 0;
-	setcolor(ctmp, evalue(mf->ep[3]),
+	setscolor(sctmp, evalue(mf->ep[3]),
 			evalue(mf->ep[4]),
 			evalue(mf->ep[5]));
 	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
-	else if (rayorigin(&sr, TRANS, r, ctmp) == 0) {
+	else if (rayorigin(&sr, TRANS, r, sctmp) == 0) {
 		if (hastexture && !(r->crtype & (SHADOW|AMBIENT))) {
 						/* perturb direction */
 			VSUB(sr.rdir, r->rdir, r->pert);
@@ -282,10 +284,10 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			VCOPY(sr.rdir, r->rdir);
 		}
 		rayvalue(&sr);
-		multcolor(sr.rcol, sr.rcoef);
-		addcolor(r->rcol, sr.rcol);
+		smultscolor(sr.rcol, sr.rcoef);
+		saddscolor(r->rcol, sr.rcol);
 		if ((!hastexture || r->crtype & (SHADOW|AMBIENT)) &&
-				nd.tspec > bright(nd.tdiff) + bright(nd.rdiff))
+				nd.tspec > pbright(nd.tdiff) + pbright(nd.rdiff))
 			r->rxt = r->rot + raydistance(&sr);
 	}
 	if (r->crtype & SHADOW)			/* the rest is shadow */
@@ -294,18 +296,18 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 						/* compute reflected ray */
 	setbrdfunc(&nd);
 	errno = 0;
-	setcolor(ctmp, evalue(mf->ep[0]),
+	setscolor(sctmp, evalue(mf->ep[0]),
 			evalue(mf->ep[1]),
 			evalue(mf->ep[2]));
 	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
-	else if (rayorigin(&sr, REFLECTED, r, ctmp) == 0) {
+	else if (rayorigin(&sr, REFLECTED, r, sctmp) == 0) {
 		VSUM(sr.rdir, r->rdir, nd.pnorm, 2.*nd.pdot);
 		checknorm(sr.rdir);
 		rayvalue(&sr);
-		multcolor(sr.rcol, sr.rcoef);
-		copycolor(r->mcol, sr.rcol);
-		addcolor(r->rcol, sr.rcol);
+		smultscolor(sr.rcol, sr.rcoef);
+		copyscolor(r->mcol, sr.rcol);
+		saddscolor(r->rcol, sr.rcol);
 		r->rmt = r->rot;
 		if (r->ro != NULL && isflat(r->ro->otype) &&
 				!hastexture | (r->crtype & AMBIENT))
@@ -315,9 +317,9 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if (hasrefl) {
 		if (!hitfront)
 			flipsurface(r);
-		copycolor(ctmp, nd.rdiff);
-		multambient(ctmp, r, nd.pnorm);
-		addcolor(r->rcol, ctmp);	/* add to returned color */
+		copyscolor(sctmp, nd.rdiff);
+		multambient(sctmp, r, nd.pnorm);
+		saddscolor(r->rcol, sctmp);	/* add to returned color */
 		if (!hitfront)
 			flipsurface(r);
 	}
@@ -327,9 +329,9 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
-		copycolor(ctmp, nd.tdiff);
-		multambient(ctmp, r, vtmp);
-		addcolor(r->rcol, ctmp);
+		copyscolor(sctmp, nd.tdiff);
+		multambient(sctmp, r, vtmp);
+		saddscolor(r->rcol, sctmp);
 		if (hitfront)
 			flipsurface(r);
 	}
@@ -348,7 +350,7 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 )
 {
 	BRDFDAT  nd;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 	FVECT  vtmp;
 	double  dtmp;
 						/* always a shadow */
@@ -372,7 +374,7 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 	nd.mp = m;
 	nd.pr = r;
 						/* get material color */
-	setcolor(nd.mcolor, m->oargs.farg[0],
+	setscolor(nd.mcolor, m->oargs.farg[0],
 			m->oargs.farg[1],
 			m->oargs.farg[2]);
 						/* get specular component */
@@ -382,18 +384,18 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		nd.trans = m->oargs.farg[4]*(1.0 - nd.rspec);
 		nd.tspec = nd.trans * m->oargs.farg[5];
 		dtmp = nd.trans - nd.tspec;
-		setcolor(nd.tdiff, dtmp, dtmp, dtmp);
+		setscolor(nd.tdiff, dtmp, dtmp, dtmp);
 	} else {
 		nd.tspec = nd.trans = 0.0;
-		setcolor(nd.tdiff, 0.0, 0.0, 0.0);
+		scolorblack(nd.tdiff);
 	}
 						/* compute reflectance */
 	dtmp = 1.0 - nd.trans - nd.rspec;
-	setcolor(nd.rdiff, dtmp, dtmp, dtmp);
+	setscolor(nd.rdiff, dtmp, dtmp, dtmp);
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
-	multcolor(nd.mcolor, r->pcol);		/* modify material color */
-	multcolor(nd.rdiff, nd.mcolor);
-	multcolor(nd.tdiff, nd.mcolor);
+	smultscolor(nd.mcolor, r->pcol);	/* modify material color */
+	smultscolor(nd.rdiff, nd.mcolor);
+	smultscolor(nd.tdiff, nd.mcolor);
 						/* load auxiliary files */
 	if (hasdata(m->otype)) {
 		nd.dp = getdata(m->oargs.sarg[1]);
@@ -404,20 +406,20 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 	}
 						/* compute ambient */
 	if (nd.trans < 1.0-FTINY) {
-		copycolor(ctmp, nd.mcolor);	/* modified by material color */
-		scalecolor(ctmp, 1.0-nd.trans);
-		multambient(ctmp, r, nd.pnorm);
-		addcolor(r->rcol, ctmp);	/* add to returned color */
+		copyscolor(sctmp, nd.mcolor);	/* modified by material color */
+		scalescolor(sctmp, 1.0-nd.trans);
+		multambient(sctmp, r, nd.pnorm);
+		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	if (nd.trans > FTINY) {			/* from other side */
 		flipsurface(r);
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
-		copycolor(ctmp, nd.mcolor);
-		scalecolor(ctmp, nd.trans);
-		multambient(ctmp, r, vtmp);
-		addcolor(r->rcol, ctmp);
+		copyscolor(sctmp, nd.mcolor);
+		scalescolor(sctmp, nd.trans);
+		multambient(sctmp, r, vtmp);
+		saddscolor(r->rcol, sctmp);
 		flipsurface(r);
 	}
 						/* add direct component */
@@ -433,6 +435,7 @@ setbrdfunc(			/* set up brdf function and variables */
 )
 {
 	FVECT  vec;
+	COLOR  ctmp;
 
 	if (setfunc(np->mp, np->pr) == 0)
 		return(0);	/* it's OK, setfunc says we're done */
@@ -443,8 +446,9 @@ setbrdfunc(			/* set up brdf function and variables */
 	varset("NzP`", '=', vec[2]/funcxf.sca);
 	varset("RdotP`", '=', np->pdot <= -1.0 ? -1.0 :
 			np->pdot >= 1.0 ? 1.0 : np->pdot);
-	varset("CrP", '=', colval(np->mcolor,RED));
-	varset("CgP", '=', colval(np->mcolor,GRN));
-	varset("CbP", '=', colval(np->mcolor,BLU));
+	scolor_color(ctmp, np->mcolor);		/* should use scolor_rgb()? */
+	varset("CrP", '=', colval(ctmp,RED));
+	varset("CgP", '=', colval(ctmp,GRN));
+	varset("CbP", '=', colval(ctmp,BLU));
 	return(1);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.28 2021/11/19 22:51:31 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.29 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -113,21 +113,22 @@ do_text(
 			return(1);
 		}
 	} else if (m->otype == PAT_BTEXT) {
-		if (foreground)
-			scalecolor(r->pcol, m->oargs.farg[9]);
-		else
-			scalecolor(r->pcol, m->oargs.farg[10]);
+		if (foreground) {
+			scalescolor(r->pcol, m->oargs.farg[9]);
+		} else {
+			scalescolor(r->pcol, m->oargs.farg[10]);
+		}
 	} else { /* PAT_CTEXT */
-		COLOR  cval;
+		SCOLOR  scval;
 		if (foreground)
-			setcolor(cval, m->oargs.farg[9],
+			setscolor(scval, m->oargs.farg[9],
 					m->oargs.farg[10],
 					m->oargs.farg[11]);
 		else
-			setcolor(cval, m->oargs.farg[12],
+			setscolor(scval, m->oargs.farg[12],
 					m->oargs.farg[13],
 					m->oargs.farg[14]);
-		multcolor(r->pcol, cval);
+		smultscolor(r->pcol, scval);
 	}
 	return(0);
 }

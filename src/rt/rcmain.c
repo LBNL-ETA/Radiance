@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.31 2023/08/15 00:46:56 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.32 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -55,14 +55,14 @@ char	RCCONTEXT[] = "RC.";		/* our special evaluation context */
 
 #if defined(_WIN32) || defined(_WIN64)
 #define RCONTRIB_FEATURES	"Accumulation\nSummation\nRecovery\n" \
-				"ImmediateIrradiance\n" \
+				"Hyperspectral\nImmediateIrradiance\n" \
 				"ProgressReporting\nDistanceLimiting\n" \
 				"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 				"Outputs=V,W\n"
 #else
 #define RCONTRIB_FEATURES	"Multiprocessing\n" \
 				"Accumulation\nSummation\nRecovery\n" \
-				"ImmediateIrradiance\n" \
+				"Hyperspectral\nImmediateIrradiance\n" \
 				"ProgressReporting\nDistanceLimiting\n" \
 				"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 				"Outputs=V,W\n"
@@ -72,6 +72,11 @@ static void
 printdefaults(void)			/* print default values to stdout */
 {
 	printf("-c %-5d\t\t\t# accumulated rays per record\n", accumulate);
+	if (NCSAMP > 3) {
+		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
+		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
+				WLPART[3], WLPART[0]);
+	}
 	printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
 			contrib ? "contributions" : "coefficients");
 	if (imm_irrad)
@@ -82,8 +87,8 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-y %-9d\t\t\t# y resolution\n", yres);
 	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
-	printf("-h%c\t\t\t\t# %s header\n", header ? '+' : '-',
-			header ? "output" : "no");
+	printf(header ? "-h+\t\t\t\t# output header\n" :
+			"-h-\t\t\t\t# no header\n");
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inpfmt, outfmt, formstr(inpfmt), formstr(outfmt));
 	printf(erract[WARNING].pf != NULL ?
@@ -287,10 +292,6 @@ main(int argc, char *argv[])
 			check(2,"s");
 			curout = argv[++i];
 			break;
-		case 'c':			/* input rays per output */
-			check(2,"i");
-			accumulate = atoi(argv[++i]);
-			break;
 		case 'r':			/* recover output */
 			check_bool(2,recover);
 			break;
@@ -300,6 +301,27 @@ main(int argc, char *argv[])
 		case 'p':			/* parameter setting(s) */
 			check(2,"s");
 			set_eparams(prms = argv[++i]);
+			break;
+		case 'c':				/* spectral sampling or count */
+			switch (argv[i][2]) {
+#if MAXCSAMP>3
+			case 's':			/* spectral bin count */
+				check(3,"i");
+				NCSAMP = atoi(argv[++i]);
+				break;
+			case 'w':			/* wavelength extrema */
+				check(3,"ff");
+				WLPART[0] = atof(argv[++i]);
+				WLPART[3] = atof(argv[++i]);
+				break;
+#endif
+			case '\0':			/* sample count */
+				check(2,"i");
+				accumulate = atoi(argv[++i]);
+				break;
+			default:
+				goto badopt;
+			}
 			break;
 		case 'b':			/* bin expression/count */
 			if (argv[i][2] == 'n') {

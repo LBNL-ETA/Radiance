@@ -1,4 +1,4 @@
-/* RCSid $Id: rtotypes.h,v 1.5 2019/04/18 22:35:01 greg Exp $ */
+/* RCSid $Id: rtotypes.h,v 1.6 2023/11/15 18:02:53 greg Exp $ */
 /*
  * External functions implementing Radiance object types
  */
@@ -20,7 +20,8 @@ extern otype_implf m_aniso, m_dielectric, m_glass, m_alias, m_light,
 
 extern otype_implf t_func, t_data;
 
-extern otype_implf p_cfunc, p_bfunc, p_pdata, p_cdata, p_bdata;
+extern otype_implf p_cfunc, p_bfunc, p_sfunc, p_pdata, p_cdata,
+	p_bdata, p_spectrum, p_specfile, p_specfunc;
 
 extern otype_implf mx_func, mx_data, mx_pdata;
 

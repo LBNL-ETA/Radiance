@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.24 2020/09/09 21:28:19 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.25 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -52,12 +52,11 @@ new_binq()
 		goto memerr;
 	for (i = nmods; i--; ) {
 		MODCONT	*mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
-		bp->mca[i] = (MODCONT *)malloc(sizeof(MODCONT) +
-						sizeof(DCOLOR)*(mp->nbins-1));
+		bp->mca[i] = (MODCONT *)malloc(mcsize(mp->nbins));
 		if (bp->mca[i] == NULL)
 			goto memerr;
-		memcpy(bp->mca[i], mp, sizeof(MODCONT)-sizeof(DCOLOR));
-		/* memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*mp->nbins); */
+		memcpy(bp->mca[i], mp, sizeof(MODCONT)-sizeof(DCOLORV));
+		/* memset(bp->mca[i]->cbin, 0, DCOLORSIZ*mp->nbins); */
 	}
 	bp->ndx = 0;
 	bp->nadded = 0;
@@ -87,7 +86,7 @@ free_binq(BINQ *bp)
 	}
 					/* clear sums for next use */
 /*	for (i = nmods; i--; )
-		memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*bp->mca[i]->nbins);
+		memset(bp->mca[i]->cbin, 0, DCOLORSIZ*bp->mca[i]->nbins);
 */
 	if (bp->next != NULL)
 		error(CONSISTENCY, "free_binq() handed list");
@@ -102,7 +101,8 @@ static void
 queue_modifiers()
 {
 	MODCONT	*mpin, *mpout;
-	int	i, j;
+	DCOLORV	*ssrc, *sdst;
+	int	i;
 
 	if ((accumulate > 0) | (out_bq == NULL))
 		error(CONSISTENCY, "bad call to queue_modifiers()");
@@ -110,9 +110,11 @@ queue_modifiers()
 	for (i = nmods; i--; ) {
 		mpin = (MODCONT *)lu_find(&modconttab,modname[i])->data;
 		mpout = out_bq->mca[i];
-		for (j = mpout->nbins; j--; )
-			addcolor(mpout->cbin[j], mpin->cbin[j]);
-		memset(mpin->cbin, 0, sizeof(DCOLOR)*mpin->nbins);
+		ssrc = mcbin(mpin, mpin->nbins);
+		sdst = mcbin(mpout, mpout->nbins);
+		while (sdst > mpout->cbin)
+			*--sdst += *--ssrc;
+		memset(mpin->cbin, 0, DCOLORSIZ*mpin->nbins);
 	}
 	out_bq->nadded++;
 }
@@ -122,13 +124,17 @@ queue_modifiers()
 static void
 add_modbin(BINQ *dst, BINQ *src)
 {
-	int	i, j;
-	
+	MODCONT	*mpin, *mpout;
+	DCOLORV	*ssrc, *sdst;
+	int	i;
+
 	for (i = nmods; i--; ) {
-		MODCONT	*mpin = src->mca[i];
-		MODCONT	*mpout = dst->mca[i];
-		for (j = mpout->nbins; j--; )
-			addcolor(mpout->cbin[j], mpin->cbin[j]);
+		mpin = src->mca[i];
+		mpout = dst->mca[i];
+		ssrc = mcbin(mpin, mpin->nbins);
+		sdst = mcbin(mpout, mpout->nbins);
+		while (sdst > mpout->cbin)
+			*--sdst += *--ssrc;
 	}
 	dst->nadded += src->nadded;
 }
@@ -231,7 +237,7 @@ put_zero_record(int ndx)
 	int	i;
 
 	for (i = nmods; i--; )
-		memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*bp->mca[i]->nbins);
+		memset(bp->mca[i]->cbin, 0, DCOLORSIZ*bp->mca[i]->nbins);
 	bp->ndx = ndx;
 	bp->nadded = 1;
 	queue_output(bp);
@@ -250,7 +256,7 @@ queue_results(int k)
 	bq->nadded = kida[k].nr;
 					/* read from child */
 	for (j = 0; j < nmods; j++)
-		if (getbinary(bq->mca[j]->cbin, sizeof(DCOLOR), bq->mca[j]->nbins,
+		if (getbinary(bq->mca[j]->cbin, DCOLORSIZ, bq->mca[j]->nbins,
 					kida[k].infp) != bq->mca[j]->nbins)
 			error(SYSTEM, "read error from render process");
 			

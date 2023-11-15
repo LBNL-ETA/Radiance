@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: freeobjmem.c,v 2.9 2013/12/09 17:56:25 greg Exp $";
+static const char	RCSid[] = "$Id: freeobjmem.c,v 2.10 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  * Free memory associated with object(s)
@@ -57,6 +57,8 @@ free_os(			/* free unneeded memory for object */
 		return(1);
 	case MAT_CLIP:		/* clipping surface */
 	case MAT_SPOT:		/* spot light source */
+	case PAT_SPECTRUM:	/* constant spectrum */
+	case PAT_SPECFILE:	/* spectrum from data file */
 		free((void *)op->os);
 		op->os = NULL;
 		return(1);

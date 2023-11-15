@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.18 2023/02/06 22:40:21 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.19 2023/11/15 18:02:53 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -44,7 +44,7 @@ extern RNUMBER		lastdone;	/* last ray processed */
 
 extern int		report_intvl;	/* reporting interval (seconds) */
 
-typedef double		DCOLOR[3];	/* double-precision color */
+typedef double		DCOLORV;	/* double-precision color type */
 
 /*
  * The MODCONT structure is used to accumulate ray contributions
@@ -53,8 +53,9 @@ typedef double		DCOLOR[3];	/* double-precision color */
  * be replaced with the modifier name.  If outspec contains a %d in it,
  * this will be used to create one output file per bin, otherwise all bins
  * will be written to the same file, in order.  If the global outfmt
- * is 'c', then a 4-byte RGBE pixel will be output for each bin value
- * and the file will conform to a RADIANCE image if xres & yres are set.
+ * is 'c', then a common-exponent pixel will be output for each bin value
+ * and the file will conform to a RADIANCE picture if NCSAMP==3 and
+ * xres and yres are set.
  */
 typedef struct {
 	const char	*outspec;	/* output file specification */
@@ -63,8 +64,12 @@ typedef struct {
 	EPNODE		*binv;		/* bin value expression */
 	int		bin0;		/* starting bin offset */
 	int		nbins;		/* number of contribution bins */
-	DCOLOR		cbin[1];	/* contribution bins (extends struct) */
+	DCOLORV		cbin[1];	/* contribution bins (extends struct) */
 } MODCONT;			/* modifier contribution */
+
+#define DCOLORSIZ	(sizeof(DCOLORV)*NCSAMP)
+#define mcsize(nb)	(sizeof(MODCONT)-sizeof(DCOLORV)+(nb)*DCOLORSIZ)
+#define mcbin(mp,bi)	((mp)->cbin + (bi)*NCSAMP)
 
 extern LUTAB		modconttab;	/* modifier contribution table */
 

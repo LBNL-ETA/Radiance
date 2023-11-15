@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.36 2022/10/19 21:25:20 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.37 2023/11/15 18:02:52 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -689,11 +689,52 @@ continue rays with a probability equal to the ray weight
 divided by the given
 .I frac.
 .TP
-.BR -ld
+.BR \-ld
 Boolean switch to limit ray distance.
 If this option is set, then rays will only be traced as far as the
 magnitude of each direction vector.
 Otherwise, vector magnitude is ignored and rays are traced to infinity.
+.TP
+.BI -cs \ Ns
+Use
+.I Ns
+bands for spectral sampling rather than the default RGB calculation space.
+The maximum setting is controlled by the compiler macro MAXCSAMP, and
+defaults to 24.
+Larger values for Ns will be reduced to MAXCSAMP.
+.TP
+.BI -cw " nmA nmB"
+Set extrema to the given wavelengths for spectral sampling.
+The default is 380 and 780 nanometers.
+The order specified does not matter.
+.TP
+.BR \-co
+Boolean switch turns on spectral data output if selected.
+The default is to reduce spectral results to RGB, but see the related
+.I \-p*
+options, below.
+.TP
+.BI -pc " xr yr xg yg xb yb xw yw"
+Use the specified chromaticity pairs for output primaries and white
+point rather than the standard RGB color space.
+.TP
+.BR \-pRGB
+Output standard RGB values (the default).
+.TP
+.BR \-pXYZ
+Output standard CIE XYZ tristimulus values rather than RGB.
+.TP
+.BR \-pY
+Produce a single output channel corresponding to photopic spectral
+sensitivity.
+.TP
+.BR \-pS
+Produce a single output channel corresponding to scotopic spectral
+sensitivity.
+.TP
+.BR \-pM
+Produce a single output channel corresponding to melanopic spectral
+sensitivity.
 .TP
 .BI -e \ efile
 Send error messages and progress reports to

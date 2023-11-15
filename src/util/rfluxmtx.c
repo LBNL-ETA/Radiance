@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.54 2021/12/15 01:38:50 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.55 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1283,11 +1283,21 @@ main(int argc, char *argv[])
 			yrs = argv[++a];
 			na = 0;
 			continue;
-		case 'c':		/* number of samples */
-			sampcnt = atoi(argv[++a]);
-			if (sampcnt <= 0)
-				goto userr;
-			na = 0;		/* we re-add this later */
+		case 'c':		/* spectral sampling or count */
+			switch (argv[a][2]) {
+			case 's':
+				na = 2;
+				break;
+			case 'w':
+				na = 3;
+				break;
+			case '\0':
+				sampcnt = atoi(argv[++a]);
+				if (sampcnt <= 0)
+					goto userr;
+				na = 0;		/* we re-add this later */
+				break;
+			}
 			continue;
 		case 'I':		/* only for pass-through mode */
 		case 'i':

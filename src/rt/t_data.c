@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_data.c,v 2.11 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: t_data.c,v 2.12 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  t_data.c - routine for stored textures
@@ -38,7 +38,7 @@ t_data(			/* interpolate texture data */
 {
 	int  nv;
 	FVECT  disp;
-	double  dval[3], pt[MAXDIM];
+	double  dval[3], pt[MAXDDIM];
 	double  d;
 	DATARRAY  *dp;
 	MFUNC  *mf;

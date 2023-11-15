@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.8 2016/01/23 18:58:35 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.9 2023/11/15 18:02:52 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -45,7 +45,7 @@ typedef unsigned short	C_CHROMA;	/* encoded (x,y) chromaticity */
 			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV},\
 			(long)C_CNSS*C_CMAXV, 1./3., 1./3., 178.006 }
 
-#define c_cval(c,l)	((c)->ssamp[((l)+(C_CWLI/2.-C_MINWL))/C_CWLI] \
+#define c_cval(c,l)	((c)->ssamp[((l)+(.5*C_CWLI-C_MINWL))/C_CWLI] \
 						/ (double)(c)->ssum)
 
 extern const C_COLOR	c_dfcolor;		/* default color */
@@ -78,11 +78,18 @@ extern C_CHROMA	c_encodeChroma(C_COLOR *clr);
 						/* decode (x,y) chromaticity */
 extern void	c_decodeChroma(C_COLOR *cres, C_CHROMA ccode);
 
-/* The following two routines are not defined in ccolor.c */
+#ifdef _RAD_COLOR_H_
+/* The following four routines are defined in ccyrgb.c */
 						/* convert to RGB color */
-extern void	ccy2rgb(C_COLOR *cin, double cieY, float cout[3]);
+extern void	ccy2rgb(C_COLOR *cin, double cieY, COLOR cout);
 						/* convert from RGB color */
-extern double	rgb2ccy(float cin[3], C_COLOR *cout);
+extern double	rgb2ccy(COLOR cin, C_COLOR *cout);
+						/* convert to spectral color */
+extern void	ccy2scolor(C_COLOR *cin, double cieY, SCOLOR sco);
+						/* convert from spectral color */
+extern double	scolor2ccy(SCOLOR sci, C_COLOR *cout);
+
+#endif /* _RAD_COLOR_H_ */
 
 #ifdef __cplusplus
 }

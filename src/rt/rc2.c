@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.25 2023/04/07 00:03:26 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.26 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -113,7 +113,7 @@ printheader(FILE *fout, const char *info)
 	printargs(gargc-1, gargv, fout);	/* add our command */
 	fprintf(fout, "SOFTWARE= %s\n", VersionID);
 	fputnow(fout);
-	fputs("NCOMP=3\n", fout);		/* always RGB */
+	fputncomp(NCSAMP, fout);
 	if (info != NULL)			/* add extra info if given */
 		fputs(info, fout);
 	if ((outfmt == 'f') | (outfmt == 'd'))
@@ -271,12 +271,12 @@ getvec(FVECT vec)
 		}
 		break;
 	case 'f':					/* binary float */
-		if (getbinary((char *)vf, sizeof(float), 3, stdin) != 3)
+		if (getbinary(vf, sizeof(float), 3, stdin) != 3)
 			return(-1);
 		VCOPY(vec, vf);
 		break;
 	case 'd':					/* binary double */
-		if (getbinary((char *)vd, sizeof(double), 3, stdin) != 3)
+		if (getbinary(vd, sizeof(double), 3, stdin) != 3)
 			return(-1);
 		VCOPY(vec, vd);
 		break;
@@ -289,46 +289,43 @@ getvec(FVECT vec)
 
 /* Put out ray contribution to file */
 static void
-put_contrib(const DCOLOR cnt, FILE *fout)
+put_contrib(const DCOLORV *cnt, FILE *fout)
 {
 	double	sf = 1;
-	COLOR	fv;
-	COLR	cv;
+	SCOLOR	fv;
+	SCOLR	cv;
+	int	i;
 
 	if (accumulate > 1)
 		sf = 1./(double)accumulate;
 	switch (outfmt) {
 	case 'a':
-		if (accumulate > 1)
-			fprintf(fout, "%.6e\t%.6e\t%.6e\t",
-					sf*cnt[0], sf*cnt[1], sf*cnt[2]);
-		else
-			fprintf(fout, "%.6e\t%.6e\t%.6e\t",
-					cnt[0], cnt[1], cnt[2]);
+		for (i = 0; i < NCSAMP; i++)
+			fprintf(fout, "%.6e\t", sf*cnt[i]);
 		break;
 	case 'f':
-		if (accumulate > 1) {
-			copycolor(fv, cnt);
-			scalecolor(fv, sf);
-		} else
-			copycolor(fv, cnt);
-		putbinary(fv, sizeof(float), 3, fout);
+		for (i = NCSAMP; i-- > 0; )
+			fv[i] = cnt[i];
+		if (accumulate > 1)
+			scalescolor(fv, sf);
+		putbinary(fv, sizeof(COLORV), NCSAMP, fout);
 		break;
 	case 'd':
 		if (accumulate > 1) {
-			DCOLOR	dv;
-			copycolor(dv, cnt);
-			scalecolor(dv, sf);
-			putbinary(dv, sizeof(double), 3, fout);
+			DCOLORV	dv[MAXCSAMP];
+			for (i = NCSAMP; i-- > 0; )
+				dv[i] = sf*cnt[i];
+			putbinary(dv, sizeof(DCOLORV), NCSAMP, fout);
 		} else
-			putbinary(cnt, sizeof(double), 3, fout);
+			putbinary(cnt, sizeof(DCOLORV), NCSAMP, fout);
 		break;
 	case 'c':
+		for (i = NCSAMP; i-- > 0; )
+			fv[i] = cnt[i];
 		if (accumulate > 1)
-			setcolr(cv, sf*cnt[0], sf*cnt[1], sf*cnt[2]);
-		else
-			setcolr(cv, cnt[0], cnt[1], cnt[2]);
-		putbinary(cv, sizeof(cv), 1, fout);
+			scalescolor(fv, sf);
+		scolor_scolr(cv, fv);
+		putbinary(cv, 1, LSCOLR, fout);
 		break;
 	default:
 		error(INTERNAL, "botched output format");
@@ -343,15 +340,15 @@ mod_output(MODCONT *mp)
 	STREAMOUT	*sop = getostream(mp->outspec, mp->modname, mp->bin0, 0);
 	int		j;
 
-	put_contrib(mp->cbin[0], sop->ofp);
+	put_contrib(mp->cbin, sop->ofp);
 	if (mp->nbins > 3 &&	/* minor optimization */
 			sop == getostream(mp->outspec, mp->modname, mp->bin0+1, 0)) {
 		for (j = 1; j < mp->nbins; j++)
-			put_contrib(mp->cbin[j], sop->ofp);
+			put_contrib(mcbin(mp,j), sop->ofp);
 	} else {
 		for (j = 1; j < mp->nbins; j++) {
 			sop = getostream(mp->outspec, mp->modname, mp->bin0+j, 0);
-			put_contrib(mp->cbin[j], sop->ofp);
+			put_contrib(mcbin(mp,j), sop->ofp);
 		}
 	}
 }
@@ -394,31 +391,36 @@ end_record()
 
 /* Get ray contribution from previous file */
 static int
-get_contrib(DCOLOR cnt, FILE *finp)
+get_contrib(DCOLORV *cnt, FILE *finp)
 {
-	COLOR	fv;
-	COLR	cv;
+	SCOLOR	fv;
+	SCOLR	cv;
+	int	i;
 
 	switch (outfmt) {
 	case 'a':
-		return(fscanf(finp,"%lf %lf %lf",&cnt[0],&cnt[1],&cnt[2]) == 3);
-	case 'f':
-		if (getbinary(fv, sizeof(fv[0]), 3, finp) != 3)
-			return(0);
-		copycolor(cnt, fv);
+		for (i = 0; i < NCSAMP; i++)
+			if (fscanf(finp, "%lf", &cnt[i]) != 1)
+				return(0);
 		return(1);
 	case 'd':
-		return(getbinary(cnt, sizeof(cnt[0]), 3, finp) == 3);
-	case 'c':
-		if (getbinary(cv, sizeof(cv), 1, finp) != 1)
+		return(getbinary(cnt, sizeof(DCOLORV), NCSAMP, finp) == NCSAMP);
+	case 'f':
+		if (getbinary(fv, sizeof(COLORV), NCSAMP, finp) != NCSAMP)
 			return(0);
-		colr_color(fv, cv);
-		copycolor(cnt, fv);
-		return(1);
+		break;
+	case 'c':
+		if (getbinary(cv, 1, LSCOLR, finp) != LSCOLR)
+			return(0);
+		scolr_scolor(fv, cv);
+		break;
 	default:
 		error(INTERNAL, "botched output format");
 	}
-	return(0);	/* pro forma return */
+			/* copy result from SCOLOR */
+	for (i = NCSAMP; i-- > 0; )
+		cnt[i] = fv[i];
+	return(1);
 }
 
 
@@ -449,11 +451,11 @@ reload_output()
 	LUENT		*oent;
 	int		xr, yr;
 	STREAMOUT	*sop;
-	DCOLOR		rgbv;
+	DCOLORV		contr[MAXCSAMP];
 
 	if (outfmt == 'a')
 		fmode = "r";
-	outvfmt = formstr(outfmt);
+	outvfmt = (char *)formstr(outfmt);
 						/* reload modifier values */
 	for (i = 0; i < nmods; i++) {
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
@@ -494,8 +496,8 @@ reload_output()
 					error(USER, errmsg);
 				}
 			}
-							/* read in RGB value */
-			if (!get_contrib(rgbv, sop->ofp)) {
+							/* read in spectral value */
+			if (!get_contrib(contr, sop->ofp)) {
 				if (!j) {
 					fclose(sop->ofp);
 					break;		/* ignore empty file */
@@ -506,8 +508,8 @@ reload_output()
 					error(USER, errmsg);
 				}
 				break;
-			}				
-			copycolor(mp->cbin[j], rgbv);
+			}
+			memcpy(mcbin(mp,j), contr, DCOLORSIZ);
 		}
 	}
 	lu_doall(&ofiletab, &myclose, NULL);	/* close all files */
@@ -552,19 +554,19 @@ recover_output()
 		error(USER, "cannot recover ASCII output");
 		return;
 	case 'f':
-		outvsiz = sizeof(float)*3;
+		outvsiz = sizeof(float)*NCSAMP;
 		break;
 	case 'd':
-		outvsiz = sizeof(double)*3;
+		outvsiz = sizeof(double)*NCSAMP;
 		break;
 	case 'c':
-		outvsiz = sizeof(COLR);
+		outvsiz = LSCOLR;
 		break;
 	default:
 		error(INTERNAL, "botched output format");
 		return;
 	}
-	outvfmt = formstr(outfmt);
+	outvfmt = (char *)formstr(outfmt);
 						/* check modifier outputs */
 	for (i = 0; i < nmods; i++) {
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;

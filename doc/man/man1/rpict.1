@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.28 2022/10/19 21:25:20 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.29 2023/11/15 18:02:52 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -698,6 +698,29 @@ Otherwise, Russian roulette is used to
 continue rays with a probability equal to the ray weight
 divided by the given
 .I frac.
+.TP
+.BI -cs \ Ns
+Use
+.I Ns
+bands for spectral sampling rather than the default RGB calculation space.
+The maximum setting is controlled by the compiler macro MAXCSAMP, and
+defaults to 24.
+Larger values for Ns will be reduced to MAXCSAMP.
+.TP
+.BI -cw " nmA nmB"
+Set extrema to the given wavelengths for spectral sampling.
+The default is 380 and 780 nanometers.
+The order specified does not matter.
+.TP
+.BI -pc " xr yr xg yg xb yb xw yw"
+Use the specified chromaticity pairs for output primaries and white
+point rather than the standard RGB color space.
+.TP
+.BR \-pRGB
+Output standard RGB values (the default).
+.TP
+.BR \-pXYZ
+Output standard CIE XYZ tristimulus values rather than RGB.
 .TP
 .BI -S \ seqstart
 Instead of generating a single picture based only on the view

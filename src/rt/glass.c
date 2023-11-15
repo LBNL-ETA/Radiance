@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.28 2019/04/19 19:01:32 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.29 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -49,10 +49,11 @@ m_glass(		/* color a ray which hit a thin glass surface */
 )
 {
 	COLOR  mcolor;
+	SCOLOR  scoef;
+	double	ctemp[3];
 	double  pdot;
 	FVECT  pnorm;
 	double  rindex=0, cos2;
-	COLOR  trans, refl;
 	int  hastexture, hastrans;
 	double  d, r1e, r1m;
 	RAY  p;
@@ -87,7 +88,8 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	if (r->rod < 0.0)			/* reorient if necessary */
 		flipsurface(r);
 						/* perturb normal */
-	if ( (hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY)) ) {
+	hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY);
+	if (hastexture) {
 		pdot = raynormal(pnorm, r);
 	} else {
 		VCOPY(pnorm, r->ron);
@@ -110,14 +112,15 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	if (hastrans) {
 		for (i = 0; i < 3; i++) {
 			d = colval(mcolor, i);
-			colval(trans,i) = .5*(1.0-r1e)*(1.0-r1e)*d /
-							(1.0-r1e*r1e*d*d);
-			colval(trans,i) += .5*(1.0-r1m)*(1.0-r1m)*d /
+			ctemp[i] = .5*(1.0-r1e)*(1.0-r1e)*d /
+							(1.0-r1e*r1e*d*d) +
+					.5*(1.0-r1m)*(1.0-r1m)*d /
 							(1.0-r1m*r1m*d*d);
 		}
-		multcolor(trans, r->pcol);	/* modify by pattern */
+		setscolor(scoef, ctemp[RED], ctemp[GRN], ctemp[BLU]);
+		smultscolor(scoef, r->pcol);	/* modify by pattern */
 						/* transmitted ray */
-		if (rayorigin(&p, TRANS, r, trans) == 0) {
+		if (rayorigin(&p, TRANS, r, scoef) == 0) {
 			if (!(r->crtype & (SHADOW|AMBIENT)) && hastexture) {
 				VSUM(p.rdir, r->rdir, r->pert, 2.*(1.-rindex));
 				if (normalize(p.rdir) == 0.0) {
@@ -128,8 +131,8 @@ m_glass(		/* color a ray which hit a thin glass surface */
 				VCOPY(p.rdir, r->rdir);
 			}
 			rayvalue(&p);
-			multcolor(p.rcol, p.rcoef);
-			addcolor(r->rcol, p.rcol);
+			smultscolor(p.rcol, p.rcoef);
+			saddscolor(r->rcol, p.rcol);
 			if (!hastexture || r->crtype & (SHADOW|AMBIENT))
 				r->rxt = r->rot + raydistance(&p);
 		}
@@ -140,17 +143,18 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	for (i = 0; i < 3; i++) {
 		d = colval(mcolor, i);
 		d *= d;
-		colval(refl,i) = .5*r1e*(1.0+(1.0-2.0*r1e)*d)/(1.0-r1e*r1e*d);
-		colval(refl,i) += .5*r1m*(1.0+(1.0-2.0*r1m)*d)/(1.0-r1m*r1m*d);
+		ctemp[i] = .5*r1e*(1.0+(1.0-2.0*r1e)*d)/(1.0-r1e*r1e*d) +
+				.5*r1m*(1.0+(1.0-2.0*r1m)*d)/(1.0-r1m*r1m*d);
 	}
+	setscolor(scoef, ctemp[RED], ctemp[GRN], ctemp[BLU]);
 						/* reflected ray */
-	if (rayorigin(&p, REFLECTED, r, refl) == 0) {
+	if (rayorigin(&p, REFLECTED, r, scoef) == 0) {
 		VSUM(p.rdir, r->rdir, pnorm, 2.*pdot);
 		checknorm(p.rdir);
 		rayvalue(&p);
-		multcolor(p.rcol, p.rcoef);
-		copycolor(r->mcol, p.rcol);
-		addcolor(r->rcol, p.rcol);
+		smultscolor(p.rcol, p.rcoef);
+		copyscolor(r->mcol, p.rcol);
+		saddscolor(r->rcol, p.rcol);
 		r->rmt = r->rot;
 		if (r->ro != NULL && isflat(r->ro->otype) &&
 				!hastexture | (r->crtype & AMBIENT))

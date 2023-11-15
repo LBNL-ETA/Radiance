@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.27 2023/08/15 01:19:37 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.28 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -52,13 +52,16 @@ extern double  mblur;			/* motion blur parameter */
 
 extern double  dblur;			/* depth-of-field blur parameter */
 
+RGBPRIMP  out_prims = stdprims;		/* output color primitives */
+static RGBPRIMS  our_prims;		/* private output color primitives */
+
 static void onsig(int signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
 					/* rpict additional features */
 #ifdef PERSIST
 #define RPICT_FEATURES	"Persist\nParallelPersist\n" \
-		"ParticipatingMedia=Mist\n" \
+		"Hyperspectral\nParticipatingMedia=Mist\n" \
 		"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
@@ -66,7 +69,7 @@ static void printdefaults(void);
 		"AdaptiveShadowTesting\nOutputs=v,l\n"
 #else
 #define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
-		"ParticipatingMedia=Mist\n" \
+		"Hyperspectral\nParticipatingMedia=Mist\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
@@ -180,6 +183,31 @@ main(int  argc, char  *argv[])
 				check(3,"f");
 				dblur = atof(argv[++i]);
 				break;
+			case 'R':				/* standard RGB output */
+				if (strcmp(argv[i]+2, "RGB"))
+					goto badopt;
+				out_prims = stdprims;
+				break;
+			case 'X':				/* XYZ output */
+				if (strcmp(argv[i]+2, "XYZ"))
+					goto badopt;
+				out_prims = xyzprims;
+				break;
+			case 'c': {				/* chromaticities */
+				int	j;
+				check(3,"ffffffff");
+				rval = 0;
+				for (j = 0; j < 8; j++) {
+					our_prims[0][j] = atof(argv[++i]);
+					rval |= fabs(our_prims[0][j]-stdprims[0][j]) > .001;
+				}
+				if (rval) {
+					if (!colorprimsOK(our_prims))
+						error(USER, "illegal primary chromaticities");
+					out_prims = our_prims;
+				} else
+					out_prims = stdprims;
+				} break;
 			default:
 				goto badopt;
 			}
@@ -216,6 +244,31 @@ main(int  argc, char  *argv[])
 			check(2,"i");
 			ralrm = atoi(argv[++i]);
 			break;
+#if MAXCSAMP>3
+		case 'c':				/* spectral sampling */
+			switch (argv[i][2]) {
+			case 's':			/* spectral bin count */
+				check(3,"i");
+				NCSAMP = atoi(argv[++i]);
+				break;
+			case 'w':			/* wavelength extrema */
+				check(3,"ff");
+				WLPART[0] = atof(argv[++i]);
+				WLPART[3] = atof(argv[++i]);
+				break;
+#if 0
+			case 'o':			/* output spectral results */
+				rval = (out_prims == NULL);
+				check_bool(3,rval);
+				if (rval) out_prims = NULL;
+				else if (out_prims == NULL) out_prims = stdprims;
+				break;
+#endif
+			default:
+				goto badopt;
+			}
+			break;
+#endif
 #ifdef  PERSIST
 		case 'P':				/* persist file */
 			if (argv[i][2] == 'P') {
@@ -485,6 +538,23 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-vl %f\t\t\t# view lift\n", ourview.voff);
 	printf("-x  %-9d\t\t\t# x resolution\n", hresolu);
 	printf("-y  %-9d\t\t\t# y resolution\n", vresolu);
+	if (NCSAMP > 3) {
+		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
+		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
+				WLPART[3], WLPART[0]);
+/*		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
+				"-co+\t\t\t\t# output spectral values\n");
+*/	}
+	if (out_prims == stdprims)
+		printf("-pRGB\t\t\t\t# standard RGB color output\n");
+	else if (out_prims == xyzprims)
+		printf("-pXYZ\t\t\t\t# CIE XYZ color output\n");
+	else if (out_prims != NULL)
+		printf("-pc %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\t# output color primaries and white point\n",
+				out_prims[RED][0], out_prims[RED][1],
+				out_prims[GRN][0], out_prims[GRN][1],
+				out_prims[BLU][0], out_prims[BLU][1],
+				out_prims[WHT][0], out_prims[WHT][1]);
 	printf("-pa %f\t\t\t# pixel aspect ratio\n", pixaspect);
 	printf("-pj %f\t\t\t# pixel jitter\n", dstrpix);
 	printf("-pm %f\t\t\t# pixel motion\n", mblur);

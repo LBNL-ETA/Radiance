@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.26 2023/07/01 01:31:17 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.27 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -28,13 +28,269 @@ static const char	RCSid[] = "$Id: color.c,v 2.26 2023/07/01 01:31:17 greg Exp $"
 #define  MINRUN		4	/* minimum run length */
 
 
-void *
-tempbuffer(			/* get a temporary buffer */
-	unsigned int  len
+int  CNDX[4] = {0,1,2,3};	/* RGBE indices for SCOLOR, SCOLR */
+float  WLPART[4] = {780,588,480,380};	/* RGB wavelength limits+partitions (nm) */
+
+
+int
+setspectrsamp(			/* assign spectral sampling, 1 if good, -1 if bad */
+	int cn[4],		/* input cn[3]=nsamps */
+	float wlpt[4]		/* input wlpt[0],wlpt[3]=extrema */
 )
 {
-	static void		*tempbuf = NULL;
-	static unsigned int	tempbuflen = 0;
+	static const float	PKWL[3] = {607, 553, 469};
+	int			i, j;
+
+	if (cn[3] < 3)
+		return(-1);		/* reject this */
+
+	if (wlpt[0] < wlpt[3]) {
+		float	tf = wlpt[0];
+		wlpt[0] = wlpt[3]; wlpt[3] = tf;
+	}
+	if (wlpt[0] - wlpt[3] < 50.f)
+		return(-1);		/* also reject */
+
+	if (cn[3] > MAXCSAMP)
+		cn[3] = MAXCSAMP;
+
+	if ((wlpt[3] >= PKWL[2]) | (wlpt[0] <= PKWL[0])) {
+		wlpt[1] = wlpt[0] + 0.333333f*(wlpt[3]-wlpt[0]);
+		wlpt[2] = wlpt[0] + 0.666667f*(wlpt[3]-wlpt[0]);
+		cn[0] = 0; cn[1] = cn[3]/3; cn[2] = cn[3]*2/3;
+		return(0);		/* unhappy but non-fatal return value */
+	}
+	wlpt[1] = 588.f;		/* tuned for standard green channel */
+	wlpt[2] = 480.f;
+	if (cn[3] == 3) {		/* nothing to tune? */
+		cn[0] = 0; cn[1] = 1; cn[2] = 2;
+	} else {			/* else find nearest color indices */
+		double	curwl[3];
+		memset(curwl, 0, sizeof(curwl));
+		for (i = cn[3]; i--; ) {
+			const float	cwl = (i+.5f)/cn[3]*(wlpt[3]-wlpt[0]) + wlpt[0];
+			for (j = 3; j--; )
+				if (fabs(cwl - PKWL[j]) < fabs(curwl[j] - PKWL[j])) {
+					curwl[j] = cwl;
+					cn[j] = i;
+				}
+		}
+	}
+	return(1);			/* happy return value */
+}
+
+
+void
+setscolor(			/* assign spectral color from RGB */
+	SCOLOR scol,
+	double r,
+	double g,
+	double b
+)
+{
+	const double	step = (WLPART[3] - WLPART[0])/(double)NCSAMP;
+	double		cwl = WLPART[0] + .5*step;
+	int		i;
+
+	for (i = 0; i < NCSAMP; i++) {
+		if (cwl >= WLPART[1])
+			scol[i] = r;
+		else if (cwl >= WLPART[2])
+			scol[i] = g;
+		else
+			scol[i] = b;
+		cwl += step;
+	}
+}
+
+
+void
+scolor2color(			/* assign RGB color from spectrum */
+	COLOR col,
+	SCOLOR scol,		/* uses average over bands */
+	int ncs,
+	float wlpt[4]
+)
+{
+	const double	step = (wlpt[3] - wlpt[0])/(double)ncs;
+	double		cwl = wlpt[0] + .5*step;
+	int		i, j=0, n=0;
+
+	setcolor(col, 0, 0, 0);
+	for (i = 0; i < ncs; i++) {
+		if (cwl < wlpt[j+1]) {
+			if (n > 1) col[j] /= (COLORV)n;
+			j++;
+			n = 0;
+		}
+		col[j] += scol[i];
+		n++;
+		cwl += step;
+	}
+	if (n > 1) col[j] /= (COLORV)n;
+}
+
+
+void
+scolor2colr(			/* assign RGBE from spectral color */
+	COLR clr,
+	SCOLOR scol,		/* uses average over bands */
+	int ncs,
+	float wlpt[4]
+)
+{
+	COLOR	col;
+
+	scolor2color(col, scol, ncs, wlpt);
+	setcolr(clr, col[RED], col[GRN], col[BLU]);
+}
+
+
+void
+scolor2scolr(			/* float spectrum to common exponent */
+	SCOLR sclr,
+	SCOLOR scol,
+	int ncs
+)
+{
+	int	i = ncs;
+	COLORV	p = scol[--i];
+
+	while (i)
+		if (scol[--i] > p)
+			p = scol[i];
+	if (p <= 1e-32) {
+		memset(sclr, 0, ncs+1);
+		return;
+	}
+	p = frexp(p, &i) * 256.0 / p;
+	sclr[ncs] = i + COLXS;
+	for (i = ncs; i--; )
+		sclr[i] = (scol[i] > 0) * (int)(scol[i]*p);
+}
+
+
+void
+scolr2scolor(			/* common exponent to float spectrum */
+	SCOLOR scol,
+	SCOLR sclr,
+	int ncs
+)
+{
+	double	f;
+	int	i;
+
+	if (sclr[ncs] == 0) {
+		memset(scol, 0, sizeof(COLORV)*ncs);
+		return;
+	}
+	f = ldexp(1.0, (int)sclr[ncs]-(COLXS+8));
+
+	for (i = ncs; i--; )
+		scol[i] = (sclr[i] + 0.5)*f;
+}
+
+
+double
+scolor_mean(			/* compute average for spectral color */
+	SCOLOR  scol
+)
+{
+	int	i = NCSAMP;
+	double	sum = 0;
+
+	while (i--)
+		sum += scol[i];
+
+	return sum/(double)NCSAMP;
+}
+
+
+double
+sintens(			/* find maximum value from spectrum */
+	SCOLOR  scol
+)
+{
+	int	i = NCSAMP;
+	COLORV	peak = scol[--i];
+
+	while (i)
+		if (scol[--i] > peak)
+			peak = scol[i];
+
+	return peak;
+}
+
+
+void
+convertscolor(			/* spectrum conversion, zero-fill ends */
+	SCOLOR dst,		/* destination spectrum */
+	int dnc,		/* destination # of spectral samples/intervals */
+	double dwl0,		/* starting destination wavelength (longer) */
+	double dwl1,		/* ending destination wavelength (shorter) */
+	const COLORV src[],	/* source spectrum array */
+	int snc,
+	double swl0,		/* long/short wavelengths may be reversed */
+	double swl1
+)
+{
+	const int	sdir = 1 - 2*(swl0 < swl1);
+	const double	sstp = (swl1 - swl0)/(double)snc;
+	const double	dstp = (dwl1 - dwl0)/(double)dnc;
+	const double	rdstp = 1./dstp;
+	int		si, ssi, di;
+	double		wl;
+
+	if ((dnc < 3) | (dwl0 <= dwl1) | (dst == src))
+		return;		/* invalid destination */
+
+	if (dnc == snc && (dwl0-swl0)*(dwl0-swl0) + (dwl1-swl1)*(dwl1-swl1) <= .5) {
+		memcpy(dst, src, sizeof(COLORV)*dnc);
+		return;		/* same spectral sampling */
+	}
+	memset(dst, 0, sizeof(COLORV)*dnc);
+				/* set starting positions */
+	if ((sdir>0 ? swl0 : swl1) <= dwl0) {
+		if (sdir > 0) {
+			wl = swl0;
+			ssi = 0;
+		} else {
+			wl = swl1;
+			ssi = snc-1;
+		}
+		si = 0;
+		di = (wl - dwl0)*rdstp;
+	} else {
+		wl = dwl0;
+		si = (wl - swl0)/sstp;
+		ssi = sdir > 0 ? si : snc-1 - si;
+		di = 0;
+	}
+	swl0 += (sdir < 0)*sstp;
+				/* step through intervals */
+	while ((si < snc) & (di < dnc)) {
+		double	intvl;
+		if (swl0 + (ssi+sdir)*sstp < dwl0 + (di+1)*dstp) {
+			intvl = dwl0 + (di+1)*dstp - wl;
+			dst[di++] += src[ssi]*intvl*rdstp;
+		} else {
+			intvl = swl0 + (ssi+sdir)*sstp - wl;
+			dst[di] += src[ssi]*intvl*rdstp;
+			ssi += sdir;
+			si++;
+		}
+		wl += intvl;
+	}
+}
+
+
+void *
+tempbuffer(			/* get a temporary buffer */
+	size_t  len
+)
+{
+	static void	*tempbuf = NULL;
+	static size_t	tempbuflen = 0;
 
 	if (!len) {		/* call to free */
 		if (tempbuflen) {
@@ -306,19 +562,9 @@ setcolr(			/* assign a short color value */
 
 	d = frexp(d, &e) * 256.0 / d;
 
-	if (r > 0.0)
-		clr[RED] = r * d;
-	else
-		clr[RED] = 0;
-	if (g > 0.0)
-		clr[GRN] = g * d;
-	else
-		clr[GRN] = 0;
-	if (b > 0.0)
-		clr[BLU] = b * d;
-	else
-		clr[BLU] = 0;
-
+	clr[RED] = (r > 0) * (int)(r*d);
+	clr[GRN] = (g > 0) * (int)(g*d);
+	clr[BLU] = (b > 0) * (int)(b*d);
 	clr[EXP] = e + COLXS;
 }
 
@@ -331,14 +577,14 @@ colr_color(			/* convert short to float color */
 {
 	double  f;
 	
-	if (clr[EXP] == 0)
+	if (clr[EXP] == 0) {
 		col[RED] = col[GRN] = col[BLU] = 0.0;
-	else {
-		f = ldexp(1.0, (int)clr[EXP]-(COLXS+8));
-		col[RED] = (clr[RED] + 0.5)*f;
-		col[GRN] = (clr[GRN] + 0.5)*f;
-		col[BLU] = (clr[BLU] + 0.5)*f;
+		return;
 	}
+	f = ldexp(1.0, (int)clr[EXP]-(COLXS+8));
+	col[RED] = (clr[RED] + 0.5)*f;
+	col[GRN] = (clr[GRN] + 0.5)*f;
+	col[BLU] = (clr[BLU] + 0.5)*f;
 }
 
 
@@ -352,8 +598,24 @@ bigdiff(				/* c1 delta c2 > md? */
 	int  i;
 
 	for (i = 0; i < 3; i++)
-		if (colval(c1,i)-colval(c2,i) > md*colval(c2,i) ||
-				colval(c2,i)-colval(c1,i) > md*colval(c1,i))
+		if ((colval(c1,i)-colval(c2,i) > md*colval(c2,i)) |
+				(colval(c2,i)-colval(c1,i) > md*colval(c1,i)))
+			return(1);
+	return(0);
+}
+
+
+int
+sbigsdiff(				/* sc1 delta sc2 > md? */
+	SCOLOR  c1,
+	SCOLOR  c2,
+	double  md
+)
+{
+	int  i = NCSAMP;
+
+	while (i--)
+		if ((c1[i]-c2[i] > md*c2[i]) | (c2[i]-c1[i] > md*c1[i]))
 			return(1);
 	return(0);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.43 2020/01/23 19:20:54 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.44 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -213,7 +213,7 @@ paint(			/* compute and paint a rectangle */
 	
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir, &ourview,
 			h/hresolu, v/vresolu)) < -FTINY) {
-		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
+		scolorblack(thisray.rcol);
 	} else if (!ray_pnprocs) {		/* immediate mode */
 		ray_trace(&thisray);
 	} else {				/* queuing mode */
@@ -229,7 +229,7 @@ paint(			/* compute and paint a rectangle */
 		p = (PNODE *)thisray.rno;
 	}
 
-	copycolor(p->v, thisray.rcol);
+	scolor_color(p->v, thisray.rcol);
 	scalecolor(p->v, exposure);
 
 	recolor(p);				/* paint it */
@@ -271,7 +271,7 @@ waitrays(void)					/* finish up pending rays */
 		return(0);
 	while ((rval = ray_presult(&raydone, 0)) > 0) {
 		PNODE  *p = (PNODE *)raydone.rno;
-		copycolor(p->v, raydone.rcol);
+		scolor_color(p->v, raydone.rcol);
 		scalecolor(p->v, exposure);
 		recolor(p);
 		nwaited++;

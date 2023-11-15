@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.6 2015/09/02 18:59:01 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.7 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -38,8 +38,8 @@ typedef struct {
 	OBJREC  *mp;		/* material pointer */
 	RAY  *rp;		/* ray pointer */
 	short  specfl;		/* specularity flags, defined above */
-	COLOR  mcolor;		/* color of this material */
-	COLOR  scolor;		/* color of specular component */
+	SCOLOR  mcolor;		/* color of this material */
+	SCOLOR  scolor;		/* color of specular component */
 	FVECT  u, v;		/* u and v vectors orienting anisotropy */
 	double  u_power;	/* u power */
 	double  v_power;	/* v power */
@@ -65,7 +65,7 @@ schlick_fres(double dprod)
 
 static void
 dirashik(		/* compute source contribution */
-	COLOR  cval,		/* returned coefficient */
+	SCOLOR  scval,		/* returned coefficient */
 	void  *nnp,		/* material data */
 	FVECT  ldir,		/* light source direction */
 	double  omega		/* light source size */
@@ -75,23 +75,23 @@ dirashik(		/* compute source contribution */
 	double  ldot;
 	double  dtmp, dtmp1, dtmp2;
 	FVECT  h;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 
-	setcolor(cval, 0.0, 0.0, 0.0);
+	scolorblack(scval);
 
 	ldot = DOT(np->pnorm, ldir);
 
-	if (ldot < 0.0)
+	if (ldot <= FTINY)
 		return;		/* wrong side */
 
 	/*
 	 *  Compute and add diffuse reflected component to returned
 	 *  color.
 	 */
-	copycolor(ctmp, np->mcolor);
+	copyscolor(sctmp, np->mcolor);
 	dtmp = ldot * omega * (1.0/PI) * (1. - schlick_fres(ldot));
-	scalecolor(ctmp, dtmp);		
-	addcolor(cval, ctmp);
+	scalescolor(sctmp, dtmp);
+	saddscolor(scval, sctmp);
 
 	if (!(np->specfl & SPA_REFL) || ambRayInPmap(np->rp))
 		return;
@@ -113,10 +113,10 @@ dirashik(		/* compute source contribution */
 	dtmp /= 8.*PI * DOT(ldir,h) * MAX(ldot,np->pdot);
 					/* worth using? */
 	if (dtmp > FTINY) {
-		copycolor(ctmp, np->scolor);
+		copyscolor(sctmp, np->scolor);
 		dtmp *= ldot * omega;
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 }
 
@@ -128,7 +128,7 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 )
 {
 	ASHIKDAT  nd;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 	double	fres;
 	int  i;
 						/* easy shadow test */
@@ -150,10 +150,10 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 						/* get material color */
 	nd.mp = m;
 	nd.rp = r;
-	setcolor(nd.mcolor, m->oargs.farg[0],
+	setscolor(nd.mcolor, m->oargs.farg[0],
 			   m->oargs.farg[1],
 			   m->oargs.farg[2]);
-	setcolor(nd.scolor, m->oargs.farg[3],
+	setscolor(nd.scolor, m->oargs.farg[3],
 			   m->oargs.farg[4],
 			   m->oargs.farg[5]);
 						/* get specular power */
@@ -164,16 +164,16 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for dirashik() */
-	multcolor(nd.mcolor, r->pcol);		/* modify diffuse color */
+	smultscolor(nd.mcolor, r->pcol);	/* modify diffuse color */
 
-	if (bright(nd.scolor) > FTINY) {	/* adjust specular color */
+	if (sintens(nd.scolor) > FTINY) {	/* adjust specular color */
 		nd.specfl |= SPA_REFL;
 						/* check threshold */
-		if (specthresh >= bright(nd.scolor)-FTINY)
+		if (specthresh >= pbright(nd.scolor)-FTINY)
 			nd.specfl |= SPA_RBLT;
 		fres = schlick_fres(nd.pdot);	/* Schick's Fresnel approx */
-		for (i = 0; i < 3; i++)
-			colval(nd.scolor,i) += (1.-colval(nd.scolor,i))*fres;
+		for (i = NCSAMP; i--; )
+			nd.scolor[i] += (1.-nd.scolor[i])*fres;
 	}
 	if (r->ro != NULL && isflat(r->ro->otype))
 		nd.specfl |= SPA_FLAT;
@@ -183,12 +183,12 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 	if ((nd.specfl & (SPA_REFL|SPA_RBLT)) == SPA_REFL)
 		ashiksamp(&nd);
 						/* diffuse interreflection */
-	if (bright(nd.mcolor) > FTINY) {
-		copycolor(ctmp, nd.mcolor);	/* modified by material color */		
+	if (sintens(nd.mcolor) > FTINY) {
+		copyscolor(sctmp, nd.mcolor);	/* modified by material color */
 		if (nd.specfl & SPA_RBLT)	/* add in specular as well? */
-			addcolor(ctmp, nd.scolor);
-		multambient(ctmp, r, nd.pnorm);
-		addcolor(r->rcol, ctmp);	/* add to returned color */
+			saddscolor(sctmp, nd.scolor);
+		multambient(sctmp, r, nd.pnorm);
+		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	direct(r, dirashik, &nd);		/* add direct component */
 
@@ -248,7 +248,7 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 			nstarget = sr.rweight/minweight;
 		if (nstarget > 1) {
 			dtmp = 1./nstarget;
-			scalecolor(sr.rcoef, dtmp);
+			scalescolor(sr.rcoef, dtmp);
 			sr.rweight *= dtmp;
 		} else
 			nstarget = 1;
@@ -284,8 +284,8 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 			continue;
 		checknorm(sr.rdir);
 		rayvalue(&sr);
-		multcolor(sr.rcol, sr.rcoef);
-		addcolor(np->rp->rcol, sr.rcol);
+		smultscolor(sr.rcol, sr.rcoef);
+		saddscolor(np->rp->rcol, sr.rcol);
 		++nstaken;
 	}
 	ndims--;

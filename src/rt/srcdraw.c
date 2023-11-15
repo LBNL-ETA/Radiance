@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.21 2020/05/14 20:58:03 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.22 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -407,6 +407,7 @@ drawsources(
 	int	nsv, npv;
 	int	xmin, xmax, ymin, ymax, x, y;
 	RREAL	cxy[2];
+	COLOR	rcol;
 	double	w;
 	RAY	sr;
 	SPLIST	*sp;
@@ -452,21 +453,22 @@ drawsources(
 				rayorigin(&sr, SHADOW, NULL, NULL);
 				sr.rsrc = sp->sn;
 				rayvalue(&sr);		/* compute value */
-				if (bright(sr.rcol) <= FTINY)
+				if (sintens(sr.rcol) <= FTINY)
 					continue;	/* missed/blocked */
+				scolor_rgb(rcol, sr.rcol);
 							/* modify pixel */
 				w = poly_area(ppoly, npv) * hres * vres;
 				if (zbf[y-y0] != NULL &&
 						sr.rxt < 0.99*zbf[y-y0][x-x0]) {
 					zbf[y-y0][x-x0] = sr.rxt;
-				} else if (!bigdiff(sr.rcol, pic[y-y0][x-x0],
+				} else if (!bigdiff(rcol, pic[y-y0][x-x0],
 						0.01)) { /* source sample */
 					scalecolor(pic[y-y0][x-x0], w);
 					continue;
 				}
-				scalecolor(sr.rcol, w);
+				scalecolor(rcol, w);
 				scalecolor(pic[y-y0][x-x0], 1.-w);
-				addcolor(pic[y-y0][x-x0], sr.rcol);
+				addcolor(pic[y-y0][x-x0], rcol);
 			}
 	}
 }

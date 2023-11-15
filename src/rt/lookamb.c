@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.17 2019/05/14 17:39:10 greg Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.18 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -10,7 +10,6 @@ static const char	RCSid[] = "$Id: lookamb.c,v 2.17 2019/05/14 17:39:10 greg Exp 
 #include  "platform.h"
 #include  "ray.h"
 #include  "ambient.h"
-#include  "resolu.h"
 
 
 int  dataonly = 0;
@@ -26,19 +25,21 @@ lookamb(			/* load & convert ambient values from a file */
 )
 {
 	FVECT	norm, uvec;
+	COLOR	avcol;
 
 	while (readambval(&av, fp)) {
 		decodedir(norm, av.ndir);
 		decodedir(uvec, av.udir);
+		scolor2rgb(avcol, av.val, AMB_CNDX[3], AMB_WLPART);
 		if (dataonly) {
 			printf("%f\t%f\t%f\t", av.pos[0], av.pos[1], av.pos[2]);
 			printf("%f\t%f\t%f\t", norm[0], norm[1], norm[2]);
 			printf("%f\t%f\t%f\t", uvec[0], uvec[1], uvec[2]);
 			printf("%d\t%f\t%f\t%f\t", av.lvl, av.weight,
 					av.rad[0], av.rad[1]);
-			printf("%e\t%e\t%e\t", colval(av.val,RED),
-						colval(av.val,GRN),
-						colval(av.val,BLU));
+			printf("%e\t%e\t%e\t", colval(avcol,RED),
+						colval(avcol,GRN),
+						colval(avcol,BLU));
 			printf("%f\t%f\t", av.gpos[0], av.gpos[1]);
 			printf("%f\t%f\t", av.gdir[0], av.gdir[1]);
 			printf("%u\n", av.corral);
@@ -51,8 +52,8 @@ lookamb(			/* load & convert ambient values from a file */
 					uvec[0], uvec[1], uvec[2]);
 			printf("Lvl,Wt,UVrad:\t%d\t\t%f\t%f\t%f\n", av.lvl,
 					av.weight, av.rad[0], av.rad[1]);
-			printf("Value:\t\t%e\t%e\t%e\n", colval(av.val,RED),
-					colval(av.val,GRN), colval(av.val,BLU));
+			printf("Value:\t\t%e\t%e\t%e\n", colval(avcol,RED),
+					colval(avcol,GRN), colval(avcol,BLU));
 			printf("Pos.Grad:\t%f\t%f\n", av.gpos[0], av.gpos[1]);
 			printf("Dir.Grad:\t%f\t%f\n", av.gdir[0], av.gdir[1]);
 			printf("Corral:\t\t%8X\n\n", av.corral);
@@ -69,6 +70,7 @@ writamb(			/* write binary ambient values to stdout */
 )
 {
 	FVECT	norm;
+	COLOR	avcol;
 
 	for ( ; ; ) {
 		if (!dataonly)
@@ -94,8 +96,9 @@ writamb(			/* write binary ambient values to stdout */
 		if (!dataonly)
 			fscanf(fp, "%*s");
 		if (fscanf(fp, "%f %f %f",
-				&av.val[RED], &av.val[GRN], &av.val[BLU]) != 3)
+				&avcol[RED], &avcol[GRN], &avcol[BLU]) != 3)
 			return;
+		setscolor(av.val, avcol[RED], avcol[GRN], avcol[BLU]);
 		if (!dataonly)
 			fscanf(fp, "%*s");
 		if (fscanf(fp, "%f %f", &av.gpos[0], &av.gpos[1]) != 2)
@@ -110,8 +113,7 @@ writamb(			/* write binary ambient values to stdout */
 		} else if (fscanf(fp, "%*s %X", &av.corral) != 1)
 			return;
 		av.next = NULL;
-		writambval(&av, stdout);
-		if (ferror(stdout))
+		if (writambval(&av, stdout) < 0)
 			exit(1);
 	}
 }
@@ -153,6 +155,7 @@ main(		/* load ambient values from a file */
 		return(1);
 	}
 	if (reverse) {
+		SET_FILE_BINARY(stdout);
 		if (header) {
 			if (checkheader(fp, "ascii", stdout) < 0)
 				goto formaterr;
@@ -160,20 +163,20 @@ main(		/* load ambient values from a file */
 			newheader("RADIANCE", stdout);
 			printargs(argc, argv, stdout);
 		}
+		fputncomp(3, stdout);
 		fputformat(AMBFMT, stdout);
-		putchar('\n');
-		SET_FILE_BINARY(stdout);
+		fputc('\n', stdout);
 		putambmagic(stdout);
 		writamb(fp);
 	} else {
 		SET_FILE_BINARY(fp);
-		if (checkheader(fp, AMBFMT, header ? stdout : (FILE *)NULL) < 0)
+		if (getheader(fp, amb_headline, header ? stdout : (FILE *)NULL) < 0)
 			goto formaterr;
 		if (!hasambmagic(fp))
 			goto formaterr;
 		if (header) {
 			fputformat("ascii", stdout);
-			putchar('\n');
+			fputc('\n', stdout);
 		}
 		lookamb(fp);
 	}

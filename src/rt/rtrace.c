@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.106 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.107 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -47,6 +47,10 @@ extern int  vresolu;			/* vertical resolution */
 
 extern int  castonly;			/* only doing ray-casting? */
 
+extern double  (*sens_curve)(SCOLOR scol);	/* spectral conversion for 1-channel */
+extern double  out_scalefactor;		/* output calibration scale factor */
+extern RGBPRIMP  out_prims;		/* output color primitives (NULL if spectral) */
+
 #ifndef  MAXTSET
 #define	 MAXTSET	8191		/* maximum number in trace set */
 #endif
@@ -63,7 +67,7 @@ static int	inp_qpos = 0;		/* next ray to return */
 static int	inp_qend = 0;		/* number of rays in this work group */
 
 typedef void putf_t(RREAL *v, int n);
-static putf_t puta, putd, putf, putrgbe;
+static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
 static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
@@ -82,6 +86,8 @@ static int iszerovec(const FVECT vec);
 static double nextray(FVECT org, FVECT dir);
 static void tabin(RAY *r);
 static void ourtrace(RAY *r);
+
+static void  putscolor(const COLORV *scol);
 
 static oputf_t *ray_out[32], *every_out[32];
 static putf_t *putreal;
@@ -115,7 +121,12 @@ formstr(				/* return format identifier */
 	case 'a': return("ascii");
 	case 'f': return("float");
 	case 'd': return("double");
-	case 'c': return(COLRFMT);
+	case 'c':
+		if (out_prims == NULL)
+			return(SPECFMT);
+		if (out_prims == xyzprims)
+			return(CIEFMT);
+		return(COLRFMT);
 	}
 	return("unknown");
 }
@@ -228,6 +239,8 @@ setrtoutput(void)			/* set up output tables, return #comp */
 {
 	char  *vs = outvals;
 	oputf_t **table = ray_out;
+	const int	nco = (sens_curve != NULL) ? 1 :
+				(out_prims != NULL) ? 3 : NCSAMP;
 	int  ncomp = 0;
 
 	if (!*vs)
@@ -240,7 +253,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	case 'c':
 		if (outvals[1] || !strchr("vrx", outvals[0]))
 			error(USER, "color format only with -ov, -or, -ox");
-		putreal = putrgbe; break;
+		break;
 	default:
 		error(CONSISTENCY, "botched output format");
 	}
@@ -266,7 +279,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 			break;
 		case 'r':				/* reflected contrib. */
 			*table++ = oputr;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'R':				/* reflected distance */
@@ -276,7 +289,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 			break;
 		case 'x':				/* xmit contrib. */
 			*table++ = oputx;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'X':				/* xmit distance */
@@ -286,12 +299,12 @@ setrtoutput(void)			/* set up output tables, return #comp */
 			break;
 		case 'v':				/* value */
 			*table++ = oputv;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'V':				/* contribution */
 			*table++ = oputV;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
@@ -333,7 +346,7 @@ setrtoutput(void)			/* set up output tables, return #comp */
 			break;
 		case 'W':				/* coefficient */
 			*table++ = oputW;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY) | (ambssamp > 0))
 				error(WARNING,
@@ -693,12 +706,12 @@ oputx(				/* print unmirrored contribution */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
+	SCOLOR	cdiff;
 
-	cval[0] = colval(r->rcol,RED) - colval(r->mcol,RED);
-	cval[1] = colval(r->rcol,GRN) - colval(r->mcol,GRN);
-	cval[2] = colval(r->rcol,BLU) - colval(r->mcol,BLU);
-	(*putreal)(cval, 3);
+	copyscolor(cdiff, r->rcol);
+	sopscolor(cdiff, -=, r->mcol);
+
+	putscolor(cdiff);
 }
 
 
@@ -716,12 +729,7 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
-
-	cval[0] = colval(r->rcol,RED);
-	cval[1] = colval(r->rcol,GRN);
-	cval[2] = colval(r->rcol,BLU);
-	(*putreal)(cval, 3);
+	putscolor(r->rcol);
 }
 
 
@@ -730,11 +738,11 @@ oputV(				/* print value contribution */
 	RAY *r
 )
 {
-	RREAL	contr[3];
+	SCOLOR	contr;
 
 	raycontrib(contr, r, PRIMARY);
-	multcolor(contr, r->rcol);
-	(*putreal)(contr, 3);
+	smultscolor(contr, r->rcol);
+	putscolor(contr);
 }
 
 
@@ -844,14 +852,14 @@ oputW(				/* print coefficient */
 	RAY  *r
 )
 {
-	RREAL	contr[3];
+	SCOLOR	contr;
 				/* shadow ray not on source? */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
-		setcolor(contr, 0.0, 0.0, 0.0);
+		scolorblack(contr);
 	else
 		raycontrib(contr, r, PRIMARY);
 
-	(*putreal)(contr, 3);
+	putscolor(contr);
 }
 
 
@@ -949,12 +957,56 @@ putf(RREAL *v, int n)		/* output binary float(s) */
 
 
 static void
-putrgbe(RREAL *v, int n)	/* output RGBE color */
+putscolor(const COLORV *scol)		/* output (spectral) color */
 {
-	COLR  cout;
-
-	if (n != 3)
-		error(INTERNAL, "putrgbe() not called with 3 components");
-	setcolr(cout, v[0], v[1], v[2]);
-	putbinary(cout, sizeof(cout), 1, stdout);
+	static COLORMAT	xyz2myrgbmat;
+	SCOLOR		my_scol;
+	COLOR		col;
+					/* apply scalefactor if any */
+	if (out_scalefactor != 1.) {
+		copyscolor(my_scol, scol);
+		scalescolor(my_scol, out_scalefactor);
+		scol = my_scol;
+	}
+	if (sens_curve != NULL) {	/* single channel output */
+		RREAL	v = (*sens_curve)(scol);
+		(*putreal)(&v, 1);
+		return;
+	}
+	if (out_prims == NULL) {	/* full spectral reporting */
+		if (outform == 'c') {
+			SCOLR	sclr;
+			scolor_scolr(sclr, scol);
+			putbinary(sclr, LSCOLR, 1, stdout);
+		} else if (sizeof(RREAL) != sizeof(COLORV)) {
+			RREAL	sreal[MAXCSAMP];
+			int	i = NCSAMP;
+			while (i--) sreal[i] = scol[i];
+			(*putreal)(sreal, NCSAMP);
+		} else
+			(*putreal)((RREAL *)scol, NCSAMP);
+		return;
+	}
+	if (out_prims == xyzprims) {
+		scolor_cie(col, scol);
+	} else if (out_prims == stdprims) {
+		scolor_rgb(col, scol);
+	} else {
+		COLOR	xyz;
+		if (xyz2myrgbmat[0][0] == 0)
+			compxyz2rgbWBmat(xyz2myrgbmat, out_prims);
+		scolor_cie(xyz, scol);
+		colortrans(col, xyz2myrgbmat, xyz);
+		clipgamut(col, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
+	}
+	if (outform == 'c') {
+		COLR	clr;
+		setcolr(clr, colval(col,RED), colval(col,GRN), colval(col,BLU));
+		putbinary(clr, sizeof(COLR), 1, stdout);
+	} else if (sizeof(RREAL) != sizeof(COLORV)) {
+		RREAL	creal[3];
+		copycolor(creal, col);
+		(*putreal)(creal, 3);
+	} else
+		(*putreal)((RREAL *)col, 3);
 }

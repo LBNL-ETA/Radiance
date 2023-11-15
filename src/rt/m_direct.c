@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.16 2018/11/13 19:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.17 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -102,7 +102,7 @@ redirect(		/* compute n'th ray redirection */
 	coef = evalue(va[0]);
 	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	setcolor(nr.rcoef, coef, coef, coef);
+	setscolor(nr.rcoef, coef, coef, coef);
 	if (rayorigin(&nr, TRANS, r, nr.rcoef) < 0)
 		return(0);
 	va++;				/* compute direction */
@@ -121,8 +121,8 @@ redirect(		/* compute n'th ray redirection */
 	if (r->rsrc >= 0)
 		nr.rsrc = source[r->rsrc].sa.sv.sn;
 	rayvalue(&nr);
-	multcolor(nr.rcol, nr.rcoef);
-	addcolor(r->rcol, nr.rcol);
+	smultscolor(nr.rcol, nr.rcoef);
+	saddscolor(r->rcol, nr.rcol);
 	if (r->ro != NULL && isflat(r->ro->otype))
 		r->rxt = r->rot + raydistance(&nr);
 	return(1);

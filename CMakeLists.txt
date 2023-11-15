@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0048 NEW)
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
@@ -70,7 +70,8 @@ set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PR
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11 -std=c++11 -stdlib=libc++")
   add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.7")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS})
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7")
 endif()
 
 if(BUILD_LIBTIFF)

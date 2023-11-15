@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.9 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.10 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -13,8 +13,8 @@ static const char	RCSid[] = "$Id: p_data.c,v 2.9 2014/07/08 18:25:00 greg Exp $"
 #include  "rtotypes.h"
 
 /*
- *	A stored pattern can either be brightness or
- *  color data.  Brightness data is specified as:
+ *	A stored pattern can either be brightness,
+ *  color, or spectral data.  Brightness data is specified as:
  *
  *	modifier brightdata name
  *	4+ func dfname vfname v0 v1 .. xf
@@ -35,13 +35,27 @@ static const char	RCSid[] = "$Id: p_data.c,v 2.9 2014/07/08 18:25:00 greg Exp $"
  *	0
  *	n A1 A2 ..
  *
+ *  A simple spectrum is specified as:
+ *
+ *	modifier spectrum name
+ *	0
+ *	0
+ *	5+ nmA nmB s1 s2 s3 ..
+ *
+ *  A constant spectrum from a data file is given as:
+ *
+ *	modifier specfile name
+ *	1 dfname
+ *	0
+ *	0
+ *
  *  Vfname is the name of the file where the variable definitions
  *  can be found.  The list of real arguments can be accessed by
  *  definitions in the file.  The dfnames are the data file
  *  names.  The dimensions of the data files and the number
  *  of variables must match.  The funcs take a single argument
  *  for brightdata, and three for colordata and colorpict to produce
- *  interpolated values from the file.  The xf is a transformation
+ *  interpolated values from the file.  The xf is a transform spec
  *  to get from the original coordinates to the current coordinates.
  */
 
@@ -53,7 +67,7 @@ p_bdata(			/* interpolate brightness data */
 )
 {
 	double  bval;
-	double  pt[MAXDIM];
+	double  pt[MAXDDIM];
 	DATARRAY  *dp;
 	MFUNC  *mf;
 	int  i;
@@ -67,15 +81,15 @@ p_bdata(			/* interpolate brightness data */
 	errno = 0;
 	for (i = dp->nd; i-- > 0; ) {
 		pt[i] = evalue(mf->ep[i]);
-		if (errno == EDOM || errno == ERANGE)
+		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
 	bval = datavalue(dp, pt);
 	errno = 0;
 	bval = funvalue(m->oargs.sarg[0], 1, &bval);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	scalecolor(r->pcol, bval);
+	scalescolor(r->pcol, bval);
 	return(0);
 computerr:
 	objerror(m, WARNING, "compute error");
@@ -91,7 +105,7 @@ p_cdata(			/* interpolate color data */
 {
 	double  col[3];
 	COLOR  cval;
-	double  pt[MAXDIM];
+	double  pt[MAXDDIM];
 	int  nv;
 	DATARRAY  *dp;
 	MFUNC  *mf;
@@ -106,7 +120,7 @@ p_cdata(			/* interpolate color data */
 	errno = 0;
 	for (i = 0; i < nv; i++) {
 		pt[i] = evalue(mf->ep[i]);
-		if (errno == EDOM || errno == ERANGE)
+		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
 	col[0] = datavalue(dp, pt);
@@ -122,9 +136,9 @@ p_cdata(			/* interpolate color data */
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 1, col+i);
 		else
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 3, col);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	multcolor(r->pcol, cval);
+	smultcolor(r->pcol, cval);
 	return(0);
 computerr:
 	objerror(m, WARNING, "compute error");
@@ -152,7 +166,7 @@ p_pdata(			/* interpolate picture data */
 	errno = 0;
 	pt[1] = evalue(mf->ep[0]);	/* y major ordering */
 	pt[0] = evalue(mf->ep[1]);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
 	dp = getpict(m->oargs.sarg[3]);
 	for (i = 0; i < 3; i++)
@@ -163,12 +177,84 @@ p_pdata(			/* interpolate picture data */
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 1, col+i);
 		else
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 3, col);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	multcolor(r->pcol, cval);
+	smultcolor(r->pcol, cval);
 	return(0);
 
 computerr:
 	objerror(m, WARNING, "compute error");
+	return(0);
+}
+
+
+int
+p_spectrum(			/* simple constant spectrum */
+	OBJREC  *m,
+	RAY  *r
+)
+{
+	COLORV	*scval;
+
+	if ((scval = (COLORV *)m->os) == NULL) {
+		COLORV	*sinp;
+		double	hstep;
+		int	i;
+		if (m->oargs.nfargs < 5)
+			objerror(m, USER, "bad # arguments");
+		sinp = (COLORV *)malloc(sizeof(COLORV)*(m->oargs.nfargs-2));
+		scval = (COLORV *)malloc(sizeof(COLORV)*NCSAMP);
+		if ((sinp == NULL) | (scval == NULL))
+			objerror(m, SYSTEM, "out of memory");
+		for (i = m->oargs.nfargs-2; i--; )
+			sinp[i] = (COLORV)m->oargs.farg[i+2];
+		hstep = 0.5 * (m->oargs.farg[1] - m->oargs.farg[0]) /
+				(m->oargs.nfargs-3.0);
+		convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
+				sinp, m->oargs.nfargs-2,
+				m->oargs.farg[0]-hstep, m->oargs.farg[1]+hstep);
+		free(sinp);
+		m->os = (void *)scval;
+	}
+	smultscolor(r->pcol, scval);
+	return(0);
+}
+
+
+int
+p_specfile(			/* constant spectrum from 1-D data file */
+	OBJREC  *m,
+	RAY  *r
+)
+{
+	COLORV	*scval;
+
+	if ((scval = (COLORV *)m->os) == NULL) {
+		DATARRAY	*dp;
+		COLORV		*sinp;
+		double		step;
+		int		i;
+		if (m->oargs.nsargs != 1)
+			objerror(m, USER, "bad # arguments");
+		dp = getdata(m->oargs.sarg[0]);
+		if (dp->nd != 1)
+			objerror(m, USER, "data file must be 1-dimensional");
+
+		sinp = (COLORV *)malloc(sizeof(COLORV)*dp->dim[0].ne);
+		scval = (COLORV *)malloc(sizeof(COLORV)*NCSAMP);
+		if ((sinp == NULL) | (scval == NULL))
+			objerror(m, SYSTEM, "out of memory");
+		step = dp->dim[0].siz / (dp->dim[0].ne - 1.0);
+		for (i = dp->dim[0].ne; i-- > 0; ) {
+			double	wl = dp->dim[0].org + i*step;
+			sinp[i] = (COLORV)datavalue(dp, &wl);
+		}
+		convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
+				sinp, dp->dim[0].ne, dp->dim[0].org-.5*step,
+				dp->dim[0].org+dp->dim[0].siz+.5*step);
+		free(sinp);
+		m->os = (void *)scval;
+	}
+	smultscolor(r->pcol, scval);
 	return(0);
 }

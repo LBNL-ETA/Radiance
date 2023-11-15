@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.22 2020/01/21 21:31:58 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.23 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -35,7 +35,7 @@ m_mirror(			/* shade mirrored ray */
 	RAY  *r
 )
 {
-	COLOR  mcolor;
+	SCOLOR  mcolor;
 	RAY  nr;
 	int  rpure = 1;
 	int  i;
@@ -65,10 +65,10 @@ m_mirror(			/* shade mirrored ray */
 					/* get modifiers */
 	raytexture(r, m->omod);
 					/* assign material color */
-	setcolor(mcolor, m->oargs.farg[0],
+	setscolor(mcolor, m->oargs.farg[0],
 			m->oargs.farg[1],
 			m->oargs.farg[2]);
-	multcolor(mcolor, r->pcol);
+	smultscolor(mcolor, r->pcol);
 					/* compute reflected ray */
 	if (r->rsrc >= 0) {			/* relayed light source */
 		rayorigin(&nr, REFLECTED, r, mcolor);
@@ -97,9 +97,9 @@ m_mirror(			/* shade mirrored ray */
 	}
 	checknorm(nr.rdir);
 	rayvalue(&nr);
-	multcolor(nr.rcol, nr.rcoef);
-	copycolor(r->mcol, nr.rcol);
-	addcolor(r->rcol, nr.rcol);
+	smultscolor(nr.rcol, nr.rcoef);
+	copyscolor(r->mcol, nr.rcol);
+	saddscolor(r->rcol, nr.rcol);
 	r->rmt = r->rot;
 	if (rpure && r->ro != NULL && isflat(r->ro->otype))
 		r->rmt += raydistance(&nr);

@@ -2603,3 +2603,22 @@ of primitives.
 
 Made reciprocity averaging default to "off" in bsdf2ttree, as it seems
 to create more problems than it solves.
+
+====================
+Version 6.0
+
+Extensive changes to enable spectral rendering, which defaults to "off"
+to maintain backwards-compatibility with previous versions, with the
+exception of the ambient file format, which is changed.  The MAXCSAMP
+macro, which defaults to 24, sets the maximum number of spectral samples.
+The actual number of samples is set by the "-cs" option, which defaults
+to 3 for rpict, rtrace, and rcontrib.  The latter two programs support
+straight spectral output, but rpict is initially restricted to
+tristimulus output pictures.  New pattern primitives "spectrum",
+"specfile", and "specfunc" have been added as a means to specify
+spectral reflectance, emittance, etc. to materials that still have
+only 3 color channels.  Those RGB channels will still affect the
+spectrum if used.  Unfortunately photon-mapping is currently broken when
+spectral sampling is enabled, but we will fix this as soon as possible.
+Calculation overhead appears to be approximately 10-15% for RGB
+renderings compared to version 5.4a.

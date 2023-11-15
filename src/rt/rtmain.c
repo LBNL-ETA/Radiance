@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.46 2023/08/15 01:19:37 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.47 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -59,6 +59,11 @@ extern void  tranotify(OBJECT obj);
 char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 
+double  (*sens_curve)(SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
+double  out_scalefactor = 1;		/* output calibration scale factor */
+RGBPRIMP  out_prims = stdprims;		/* output color primitives (NULL if spectral) */
+static RGBPRIMS  our_prims;		/* private output color primitives */
+
 static int  loadflags = ~IO_FILES;	/* what to load from octree */
 
 static void onsig(int  signo);
@@ -68,14 +73,14 @@ static void printdefaults(void);
 #ifdef PERSIST
 #define RTRACE_FEATURES	"Persist\nParallelPersist\nMultiprocessing\n" \
 			"IrradianceCalc\nImmediateIrradiance\nDistanceLimiting\n" \
-			"ParticipatingMedia=Mist\n" \
+			"Hyperspectral\nParticipatingMedia=Mist\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
 			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
 			"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 			"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n"
 #else
 #define RTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
-			"ParticipatingMedia=Mist\n" \
+			"Hyperspectral\nParticipatingMedia=Mist\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
 			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
 			"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
@@ -153,7 +158,7 @@ main(int  argc, char  *argv[])
 			check(2,"i");
 			vresolu = atoi(argv[++i]);
 			break;
-		case 'w':				/* warnings */
+		case 'w':				/* warnings & spectral */
 			rval = erract[WARNING].pf != NULL;
 			check_bool(2,rval);
 			if (rval) erract[WARNING].pf = wputs;
@@ -255,6 +260,78 @@ main(int  argc, char  *argv[])
 				goto badopt;
 			}
 			break;
+		case 'p':				/* value output */
+			switch (argv[i][2]) {
+			case 'R':			/* standard RGB output */
+				if (strcmp(argv[i]+2, "RGB"))
+					goto badopt;
+				out_prims = stdprims;
+				out_scalefactor = 1;
+				sens_curve = NULL;
+				break;
+			case 'X':			/* XYZ output */
+				if (strcmp(argv[i]+2, "XYZ"))
+					goto badopt;
+				out_prims = xyzprims;
+				out_scalefactor = WHTEFFICACY;
+				sens_curve = NULL;
+				break;
+			case 'c': {
+				int	j;
+				check(3,"ffffffff");
+				rval = 0;
+				for (j = 0; j < 8; j++) {
+					our_prims[0][j] = atof(argv[++i]);
+					rval |= fabs(our_prims[0][j]-stdprims[0][j]) > .001;
+				}
+				if (rval) {
+					if (!colorprimsOK(our_prims))
+						error(USER, "illegal primary chromaticities");
+					out_prims = our_prims;
+				} else
+					out_prims = stdprims;
+				out_scalefactor = 1;
+				sens_curve = NULL;
+				} break;
+			case 'Y':			/* photopic response */
+				sens_curve = scolor_photopic;
+				out_scalefactor = WHTEFFICACY;
+				break;
+			case 'S':			/* scotopic response */
+				sens_curve = scolor_scotopic;
+				out_scalefactor = WHTSCOTOPIC;
+				break;
+			case 'M':			/* melanopic response */
+				sens_curve = scolor_melanopic;
+				out_scalefactor = WHTMELANOPIC;
+				break;
+			default:
+				goto badopt;
+			}
+			break;
+#if MAXCSAMP>3
+		case 'c':				/* spectral sampling */
+			switch (argv[i][2]) {
+			case 's':			/* spectral bin count */
+				check(3,"i");
+				NCSAMP = atoi(argv[++i]);
+				break;
+			case 'w':			/* wavelength extrema */
+				check(3,"ff");
+				WLPART[0] = atof(argv[++i]);
+				WLPART[3] = atof(argv[++i]);
+				break;
+			case 'o':			/* output spectral results */
+				rval = (out_prims == NULL);
+				check_bool(3,rval);
+				if (rval) out_prims = NULL;
+				else if (out_prims == NULL) out_prims = stdprims;
+				break;
+			default:
+				goto badopt;
+			}
+			break;
+#endif
 #ifdef  PERSIST
 		case 'P':				/* persist file */
 			if (argv[i][2] == 'P') {
@@ -271,6 +348,15 @@ main(int  argc, char  *argv[])
 			goto badopt;
 		}
 	}
+					/* set/check spectral sampling */
+	rval = setspectrsamp(CNDX, WLPART);
+	if (rval < 0)
+		error(USER, "unsupported spectral sampling");
+	if (out_prims != NULL) {
+		if (!rval)
+			error(WARNING, "spectral range incompatible with color output");
+	} else if (NCSAMP == 3)
+		out_prims = stdprims;	/* 3 samples do not a spectrum make */
 	if (nproc > 1 && persist)
 		error(USER, "multiprocessing incompatible with persist file");
 					/* initialize object types */
@@ -340,11 +426,15 @@ main(int  argc, char  *argv[])
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
-			printf("NCOMP=%d\n", rval);
+			fputncomp(rval, stdout);
+		if (NCSAMP > 3)
+			fputwlsplit(WLPART, stdout);
+		if ((out_prims != stdprims) & (out_prims != NULL))
+			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
 		fputformat(formstr(outform), stdout);
-		putchar('\n');
+		fputc('\n', stdout);	/* end of header */
 	}
 
 	if (!castonly) {	/* any actual ray traversal to do? */
@@ -496,8 +586,8 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-y %-9d\t\t\t# y resolution\n", vresolu);
 	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
-	printf("-h%c\t\t\t\t# %s header\n", loadflags & IO_INFO ? '+' : '-',
-			loadflags & IO_INFO ? "output" : "no");
+	printf(loadflags & IO_INFO ? "-h+\t\t\t\t# output header\n" :
+			"-h-\t\t\t\t# no header\n");
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inform, outform, formstr(inform), formstr(outform));
 	printf("-o%-9s\t\t\t# output", outvals);
@@ -524,7 +614,30 @@ printdefaults(void)			/* print default values to stdout */
 		case 'M': printf(" material"); break;
 		case '~': printf(" tilde"); break;
 		}
-	putchar('\n');
+	fputc('\n', stdout);
+	if (NCSAMP > 3) {
+		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
+		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
+				WLPART[3], WLPART[0]);
+		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
+				"-co+\t\t\t\t# output spectral values\n");
+	}
+	if (sens_curve == scolor_photopic)
+		printf("-pY\t\t\t\t# photopic output\n");
+	else if (sens_curve == scolor_scotopic)
+		printf("-pS\t\t\t\t# scotopic output\n");
+	else if (sens_curve == scolor_melanopic)
+		printf("-pM\t\t\t\t# melanopic output\n");
+	else if (out_prims == stdprims)
+		printf("-pRGB\t\t\t\t# standard RGB color output\n");
+	else if (out_prims == xyzprims)
+		printf("-pXYZ\t\t\t\t# CIE XYZ color output\n");
+	else if (out_prims != NULL)
+		printf("-pc %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\t# output color primaries and white point\n",
+				out_prims[RED][0], out_prims[RED][1],
+				out_prims[GRN][0], out_prims[GRN][1],
+				out_prims[BLU][0], out_prims[BLU][1],
+				out_prims[WHT][0], out_prims[WHT][1]);
 	printf(erract[WARNING].pf != NULL ?
 			"-w+\t\t\t\t# warning messages on\n" :
 			"-w-\t\t\t\t# warning messages off\n");

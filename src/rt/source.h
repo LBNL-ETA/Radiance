@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.23 2022/08/04 22:43:46 greg Exp $ */
+/* RCSid $Id: source.h,v 2.24 2023/11/15 18:02:53 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -152,7 +152,7 @@ extern void	freesources(void);
 extern int	srcray(RAY *sr, RAY *r, SRCINDEX *si);
 extern void	srcvalue(RAY *r);
 extern int	sourcehit(RAY *r);
-typedef void srcdirf_t(COLOR cv, void *np, FVECT ldir, double omega);
+typedef void srcdirf_t(SCOLOR cv, void *np, FVECT ldir, double omega);
 extern void	direct(RAY *r, srcdirf_t *f, void *p);
 extern void	srcscatter(RAY *r);
 extern int	m_light(OBJREC *m, RAY *r);

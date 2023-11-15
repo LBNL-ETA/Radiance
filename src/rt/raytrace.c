@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.87 2023/03/16 00:25:24 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.88 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -41,20 +41,20 @@ rayorigin(		/* start new ray from old one */
 	RAY  *r,
 	int  rt,
 	const RAY  *ro,
-	const COLOR rc
+	const SCOLOR rc
 )
 {
 	double	rw, re;
 						/* assign coefficient/weight */
 	if (rc == NULL) {
 		rw = 1.0;
-		setcolor(r->rcoef, 1., 1., 1.);
+		setscolor(r->rcoef, 1., 1., 1.);
 	} else {
-		rw = intens(rc);
+		rw = sintens(rc);
 		if (rw > 1.0)
 			rw = 1.0;		/* avoid calculation growth */
 		if (rc != r->rcoef)
-			copycolor(r->rcoef, rc);
+			copyscolor(r->rcoef, rc);
 	}
 	if ((r->parent = ro) == NULL) {		/* primary ray */
 		r->rlvl = 0;
@@ -126,7 +126,7 @@ rayorigin(		/* start new ray from old one */
 		if (frandom() > r->rweight/minweight)
 			return(-1);
 		rw = minweight/r->rweight;	/* promote survivor */
-		scalecolor(r->rcoef, rw);
+		scalescolor(r->rcoef, rw);
 		r->rweight = minweight;
 		return(0);
 	}
@@ -152,9 +152,9 @@ rayclear(			/* clear a ray for (re)evaluation */
 	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
 	r->rflips = 0;
 	r->uv[0] = r->uv[1] = 0.0;
-	setcolor(r->pcol, 1.0, 1.0, 1.0);
-	setcolor(r->mcol, 0.0, 0.0, 0.0);
-	setcolor(r->rcol, 0.0, 0.0, 0.0);
+	setscolor(r->pcol, 1.0, 1.0, 1.0);
+	scolorblack(r->mcol);
+	scolorblack(r->rcol);
 }
 
 
@@ -199,8 +199,8 @@ raytrans(			/* transmit ray as is */
 	rayorigin(&tr, TRANS, r, NULL);		/* always continue */
 	VCOPY(tr.rdir, r->rdir);
 	rayvalue(&tr);
-	copycolor(r->mcol, tr.mcol);
-	copycolor(r->rcol, tr.rcol);
+	copyscolor(r->mcol, tr.mcol);
+	copyscolor(r->rcol, tr.rcol);
 	r->rmt = r->rot + tr.rmt;
 	r->rxt = r->rot + tr.rxt;
 }
@@ -218,7 +218,7 @@ raytirrad(			/* irradiance hack */
 			return(1);
 		}
 		if (!islight(m->otype)) {
-			setcolor(r->pcol, 1.0, 1.0, 1.0);
+			setscolor(r->pcol, 1.0, 1.0, 1.0);
 			return((*ofun[Lamb.otype].funp)(&Lamb, r));
 		}
 	}
@@ -260,7 +260,7 @@ rayparticipate(			/* compute ray medium participation */
 	RAY  *r
 )
 {
-	COLOR	ce, ca;
+	SCOLOR	ce, ca;
 	double	re, ge, be;
 
 	if (intens(r->cext) <= 1./FHUGE)
@@ -273,20 +273,20 @@ rayparticipate(			/* compute ray medium participation */
 		ge *= 1. - colval(r->albedo,GRN);
 		be *= 1. - colval(r->albedo,BLU);
 	}
-	setcolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+	setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
 			ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
 			be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
-	multcolor(r->rcol, ce);			/* path extinction */
+	smultscolor(r->rcol, ce);		/* path extinction */
 	if (r->crtype & SHADOW || intens(r->albedo) <= FTINY)
 		return;				/* no scattering */
 	
 	/* PMAP: indirect inscattering accounted for by volume photons? */
 	if (!volumePhotonMapping) {
-		setcolor(ca,
+		setscolor(ca,
 			colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
 			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
 			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
-		addcolor(r->rcol, ca);			/* ambient in scattering */
+		saddscolor(r->rcol, ca);		/* ambient in scattering */
 	}
 	
 	srcscatter(r);				/* source in scattering */
@@ -341,14 +341,14 @@ raymixture(		/* mix modifiers */
 	fr = *r;
 	if (coef > FTINY) {
 		fr.rweight *= coef;
-		scalecolor(fr.rcoef, coef);
+		scalescolor(fr.rcoef, coef);
 		foremat = rayshade(&fr, fore);
 	}
 					/* background */
 	br = *r;
 	if (coef < 1.0-FTINY) {
 		br.rweight *= 1.0-coef;
-		scalecolor(br.rcoef, 1.0-coef);
+		scalescolor(br.rcoef, 1.0-coef);
 		backmat = rayshade(&br, back);
 	}
 					/* check for transparency */
@@ -362,25 +362,25 @@ raymixture(		/* mix modifiers */
 	for (i = 0; i < 3; i++)
 		r->pert[i] = coef*fr.pert[i] + (1.0-coef)*br.pert[i];
 					/* mix pattern colors */
-	scalecolor(fr.pcol, coef);
-	scalecolor(br.pcol, 1.0-coef);
-	copycolor(r->pcol, fr.pcol);
-	addcolor(r->pcol, br.pcol);
+	scalescolor(fr.pcol, coef);
+	scalescolor(br.pcol, 1.0-coef);
+	copyscolor(r->pcol, fr.pcol);
+	saddscolor(r->pcol, br.pcol);
 					/* return value tells if material */
 	if (!foremat & !backmat)
 		return(0);
 					/* mix returned ray values */
-	scalecolor(fr.rcol, coef);
-	scalecolor(br.rcol, 1.0-coef);
-	copycolor(r->rcol, fr.rcol);
-	addcolor(r->rcol, br.rcol);
-	scalecolor(fr.mcol, coef);
-	scalecolor(br.mcol, 1.0-coef);
-	copycolor(r->mcol, fr.mcol);
-	addcolor(r->mcol, br.mcol);
-	mfore = bright(fr.mcol); mback = bright(br.mcol);
+	scalescolor(fr.rcol, coef);
+	scalescolor(br.rcol, 1.0-coef);
+	copyscolor(r->rcol, fr.rcol);
+	saddscolor(r->rcol, br.rcol);
+	scalescolor(fr.mcol, coef);
+	scalescolor(br.mcol, 1.0-coef);
+	copyscolor(r->mcol, fr.mcol);
+	saddscolor(r->mcol, br.mcol);
+	mfore = pbright(fr.mcol); mback = pbright(br.mcol);
 	r->rmt = mfore > mback ? fr.rmt : br.rmt;
-	r->rxt = bright(fr.rcol)-mfore > bright(br.rcol)-mback ?
+	r->rxt = pbright(fr.rcol)-mfore > pbright(br.rcol)-mback ?
 			fr.rxt : br.rxt;
 	return(1);
 }
@@ -404,19 +404,17 @@ raydist(		/* compute (cumulative) ray distance */
 
 void
 raycontrib(		/* compute (cumulative) ray contribution */
-	RREAL  rc[3],
+	SCOLOR  rc,
 	const RAY  *r,
 	int  flags
 )
 {
 	static int	warnedPM = 0;
 
-	rc[0] = rc[1] = rc[2] = 1.;
+	setscolor(rc, 1., 1., 1.);
 
 	while (r != NULL && r->crtype&flags) {
-		int	i = 3;
-		while (i--)
-			rc[i] *= colval(r->rcoef,i);
+		smultscolor(rc, r->rcoef);
 					/* check for participating medium */
 		if (!warnedPM && (bright(r->cext) > FTINY) |
 				(bright(r->albedo) > FTINY)) {

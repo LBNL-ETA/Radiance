@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.82 2023/03/07 02:24:44 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.83 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -54,8 +54,8 @@ typedef struct {
 	OBJREC  *mp;		/* material pointer */
 	RAY  *rp;		/* ray pointer */
 	short  specfl;		/* specularity flags, defined above */
-	COLOR  mcolor;		/* color of this material */
-	COLOR  scolor;		/* color of specular component */
+	SCOLOR  mcolor;		/* color of this material */
+	SCOLOR  scolor;		/* color of specular component */
 	FVECT  vrefl;		/* vector in direction of reflected ray */
 	FVECT  prdir;		/* vector in transmitted direction */
 	double  alpha2;		/* roughness squared */
@@ -71,7 +71,7 @@ static void gaussamp(NORMDAT  *np);
 
 static void
 dirnorm(		/* compute source contribution */
-	COLOR  cval,			/* returned coefficient */
+	SCOLOR  scval,			/* returned coefficient */
 	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
 	double  omega			/* light source size */
@@ -82,9 +82,9 @@ dirnorm(		/* compute source contribution */
 	double  lrdiff, ltdiff;
 	double  dtmp, d2, d3, d4;
 	FVECT  vtmp;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 
-	setcolor(cval, 0.0, 0.0, 0.0);
+	scolorblack(scval);
 
 	ldot = DOT(np->pnorm, ldir);
 
@@ -101,32 +101,32 @@ dirnorm(		/* compute source contribution */
 		ltdiff *= dtmp;
 	}
 
-	if (ldot > FTINY && lrdiff > FTINY) {
+	if ((ldot > FTINY) & (lrdiff > FTINY)) {
 		/*
 		 *  Compute and add diffuse reflected component to returned
 		 *  color.  The diffuse reflected component will always be
 		 *  modified by the color of the material.
 		 */
-		copycolor(ctmp, np->mcolor);
+		copyscolor(sctmp, np->mcolor);
 		dtmp = ldot * omega * lrdiff * (1.0/PI);
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 
-	if (ldot < -FTINY && ltdiff > FTINY) {
+	if ((ldot < -FTINY) & (ltdiff > FTINY)) {
 		/*
 		 *  Compute diffuse transmission.
 		 */
-		copycolor(ctmp, np->mcolor);
+		copyscolor(sctmp, np->mcolor);
 		dtmp = -ldot * omega * ltdiff * (1.0/PI);
-		scalecolor(ctmp, dtmp);
-		addcolor(cval, ctmp);
+		scalescolor(sctmp, dtmp);
+		saddscolor(scval, sctmp);
 	}
 
 	if (ambRayInPmap(np->rp))
 		return;		/* specular already in photon map */
 
-	if (ldot > FTINY && (np->specfl&(SP_REFL|SP_PURE)) == SP_REFL) {
+	if ((ldot > FTINY) & ((np->specfl&(SP_REFL|SP_PURE)) == SP_REFL)) {
 		/*
 		 *  Compute specular reflection coefficient using
 		 *  Gaussian distribution model.
@@ -146,15 +146,15 @@ dirnorm(		/* compute source contribution */
 		dtmp = exp(-d4/dtmp) * d3 / (PI * d2*d2 * dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
-			copycolor(ctmp, np->scolor);
+			copyscolor(sctmp, np->scolor);
 			dtmp *= ldot * omega;
-			scalecolor(ctmp, dtmp);
-			addcolor(cval, ctmp);
+			scalescolor(sctmp, dtmp);
+			saddscolor(scval, sctmp);
 		}
 	}
 	
 
-	if (ldot < -FTINY && (np->specfl&(SP_TRAN|SP_PURE)) == SP_TRAN) {
+	if ((ldot < -FTINY) & ((np->specfl&(SP_TRAN|SP_PURE)) == SP_TRAN)) {
 		/*
 		 *  Compute specular transmission.  Specular transmission
 		 *  is always modified by material color.
@@ -165,10 +165,10 @@ dirnorm(		/* compute source contribution */
 		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
-			copycolor(ctmp, np->mcolor);
+			copyscolor(sctmp, np->mcolor);
 			dtmp *= np->tspec * omega * sqrt(-ldot/np->pdot);
-			scalecolor(ctmp, dtmp);
-			addcolor(cval, ctmp);
+			scalescolor(sctmp, dtmp);
+			saddscolor(scval, sctmp);
 		}
 	}
 }
@@ -184,7 +184,7 @@ m_normal(			/* color a ray that hit something normal */
 	double  fest;
 	int	hastexture;
 	double	d;
-	COLOR  ctmp;
+	SCOLOR  sctmp;
 	int  i;
 
 	/* PMAP: skip transmitted shadow ray if accounted for in photon map */
@@ -211,7 +211,7 @@ m_normal(			/* color a ray that hit something normal */
 	nd.mp = m;
 	nd.rp = r;
 						/* get material color */
-	setcolor(nd.mcolor, m->oargs.farg[0],
+	setscolor(nd.mcolor, m->oargs.farg[0],
 			   m->oargs.farg[1],
 			   m->oargs.farg[2]);
 						/* get roughness */
@@ -230,7 +230,7 @@ m_normal(			/* color a ray that hit something normal */
 		nd.specfl |= SP_FLAT;
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for dirnorm() */
-	multcolor(nd.mcolor, r->pcol);		/* modify material color */
+	smultscolor(nd.mcolor, r->pcol);	/* modify material color */
 	nd.rspec = m->oargs.farg[3];
 						/* compute Fresnel approx. */
 	if (nd.specfl & SP_PURE && nd.rspec >= FRESTHRESH) {
@@ -267,17 +267,17 @@ m_normal(			/* color a ray that hit something normal */
 						/* transmitted ray */
 	if ((nd.specfl&(SP_TRAN|SP_PURE|SP_TBLT)) == (SP_TRAN|SP_PURE)) {
 		RAY  lr;
-		copycolor(lr.rcoef, nd.mcolor);	/* modified by color */
-		scalecolor(lr.rcoef, nd.tspec);
+		copyscolor(lr.rcoef, nd.mcolor);	/* modified by color */
+		scalescolor(lr.rcoef, nd.tspec);
 		if (rayorigin(&lr, TRANS, r, lr.rcoef) == 0) {
 			VCOPY(lr.rdir, nd.prdir);
 			rayvalue(&lr);
-			multcolor(lr.rcol, lr.rcoef);
-			addcolor(r->rcol, lr.rcol);
+			smultscolor(lr.rcol, lr.rcoef);
+			saddscolor(r->rcol, lr.rcol);
 			if (nd.tspec >= 1.0-FTINY) {
 						/* completely transparent */
-				multcolor(lr.mcol, lr.rcoef);
-				copycolor(r->mcol, lr.mcol);
+				smultscolor(lr.mcol, lr.rcoef);
+				copyscolor(r->mcol, lr.mcol);
 				r->rmt = r->rot + lr.rmt;
 				r->rxt = r->rot + lr.rxt;
 			} else if (nd.tspec > nd.tdiff + nd.rdiff)
@@ -292,15 +292,14 @@ m_normal(			/* color a ray that hit something normal */
 		nd.specfl |= SP_REFL;
 						/* compute specular color */
 		if (m->otype != MAT_METAL) {
-			setcolor(nd.scolor, nd.rspec, nd.rspec, nd.rspec);
+			setscolor(nd.scolor, nd.rspec, nd.rspec, nd.rspec);
 		} else if (fest > FTINY) {
 			d = m->oargs.farg[3]*(1. - fest);
-			for (i = 0; i < 3; i++)
-				colval(nd.scolor,i) = fest +
-						colval(nd.mcolor,i)*d;
+			for (i = NCSAMP; i--; )
+				nd.scolor[i] = fest + nd.mcolor[i]*d;
 		} else {
-			copycolor(nd.scolor, nd.mcolor);
-			scalecolor(nd.scolor, nd.rspec);
+			copyscolor(nd.scolor, nd.mcolor);
+			scalescolor(nd.scolor, nd.rspec);
 		}
 						/* check threshold */
 		if (!(nd.specfl & SP_PURE) && specthresh >= nd.rspec-FTINY)
@@ -318,9 +317,9 @@ m_normal(			/* color a ray that hit something normal */
 		if (rayorigin(&lr, REFLECTED, r, nd.scolor) == 0) {
 			VCOPY(lr.rdir, nd.vrefl);
 			rayvalue(&lr);
-			multcolor(lr.rcol, lr.rcoef);
-			copycolor(r->mcol, lr.rcol);
-			addcolor(r->rcol, lr.rcol);
+			smultscolor(lr.rcol, lr.rcoef);
+			copyscolor(r->mcol, lr.rcol);
+			saddscolor(r->rcol, lr.rcol);
 			r->rmt = r->rot;
 			if (nd.specfl & SP_FLAT &&
 					!hastexture | (r->crtype & AMBIENT))
@@ -335,29 +334,30 @@ m_normal(			/* color a ray that hit something normal */
 		gaussamp(&nd);			/* checks *BLT flags */
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
-		copycolor(ctmp, nd.mcolor);	/* modified by material color */
-		scalecolor(ctmp, nd.rdiff);
+		copyscolor(sctmp, nd.mcolor);	/* modified by material color */
+		scalescolor(sctmp, nd.rdiff);
 		if (nd.specfl & SP_RBLT)	/* add in specular as well? */
-			addcolor(ctmp, nd.scolor);
-		multambient(ctmp, r, hastexture ? nd.pnorm : r->ron);
-		addcolor(r->rcol, ctmp);	/* add to returned color */
+			saddscolor(sctmp, nd.scolor);
+		multambient(sctmp, r, hastexture ? nd.pnorm : r->ron);
+		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
-		copycolor(ctmp, nd.mcolor);	/* modified by color */
-		if (nd.specfl & SP_TBLT)
-			scalecolor(ctmp, nd.trans);
-		else
-			scalecolor(ctmp, nd.tdiff);
+		copyscolor(sctmp, nd.mcolor);	/* modified by color */
+		if (nd.specfl & SP_TBLT) {
+			scalescolor(sctmp, nd.trans);
+		} else {
+			scalescolor(sctmp, nd.tdiff);
+		}
 		flipsurface(r);
 		if (hastexture) {
 			FVECT  bnorm;
 			bnorm[0] = -nd.pnorm[0];
 			bnorm[1] = -nd.pnorm[1];
 			bnorm[2] = -nd.pnorm[2];
-			multambient(ctmp, r, bnorm);
+			multambient(sctmp, r, bnorm);
 		} else
-			multambient(ctmp, r, r->ron);
-		addcolor(r->rcol, ctmp);
+			multambient(sctmp, r, r->ron);
+		saddscolor(r->rcol, sctmp);
 		flipsurface(r);
 	}
 					/* add direct component */
@@ -376,7 +376,7 @@ gaussamp(			/* sample Gaussian specular */
 	FVECT  u, v, h;
 	double  rv[2];
 	double  d, sinp, cosp;
-	COLOR  scol;
+	SCOLOR  scol;
 	int  maxiter, ntrials, nstarget, nstaken;
 	int  i;
 					/* quick test */
@@ -396,12 +396,12 @@ gaussamp(			/* sample Gaussian specular */
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
 				d = 1./nstarget;
-				scalecolor(sr.rcoef, d);
+				scalescolor(sr.rcoef, d);
 				sr.rweight *= d;
 			} else
 				nstarget = 1;
 		}
-		setcolor(scol, 0., 0., 0.);
+		scolorblack(scol);
 		dimlist[ndims++] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; nstaken < nstarget &&
@@ -432,26 +432,26 @@ gaussamp(			/* sample Gaussian specular */
 				if (nstaken) rayclear(&sr);
 				rayvalue(&sr);
 				d = 2./(1. + np->rp->rod/d);
-				scalecolor(sr.rcol, d);
-				addcolor(scol, sr.rcol);
+				scalescolor(sr.rcol, d);
+				saddscolor(scol, sr.rcol);
 			} else {
 				rayvalue(&sr);
-				multcolor(sr.rcol, sr.rcoef);
-				addcolor(np->rp->rcol, sr.rcol);
+				smultscolor(sr.rcol, sr.rcoef);
+				saddscolor(np->rp->rcol, sr.rcol);
 			}
 			++nstaken;
 		}
 		if (nstarget > 1) {		/* final W-G-M-D weighting */
-			multcolor(scol, sr.rcoef);
+			smultscolor(scol, sr.rcoef);
 			d = (double)nstarget/ntrials;
-			scalecolor(scol, d);
-			addcolor(np->rp->rcol, scol);
+			scalescolor(scol, d);
+			saddscolor(np->rp->rcol, scol);
 		}
 		ndims--;
 	}
 					/* compute transmission */
-	copycolor(sr.rcoef, np->mcolor);	/* modified by color */
-	scalecolor(sr.rcoef, np->tspec);
+	copyscolor(sr.rcoef, np->mcolor);	/* modified by color */
+	scalescolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
 			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
@@ -461,7 +461,7 @@ gaussamp(			/* sample Gaussian specular */
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
 				d = 1./nstarget;
-				scalecolor(sr.rcoef, d);
+				scalescolor(sr.rcoef, d);
 				sr.rweight *= d;
 			} else
 				nstarget = 1;
@@ -493,8 +493,8 @@ gaussamp(			/* sample Gaussian specular */
 			if (nstaken)		/* multi-sampling */
 				rayclear(&sr);
 			rayvalue(&sr);
-			multcolor(sr.rcol, sr.rcoef);
-			addcolor(np->rp->rcol, sr.rcol);
+			smultscolor(sr.rcol, sr.rcoef);
+			saddscolor(np->rp->rcol, sr.rcol);
 			++nstaken;
 		}
 		ndims--;

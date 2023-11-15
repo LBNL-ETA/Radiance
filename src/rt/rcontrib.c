@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.42 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.43 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -83,7 +83,7 @@ formstr(				/* return format identifier */
 	case 'a': return("ascii");
 	case 'f': return("float");
 	case 'd': return("double");
-	case 'c': return(COLRFMT);
+	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
 	}
 	return("unknown");
 }
@@ -134,7 +134,7 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		error(USER, errmsg);
 	}
 					/* initialize results holder */
-	mp = (MODCONT *)malloc(sizeof(MODCONT)+sizeof(DCOLOR)*(bincnt-1));
+	mp = (MODCONT *)malloc(mcsize(bincnt));
 	if (mp == NULL)
 		error(SYSTEM, "out of memory in addmodifier");
 	mp->outspec = outf;		/* XXX assumes static string */
@@ -143,7 +143,7 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 	mp->binv = ebinv;
 	mp->bin0 = 0;
 	mp->nbins = bincnt;
-	memset(mp->cbin, 0, sizeof(DCOLOR)*bincnt);
+	memset(mp->cbin, 0, DCOLORSIZ*bincnt);
 					/* figure out starting bin */
 	while (!getostream(mp->outspec, mp->modname, mp->bin0, 1))
 		mp->bin0++;
@@ -273,7 +273,9 @@ trace_contrib(RAY *r)
 	MODCONT	*mp;
 	double	bval;
 	int	bn;
-	RREAL	contr[3];
+	SCOLOR	contr;
+	DCOLORV	*dvp;
+	int	i;
 
 	if (r->ro == NULL || r->ro->omod == OVOID)
 		return;
@@ -297,8 +299,10 @@ trace_contrib(RAY *r)
 	}
 	raycontrib(contr, r, PRIMARY);		/* compute coefficient */
 	if (contrib)
-		multcolor(contr, r->rcol);	/* -> contribution */
-	addcolor(mp->cbin[bn], contr);
+		smultscolor(contr, r->rcol);	/* -> contribution */
+	dvp = mcbin(mp, bn);
+	for (i = 0; i < NCSAMP; i++)		/* add it in */
+		*dvp++ += contr[i];
 }
 
 
@@ -352,7 +356,7 @@ done_contrib(void)
 	for (i = 0; i < nmods; i++) {	/* output records & clear */
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
 		mod_output(mp);
-		memset(mp->cbin, 0, sizeof(DCOLOR)*mp->nbins);
+		memset(mp->cbin, 0, DCOLORSIZ*mp->nbins);
 	}
 	end_record();			/* end lines & flush if time */
 

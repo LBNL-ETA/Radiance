@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.25 2021/02/12 00:41:19 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.26 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -387,13 +387,13 @@ vstestvis(		/* pretest source visibility */
 		}
 		sr.revf = srcvalue;
 		rayvalue(&sr);			/* check sample validity */
-		if ((d = bright(sr.rcol)) <= FTINY)
+		if ((d = scolor_mean(sr.rcol)) <= FTINY)
 			continue;
 		nok++;			/* got sample; check obstructions */
 		rayclear(&sr);
 		sr.revf = raytrace;
 		rayvalue(&sr);
-		if ((d1 = bright(sr.rcol)) > FTINY) {
+		if ((d1 = scolor_mean(sr.rcol)) > FTINY) {
 			if (d - d1 > FTINY) {
 #ifdef DEBUG
 				fprintf(stderr, "\tpartially shadowed\n");

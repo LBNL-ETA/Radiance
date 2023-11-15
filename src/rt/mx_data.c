@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_data.c,v 2.10 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: mx_data.c,v 2.11 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  mx_data.c - routine for stored mixtures.
@@ -49,7 +49,7 @@ mx_data(			/* interpolate mixture data */
 {
 	OBJECT	obj;
 	double  coef;
-	double  pt[MAXDIM];
+	double  pt[MAXDDIM];
 	DATARRAY  *dp;
 	OBJECT  mod[2];
 	MFUNC  *mf;
@@ -101,7 +101,7 @@ mx_pdata(			/* interpolate mixture picture */
 {
 	OBJECT	obj;
 	double	col[3], coef;
-	double  pt[MAXDIM];
+	double  pt[MAXDDIM];
 	DATARRAY  *dp;
 	OBJECT  mod[2];
 	MFUNC  *mf;

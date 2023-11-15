@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.30 2019/04/19 19:01:32 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.31 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -71,8 +71,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 )
 {
 	double  cos1, cos2, nratio;
-	COLOR  ctrans;
-	COLOR  talb;
+	COLOR  pcol, ctrans, talb;
 	int  hastexture;
 	int	flatsurface;
 	double  refl, trans;
@@ -105,23 +104,24 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 		nratio = m->oargs.farg[3] + m->oargs.farg[4]/MLAMBDA;
 	else
 		nratio = m->oargs.farg[3] / m->oargs.farg[7];
-	
+
+	scolor_rgb(pcol, r->pcol);
 	if (cos1 < 0.0) {			/* inside */
 		hastexture = -hastexture;
 		cos1 = -cos1;
 		dnorm[0] = -dnorm[0];
 		dnorm[1] = -dnorm[1];
 		dnorm[2] = -dnorm[2];
-		setcolor(r->cext, -mylog(m->oargs.farg[0]*colval(r->pcol,RED)),
-				 -mylog(m->oargs.farg[1]*colval(r->pcol,GRN)),
-				 -mylog(m->oargs.farg[2]*colval(r->pcol,BLU)));
+		setcolor(r->cext, -mylog(m->oargs.farg[0]*colval(pcol,RED)),
+				 -mylog(m->oargs.farg[1]*colval(pcol,GRN)),
+				 -mylog(m->oargs.farg[2]*colval(pcol,BLU)));
 		setcolor(r->albedo, 0., 0., 0.);
 		r->gecc = 0.;
 		if (m->otype == MAT_INTERFACE) {
 			setcolor(ctrans,
-				-mylog(m->oargs.farg[4]*colval(r->pcol,RED)),
-				-mylog(m->oargs.farg[5]*colval(r->pcol,GRN)),
-				-mylog(m->oargs.farg[6]*colval(r->pcol,BLU)));
+				-mylog(m->oargs.farg[4]*colval(pcol,RED)),
+				-mylog(m->oargs.farg[5]*colval(pcol,GRN)),
+				-mylog(m->oargs.farg[6]*colval(pcol,BLU)));
 			setcolor(talb, 0., 0., 0.);
 		} else {
 			copycolor(ctrans, cextinction);
@@ -130,15 +130,15 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 	} else {				/* outside */
 		nratio = 1.0 / nratio;
 
-		setcolor(ctrans, -mylog(m->oargs.farg[0]*colval(r->pcol,RED)),
-				 -mylog(m->oargs.farg[1]*colval(r->pcol,GRN)),
-				 -mylog(m->oargs.farg[2]*colval(r->pcol,BLU)));
+		setcolor(ctrans, -mylog(m->oargs.farg[0]*colval(pcol,RED)),
+				 -mylog(m->oargs.farg[1]*colval(pcol,GRN)),
+				 -mylog(m->oargs.farg[2]*colval(pcol,BLU)));
 		setcolor(talb, 0., 0., 0.);
 		if (m->otype == MAT_INTERFACE) {
 			setcolor(r->cext,
-				-mylog(m->oargs.farg[4]*colval(r->pcol,RED)),
-				-mylog(m->oargs.farg[5]*colval(r->pcol,GRN)),
-				-mylog(m->oargs.farg[6]*colval(r->pcol,BLU)));
+				-mylog(m->oargs.farg[4]*colval(pcol,RED)),
+				-mylog(m->oargs.farg[5]*colval(pcol,GRN)),
+				-mylog(m->oargs.farg[6]*colval(pcol,BLU)));
 			setcolor(r->albedo, 0., 0., 0.);
 			r->gecc = 0.;
 		}
@@ -168,7 +168,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 
 		trans *= nratio*nratio;		/* solid angle ratio */
 
-		setcolor(p.rcoef, trans, trans, trans);
+		setscolor(p.rcoef, trans, trans, trans);
 
 		if (rayorigin(&p, REFRACTED, r, p.rcoef) == 0) {
 
@@ -199,8 +199,8 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 				copycolor(p.cext, ctrans);
 				copycolor(p.albedo, talb);
 				rayvalue(&p);
-				multcolor(p.rcol, p.rcoef);
-				addcolor(r->rcol, p.rcol);
+				smultscolor(p.rcol, p.rcoef);
+				saddscolor(r->rcol, p.rcol);
 						/* virtual distance */
 				if (flatsurface ||
 					(1.-FTINY <= nratio) &
@@ -209,7 +209,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 			}
 		}
 	}
-	setcolor(p.rcoef, refl, refl, refl);
+	setscolor(p.rcoef, refl, refl, refl);
 
 	if (!(r->crtype & SHADOW) &&
 			rayorigin(&p, REFLECTED, r, p.rcoef) == 0) {
@@ -222,9 +222,9 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 		checknorm(p.rdir);
 		rayvalue(&p);			/* reflected ray value */
 
-		multcolor(p.rcol, p.rcoef);	/* color contribution */
-		copycolor(r->mcol, p.rcol);
-		addcolor(r->rcol, p.rcol);
+		smultscolor(p.rcol, p.rcoef);	/* color contribution */
+		copyscolor(r->mcol, p.rcol);
+		saddscolor(r->rcol, p.rcol);
 						/* virtual distance */
 		r->rmt = r->rot;
 		if (flatsurface)
@@ -361,13 +361,13 @@ disperse(  /* check light sources for dispersion */
 		if (l2 < 0)
 			continue;
 					/* compute color from spectrum */
-		if (l1 < l2)
+		if (l1 < l2)		/* XXX should use direct spectral xfer */
 			spec_rgb(ctmp, l1, l2);
 		else
 			spec_rgb(ctmp, l2, l1);
-		multcolor(ctmp, sray.rcol);
+		multscolor(ctmp, sray.rcol);
 		scalecolor(ctmp, tr);
-		addcolor(r->rcol, ctmp);
+		saddcolor(r->rcol, ctmp);
 		success++;
 	}
 	return(success);

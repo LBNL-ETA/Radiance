@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.19 2018/06/26 14:42:18 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.20 2023/11/15 18:02:52 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -78,8 +78,11 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MAT_DIRECT1	50		/* unidirecting material */
 #define  MAT_DIRECT2	51		/* bidirecting material */
 #define  MAT_ASHIKHMIN	52		/* Ashikhmin-Shirley BRDF material */
+#define  PAT_SPECTRUM	53		/* constant spectrum */
+#define  PAT_SPECFILE	54		/* spectrum file */
+#define  PAT_SPECFUNC	55		/* spectral function */
 				/* number of object types */
-#define  NUMOTYPE	53
+#define  NUMOTYPE	56
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -110,9 +113,9 @@ extern FUN  ofun[];			/* our type list */
 #define  islight(t)	(ofun[t].flags & T_L)
 #define  isvlight(t)	(ofun[t].flags & T_LV)
 #define  hasdata(t)	(ofun[t].flags & (T_D|T_I))
-#define  hasfunc(t)	(ofun[t].flags & (T_F|T_D|T_I))
+#define  hasfunc(t)	(ofun[t].flags & (T_F|T_D|T_I) && (t)!=PAT_SPECFILE)
 #define  hastext(t)	(ofun[t].flags & T_E)
-#define  isflat(t)	((t)==OBJ_FACE || (t)==OBJ_RING)
+#define  isflat(t)	(((t)==OBJ_FACE) | ((t)==OBJ_RING))
 
 #define  ALIASKEY	"alias"			/* alias keyword */
 #define  ALIASMOD	"inherit"		/* inherit target modifier */
@@ -171,6 +174,9 @@ extern FUN  ofun[];			/* our type list */
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
 				{ "prism2",	T_M|T_F|T_LV,	o_default }, \
 				{ "ashik2",	T_M|T_F,	o_default }, \
+				{ "spectrum",	T_P,		o_default }, \
+				{ "specfile",	T_P|T_D,	o_default }, \
+				{ "specfunc",	T_P|T_F,	o_default }, \
 			}
 
 

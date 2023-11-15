@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.80 2022/08/11 15:09:14 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.81 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -27,8 +27,8 @@ static const char RCSid[] = "$Id: source.c,v 2.80 2022/08/11 15:09:14 greg Exp $
 typedef struct {
 	int  sno;		/* source number */
 	FVECT  dir;		/* source direction */
-	COLOR  coef;		/* material coefficient */
-	COLOR  val;		/* contribution */
+	SCOLOR  coef;		/* material coefficient */
+	SCOLOR  val;		/* contribution */
 }  CONTRIB;		/* direct contribution */
 
 typedef struct {
@@ -200,16 +200,16 @@ freesources(void)			/* free all source structures */
 		while (nsources--)
 			freeobscache(&source[nsources]);
 #endif
-		free((void *)source);
+		free(source);
 		source = NULL;
 		nsources = 0;
 	}
 	markclip(NULL);
 	if (maxcntr <= 0)
 		return;
-	free((void *)srccnt);
+	free(srccnt);
 	srccnt = NULL;
-	free((void *)cntord);
+	free(cntord);
 	cntord = NULL;
 	maxcntr = 0;
 }
@@ -445,17 +445,17 @@ direct(					/* add direct component */
 #endif
 						/* compute coefficient */
 		(*f)(scp->coef, p, sr.rdir, si.dom);
-		cntord[sn].brt = intens(scp->coef);
+		cntord[sn].brt = sintens(scp->coef);
 		if (cntord[sn].brt <= 0.0)
 			continue;
 		VCOPY(scp->dir, sr.rdir);
-		copycolor(sr.rcoef, scp->coef);
+		copyscolor(sr.rcoef, scp->coef);
 						/* compute potential */
 		sr.revf = srcvalue;
 		rayvalue(&sr);
-		multcolor(sr.rcol, sr.rcoef);
-		copycolor(scp->val, sr.rcol);
-		cntord[sn].brt = bright(sr.rcol);
+		smultscolor(sr.rcol, sr.rcoef);
+		copyscolor(scp->val, sr.rcol);
+		cntord[sn].brt = pbright(sr.rcol);
 	}
 						/* sort contributions */
 	qsort(cntord, sn, sizeof(CNTPTR), cntcmp);
@@ -490,12 +490,12 @@ direct(					/* add direct component */
 		if (sn >= MINSHADCNT &&
 			    (sn+nshadcheck>=ncnts ? cntord[sn].brt :
 				cntord[sn].brt-cntord[sn+nshadcheck].brt)
-					< ourthresh*bright(r->rcol))
+					< ourthresh*pbright(r->rcol))
 			break;
 		scp = srccnt + cntord[sn].sndx;
 						/* test for hit */
 		rayorigin(&sr, SHADOW, r, NULL);
-		copycolor(sr.rcoef, scp->coef);
+		copyscolor(sr.rcoef, scp->coef);
 		VCOPY(sr.rdir, scp->dir);
 		sr.rsrc = scp->sno;
 						/* keep statistics */
@@ -510,7 +510,7 @@ direct(					/* add direct component */
 			raycont(&sr);
 			if (trace != NULL)
 				(*trace)(&sr);	/* trace execution */
-			if (bright(sr.rcol) <= FTINY) {
+			if (scolor_mean(sr.rcol) <= FTINY) {
 #if SHADCACHE
 				if ((scp <= srccnt || scp[-1].sno != scp->sno)
 						&& (scp >= srccnt+ncnts-1 ||
@@ -520,8 +520,8 @@ direct(					/* add direct component */
 				continue;	/* missed! */
 			}
 			rayparticipate(&sr);
-			multcolor(sr.rcol, sr.rcoef);
-			copycolor(scp->val, sr.rcol);
+			smultscolor(sr.rcol, sr.rcoef);
+			copyscolor(scp->val, sr.rcol);
 		} else if (trace != NULL &&
 			(source[scp->sno].sflags & (SDISTANT|SVIRTUAL|SFOLLOW))
 						== (SDISTANT|SFOLLOW) &&
@@ -530,7 +530,7 @@ direct(					/* add direct component */
 			/* skip call to rayparticipate() & scp->val update */
 		}
 						/* add contribution if hit */
-		addcolor(r->rcol, scp->val);
+		saddscolor(r->rcol, scp->val);
 		nhits++;
 		source[scp->sno].nhits++;
 	}
@@ -550,8 +550,8 @@ direct(					/* add direct component */
 		prob = hwt * (double)source[scp->sno].nhits /
 				(double)source[scp->sno].ntests;
 		if (prob < 1.0)
-			scalecolor(scp->val, prob);
-		addcolor(r->rcol, scp->val);
+			scalescolor(scp->val, prob);
+		saddscolor(r->rcol, scp->val);
 	}
 }
 
@@ -618,7 +618,7 @@ srcscatter(			/* compute source scattering into ray */
 				sr.gecc = r->gecc;
 				sr.slights = r->slights;
 				rayvalue(&sr);		/* eval. source ray */
-				if (bright(sr.rcol) <= FTINY) {
+				if (pbright(sr.rcol) <= FTINY) {
 #if SHADCACHE
 					srcblocker(&sr); /* add blocker to cache */
 #endif
@@ -633,7 +633,7 @@ srcscatter(			/* compute source scattering into ray */
 				}
 							/* other factors */
 				d *= si.dom * r->rot / (4.*PI*nsamps);
-				scalecolor(sr.rcol, d);
+				scalescolor(sr.rcol, d);
 			} else {
 				/* PMAP: Add ambient inscattering from
 				 * volume photons; note we reverse the 
@@ -644,12 +644,12 @@ srcscatter(			/* compute source scattering into ray */
 				sr.rdir [2] = -r -> rdir [2];
 				sr.gecc = r -> gecc;
 				inscatterVolumePmap(&sr, sr.rcol);
-				scalecolor(sr.rcol, r -> rot / nsamps);
+				scalescolor(sr.rcol, r -> rot / nsamps);
 			}
-			multcolor(sr.rcol, r->cext);
-			multcolor(sr.rcol, r->albedo);
-			multcolor(sr.rcol, cvext);
-			addcolor(r->rcol, sr.rcol);	/* add it in */
+			smultcolor(sr.rcol, r->cext);
+			smultcolor(sr.rcol, r->albedo);
+			smultcolor(sr.rcol, cvext);
+			saddscolor(r->rcol, sr.rcol);	/* add it in */
 		}
 	}
 	samplendx = oldsampndx;
@@ -750,11 +750,11 @@ m_light(				/* ray hit a light source */
 {
 						/* check for over-counting */
 	if (badcomponent(m, r)) {
-		setcolor(r->rcoef, 0.0, 0.0, 0.0);
+		scolorblack(r->rcoef);
 		return(1);
 	}
 	if (wrongsource(m, r)) {
-		setcolor(r->rcoef, 0.0, 0.0, 0.0);
+		scolorblack(r->rcoef);
 		return(1);
 	}
 						/* check for passed illum */
@@ -766,7 +766,7 @@ m_light(				/* ray hit a light source */
 	}
 						/* check for invisibility */
 	if (srcignore(m, r)) {
-		setcolor(r->rcoef, 0.0, 0.0, 0.0);
+		scolorblack(r->rcoef);
 		return(1);
 	}
 					/* otherwise treat as source */
@@ -781,10 +781,10 @@ m_light(				/* ray hit a light source */
 						/* get distribution pattern */
 	raytexture(r, m->omod);
 						/* get source color */
-	setcolor(r->rcol, m->oargs.farg[0],
+	setscolor(r->rcol, m->oargs.farg[0],
 			  m->oargs.farg[1],
 			  m->oargs.farg[2]);
 						/* modify value */
-	multcolor(r->rcol, r->pcol);
+	smultscolor(r->rcol, r->pcol);
 	return(1);
 }

@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.117 2023/01/28 19:08:56 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.118 2023/11/15 18:02:52 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -44,11 +44,12 @@ static long  lastpos = -1;		/* last flush position */
 
 #define	 AMBFLUSH	(BUFSIZ/AMBVALSIZ)
 
-#define	 newambval()	(AMBVAL *)malloc(sizeof(AMBVAL))
+#define  AVSIZE		(sizeof(AMBVAL)-sizeof(SCOLOR)+sizeof(COLORV)*NCSAMP)
+#define	 newambval()	(AMBVAL *)malloc(AVSIZE)
 
 #define  tfunc(x0, x, x1)	(((x)-(x0))/((x1)-(x0)))
 
-static void initambfile(int creat);
+static void initambfile(int cre8);
 static void avsave(AMBVAL *av);
 static AMBVAL *avstore(AMBVAL  *aval);
 static AMBTREE *newambtree(void);
@@ -62,10 +63,10 @@ static void unloadatree(AMBTREE  *at, unloadtf_t *f);
 static void sortambvals(void);
 
 static int	plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang);
-static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
+static double	sumambient(SCOLOR acol, RAY *r, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
-static int	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
-static int	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv, 
+static int	makeambient(SCOLOR acol, RAY *r, FVECT rn, int al);
+static int	extambient(SCOLOR cr, AMBVAL *ap, FVECT pv, FVECT nv,
 				FVECT uvw[3]);
 
 #ifdef  F_SETLKW
@@ -229,14 +230,14 @@ ambnotify(			/* record new modifier */
 
 void
 multambient(		/* compute ambient component & multiply by coef. */
-	COLOR  aval,
+	SCOLOR  aval,
 	RAY  *r,
 	FVECT  nrm
 )
 {
 	static double  logAvgAbsorp = 1;
 	static int  rdepth = 0;			/* ambient recursion */
-	COLOR	acol, caustic;
+	SCOLOR	acol, caustic;
 	int	i, ok;
 	double	d, l;
 
@@ -252,9 +253,12 @@ multambient(		/* compute ambient component & multiply by coef. */
 	/* PMAP: Factor in specular-diffuse ambient (caustics) from photon
 	 * map, if enabled and ray is primary, else caustic is zero.  Continue
 	 * with RADIANCE ambient calculation */
-	copycolor(caustic, aval);
-	ambPmapCaustic(caustic, r, rdepth);
-	
+{/* XXX TEMPORARY */
+	COLOR	pmc;
+	scolor_color(pmc, aval);
+	ambPmapCaustic(pmc, r, rdepth);
+	setscolor(caustic, colval(pmc,RED), colval(pmc,GRN), colval(pmc,BLU));
+}
 	if (ambdiv <= 0)			/* no ambient calculation */
 		goto dumbamb;
 						/* check number of bounces */
@@ -271,7 +275,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 
 		if (nrm != r->ron && DOT(nrm,r->ron) < 0.9999)
 			dgp = dgrad;		/* compute rotational grad. */
-		copycolor(acol, aval);
+		copyscolor(acol, aval);
 		rdepth++;
 		ok = doambient(acol, r, r->rweight,
 				uvd, NULL, NULL, dgp, NULL);
@@ -285,26 +289,25 @@ multambient(		/* compute ambient component & multiply by coef. */
 			for (i = 3; i--; )
 				d += v1[i] * (dgp[0]*uvd[0][i] + dgp[1]*uvd[1][i]);
 			if (d >= 0.05)
-				scalecolor(acol, d);
+				scalescolor(acol, d);
 		}
-		copycolor(aval, acol);
+		copyscolor(aval, acol);
 
 		/* PMAP: add in caustic */
-		addcolor(aval, caustic);
+		saddscolor(aval, caustic);
 		return;
 	}
 						/* interpolate ambient value */
-	setcolor(acol, 0.0, 0.0, 0.0);
+	scolorblack(acol);
 	d = sumambient(acol, r, nrm, rdepth,
 			&atrunk, thescene.cuorg, thescene.cusize);
 			
 	if (d > FTINY) {
-		d = 1.0/d;
-		scalecolor(acol, d);
-		multcolor(aval, acol);
+		scalescolor(acol, 1.0/d);
+		smultscolor(aval, acol);
 
 		/* PMAP: add in caustic */
-		addcolor(aval, caustic);
+		saddscolor(aval, caustic);
 		return;
 	}
 	
@@ -313,19 +316,19 @@ multambient(		/* compute ambient component & multiply by coef. */
 	rdepth--;
 	
 	if (ok) {
-		multcolor(aval, acol);		/* computed new value */
+		smultscolor(aval, acol);	/* computed new value */
 
 		/* PMAP: add in caustic */
-		addcolor(aval, caustic);
+		saddscolor(aval, caustic);
 		return;
 	}
 	
 dumbamb:					/* return global value */
 	if ((ambvwt <= 0) | (navsum == 0)) {
-		multcolor(aval, ambval);
+		smultcolor(aval, ambval);
 		
 		/* PMAP: add in caustic */
-		addcolor(aval, caustic);
+		saddscolor(aval, caustic);
 		return;
 	}
 	
@@ -334,11 +337,11 @@ dumbamb:					/* return global value */
 		d = (log(l)*(double)ambvwt + avsum + logAvgAbsorp*navsum) /
 				(double)(ambvwt + navsum);
 		d = exp(d) / l;
-		scalecolor(aval, d);
-		multcolor(aval, ambval);	/* apply color of ambval */
+		scalescolor(aval, d);
+		smultcolor(aval, ambval);	/* apply color of ambval */
 	} else {
 		d = exp( avsum/(double)navsum + logAvgAbsorp );
-		scalecolor(aval, d);		/* neutral color */
+		scalescolor(aval, d);		/* neutral color */
 	}
 }
 
@@ -391,7 +394,7 @@ plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang)
 
 static double
 sumambient(		/* get interpolated ambient value */
-	COLOR  acol,
+	SCOLOR  acol,
 	RAY  *r,
 	FVECT  rn,
 	int  al,
@@ -433,7 +436,7 @@ sumambient(		/* get interpolated ambient value */
 					/* sum this node */
 	for (av = at->alist; av != NULL; av = av->next) {
 		double	u, v, d, delta_r2, delta_t2;
-		COLOR	ct;
+		SCOLOR	sct;
 		FVECT	uvw[3];
 		/*
 		 *  Ambient level test
@@ -481,12 +484,12 @@ sumambient(		/* get interpolated ambient value */
 		/*
 		 *  Extrapolate value and compute final weight (hat function)
 		 */
-		if (!extambient(ct, av, r->rop, rn, uvw))
+		if (!extambient(sct, av, r->rop, rn, uvw))
 			continue;
 		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
 			tfunc(ambacc, sqrt(delta_t2), 0.0);
-		scalecolor(ct, d);
-		addcolor(acol, ct);
+		scalescolor(sct, d);
+		saddscolor(acol, sct);
 		wsum += d;
 	}
 	return(wsum);
@@ -495,7 +498,7 @@ sumambient(		/* get interpolated ambient value */
 
 static int
 makeambient(		/* make a new ambient value for storage */
-	COLOR  acol,
+	SCOLOR  acol,
 	RAY  *r,
 	FVECT  rn,
 	int  al
@@ -510,11 +513,11 @@ makeambient(		/* make a new ambient value for storage */
 		amb.weight *= AVGREFL;
 	if (r->rweight < 0.1*amb.weight)	/* heuristic override */
 		amb.weight = 1.25*r->rweight;
-	setcolor(acol, AVGREFL, AVGREFL, AVGREFL);
+	setscolor(acol, AVGREFL, AVGREFL, AVGREFL);
 						/* compute ambient */
 	i = doambient(acol, r, amb.weight,
 			uvw, amb.rad, amb.gpos, amb.gdir, &amb.corral);
-	scalecolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
+	scalescolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
 	if (i <= 0 || amb.rad[0] <= FTINY)	/* no Hessian or zero radius */
 		return(i);
 						/* store value */
@@ -522,7 +525,7 @@ makeambient(		/* make a new ambient value for storage */
 	amb.ndir = encodedir(r->ron);
 	amb.udir = encodedir(uvw[0]);
 	amb.lvl = al;
-	copycolor(amb.val, acol);
+	copyscolor(amb.val, acol);
 						/* insert into tree */
 	avsave(&amb);				/* and save to file */
 	if (rn != r->ron) {			/* texture */
@@ -535,7 +538,7 @@ makeambient(		/* make a new ambient value for storage */
 
 static int
 extambient(		/* extrapolate value at pv, nv */
-	COLOR  cr,
+	SCOLOR  scr,
 	AMBVAL	 *ap,
 	FVECT  pv,
 	FVECT  nv,
@@ -567,8 +570,8 @@ extambient(		/* extrapolate value at pv, nv */
 		d = min_d;
 	else if (d > max_d)
 		d = max_d;
-	copycolor(cr, ap->val);
-	scalecolor(cr, d);
+	copyscolor(scr, ap->val);
+	scalescolor(scr, d);
 	return(d > min_d);
 }
 
@@ -643,16 +646,30 @@ initambfile(		/* initialize ambient file */
 				srcsizerat, shadthresh, shadcert);
 		fprintf(ambfp, "-ss %g -st %g -lr %d -lw %g ", specjitter,
 				specthresh, maxdepth, minweight);
+		fprintf(ambfp, "-cw %f %f -cs %d ", WLPART[3], WLPART[0], NCSAMP);
 		if (octname != NULL)
 			fputs(octname, ambfp);
 		fputc('\n', ambfp);
 		fprintf(ambfp, "SOFTWARE= %s\n", VersionID);
 		fputnow(ambfp);
+		fputwlsplit(WLPART, ambfp);
+		fputncomp(NCSAMP, ambfp);
 		fputformat(AMBFMT, ambfp);
 		fputc('\n', ambfp);
 		putambmagic(ambfp);
-	} else if (checkheader(ambfp, AMBFMT, NULL) < 0 || !hasambmagic(ambfp))
-		error(USER, "bad ambient file");
+	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp))
+		error(USER, "bad/incompatible ambient file");
+
+	if ((AMB_CNDX != CNDX) | (AMB_WLPART != WLPART)) {
+		if (setspectrsamp(AMB_CNDX, AMB_WLPART) < 0)
+			error(USER, "bad wavelength sampling in ambient file");
+		if (AMB_CNDX[3] == CNDX[3] && FABSEQ(AMB_WLPART[0],WLPART[0]) &&
+					FABSEQ(AMB_WLPART[3],WLPART[3])) {
+			AMB_CNDX = CNDX;
+			AMB_WLPART = WLPART;		/* just the same */
+		} else
+			error(WARNING, "different ambient file wavelength sampling");
+	}
 }
 
 
@@ -685,10 +702,10 @@ avstore(				/* allocate memory and save aval */
 
 	if ((av = newambval()) == NULL)
 		error(SYSTEM, "out of memory in avstore");
-	*av = *aval;
+	memcpy(av, aval, AVSIZE);	/* AVSIZE <= sizeof(AMBVAL) */
 	av->next = NULL;
 	nambvals++;
-	d = bright(av->val);
+	d = pbright(av->val);
 	if (d > FTINY) {		/* add to log sum for averaging */
 		avsum += log(d);
 		navsum++;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.89 2022/04/19 00:36:34 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.90 2023/11/15 18:02:52 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -26,17 +26,17 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.89 2022/04/19 00:36:34 greg Exp 
 #endif
 
 typedef struct {
-	COLOR	v;		/* hemisphere sample value */
-	float	d;		/* reciprocal distance */
 	FVECT	p;		/* intersection point */
+	float	d;		/* reciprocal distance */
+	SCOLOR	v;		/* hemisphere sample value */
 } AMBSAMP;		/* sample value */
 
 typedef struct {
 	RAY	*rp;		/* originating ray sample */
 	int	ns;		/* number of samples per axis */
 	int	sampOK;		/* acquired full sample set? */
-	COLOR	acoef;		/* division contribution coefficient */
-	double	acol[3];	/* accumulated color */
+	SCOLOR	acoef;		/* division contribution coefficient */
+	SCOLOR  acol;		/* accumulated color */
 	FVECT	ux, uy;		/* tangent axis unit vectors */
 	AMBSAMP	sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
@@ -103,14 +103,14 @@ ambsample(				/* initial ambient division sample */
 					/* generate hemispherical sample */
 					/* ambient coefficient for weight */
 	if (ambacc > FTINY)
-		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
+		setscolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
 	else
-		copycolor(ar.rcoef, hp->acoef);
+		copyscolor(ar.rcoef, hp->acoef);
 	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0)
 		return(0);
 	if (ambacc > FTINY) {
-		multcolor(ar.rcoef, hp->acoef);
-		scalecolor(ar.rcoef, 1./AVGREFL);
+		smultscolor(ar.rcoef, hp->acoef);
+		scalescolor(ar.rcoef, 1./AVGREFL);
 	}
 	hlist[0] = hp->rp->rno;
 	hlist[1] = j;
@@ -135,25 +135,23 @@ resample:
 	zd = raydistance(&ar);
 	if (zd <= FTINY)
 		return(0);		/* should never happen */
-	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
+	smultscolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	if (zd*ap->d < 1.0)		/* new/closer distance? */
 		ap->d = 1.0/zd;
 	if (!n) {			/* record first vertex & value */
 		if (zd > 10.0*thescene.cusize + 1000.)
 			zd = 10.0*thescene.cusize + 1000.;
 		VSUM(ap->p, ar.rorg, ar.rdir, zd);
-		copycolor(ap->v, ar.rcol);
+		copyscolor(ap->v, ar.rcol);
 	} else {			/* else update recorded value */
-		hp->acol[RED] -= colval(ap->v,RED);
-		hp->acol[GRN] -= colval(ap->v,GRN);
-		hp->acol[BLU] -= colval(ap->v,BLU);
+		sopscolor(hp->acol, -=, ap->v);
 		zd = 1.0/(double)(n+1);
-		scalecolor(ar.rcol, zd);
+		scalescolor(ar.rcol, zd);
 		zd *= (double)n;
-		scalecolor(ap->v, zd);
-		addcolor(ap->v, ar.rcol);
+		scalescolor(ap->v, zd);
+		saddscolor(ap->v, ar.rcol);
 	}
-	addcolor(hp->acol, ap->v);	/* add to our sum */
+	saddscolor(hp->acol, ap->v);	/* add to our sum */
 	return(1);
 }
 
@@ -174,9 +172,9 @@ getambdiffs(AMBHEMI *hp)
 					/* sum squared neighbor diffs */
 	for (ap = hp->sa, ep = earr, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++, ep++) {
-		b = bright(ap[0].v);
+		b = pbright(ap[0].v);
 		if (i) {		/* from above */
-			b1 = bright(ap[-hp->ns].v);
+			b1 = pbright(ap[-hp->ns].v);
 			d2 = b - b1;
 			d2 *= d2*normf/(b + b1 + FTINY);
 			ep[0] += d2;
@@ -184,14 +182,14 @@ getambdiffs(AMBHEMI *hp)
 		}
 		if (!j) continue;
 					/* from behind */
-		b1 = bright(ap[-1].v);
+		b1 = pbright(ap[-1].v);
 		d2 = b - b1;
 		d2 *= d2*normf/(b + b1 + FTINY);
 		ep[0] += d2;
 		ep[-1] += d2;
 		if (!i) continue;
 					/* diagonal */
-		b1 = bright(ap[-hp->ns-1].v);
+		b1 = pbright(ap[-hp->ns-1].v);
 		d2 = b - b1;
 		d2 *= d2*normf/(b + b1 + FTINY);
 		ep[0] += d2;
@@ -245,7 +243,7 @@ done:
 
 static AMBHEMI *
 samp_hemi(				/* sample indirect hemisphere */
-	COLOR	rcol,
+	SCOLOR	rcol,
 	RAY	*r,
 	double	wt
 )
@@ -254,11 +252,12 @@ samp_hemi(				/* sample indirect hemisphere */
 	double	d;
 	int	n, i, j;
 					/* insignificance check */
-	if (bright(rcol) <= FTINY)
+	d = sintens(rcol);
+	if (d <= FTINY)
 		return(NULL);
 					/* set number of divisions */
 	if (ambacc <= FTINY &&
-			wt > (d = 0.8*intens(rcol)*r->rweight/(ambdiv*minweight)))
+			wt > (d *= 0.8*r->rweight/(ambdiv*minweight)))
 		wt = d;			/* avoid ray termination */
 	n = sqrt(ambdiv * wt) + 0.5;
 	i = 1 + (MINADIV-1)*(ambacc > FTINY);
@@ -270,13 +269,13 @@ samp_hemi(				/* sample indirect hemisphere */
 		error(SYSTEM, "out of memory in samp_hemi");
 	hp->rp = r;
 	hp->ns = n;
-	hp->acol[RED] = hp->acol[GRN] = hp->acol[BLU] = 0.0;
+	scolorblack(hp->acol);
 	memset(hp->sa, 0, sizeof(AMBSAMP)*n*n);
 	hp->sampOK = 0;
 					/* assign coefficient */
-	copycolor(hp->acoef, rcol);
+	copyscolor(hp->acoef, rcol);
 	d = 1.0/(n*n);
-	scalecolor(hp->acoef, d);
+	scalescolor(hp->acoef, d);
 					/* make tangent plane axes */
 	if (!getperpendicular(hp->ux, r->ron, 1))
 		error(CONSISTENCY, "bad ray direction in samp_hemi");
@@ -285,7 +284,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	for (i = hp->ns; i--; )
 	    for (j = hp->ns; j--; )
 		hp->sampOK += ambsample(hp, i, j, 0);
-	copycolor(rcol, hp->acol);
+	copyscolor(rcol, hp->acol);
 	if (!hp->sampOK) {		/* utter failure? */
 		free(hp);
 		return(NULL);
@@ -299,7 +298,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	n = ambssamp*wt + 0.5;
 	if (n > 8) {			/* perform super-sampling? */
 		ambsupersamp(hp, n);
-		copycolor(rcol, hp->acol);
+		copyscolor(rcol, hp->acol);
 	}
 	return(hp);			/* all is well */
 }
@@ -311,12 +310,12 @@ back_ambval(AMBHEMI *hp, const int n1, const int n2, const int n3)
 {
 	if (hp->sa[n1].d <= hp->sa[n2].d) {
 		if (hp->sa[n1].d <= hp->sa[n3].d)
-			return(colval(hp->sa[n1].v,CIEY));
-		return(colval(hp->sa[n3].v,CIEY));
+			return(hp->sa[n1].v[0]);
+		return(hp->sa[n3].v[0]);
 	}
 	if (hp->sa[n2].d <= hp->sa[n3].d)
-		return(colval(hp->sa[n2].v,CIEY));
-	return(colval(hp->sa[n3].v,CIEY));
+		return(hp->sa[n2].v[0]);
+	return(hp->sa[n3].v[0]);
 }
 
 
@@ -630,7 +629,7 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 					/* use vector for azimuth + 90deg */
 		VSUB(vd, ap->p, hp->rp->rop);
 					/* brightness over cosine factor */
-		gfact = colval(ap->v,CIEY) / DOT(hp->rp->ron, vd);
+		gfact = ap->v[0] / DOT(hp->rp->ron, vd);
 					/* sine = proj_radius/vd_length */
 		dgsum[0] -= DOT(uv[1], vd) * gfact;
 		dgsum[1] += DOT(uv[0], vd) * gfact;
@@ -686,7 +685,7 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 
 int
 doambient(				/* compute ambient component */
-	COLOR	rcol,			/* input/output color */
+	SCOLOR	rcol,			/* input/output color */
 	RAY	*r,
 	double	wt,
 	FVECT	uv[2],			/* returned (optional) */
@@ -720,8 +719,8 @@ doambient(				/* compute ambient component */
 		free(hp);		/* Hessian not requested/possible */
 		return(-1);		/* value-only return value */
 	}
-	if ((d = bright(rcol)) > FTINY) {	/* normalize Y values */
-		d = 0.99*(hp->ns*hp->ns)/d;
+	if ((d = scolor_photopic(rcol)) > FTINY) {
+		d = 0.99*(hp->ns*hp->ns)/d;	/* normalize Y values */
 		K = 0.01;
 	} else {			/* or fall back on geometric Hessian */
 		K = 1.0;
@@ -729,9 +728,9 @@ doambient(				/* compute ambient component */
 		dg = NULL;
 		crlp = NULL;
 	}
-	ap = hp->sa;			/* relative Y channel from here on... */
+	ap = hp->sa;			/* single channel from here on... */
 	for (i = hp->ns*hp->ns; i--; ap++)
-		colval(ap->v,CIEY) = bright(ap->v)*d + K;
+		ap->v[0] = scolor_mean(ap->v)*d + K;
 
 	if (uv == NULL)			/* make sure we have axis pointers */
 		uv = my_uv;

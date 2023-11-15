@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_mist.c,v 2.20 2019/02/13 02:38:26 greg Exp $";
+static const char RCSid[] = "$Id: m_mist.c,v 2.21 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  * Mist volumetric material.
@@ -161,7 +161,7 @@ m_mist(		/* process a ray entering or leaving some mist */
 		setcolor(mext, m->oargs.farg[0], m->oargs.farg[1],
 				m->oargs.farg[2]);
 		raytexture(r, m->omod);			/* get modifiers */
-		multcolor(mext, r->pcol);
+		multscolor(mext, r->pcol);
 	} else
 		setcolor(mext, 0., 0., 0.);
 						/* start transmitted ray */
@@ -217,8 +217,8 @@ m_mist(		/* process a ray entering or leaving some mist */
 			p.gecc = seccg;
 	}
 	rayvalue(&p);				/* calls rayparticipate() */
-	copycolor(r->rcol, p.rcol);		/* return value */
-	copycolor(r->mcol, p.mcol);
+	copyscolor(r->rcol, p.rcol);		/* return value */
+	copyscolor(r->mcol, p.mcol);
 	r->rmt = r->rot + p.rmt;
 	r->rxt = r->rot + p.rxt;
 	return(1);

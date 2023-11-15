@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.98 2023/01/24 21:54:49 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.99 2023/11/15 18:02:53 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -47,6 +47,8 @@ static const char RCSid[] = "$Id: rpict.c,v 2.98 2023/01/24 21:54:49 greg Exp $"
 
 CUBE  thescene;				/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
+
+extern RGBPRIMP  out_prims;		/* output color primitives (NULL if spectral) */
 
 int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
@@ -340,9 +342,13 @@ rpict(			/* generate image(s) */
 		if ((pa < .99) | (pa > 1.01))
 			fputaspect(pa, stdout);
 		fputnow(stdout);
-		fputprims(stdprims, stdout);
-		fputformat(COLRFMT, stdout);
-		putchar('\n');
+		if (out_prims == xyzprims) {
+			fputformat(CIEFMT, stdout);
+		} else {
+			fputprims(out_prims, stdout);
+			fputformat(COLRFMT, stdout);
+		}
+		putchar('\n');		/* close header */
 		if (zout != NULL)
 			sprintf(cp=fbuf, zout, seq);
 		else
@@ -660,6 +666,7 @@ pixvalue(		/* compute pixel value */
 	int  y
 )
 {
+	static COLORMAT	xyz2myrgbmat;
 	RAY  thisray;
 	FVECT	lorg, ldir;
 	double	hpos, vpos, lmax;
@@ -694,7 +701,20 @@ pixvalue(		/* compute pixel value */
 
 	rayvalue(&thisray);			/* trace ray */
 
-	copycolor(col, thisray.rcol);		/* return color */
+	if (out_prims == stdprims) {		/* return color */
+		scolor_rgb(col, thisray.rcol);
+	} else if (out_prims == xyzprims) {
+		scolor_cie(col, thisray.rcol);
+		scalecolor(col, WHTEFFICACY);
+	} else if (NCSAMP > 3) {
+		COLOR	xyz;
+		if (xyz2myrgbmat[0][0] == 0)
+			compxyz2rgbWBmat(xyz2myrgbmat, out_prims);
+		scolor_cie(xyz, thisray.rcol);
+		colortrans(col, xyz2myrgbmat, xyz);
+		clipgamut(col, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
+	} else
+		copycolor(col, thisray.rcol);
 
 	return(raydistance(&thisray));		/* return distance */
 }
