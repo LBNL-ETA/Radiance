@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.37 2023/11/15 18:02:52 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.38 2023/11/15 19:23:37 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -725,16 +725,13 @@ Output standard RGB values (the default).
 Output standard CIE XYZ tristimulus values rather than RGB.
 .TP
 .BR \-pY
-Produce a single output channel corresponding to photopic spectral
-sensitivity.
+Produce a single output channel corresponding to photopic luminance.
 .TP
 .BR \-pS
-Produce a single output channel corresponding to scotopic spectral
-sensitivity.
+Produce a single output channel corresponding to scotopic luminance.
 .TP
 .BR \-pM
-Produce a single output channel corresponding to melanopic spectral
-sensitivity.
+Produce a single output channel corresponding to melanopic luminance.
 .TP
 .BI -e \ efile
 Send error messages and progress reports to
