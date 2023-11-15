@@ -1,8 +1,8 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.32 2023/11/03 17:41:27 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.33 2023/11/15 18:28:10 greg Exp $ -->
 <head>
 <title>
-The RADIANCE 5.4 Synthetic Imaging System
+The RADIANCE 6.0 Synthetic Imaging System
 </title>
 </head>
 <body>
@@ -10,7 +10,7 @@ The RADIANCE 5.4 Synthetic Imaging System
 <p>
 
 <h1>
-The RADIANCE 5.4 Synthetic Imaging System
+The RADIANCE 6.0 Synthetic Imaging System
 </h1>
 
 <p>
@@ -1460,6 +1460,100 @@ or:
 	A single line of text will often be accompanied by a negative spacing value.  
 	A section of text meant to  depict  a  picture, perhaps using a special purpose font such as hexbit4x1.fnt, calls for uniform  spacing.   
 	Reasonable  magnitudes  for  proportional  spacing are between 0.1 (for tightly spaced characters) and 0.3 (for wide spacing).
+
+<p>
+
+<dt>
+	<a NAME="Spectrum">
+	<b>Spectrum</b>
+	</a>
+
+<dd>
+	The spectrum primitive is the most basic type for introducing spectral
+	color to a material.
+	Since materials only provide RGB parameters, spectral patterns
+	are the only way to superimpose wavelength-dependent behavior.
+
+<pre>
+        mod spectrum id
+	0
+	0
+	5+ nmA nmB s1 s2 .. sN
+</pre>
+
+<p>
+	The first two real arguments indicate the limits of the covered
+	spectral range in nanometers.
+	Subsequent real values correspond to multipliers in each wavelength band,
+	where the first band goes from nmA to nmA+(nmB-nmA)/N, and N is the
+	number of bands (i.e., the number of real arguments minus 2).
+	The nmA wavelength may be greater or less than the nmB wavelength,
+	but they may not be equal, and their ordering must correspond to
+	the ordering of the spectral values.
+	A minimum of 3 values must be given, which would act
+	more or less the same as a constant RGB multiplier.
+	As with RGB values, spectral quantities normally range between 0
+	and 1 at each wavelength, or average to 1.0 against a standard
+	sensitivity functions such as V(lambda).
+	The best results obtain when the spectral range and number
+	of samples match rendering options, though resampling will handle
+	any differences, zero-filling wavelenths outside the nmA to nmB
+	range.
+	A warning will be issued if the given wavelength range does not
+	adequately cover the visible spectrum.
+
+<p>
+
+<dt>
+	<a NAME="Specfile">
+	<b>Specfile</b>
+	</a>
+
+<dd>
+	The specfile primitive is equivalent to the spectrum type, but
+	the wavelength range and values are contained in a 1-dimensional
+	data file.
+	This may be a more convenient way to specify a spectral color,
+	especially one corresponding to a standard illuminant such as D65
+	or a library of measured spectra.
+
+<pre>
+        mod specfile id
+	1 datafile
+	0
+	0
+</pre>
+
+<p>
+	As with the spectrum type, rendering wavelengths outside the defined
+	range will be zero-filled.
+	Unlike the spectrum type, the file may contain non-uniform samples.
+
+<p>
+
+<dt>
+	<a NAME="Specfunc">
+	<b>Specfunc</b>
+	</a>
+
+<dd>
+	The specfunc primitive offers dynamic control over a spectral
+	pattern, similar to the colorfunc type.
+
+<pre>
+        mod specfunc id
+	2+ sval funcfile transform
+	0
+	2+ nmA nmB A3 ..
+</pre>
+
+<p>
+	Like the spectrum primitive, the wavelength range is specified
+	in the first two real arguments, and additional real values are
+	accessible to the sval function.
+	This function is fed a wavelenth sample
+	between nmA and nmB as its only argument,
+	and it returns the corresponding spectral intensity.
 
 </dl>
 
