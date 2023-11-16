@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.41 2023/11/15 18:28:09 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.42 2023/11/16 21:57:39 greg Exp $"
 .\" Print using the -ms macro package
 .DA 11/13/2023
 .LP
@@ -1212,9 +1212,9 @@ spectral range in nanometers.
 Subsequent real values correspond to multipliers in each wavelength band,
 where the first band goes from nmA to nmA+(nmB-nmA)/N, and N is the
 number of bands (i.e., the number of real arguments minus 2).
-The nmA wavelength may be greater or less than the nmB wavelength,
-but they may not be equal, and their ordering must correspond to
-the ordering of the spectral values.
+The nmA wavelength may be greater or less than nmB,
+but they may not be equal, and their ordering matches
+the order of the spectral values.
 A minimum of 3 values must be given, which would act
 more or less the same as a constant RGB multiplier.
 As with RGB values, spectral quantities normally range between 0
