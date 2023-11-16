@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.131 2023/06/10 15:49:55 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.132 2023/11/16 23:37:29 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1613,8 +1613,8 @@ rpict(				/* run rpict and pfilt for each view */
 		} else {
 			if (overture) {		/* run overture calculation */
 				sprintf(combuf,
-					"%s%s %s%s -x 64 -y 64 -ps 1 %s > %s",
-						c_rpict, rep, vw, opts,
+					"%s%s %s%s%s -x 64 -y 64 -ps 1 %s > %s",
+						c_rpict, rep, vw, opts, po,
 						oct1name, overfile);
 				if (!do_rpiece || !next_process(0)) {
 					if (runcom(combuf)) {
