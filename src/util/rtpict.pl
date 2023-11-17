@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.27 2023/11/15 18:02:53 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.28 2023/11/17 23:30:07 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -16,7 +16,7 @@ my %rtraceC = ('-dt',1, '-dc',1, '-dj',1, '-ds',1, '-dr',1, '-dp',1,
 		'-av',3, '-aw',1, '-aa',1, '-ar',1, '-ad',1, '-as',1,
 		'-me',3, '-ma',3, '-mg',1, '-ms',1, '-lr',1, '-lw',1,
 		'-ap',2, '-am',1, '-ac',1, '-aC',1,
-		'-cs',1, '-cw',2, '-pc',8, '-pRGB',0, '-pXYZ',0);
+		'-cs',1, '-cw',2, '-pc',8, '-pXYZ',0);
 # boolean rtrace options
 my @boolO = ('-w', '-bv', '-dv', '-i', '-u');
 # view options and the associated number of arguments
@@ -31,6 +31,7 @@ my @rtraceA = split(' ', 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 ' .
 my @vwraysA = ('vwrays', '-pj', '.67');
 my @vwrightA = ('vwright', '-vtv');
 my @rpictA = ('rpict', '-ps', '1');
+my @pvalueA = ('pvalue', '-r');
 my $outpatt = '^-o[vrxlLRXnNsmM]+';
 my $refDepth = "";
 my $irrad = 0;
@@ -89,6 +90,11 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 			$ambcache = ($ARGV[1] > 0.0);
 		} elsif ("$ARGV[0]" eq '-af') {
 			$ambfile = "$ARGV[1]";
+		} elsif ("$ARGV[0]" eq '-pXYZ') {
+			push @pvalueA, $ARGV[0];
+		} elsif ("$ARGV[0]" eq '-pc') {
+			push @pvalueA, '-p';
+			push @pvalueA, @ARGV[1..8];
 		}
 		push @rtraceA, $ARGV[0];
 		push @rpictA, shift(@ARGV);
@@ -162,7 +168,7 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 		die "Error running rtrace\n" if ( $? );
 		system "( getinfo < /tmp/pix$$.txt | getinfo -a 'VIEW=$view'; " .
 			"getinfo - < /tmp/pix$$.txt | rlam /tmp/ord$$.txt - " .
-			"| sort -k2rn -k1n ) | pvalue -r -Y $res[3] +X $res[1]";
+			"| sort -k2rn -k1n ) | @pvalueA -Y $res[3] +X $res[1]";
 		die "rlam error\n" if ( $? );
 		unlink ("/tmp/ord$$.txt", "/tmp/pix$$.txt");
 		exit 0;
@@ -181,7 +187,7 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 if (defined $outzbf) {
 	exec "@vwraysA -ff | @rtraceA -fff -olv @res '$oct' | " .
 		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of3 - | " .
-		"pvalue -r -df | getinfo -a 'VIEW=$view'";
+		"@pvalueA -df | getinfo -a 'VIEW=$view'";
 }
 #####################################################################
 ##### Base case with output picture only?
@@ -208,7 +214,7 @@ my %rtoutC = (
 );
 # Arguments for rsplit based on output file type
 my %rcodeC = (
-	'.hdr',	['-of3', '!pvalue -r -df -u'],
+	'.hdr',	['-of3', "!@pvalueA -df -u"],
 	'.dpt',	['-of', "!rcode_depth$refDepth -ff"],
 	'.nrm',	['-of3', '!rcode_norm -ff'],
 	'.idx',	['-oa', '!rcode_ident "-t	"']
