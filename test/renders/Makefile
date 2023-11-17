@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.36 2023/11/17 21:22:27 greg Exp $
+# RCSid $Id: Makefile,v 1.37 2023/11/17 22:03:14 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -536,6 +536,11 @@ mixtex_rplan.hdr:	mixtex.oct
 	rad -v rplan  mixtex.rif
 
 ### End  mixtex-rplan tests
+
+### Octree for spectra
+
+spectra.oct:	spectra.rif
+	rad -v 0 spectra.rif
 
 ### Reference and test for spectra fish ###
 
