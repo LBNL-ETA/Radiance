@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.47 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.48 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -73,14 +73,14 @@ static void printdefaults(void);
 #ifdef PERSIST
 #define RTRACE_FEATURES	"Persist\nParallelPersist\nMultiprocessing\n" \
 			"IrradianceCalc\nImmediateIrradiance\nDistanceLimiting\n" \
-			"Hyperspectral\nParticipatingMedia=Mist\n" \
+			"ParticipatingMedia=Mist\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
 			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
 			"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 			"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n"
 #else
 #define RTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
-			"Hyperspectral\nParticipatingMedia=Mist\n" \
+			"ParticipatingMedia=Mist\n" \
 			"HessianAmbientCache\nAmbientAveraging\n" \
 			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
 			"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
@@ -310,26 +310,13 @@ main(int  argc, char  *argv[])
 			}
 			break;
 #if MAXCSAMP>3
-		case 'c':				/* spectral sampling */
-			switch (argv[i][2]) {
-			case 's':			/* spectral bin count */
-				check(3,"i");
-				NCSAMP = atoi(argv[++i]);
-				break;
-			case 'w':			/* wavelength extrema */
-				check(3,"ff");
-				WLPART[0] = atof(argv[++i]);
-				WLPART[3] = atof(argv[++i]);
-				break;
-			case 'o':			/* output spectral results */
-				rval = (out_prims == NULL);
-				check_bool(3,rval);
-				if (rval) out_prims = NULL;
-				else if (out_prims == NULL) out_prims = stdprims;
-				break;
-			default:
+		case 'c':				/* output spectral results */
+			if (argv[i][2] != 'o')
 				goto badopt;
-			}
+			rval = (out_prims == NULL);
+			check_bool(3,rval);
+			if (rval) out_prims = NULL;
+			else if (out_prims == NULL) out_prims = stdprims;
 			break;
 #endif
 #ifdef  PERSIST
@@ -615,13 +602,9 @@ printdefaults(void)			/* print default values to stdout */
 		case '~': printf(" tilde"); break;
 		}
 	fputc('\n', stdout);
-	if (NCSAMP > 3) {
-		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
-		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
-				WLPART[3], WLPART[0]);
+	if (NCSAMP > 3)
 		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
 				"-co+\t\t\t\t# output spectral values\n");
-	}
 	if (sens_curve == scolor_photopic)
 		printf("-pY\t\t\t\t# photopic output\n");
 	else if (sens_curve == scolor_scotopic)

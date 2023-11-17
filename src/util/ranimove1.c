@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.26 2020/05/14 20:58:03 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.27 2023/11/17 20:02:08 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -379,7 +379,7 @@ init_frame_sample(void)		/* sample our initial frame */
 					rayshade(&ir, ir.ro->omod);
 					rayparticipate(&ir);
 				}
-				copycolor(cbuffer[n], ir.rcol);
+				scolor_rgb(cbuffer[n], ir.rcol);
 				zbuffer[n] = ir.rot;
 				obuffer[n] = ir.robj;
 				abuffer[n] = ADISTANT;
@@ -403,7 +403,7 @@ init_frame_sample(void)		/* sample our initial frame */
 			n = ir.rno;
 		} else
 			ray_trace(&ir);
-		copycolor(cbuffer[n], ir.rcol);
+		scolor_rgb(cbuffer[n], ir.rcol);
 		zbuffer[n] = ir.rot;
 		obuffer[n] = ir.robj;
 		sbuffer[n] = 1;
@@ -417,7 +417,7 @@ init_frame_sample(void)		/* sample our initial frame */
 	if (nprocs > 1)			/* get stragglers */
 		while (ray_presult(&ir, 0)) {
 			n = ir.rno;
-			copycolor(cbuffer[n], ir.rcol);
+			scolor_rgb(cbuffer[n], ir.rcol);
 			zbuffer[n] = ir.rot;
 			obuffer[n] = ir.robj;
 			sbuffer[n] = 1;

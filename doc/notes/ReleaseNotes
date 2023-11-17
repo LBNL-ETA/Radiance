@@ -2622,3 +2622,11 @@ spectrum if used.  Unfortunately photon-mapping is currently broken when
 spectral sampling is enabled, but we will fix this as soon as possible.
 Calculation overhead appears to be approximately 10-15% for RGB
 renderings compared to version 5.4a.
+
+Added spectral rendering to rvu as well, and made -cs and -cw
+options standard across the rendering library.  I also brought
+mkillum, ranimove, rsensor, and mksource into the fold.  These
+tools were broken in the initial release.  (Hopefully, they are
+working now, but none have been tested as yet.)
+There was also an indexing bug in the spectral->RGB conversions
+that made reds into blues and vice versa, which has been fixed.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.27 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.28 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -297,12 +297,12 @@ spec_dot(			/* spectrum dot-product with cumulative observer */
 
 	while (n < ncs) {
 		int	wl0 = wl1;
-		wl1 = (int)(ncs==3 ? wlpt[ncs-1-n] : wlpt[3] + (n+1)*wlstp);
+		wl1 = (int)(ncs==3 ? wlpt[2-n] : wlpt[3] + (n+1)*wlstp);
 		if (wl1 >= wlmax) {
-			sum += (65535 - cumul[wl0-wlmin]) * scol[n];
+			sum += (65535 - cumul[wl0-wlmin]) * scol[ncs-1-n];
 			break;
 		}
-		sum += (cumul[wl1-wlmin] - cumul[wl0-wlmin]) * scol[n++];
+		sum += (cumul[wl1-wlmin] - cumul[wl0-wlmin]) * scol[ncs-1-n++];
 	}
 	return(sum * (1./65535.));
 }

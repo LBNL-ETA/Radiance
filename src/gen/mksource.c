@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.10 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.11 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -116,9 +116,7 @@ leafsample(TRITREE *leaf)
 	VCOPY(myray.rdir, sdir);
 	myray.rmax = 0.;
 	ray_trace(&myray);
-	setcolr(leaf->val, colval(myray.rcol,RED),
-			colval(myray.rcol,GRN),
-			colval(myray.rcol,BLU));
+	scolor_colr(leaf->val, myray.rcol);
 }
 
 /* Initialize a branch node contained in the given spherical triangle */

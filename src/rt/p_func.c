@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.9 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.10 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.9 2023/11/15 18:02:53 greg Exp $"
 
 #include  "ray.h"
 #include  "func.h"
+#include  "random.h"
 #include  "rtotypes.h"
 
 /*
@@ -122,15 +123,14 @@ p_specfunc(			/* compute spectral pattern */
 		return(0);
 	}
 	wlstep = (wlmax - wlmin)/(double)MAXCSAMP;
-	if (wlstep*(5.*NCSAMP) < WLPART[0] - WLPART[3])
-		wlstep = (WLPART[0] - WLPART[3])/(5.*NCSAMP);
 	mf = getfunc(m, 1, 0, 0);
 	setfunc(m, r);
 	errno = 0;
 	ns = (wlmax - wlmin)/wlstep + .1;
 	wl = wlmax - .5*wlstep;
 	for (i = ns; i-- > 0; wl -= wlstep) {
-		scsamp[i] = funvalue(m->oargs.sarg[0], 1, &wl);
+		double	ws = wl + 0.9*(1.-frandom())*wlstep;
+		scsamp[i] = funvalue(m->oargs.sarg[0], 1, &ws);
 		if ((errno == EDOM) | (errno == ERANGE)) {
 			objerror(m, WARNING, "compute error");
 			return(0);

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.92 2023/11/15 18:02:52 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.93 2023/11/17 20:02:07 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -213,7 +213,7 @@ initotypes.o m_brdf.o m_bsdf.o m_direct.o m_mirror.o normal.o o_cone.o \
 preload.o raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o \
 srcsupp.o text.o srcdraw.o srcobstr.o virtuals.o:	../common/otypes.h
 
-ambient.o ambcomp.o aniso.o ashikhmin.o normal.o raycalls.o raytrace.o \
+ambient.o ambcomp.o aniso.o ashikhmin.o normal.o p_func.o raycalls.o raytrace.o \
 rpict.o rvmain.o rtmain.o rpmain.o rcmain.o persist.o source.o rv3.o \
 srcsamp.o virtuals.o:	../common/random.h
 

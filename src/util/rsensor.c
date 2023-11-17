@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.21 2022/03/15 18:05:03 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.22 2023/11/17 20:02:08 greg Exp $";
 #endif
 
 /*
@@ -521,7 +521,8 @@ comp_sensor(
 				ndsamps > 0 ? 1 : 0;
 	char	*err;
 	int	nt, np;
-	COLOR	vsum;
+	SCOLOR	vsum;
+	COLOR	cres;
 	RAY	rr;
 	double	sf;
 	int	i, j;
@@ -535,7 +536,7 @@ comp_sensor(
 						/* assign probability table */
 	init_ptable(sfile);
 						/* stratified MC sampling */
-	setcolor(vsum, .0f, .0f, .0f);
+	scolorblack(vsum);
 	nt = (int)(sqrt((double)nsamps*ntheta/nphi) + .5);
 	np = nsamps/nt;
 	sf = gscale/nsamps;
@@ -551,9 +552,9 @@ comp_sensor(
 			}
 			rr.rmax = .0;
 			rayorigin(&rr, PRIMARY|SPECULAR, NULL, NULL);
-			scalecolor(rr.rcoef, sf);
+			scalescolor(rr.rcoef, sf);
 			if (ray_pqueue(&rr) == 1)
-				addcolor(vsum, rr.rcol);
+				saddscolor(vsum, rr.rcol);
 		}
 						/* remaining rays pure MC */
 	for (i = nsamps - nt*np; i-- > 0; ) {
@@ -567,14 +568,14 @@ comp_sensor(
 		}
 		rr.rmax = .0;
 		rayorigin(&rr, PRIMARY|SPECULAR, NULL, NULL);
-		scalecolor(rr.rcoef, sf);
+		scalescolor(rr.rcoef, sf);
 		if (ray_pqueue(&rr) == 1)
-			addcolor(vsum, rr.rcol);
+			saddscolor(vsum, rr.rcol);
 	}
 	if (!ray_pnprocs)			/* just printing rays */
 		return;
 						/* scale partial result */
-	scalecolor(vsum, sf);
+	scalescolor(vsum, sf);
 						/* add direct component */
 	for (i = ndirs; i-- > 0; ) {
 		SRCINDEX	si;
@@ -584,19 +585,20 @@ comp_sensor(
 			if (sf <= FTINY)
 				continue;
 			sf *= si.dom/ndirs;
-			scalecolor(rr.rcoef, sf);
+			scalescolor(rr.rcoef, sf);
 			if (ray_pqueue(&rr) == 1) {
-				multcolor(rr.rcol, rr.rcoef);
-				addcolor(vsum, rr.rcol);
+				smultscolor(rr.rcol, rr.rcoef);
+				saddscolor(vsum, rr.rcol);
 			}
 		}
 	}
 						/* finish our calculation */
 	while (ray_presult(&rr, 0) > 0) {
-		multcolor(rr.rcol, rr.rcoef);
-		addcolor(vsum, rr.rcol);
+		smultscolor(rr.rcol, rr.rcoef);
+		saddscolor(vsum, rr.rcol);
 	}
 						/* print our result */
-	printf("%.4e %.4e %.4e\n", colval(vsum,RED),
-				colval(vsum,GRN), colval(vsum,BLU));
+	scolor_rgb(cres, vsum);
+	printf("%.4e %.4e %.4e\n", colval(cres,RED),
+				colval(cres,GRN), colval(cres,BLU));
 }

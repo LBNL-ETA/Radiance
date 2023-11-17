@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.11 2020/03/29 02:55:01 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.12 2023/11/17 20:02:08 greg Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -379,7 +379,7 @@ ray_refine(			/* refine the given pixel by tracing a ray */
 )
 {
 	RAY	ir;
-	COLOR	ctmp;
+	COLOR	rcol, ctmp, csqr;
 	int	i;
 
 	if (n < 0) {			/* fetching stragglers */
@@ -407,6 +407,7 @@ ray_refine(			/* refine the given pixel by tracing a ray */
 		} else
 			ray_trace(&ir);
 	}
+	scolor_rgb(rcol, ir.rcol);
 	if (abuffer[n] == ALOWQ && asump != NULL) {
 		if (sbuffer[n] != 1)
 			error(CONSISTENCY, "bad code in ray_refine");
@@ -416,24 +417,22 @@ ray_refine(			/* refine the given pixel by tracing a ray */
 				(colval(ctmp,BLU) > 0.01)) {
 			for (i = 0; i < 3; i++)
 				asump->diffsum[i] +=
-				    (colval(ir.rcol,i) - colval(cbuffer[n],i))
+				    (colval(rcol,i) - colval(cbuffer[n],i))
 					/ colval(ctmp,i);
 			asump->nsamps++;
 		}
 		sbuffer[n] = 0;
 	}
-	setcolor(ctmp,
-		colval(ir.rcol,RED)*colval(ir.rcol,RED),
-		colval(ir.rcol,GRN)*colval(ir.rcol,GRN),
-		colval(ir.rcol,BLU)*colval(ir.rcol,BLU));
+	copycolor(csqr, rcol);
+	multcolor(csqr, rcol);
 	if (!sbuffer[n]) {			/* first sample */
-		copycolor(cbuffer[n], ir.rcol);
-		copycolor(val2map[n], ctmp);
+		copycolor(cbuffer[n], rcol);
+		copycolor(val2map[n], csqr);
 		abuffer[n] = AHIGHQ;
 		sbuffer[n] = 1;
 	} else {				/* else sum in sample */
-		addcolor(cbuffer[n], ir.rcol);
-		addcolor(val2map[n], ctmp);
+		addcolor(cbuffer[n], rcol);
+		addcolor(val2map[n], csqr);
 		sbuffer[n]++;
 	}
 	return(n);

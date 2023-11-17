@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.42 2016/09/16 15:08:38 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.43 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -59,9 +59,9 @@ process_ray(			/* process a ray result or report error */
 		error(USER, "ray tracing process died");
 	if (r->rno >= distsiz)
 		error(INTERNAL, "bad returned index in process_ray");
-	multcolor(r->rcol, r->rcoef);	/* in case it's a source ray */
+	smultscolor(r->rcol, r->rcoef);	/* in case it's a source ray */
 	colp = &distarr[r->rno * 3];
-	addcolor(colp, r->rcol);
+	addscolor(colp, r->rcol);
 	return(1);
 }
 
@@ -125,7 +125,7 @@ srcsamps(			/* sample sources from this surface position */
 		sr.rno = flatindex(v, nalt, nazi);
 		d = nalt*nazi*(1./PI) * v[2];
 		d *= si.dom;			/* solid angle correction */
-		scalecolor(sr.rcoef, d);
+		scalescolor(sr.rcoef, d);
 		VSUM(sr.rorg, sr.rorg, sr.rdir, -eps);
 		process_ray(&sr, ray_pqueue(&sr));
 	}

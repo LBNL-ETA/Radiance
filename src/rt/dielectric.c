@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.31 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.32 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -336,7 +336,7 @@ disperse(  /* check light sources for dispersion */
 		copycolor(sray.albedo, abt);
 		normalize(sray.rdir);
 		rayvalue(&sray);
-		if (bright(sray.rcol) <= FTINY)	/* missed it */
+		if (pbright(sray.rcol) <= FTINY)	/* missed it */
 			continue;
 		
 		/*

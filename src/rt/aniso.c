@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.62 2023/11/15 18:02:52 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.63 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -361,7 +361,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
 				d = 1./nstarget;
-				scalecolor(sr.rcoef, d);
+				scalescolor(sr.rcoef, d);
 				sr.rweight *= d;
 			} else
 				nstarget = 1;
@@ -432,7 +432,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
 				d = 1./nstarget;
-				scalecolor(sr.rcoef, d);
+				scalescolor(sr.rcoef, d);
 				sr.rweight *= d;
 			} else
 				nstarget = 1;

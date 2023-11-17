@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.34 2023/11/16 21:57:39 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.35 2023/11/17 20:02:07 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -1482,11 +1482,9 @@ or:
 </pre>
 
 <p>
-	The first two real arguments indicate the limits of the covered
+	The first two real arguments indicate the extrema of the
 	spectral range in nanometers.
-	Subsequent real values correspond to multipliers in each wavelength band,
-	where the first band goes from nmA to nmA+(nmB-nmA)/N, and N is the
-	number of bands (i.e., the number of real arguments minus 2).
+	Subsequent real values correspond to multipliers in at each wavelength.
 	The nmA wavelength may be greater or less than nmB,
 	but they may not be equal, and their ordering matches
 	the order of the spectral values.

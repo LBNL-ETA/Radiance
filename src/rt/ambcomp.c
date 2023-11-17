@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.90 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.91 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -719,8 +719,8 @@ doambient(				/* compute ambient component */
 		free(hp);		/* Hessian not requested/possible */
 		return(-1);		/* value-only return value */
 	}
-	if ((d = scolor_photopic(rcol)) > FTINY) {
-		d = 0.99*(hp->ns*hp->ns)/d;	/* normalize Y values */
+	if ((d = scolor_mean(rcol)) > FTINY) {
+		d = 0.99*(hp->ns*hp->ns)/d;	/* normalize avg. values */
 		K = 0.01;
 	} else {			/* or fall back on geometric Hessian */
 		K = 1.0;

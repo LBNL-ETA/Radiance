@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.22 2023/08/15 01:19:37 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.23 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -23,6 +23,9 @@ char	RFeatureList[2048] =	/* newline-separated feature list */
 		"ScatteringModels=WGMD,Ashikhmin-Shirley\n"
 		"TabulatedBSDFs=DataFile,KlemsXML,TensorTreeXML,+ViewPeakExtraction\n"
 		"Instancing=Octree,TriangleMesh\nAliases\n"
+#if MAXCSAMP>3
+		"Hyperspectral\n"
+#endif
 #if !defined(SHADCACHE) || SHADCACHE > 0
 		"ShadowCache\n"
 #endif
@@ -307,6 +310,21 @@ getrenderopt(		/* get next render option */
 			return(1);
 		}
 		break;
+#if MAXCSAMP>3
+	case 'c':				/* spectral sampling */
+		switch (av[0][2]) {
+		case 's':			/* spectral bin count */
+			check(3,"i");
+			NCSAMP = atoi(av[1]);
+			return(1);
+		case 'w':			/* wavelength extrema */
+			check(3,"ff");
+			WLPART[0] = atof(av[1]);
+			WLPART[3] = atof(av[2]);
+			return(1);
+		}
+		break;
+#endif
 	}
 	
 	/* PMAP: Parse photon mapping options */
@@ -354,6 +372,11 @@ print_rdefaults(void)		/* print default render values to stdout */
 			colval(salbedo,GRN), colval(salbedo,BLU));
 	printf("-mg %f\t\t\t# mist scattering eccentricity\n", seccg);
 	printf("-ms %f\t\t\t# mist sampling distance\n", ssampdist);
+	if (NCSAMP > 3) {
+		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
+		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
+				WLPART[3], WLPART[0]);
+	}
 	printf("-lr %-9d\t\t\t# limit reflection%s\n", maxdepth,
 			maxdepth<=0 ? " (Russian roulette)" : "");
 	printf("-lw %.2e\t\t\t# limit weight\n", minweight);

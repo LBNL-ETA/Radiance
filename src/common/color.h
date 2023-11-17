@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.38 2023/11/15 18:02:52 greg Exp $ */
+/* RCSid $Id: color.h,v 2.39 2023/11/17 20:02:07 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -255,7 +255,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  iswlsplit(hl)		(!strncmp(hl,WLSPLTSTR,LWLSPLTSTR))
 #define  wlsplitval(w,hl)	(sscanf((hl)+LWLSPLTSTR,"%f %f %f %f",\
 					&(w)[0],&(w)[1],&(w)[2],&(w)[3]) == 4)
-#define  fputwlsplit(w,fp)	fprintf(fp,"%s %f %f %f %f\n",WLSPLTSTR,\
+#define  fputwlsplit(w,fp)	fprintf(fp,"%s %g %g %g %g\n",WLSPLTSTR,\
 					(w)[0],(w)[1],(w)[2],(w)[3])
 
 				/* macros for exposures */

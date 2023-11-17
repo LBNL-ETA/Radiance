@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.28 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.29 2023/11/17 20:02:07 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -61,7 +61,7 @@ static void printdefaults(void);
 					/* rpict additional features */
 #ifdef PERSIST
 #define RPICT_FEATURES	"Persist\nParallelPersist\n" \
-		"Hyperspectral\nParticipatingMedia=Mist\n" \
+		"ParticipatingMedia=Mist\n" \
 		"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
@@ -69,7 +69,7 @@ static void printdefaults(void);
 		"AdaptiveShadowTesting\nOutputs=v,l\n"
 #else
 #define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
-		"Hyperspectral\nParticipatingMedia=Mist\n" \
+		"ParticipatingMedia=Mist\n" \
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
@@ -244,31 +244,6 @@ main(int  argc, char  *argv[])
 			check(2,"i");
 			ralrm = atoi(argv[++i]);
 			break;
-#if MAXCSAMP>3
-		case 'c':				/* spectral sampling */
-			switch (argv[i][2]) {
-			case 's':			/* spectral bin count */
-				check(3,"i");
-				NCSAMP = atoi(argv[++i]);
-				break;
-			case 'w':			/* wavelength extrema */
-				check(3,"ff");
-				WLPART[0] = atof(argv[++i]);
-				WLPART[3] = atof(argv[++i]);
-				break;
-#if 0
-			case 'o':			/* output spectral results */
-				rval = (out_prims == NULL);
-				check_bool(3,rval);
-				if (rval) out_prims = NULL;
-				else if (out_prims == NULL) out_prims = stdprims;
-				break;
-#endif
-			default:
-				goto badopt;
-			}
-			break;
-#endif
 #ifdef  PERSIST
 		case 'P':				/* persist file */
 			if (argv[i][2] == 'P') {
@@ -538,13 +513,6 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-vl %f\t\t\t# view lift\n", ourview.voff);
 	printf("-x  %-9d\t\t\t# x resolution\n", hresolu);
 	printf("-y  %-9d\t\t\t# y resolution\n", vresolu);
-	if (NCSAMP > 3) {
-		printf("-cs %-2d\t\t\t\t# number of spectral bins\n", NCSAMP);
-		printf("-cw %3.0f %3.0f\t\t\t# wavelength limits (nm)\n",
-				WLPART[3], WLPART[0]);
-/*		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
-				"-co+\t\t\t\t# output spectral values\n");
-*/	}
 	if (out_prims == stdprims)
 		printf("-pRGB\t\t\t\t# standard RGB color output\n");
 	else if (out_prims == xyzprims)
