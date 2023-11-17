@@ -1,0 +1,28 @@
+# RCSid $Id: spectral_objs.rad,v 1.1 2023/11/17 21:22:27 greg Exp $
+#
+# A few spectral test objects
+#
+
+!xform -m gold -t 0 -1 0 ./vase.rad
+
+!xform -m gold_smat -t 0 1 0 ./vase.rad
+
+!xform -m copper_smat -t 1 0 0 ./vase.rad
+
+rainbow_smat polygon rainbow1
+0
+0
+12
+	-6	.01	1
+	-2	.01	1
+	-2	.01	2
+	-6	.01	2
+
+rainbow_smat polygon rainbow2
+0
+0
+12
+	-6	4.99	2
+	-2	4.99	2
+	-2	4.99	1
+	-6	4.99	1

@@ -1,0 +1,8 @@
+{ RCSid $Id: rainbow.cal,v 1.1 2023/11/17 21:22:27 greg Exp $ }
+{
+	Simple function to return spectral band along (0,1) interval
+}
+
+inBand(w,m) = A3/2 - abs(A1 + (A2-A1)*m - w);	{ wavelength in bandwidth for 0<m<1 ? }
+
+xrainbow(w) = if(inBand(w,Px), 1, 0);	{ simple on-off value along X axis }

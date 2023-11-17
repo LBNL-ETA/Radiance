@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.35 2021/03/02 17:51:56 greg Exp $
+# RCSid $Id: Makefile,v 1.36 2023/11/17 21:22:27 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -27,7 +27,7 @@ test-dielectric-def test-dielectric-fish test-trans-def \
 test-glass-def test-glass-fish test-glass-up \
 test-trans-fish test-patterns-def test-patterns-plan \
 test-rtrace test-mirror-fish test-obj2mesh \
-test-prism1-fish test-prism2-fish
+test-prism1-fish test-prism2-fish test-spectra-fish
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
@@ -536,3 +536,17 @@ mixtex_rplan.hdr:	mixtex.oct
 	rad -v rplan  mixtex.rif
 
 ### End  mixtex-rplan tests
+
+### Reference and test for spectra fish ###
+
+test-spectra-fish:	ref/spectra_fish.hdr spectra_fish.hdr
+	$(RDU_PFILT) spectra_fish.hdr | $(IMG_CMP) ref/spectra_fish.hdr -
+
+ref/spectra_fish.hdr:
+	make spectra_fish.hdr
+	$(RDU_PFILT) spectra_fish.hdr > ref/spectra_fish.hdr
+
+spectra_fish.hdr:	spectra.oct
+	rad -v fish spectra.rif
+
+### End spectra-fish tests

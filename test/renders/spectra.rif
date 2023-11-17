@@ -1,0 +1,29 @@
+# RCSid $Id: spectra.rif,v 1.1 2023/11/17 21:22:27 greg Exp $
+#
+# A test of spectral patterns/colors
+#
+
+OCTREE = spectra.oct
+
+materials = basic.mat
+materials = spectral.mat gold.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = rect_fixture.rad
+scene = spectral_objs.rad
+objects = vase.rad vase.rtm
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = 1.5
+
+RES = 1024
+QUAL = Med
+AMB = spectra.amb
+IND = 1
+VAR = Med
+DET = Med
+PEN = False
+
+render = @render.opt -cs 18
+
+view= fish -vf fish.vf -vv 150

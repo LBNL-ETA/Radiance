@@ -1,4 +1,10 @@
-# RCSid $Id: combined.rad,v 1.13 2021/02/20 19:17:27 greg Exp $
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A collection of all our scene bits without the front caps
+#
+# xform -n i0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Basic materials used for walls, etc.
 
 void plastic wall_mat
 0
@@ -19,16 +25,21 @@ void plastic black_outside
 0
 0
 5               0.05               0.05               0.05                  0                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
 
 void metal chrome
 0
 0
 5                0.6                0.6               0.75                  1                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
 
 void metal gold
 0
 0
 5            0.99717           0.781957           0.334172                  1                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A photographed sunset taken on Nov. 6 2018, Berkeley CA
+# Artificial sun source scaled to cover circumsolar
 
 void colorpict sunset_pat
 9 red green blue sunset.hdr fisheye.cal fish_u fish_v -rz 90
@@ -54,6 +65,11 @@ sol_light source i0.bigsun
 0
 0
 4            -0.9338              -0.35              0.001                  1
+# xform -n dielectric.1 -t 0 0 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon dielectric.1.wall.b
 0
@@ -120,6 +136,14 @@ black_outside polygon dielectric.1.wall.4
                  -8               -0.1                3.1
                  -8               -0.1               -0.1
  -6.12323399574e-18               -0.1               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon dielectric.1.wall.6
 0
@@ -156,6 +180,10 @@ floor_mat polygon dielectric.1.wall.9
                  -8                  5  4.89858719659e-16
                  -8                  0  4.89858719659e-16
                   0                  0                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon dielectric.1.end_wall.b
 0
@@ -267,6 +295,17 @@ wall_mat polygon dielectric.1.end_wall.9
                -8.2                  4                  1
                -8.2                  1                  1
                  -8                  1                  1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
 
 void colorpict vase_pat
 13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 0 0
@@ -282,16 +321,25 @@ vase_clay mesh dielectric.1.vase
 17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 0 0
 0
 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
 
 void brightdata lum_dist
 19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 0 0
 0
 0
+# this is scaled by 1/area (SI)
 
 lum_dist light lum_bright
 0
 0
 3                 20                 20                 20
+# 3               1.55               1.55               1.55
 
 lum_bright polygon dielectric.1.luminaire
 0
@@ -301,6 +349,8 @@ lum_bright polygon dielectric.1.luminaire
      -4.57784968833      2.22695014728              2.999
      -4.57784968833      2.77304985273              2.999
      -3.42215031167      2.77304985272              2.999
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Pink glass pane made of two dieletric faces to fit any opening in end wall
 
 void dielectric dielectric_pink
 0
@@ -324,6 +374,11 @@ dielectric_pink polygon dielectric.1.blue_glazing
               -8.15                  5                  3
               -8.15                  5                  0
               -8.15                  0                  0
+# xform -n glass.2 -t 0 5.2 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon glass.2.wall.b
 0
@@ -390,6 +445,14 @@ black_outside polygon glass.2.wall.4
                  -8                5.1                3.1
                  -8                5.1               -0.1
  -6.12323399574e-18                5.1               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon glass.2.wall.6
 0
@@ -426,6 +489,10 @@ floor_mat polygon glass.2.wall.9
                  -8               10.2  4.89858719659e-16
                  -8                5.2  4.89858719659e-16
                   0                5.2                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon glass.2.end_wall.b
 0
@@ -537,6 +604,8 @@ wall_mat polygon glass.2.end_wall.9
                -8.2                9.2                  1
                -8.2                6.2                  1
                  -8                6.2                  1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A green metal torus with glowing red stripes
 
 void metal green_metal
 0
@@ -552,6 +621,8 @@ void mixfunc striped
 10 green_metal red_glow "if(mod(atan2(Py-A2,Px-A1),PI/10) - PI/20, 1, 0)" . -i 1 -t 0 5.2 0
 0
 3                 -4                2.5                1.5
+# xform -ry 52 -s .2 -t -4 2.5 1.5
+# genrev striped torus sin(2*PI*t) 2+cos(2*PI*t) 32 -s
 
 striped texfunc Phong
 20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.2 0
@@ -968,6 +1039,11 @@ Phong cone glass.2.torus.32
      -4.03074665433                7.7      1.47597808091
                  -4                7.7                1.5
       0.59615705608                0.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A clear glazing used to create rectangular illum at window
+# mkillum -ab 0 !oconv -i glass.oct illum_glass.rad
+#@mkillum !
+# mkillum f=glass_ill c=d d=50 s=64
 
 void glass glass_clear
 0
@@ -992,6 +1068,11 @@ illum_mat polygon glass.2.clear_glazing
                  -8                9.2                  1
                  -8                9.2                  2
                  -8                6.2                  2
+# xform -n inst.3 -t 0 10.4 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon inst.3.wall.b
 0
@@ -1058,6 +1139,14 @@ black_outside polygon inst.3.wall.4
                  -8               10.3                3.1
                  -8               10.3               -0.1
  -6.12323399574e-18               10.3               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon inst.3.wall.6
 0
@@ -1094,6 +1183,10 @@ floor_mat polygon inst.3.wall.9
                  -8               15.4  4.89858719659e-16
                  -8               10.4  4.89858719659e-16
                   0               10.4                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
 
 wall_mat polygon inst.3.end_wall.1540
 0
@@ -1148,6 +1241,10 @@ wall_mat polygon inst.3.end_wall.6457
                -8.2               10.3                3.1
                  -8               10.3                3.1
                  -8               15.5                3.1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Test of instance primitive and spaces in names and modifiers
+#
 
 void instance "inst.3.porsche #1"
 15 porsche.octf -rx 90 -s .15 -t -4 2 1 -i 1 -t 0 10.4 0
@@ -1163,6 +1260,8 @@ void ashik2 "ashik mat"
 15 porsche.octf -rx 90 -s .15 -t -4 3 1 -i 1 -t 0 10.4 0
 0
 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A pair of spotlights, one pink and one bluish
 
 void spotlight pink_spotlight
 0
@@ -1191,16 +1290,25 @@ blue_spotlight ring inst.3.bspot
                  -2               14.4                2.5
                -2.5               -1.5                 -2
                   0                0.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
 
 void brightdata lum_dist
 19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 10.4 0
 0
 0
+# this is scaled by 1/area (SI)
 
 lum_dist light lum_bright
 0
 0
 3                 20                 20                 20
+# 3               1.55               1.55               1.55
 
 lum_bright polygon inst.3.luminaire
 0
@@ -1210,6 +1318,10 @@ lum_bright polygon inst.3.luminaire
      -4.57784968833      12.6269501473              2.999
      -4.57784968833      13.1730498527              2.999
      -3.42215031167      13.1730498527              2.999
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Test of glow source with limited effect
+#
 
 void glow red_glow
 0
@@ -1220,6 +1332,7 @@ red_glow sphere inst.3.red_bulb
 0
 0
 4                 -7               11.4                  2               0.25
+# Negative influence radius means no illumination cast
 
 void glow green_glow
 0
@@ -1230,6 +1343,11 @@ green_glow sphere inst.3.green_bulb
 0
 0
 4                 -7               12.4                  2               0.25
+# xform -n mesh.4 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon mesh.4.wall.b
 0
@@ -1296,6 +1414,14 @@ black_outside polygon mesh.4.wall.4
                  -8               15.5                3.1
                  -8               15.5               -0.1
  -6.12323399574e-18               15.5               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon mesh.4.wall.6
 0
@@ -1332,6 +1458,10 @@ floor_mat polygon mesh.4.wall.9
                  -8               20.6  4.89858719659e-16
                  -8               15.6  4.89858719659e-16
                   0               15.6                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
 
 wall_mat polygon mesh.4.end_wall.1540
 0
@@ -1386,16 +1516,25 @@ wall_mat polygon mesh.4.end_wall.6457
                -8.2               15.5                3.1
                  -8               15.5                3.1
                  -8               20.7                3.1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
 
 void brightdata lum_dist
 19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 15.6 0
 0
 0
+# this is scaled by 1/area (SI)
 
 lum_dist light lum_bright
 0
 0
 3                 20                 20                 20
+# 3               1.55               1.55               1.55
 
 lum_bright polygon mesh.4.luminaire
 0
@@ -1405,96 +1544,191 @@ lum_bright polygon mesh.4.luminaire
      -4.57784968833      17.8269501473              2.999
      -4.57784968833      18.3730498527              2.999
      -3.42215031167      18.3730498527              2.999
+# xform -n mesh.plainclothes.5.0 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.0.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.1.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.2 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.2.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.3 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.3.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.4 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.4.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.5 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.5.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.6 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.6.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.7 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.7.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mesh.plainclothes.5.8 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 void mesh mesh.plainclothes.5.8.woman
 27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.0 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.0.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.1.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.2 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.2.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.3 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.3.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.4 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.4.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.5 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.5.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.6 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.6.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.7 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.7.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -m chrome -n mesh.shiny.6.8 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Mesh test with a woman model
+#
 
 chrome mesh mesh.shiny.6.8.woman
 29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0
 0
 0
+# xform -n mirror.7 -t 0 0 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon mirror.7.wall.b
 0
@@ -1561,6 +1795,14 @@ black_outside polygon mirror.7.wall.4
                  -8               -0.1                6.3
                  -8               -0.1                3.1
  -6.12323399574e-18               -0.1                3.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon mirror.7.wall.6
 0
@@ -1597,6 +1839,10 @@ floor_mat polygon mirror.7.wall.9
                  -8                  5                3.2
                  -8                  0                3.2
                   0                  0                3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
 
 wall_mat polygon mirror.7.end_wall.1540
 0
@@ -1651,6 +1897,8 @@ wall_mat polygon mirror.7.end_wall.6457
                -8.2               -0.1                6.3
                  -8               -0.1                6.3
                  -8                5.1                6.3
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A bluish glass pane to fit any opening in end wall
 
 void glass glass_blue
 0
@@ -1665,6 +1913,9 @@ glass_blue polygon mirror.7.blue_glazing
                -8.1                  5                3.2
                -8.1                  5                6.2
                -8.1                  0                6.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Antimatter to cut through window wall with round, bevelled portal
+# Couple with closed_end.rad
 
 void antimatter wall_eraser
 1 wall_mat
@@ -1694,6 +1945,9 @@ wall_eraser ring mirror.7.inner_portal
              -7.999                2.5                4.7
                   1                  0                  0
                   0                1.1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Red ball inside water cube, test for interface
+# Should match ball_in_cube.rad, but using bubble to invert normal
 
 void dielectric clear_water
 0
@@ -1706,6 +1960,8 @@ void interface red_interface
 8
         0.98         0.98         0.98         1.33
         0.98         0.05         0.02          1.6
+# xform -t -.5 -.5 -.5 -rz 17 -t -4 2.5 1.5
+# genbox clear_water watery 1 1 1
 
 clear_water polygon mirror.7.watery.1540
 0
@@ -1765,6 +2021,13 @@ red_interface bubble mirror.7.red_ruby
 0
 0
 4                 -4                2.5                4.7               0.25
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A mirror on the Y=5 wall with an alternate material having some pink diffuse
+#
+# Also used for testing rfluxmtx
+#
+#@rfluxmtx h=kf u=+Z
 
 void plastic pink_mirror_mat
 0
@@ -1784,6 +2047,11 @@ wall_mirror polygon mirror.7.mirror
                  -2               4.99                4.2
                  -2               4.99                5.2
                  -5               4.99                5.2
+# xform -n mist.8 -t 0 5.2 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon mist.8.wall.b
 0
@@ -1850,6 +2118,14 @@ black_outside polygon mist.8.wall.4
                  -8                5.1                6.3
                  -8                5.1                3.1
  -6.12323399574e-18                5.1                3.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon mist.8.wall.6
 0
@@ -1886,6 +2162,10 @@ floor_mat polygon mist.8.wall.9
                  -8               10.2                3.2
                  -8                5.2                3.2
                   0                5.2                3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
 
 wall_mat polygon mist.8.end_wall.1540
 0
@@ -1940,6 +2220,8 @@ wall_mat polygon mist.8.end_wall.6457
                -8.2                5.1                6.3
                  -8                5.1                6.3
                  -8               10.3                6.3
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Test of cylinders, tubes, and BRTDfunc material
 
 void BRTDfunc brtd_mat
 16 .1 .1 .1+if(Rdot-.8,0,.7) .1+if(RdotP-.8,.7,0) .1 .1 0 0 0 . -i 1 -t 0 5.2 3.2
@@ -1969,11 +2251,15 @@ brtd_mat cylinder mist.8.cyl3
                  -4                7.7                4.5
                  -4                7.7                4.9
                 0.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Bluish mist suffusing space
 
 void mist blue_mist
 0
 0
 7          0.1          0.1          0.4          0.9          0.9          0.9          0.3
+# xform -t -7.99 .01 .01
+# genbox blue_mist smoke 7.98 4.98 2.98
 
 blue_mist polygon mist.8.smoke.1540
 0
@@ -2028,6 +2314,8 @@ blue_mist polygon mist.8.smoke.6457
               -7.99               5.21               6.19
               -0.01               5.21               6.19
               -0.01              10.19               6.19
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A pair of spotlights, one pink and one bluish
 
 void spotlight pink_spotlight
 0
@@ -2056,6 +2344,8 @@ blue_spotlight ring mist.8.bspot
                  -2                9.2                5.7
                -2.5               -1.5                 -2
                   0                0.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Mist cones to accompany spotlights
 
 void mist blue_spot_mist
 1 mist.8.bspot
@@ -2114,6 +2404,11 @@ pink_spot_mist ring mist.8.pink_spot_end
               -6.95               9.17               1.74
                -2.5                1.5                 -2
                   0               2.13
+# xform -n prism1.9 -t 0 10.4 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon prism1.9.wall.b
 0
@@ -2180,6 +2475,14 @@ black_outside polygon prism1.9.wall.4
                  -8               10.3                6.3
                  -8               10.3                3.1
  -6.12323399574e-18               10.3                3.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon prism1.9.wall.6
 0
@@ -2216,6 +2519,10 @@ floor_mat polygon prism1.9.wall.9
                  -8               15.4                3.2
                  -8               10.4                3.2
                   0               10.4                3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon prism1.9.end_wall.b
 0
@@ -2327,6 +2634,8 @@ wall_mat polygon prism1.9.end_wall.9
                -8.2               14.4                4.2
                -8.2               11.4                4.2
                  -8               11.4                4.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A singe-direction prism
 
 void prism1 prism1mat
 13 coef1 dx1 dy1 dz1 prism.cal -rz 90 -i 1 -t 0 10.4 3.2
@@ -2341,6 +2650,18 @@ prism1mat polygon prism1.9.prism1_window
                -8.1               14.4                4.2
                -8.1               14.4                5.2
                -8.1               11.4                5.2
+# xform -m gold -n prism1.10 -t 0 10.2 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
 
 void colorpict vase_pat
 13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 10.2 3.2
@@ -2356,6 +2677,11 @@ gold mesh prism1.10.vase
 17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 10.2 3.2
 0
 0
+# xform -n prism2.11 -t 0 15.6 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon prism2.11.wall.b
 0
@@ -2422,6 +2748,14 @@ black_outside polygon prism2.11.wall.4
                  -8               15.5                6.3
                  -8               15.5                3.1
  -6.12323399574e-18               15.5                3.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon prism2.11.wall.6
 0
@@ -2458,6 +2792,10 @@ floor_mat polygon prism2.11.wall.9
                  -8               20.6                3.2
                  -8               15.6                3.2
                   0               15.6                3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon prism2.11.end_wall.b
 0
@@ -2569,6 +2907,8 @@ wall_mat polygon prism2.11.end_wall.9
                -8.2               19.6                4.2
                -8.2               16.6                4.2
                  -8               16.6                4.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A dual-direction prism
 
 void prism2 prism2mat
 17 coef1 dx1 dy1 dz1 coef2 dx2 dy2 dz2 prism.cal -rz 90 -i 1 -t 0 15.6 3.2
@@ -2583,6 +2923,18 @@ prism2mat polygon prism2.11.prism2_window
                -8.1               19.6                4.2
                -8.1               19.6                5.2
                -8.1               16.6                5.2
+# xform -m gold -n prism2.12 -t 0 15.3 3.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
 
 void colorpict vase_pat
 13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 15.3 3.2
@@ -2598,6 +2950,9 @@ gold mesh prism2.12.vase
 17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 15.3 3.2
 0
 0
+# xform -n tfunc.13 -t 0 0 6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Basic materials used for walls, etc.
 
 void plastic wall_mat
 0
@@ -2618,6 +2973,10 @@ void plastic black_outside
 0
 0
 5               0.05               0.05               0.05                  0                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon tfunc.13.wall.b
 0
@@ -2684,6 +3043,14 @@ black_outside polygon tfunc.13.wall.4
                  -8               -0.1                9.5
                  -8               -0.1                6.3
  -6.12323399574e-18               -0.1                6.3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon tfunc.13.wall.6
 0
@@ -2720,6 +3087,10 @@ floor_mat polygon tfunc.13.wall.9
                  -8                  5                6.4
                  -8                  0                6.4
                   0                  0                6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon tfunc.13.end_wall.b
 0
@@ -2831,6 +3202,8 @@ wall_mat polygon tfunc.13.end_wall.9
                -8.2                  4                7.4
                -8.2                  1                7.4
                  -8                  1                7.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Red ball inside water cube, test for interface
 
 void dielectric clear_water
 0
@@ -2843,6 +3216,8 @@ void interface red_interface
 8
         0.98         0.05         0.02          1.6
         0.98         0.98         0.98         1.33
+# xform -t -.5 -.5 -.5 -rz 17 -t -4 2.5 1.5
+# genbox clear_water watery 1 1 1
 
 clear_water polygon tfunc.13.watery.1540
 0
@@ -2902,6 +3277,9 @@ red_interface sphere tfunc.13.red_ruby
 0
 0
 4                 -4                2.5                7.9               0.25
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A transfunc window to turn into a light source with mkillum
+#@mkillum l+ f=tfunc_ill c=a d=100 s=128 i=void
 
 void transfunc tfunc_mat
 8 absdf aniso.cal -i 1 -t 0 0 6.4
@@ -2925,6 +3303,11 @@ void polygon tfunc.13.tfunc_window
                  -8                  4                7.4
                  -8                  4                8.4
                  -8                  1                8.4
+# xform -n trans.14 -t 0 5.2 6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon trans.14.wall.b
 0
@@ -2991,6 +3374,14 @@ black_outside polygon trans.14.wall.4
                  -8                5.1                9.5
                  -8                5.1                6.3
  -6.12323399574e-18                5.1                6.3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon trans.14.wall.6
 0
@@ -3027,6 +3418,10 @@ floor_mat polygon trans.14.wall.9
                  -8               10.2                6.4
                  -8                5.2                6.4
                   0                5.2                6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon trans.14.end_wall.b
 0
@@ -3138,6 +3533,11 @@ wall_mat polygon trans.14.end_wall.9
                -8.2                9.2                7.4
                -8.2                6.2                7.4
                  -8                6.2                7.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Four balls made of plastic2, metal2, plasfunc, and metfunc
+# Mixtext used to label each
+#
 
 void plastic white_mat
 0
@@ -3260,6 +3660,8 @@ metf_text polygon trans.14.metf_label
                  -4                9.2                7.3
                  -4                8.7                7.3
                  -4                8.7                7.5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A pair of spotlights, one pink and one bluish
 
 void spotlight pink_spotlight
 0
@@ -3288,16 +3690,25 @@ blue_spotlight ring trans.14.bspot
                  -2                9.2                8.9
                -2.5               -1.5                 -2
                   0                0.2
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
 
 void brightdata lum_dist
 19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 5.2 6.4
 0
 0
+# this is scaled by 1/area (SI)
 
 lum_dist light lum_bright
 0
 0
 3                 20                 20                 20
+# 3               1.55               1.55               1.55
 
 lum_bright polygon trans.14.luminaire
 0
@@ -3307,6 +3718,8 @@ lum_bright polygon trans.14.luminaire
      -4.57784968833      7.42695014728              9.399
      -4.57784968833      7.97304985273              9.399
      -3.42215031167      7.97304985272              9.399
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A yellowish trans material in our window
 
 void trans yellow_trans
 0
@@ -3321,6 +3734,11 @@ yellow_trans polygon trans.14.yellow_diffuser
                -8.1               10.2                6.4
                -8.1               10.2                9.4
                -8.1                5.2                9.4
+# xform -n trans2.15 -t 0 10.4 6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon trans2.15.wall.b
 0
@@ -3387,6 +3805,14 @@ black_outside polygon trans2.15.wall.4
                  -8               10.3                9.5
                  -8               10.3                6.3
  -6.12323399574e-18               10.3                6.3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon trans2.15.wall.6
 0
@@ -3423,6 +3849,10 @@ floor_mat polygon trans2.15.wall.9
                  -8               15.4                6.4
                  -8               10.4                6.4
                   0               10.4                6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon trans2.15.end_wall.b
 0
@@ -3534,6 +3964,8 @@ wall_mat polygon trans2.15.end_wall.9
                -8.2               14.4                7.4
                -8.2               11.4                7.4
                  -8               11.4                7.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Test of cylinders, tubes, and BRTDfunc material
 
 void BRTDfunc brtd_mat
 16 .1 .1 .1+if(Rdot-.8,0,.7) .1+if(RdotP-.8,.7,0) .1 .1 0 0 0 . -i 1 -t 0 10.4 6.4
@@ -3563,6 +3995,9 @@ brtd_mat cylinder trans2.15.cyl3
                  -4               12.9                7.7
                  -4               12.9                8.1
                 0.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A trans2 window to turn into an llum with mkillum
+#@mkillum l- f=trans2_ill c=a d=200 s=256 i=void
 
 void trans2 trans2_mat
 10 0 0 1 . -i 1 -t 0 10.4 6.4
@@ -3586,6 +4021,11 @@ void polygon trans2.15.tfunc_window
                  -8               14.4                7.4
                  -8               14.4                8.4
                  -8               11.4                8.4
+# xform -n patterns.16 -t 0 15.6 6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A set of 9 patterned materials
+#
 
 void brightfunc noisepat
 8 "1 - .35*(1+fnoise3(3*Px,3*Py,3*Pz))" . -i 1 -t 0 15.6 6.4
@@ -3616,6 +4056,7 @@ textpat alias mat1
 
 void alias mat3
 	base_mat
+# Intentionally redefining base_mat
 
 void plastic base_mat
 0
@@ -3678,6 +4119,10 @@ cfpat alias mat9
 
 inherit alias mat2
 	base_mat1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon patterns.16.wall.b
 0
@@ -3744,6 +4189,14 @@ black_outside polygon patterns.16.wall.4
                  -8               15.5                9.5
                  -8               15.5                6.3
  -6.12323399574e-18               15.5                6.3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon patterns.16.wall.6
 0
@@ -3780,6 +4233,10 @@ floor_mat polygon patterns.16.wall.9
                  -8               20.6                6.4
                  -8               15.6                6.4
                   0               15.6                6.4
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
 
 wall_mat polygon patterns.16.end_wall.1540
 0
@@ -3834,6 +4291,16 @@ wall_mat polygon patterns.16.end_wall.6457
                -8.2               15.5                9.5
                  -8               15.5                9.5
                  -8               20.7                9.5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A set of 9 disks to be painted in various modes
+#
+# xform -m mat1 -n disk1 -t -5.5 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat1 cone patterns.16.disk1.seg.1
 0
@@ -4274,6 +4741,12 @@ mat1 cone patterns.16.disk1.seg.55
                -5.5               16.6      7.54995921682
                -5.5               16.6               7.55
    0.00856785054562                  0
+# xform -m mat2 -n disk2 -t -5.5 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat2 cone patterns.16.disk2.seg.1
 0
@@ -4714,6 +5187,12 @@ mat2 cone patterns.16.disk2.seg.55
                -5.5               18.1      7.54995921682
                -5.5               18.1               7.55
    0.00856785054562                  0
+# xform -m mat3 -n disk3 -t -5.5 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat3 cone patterns.16.disk3.seg.1
 0
@@ -5154,6 +5633,12 @@ mat3 cone patterns.16.disk3.seg.55
                -5.5               19.6      7.54995921682
                -5.5               19.6               7.55
    0.00856785054562                  0
+# xform -m mat4 -n disk4 -t -4 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat4 cone patterns.16.disk4.seg.1
 0
@@ -5594,6 +6079,12 @@ mat4 cone patterns.16.disk4.seg.55
                  -4               16.6      7.54995921682
                  -4               16.6               7.55
    0.00856785054562                  0
+# xform -m mat5 -n disk5 -t -4 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat5 cone patterns.16.disk5.seg.1
 0
@@ -6034,6 +6525,12 @@ mat5 cone patterns.16.disk5.seg.55
                  -4               18.1      7.54995921682
                  -4               18.1               7.55
    0.00856785054562                  0
+# xform -m mat6 -n disk6 -t -4 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat6 cone patterns.16.disk6.seg.1
 0
@@ -6474,6 +6971,12 @@ mat6 cone patterns.16.disk6.seg.55
                  -4               19.6      7.54995921682
                  -4               19.6               7.55
    0.00856785054562                  0
+# xform -m mat7 -n disk7 -t -2.5 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat7 cone patterns.16.disk7.seg.1
 0
@@ -6914,6 +7417,12 @@ mat7 cone patterns.16.disk7.seg.55
                -2.5               16.6      7.54995921682
                -2.5               16.6               7.55
    0.00856785054562                  0
+# xform -m mat8 -n disk8 -t -2.5 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat8 cone patterns.16.disk8.seg.1
 0
@@ -7354,6 +7863,12 @@ mat8 cone patterns.16.disk8.seg.55
                -2.5               18.1      7.54995921682
                -2.5               18.1               7.55
    0.00856785054562                  0
+# xform -m mat9 -n disk9 -t -2.5 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat9 cone patterns.16.disk9.seg.1
 0
@@ -7794,16 +8309,25 @@ mat9 cone patterns.16.disk9.seg.55
                -2.5               19.6      7.54995921682
                -2.5               19.6               7.55
    0.00856785054562                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
 
 void brightdata lum_dist
 19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 15.6 6.4
 0
 0
+# this is scaled by 1/area (SI)
 
 lum_dist light lum_bright
 0
 0
 3                 20                 20                 20
+# 3               1.55               1.55               1.55
 
 lum_bright polygon patterns.16.luminaire
 0
@@ -7813,6 +8337,10 @@ lum_bright polygon patterns.16.luminaire
      -4.57784968833      17.8269501473              9.399
      -4.57784968833      18.3730498527              9.399
      -3.42215031167      18.3730498527              9.399
+# xform -n mixtex.17 -t 0 0 9.6
+#
+# A set of mixtures and textures applied to 9 materials
+#
 
 void metal2 brushed_gold
 10 0 1 0 . -i 1 -t 0 0 9.6
@@ -7874,6 +8402,10 @@ void transdata mat4
 10 noop tcutoff.dat maxang.cal maxang -i 1 -t 0 0 9.6
 0
 6                0.9                0.9                0.9               0.07                0.9                  1
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
 
 black_outside polygon mixtex.17.wall.b
 0
@@ -7940,6 +8472,14 @@ black_outside polygon mixtex.17.wall.4
                  -8               -0.1               12.7
                  -8               -0.1                9.5
  -6.12323399574e-18               -0.1                9.5
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
 
 wall_mat polygon mixtex.17.wall.6
 0
@@ -7976,6 +8516,8 @@ floor_mat polygon mixtex.17.wall.9
                  -8                  5                9.6
                  -8                  0                9.6
                   0                  0                9.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A bluish glass pane to fit any opening in end wall
 
 void glass glass_blue
 0
@@ -7990,6 +8532,12 @@ glass_blue polygon mixtex.17.blue_glazing
                -8.1                  5                9.6
                -8.1                  5               12.6
                -8.1                  0               12.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Venetian blinds with BSDF in rectangular window
+#@mkillum f=blinds_ill c=d d=200 s=100 i=m_blinds20c_f
+# xform -rz 90 -ry 90 -t -8.04 2.5 1.5
+# Produced by: pkgBSDF blinds20c.xml
+# Material 'Green specular venetian blinds at 20 degree angle' by 'Greg Ward'
 
 void BSDF m_blinds20c_f
 22 0.0375926 blinds20c.xml 0 1 0 . -i 1 -rz 90 -ry 90 -t -8.04 2.5 1.5 -i 1 -t 0 0 9.6
@@ -8018,6 +8566,10 @@ m_blinds20c_b polygon mixtex.17.blinds20c_b
         -8.07759185                  4         10.6131551
         -8.07759185                  4         11.5868449
         -8.07759185                  1         11.5868449
+## Translated from MGF Version 2.0
+## mgf2rad
+## mgf2rad /tmp/rtAhkTMq ##############################
+# Y-axis points "up", Z-axis into room, right-handed coordinates
 
 void plastic MagentaPlastic
 0
@@ -8622,6 +9174,10 @@ SpecularGreen polygon mixtex.17.VenetianBlinds.a32.gSlat.f66
      -8.07759112503                  4      11.5731645912
       -8.0400034202                  4      11.5868453969
       -8.0400034202                  1      11.5868453969
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
 
 wall_mat polygon mixtex.17.end_wall.b
 0
@@ -8733,6 +9289,16 @@ wall_mat polygon mixtex.17.end_wall.9
                -8.2                  4               10.6
                -8.2                  1               10.6
                  -8                  1               10.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A set of 9 disks to be painted in various modes
+#
+# xform -m mat1 -n disk1 -t -5.5 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat1 cone mixtex.17.disk1.seg.1
 0
@@ -9173,6 +9739,12 @@ mat1 cone mixtex.17.disk1.seg.55
                -5.5                  1      10.7499592168
                -5.5                  1              10.75
    0.00856785054562                  0
+# xform -m mat2 -n disk2 -t -5.5 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat2 cone mixtex.17.disk2.seg.1
 0
@@ -9613,6 +10185,12 @@ mat2 cone mixtex.17.disk2.seg.55
                -5.5                2.5      10.7499592168
                -5.5                2.5              10.75
    0.00856785054562                  0
+# xform -m mat3 -n disk3 -t -5.5 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat3 cone mixtex.17.disk3.seg.1
 0
@@ -10053,6 +10631,12 @@ mat3 cone mixtex.17.disk3.seg.55
                -5.5                  4      10.7499592168
                -5.5                  4              10.75
    0.00856785054562                  0
+# xform -m mat4 -n disk4 -t -4 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat4 cone mixtex.17.disk4.seg.1
 0
@@ -10493,6 +11077,12 @@ mat4 cone mixtex.17.disk4.seg.55
                  -4                  1      10.7499592168
                  -4                  1              10.75
    0.00856785054562                  0
+# xform -m mat5 -n disk5 -t -4 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat5 cone mixtex.17.disk5.seg.1
 0
@@ -10933,6 +11523,12 @@ mat5 cone mixtex.17.disk5.seg.55
                  -4                2.5      10.7499592168
                  -4                2.5              10.75
    0.00856785054562                  0
+# xform -m mat6 -n disk6 -t -4 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat6 cone mixtex.17.disk6.seg.1
 0
@@ -11373,6 +11969,12 @@ mat6 cone mixtex.17.disk6.seg.55
                  -4                  4      10.7499592168
                  -4                  4              10.75
    0.00856785054562                  0
+# xform -m mat7 -n disk7 -t -2.5 1 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat7 cone mixtex.17.disk7.seg.1
 0
@@ -11813,6 +12415,12 @@ mat7 cone mixtex.17.disk7.seg.55
                -2.5                  1      10.7499592168
                -2.5                  1              10.75
    0.00856785054562                  0
+# xform -m mat8 -n disk8 -t -2.5 2.5 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat8 cone mixtex.17.disk8.seg.1
 0
@@ -12253,6 +12861,12 @@ mat8 cone mixtex.17.disk8.seg.55
                -2.5                2.5      10.7499592168
                -2.5                2.5              10.75
    0.00856785054562                  0
+# xform -m mat9 -n disk9 -t -2.5 4 .5
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A rounded saucer for material testing
+#
+# genrev mat seg -.25+.9*cos(PI/6*(1-t)) .9*sin(PI/6*(1-t)) 55
 
 mat9 cone mixtex.17.disk9.seg.1
 0
@@ -12693,6 +13307,10 @@ mat9 cone mixtex.17.disk9.seg.55
                -2.5                  4      10.7499592168
                -2.5                  4              10.75
    0.00856785054562                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Multiple light sources for material models
+#
 
 void light bright
 0
@@ -12748,3 +13366,370 @@ bright sphere mixtex.17.bulb9
 0
 0
 4     -2.30106431181      1.26565097019               12.4               0.03
+# xform -n spectra.18 -t 0 5.2 9.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Basic materials used for walls, etc.
+
+void plastic wall_mat
+0
+0
+5                0.5                0.5                0.5                  0                  0
+
+void plastic ceil_mat
+0
+0
+5                0.7                0.7                0.7                  0                  0
+
+void plastic floor_mat
+0
+0
+5                0.3                0.2                0.1               0.02               0.04
+
+void plastic black_outside
+0
+0
+5               0.05               0.05               0.05                  0                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Spectral material definitions
+#
+
+void spectrum gold_spec
+0
+0
+82                380                775        0.389133964        0.389133964        0.389255302        0.389980986        0.391051245        0.392138273        0.392908482        0.393032534        0.392429968        0.391351324        0.390030615        0.388650157        0.387407915        0.386320218        0.385530031        0.385510124        0.386040307        0.386026057        0.388298949        0.394215681        0.404140535        0.419966115        0.443246002        0.473861019        0.511014174        0.552643396        0.596304788        0.639685049        0.682955923        0.723645597        0.759200442        0.789126545        0.813469177        0.832955943        0.848265499        0.860485356        0.870549939        0.878925721        0.885276016        0.891159039        0.896546999        0.901393946        0.905636686        0.909327028        0.912475235         0.91521538        0.917680109        0.919998384        0.922297675        0.924966158        0.927728576        0.930571538        0.933477024        0.936421086        0.939377245        0.942439249        0.945588396        0.948563802        0.951319598        0.953828111        0.956075841        0.958059262        0.959789105        0.961306963         0.96261608        0.963753124        0.964748535        0.965627808        0.966413149         0.96712339        0.967778124        0.968398351        0.968976934        0.969517604        0.970024269        0.970500409        0.970949021        0.971372989        0.971775043        0.972157635
+
+void specfile copper_spec
+1 copper_spec.dat
+0
+0
+# Third real argument is bandwidth and determines brightness/saturation
+
+void specfunc rainbow_spec
+14 xrainbow rainbow.cal -s 4 -t -6 0 0 -i 1 -t 0 5.2 9.6
+0
+3                380                780                 30
+
+gold_spec metal gold_smat
+0
+0
+5                  1                  1                  1                  1                  0
+
+copper_spec metal copper_smat
+0
+0
+5                  1                  1                  1                  1                  0
+
+rainbow_spec plastic rainbow_smat
+0
+0
+5                  1                  1                  1                  0                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+
+void metal gold
+0
+0
+5            0.99717           0.781957           0.334172                  1                  0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon spectra.18.wall.b
+0
+0
+30
+ -6.12323399574e-18                5.1                9.5
+ -6.12323399574e-18               10.3                9.5
+  1.89820253868e-16               10.3               12.7
+  1.89820253868e-16                5.1               12.7
+ -6.12323399574e-18                5.1                9.5
+                  0                5.2                9.6
+  1.83697019872e-16                5.2               12.6
+  1.83697019872e-16               10.2               12.6
+                  0               10.2                9.6
+                  0                5.2                9.6
+
+black_outside polygon spectra.18.wall.t
+0
+0
+30
+                 -8                5.2                9.6
+                 -8               10.2                9.6
+                 -8               10.2               12.6
+                 -8                5.2               12.6
+                 -8                5.2                9.6
+                 -8                5.1                9.5
+                 -8                5.1               12.7
+                 -8               10.3               12.7
+                 -8               10.3                9.5
+                 -8                5.1                9.5
+
+black_outside polygon spectra.18.wall.1
+0
+0
+12
+ -6.12323399574e-18                5.1                9.5
+                 -8                5.1                9.5
+                 -8               10.3                9.5
+ -6.12323399574e-18               10.3                9.5
+
+black_outside polygon spectra.18.wall.2
+0
+0
+12
+ -6.12323399574e-18               10.3                9.5
+                 -8               10.3                9.5
+                 -8               10.3               12.7
+  1.89820253868e-16               10.3               12.7
+
+black_outside polygon spectra.18.wall.3
+0
+0
+12
+  1.89820253868e-16               10.3               12.7
+                 -8               10.3               12.7
+                 -8                5.1               12.7
+  1.89820253868e-16                5.1               12.7
+
+black_outside polygon spectra.18.wall.4
+0
+0
+12
+  1.89820253868e-16                5.1               12.7
+                 -8                5.1               12.7
+                 -8                5.1                9.5
+ -6.12323399574e-18                5.1                9.5
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon spectra.18.wall.6
+0
+0
+12
+                  0                5.2                9.6
+                 -8                5.2                9.6
+                 -8                5.2               12.6
+  1.83697019872e-16                5.2               12.6
+
+ceil_mat polygon spectra.18.wall.7
+0
+0
+12
+  1.83697019872e-16                5.2               12.6
+                 -8                5.2               12.6
+                 -8               10.2               12.6
+  1.83697019872e-16               10.2               12.6
+
+wall_mat polygon spectra.18.wall.8
+0
+0
+12
+  1.83697019872e-16               10.2               12.6
+                 -8               10.2               12.6
+                 -8               10.2                9.6
+                  0               10.2                9.6
+
+floor_mat polygon spectra.18.wall.9
+0
+0
+12
+                  0               10.2                9.6
+                 -8               10.2                9.6
+                 -8                5.2                9.6
+                  0                5.2                9.6
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
+
+wall_mat polygon spectra.18.end_wall.1540
+0
+0
+12
+                 -8                5.1                9.5
+                 -8                5.1               12.7
+               -8.2                5.1               12.7
+               -8.2                5.1                9.5
+
+wall_mat polygon spectra.18.end_wall.4620
+0
+0
+12
+               -8.2                5.1               12.7
+               -8.2               10.3               12.7
+               -8.2               10.3                9.5
+               -8.2                5.1                9.5
+
+wall_mat polygon spectra.18.end_wall.2310
+0
+0
+12
+               -8.2               10.3                9.5
+                 -8               10.3                9.5
+                 -8                5.1                9.5
+               -8.2                5.1                9.5
+
+wall_mat polygon spectra.18.end_wall.3267
+0
+0
+12
+                 -8               10.3                9.5
+               -8.2               10.3                9.5
+               -8.2               10.3               12.7
+                 -8               10.3               12.7
+
+wall_mat polygon spectra.18.end_wall.5137
+0
+0
+12
+                 -8                5.1               12.7
+                 -8                5.1                9.5
+                 -8               10.3                9.5
+                 -8               10.3               12.7
+
+wall_mat polygon spectra.18.end_wall.6457
+0
+0
+12
+               -8.2               10.3               12.7
+               -8.2                5.1               12.7
+                 -8                5.1               12.7
+                 -8               10.3               12.7
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
+
+void brightdata lum_dist
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 5.2 9.6
+0
+0
+# this is scaled by 1/area (SI)
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+# 3               1.55               1.55               1.55
+
+lum_bright polygon spectra.18.luminaire
+0
+0
+12
+     -3.42215031167      7.42695014727             12.599
+     -4.57784968833      7.42695014728             12.599
+     -4.57784968833      7.97304985273             12.599
+     -3.42215031167      7.97304985272             12.599
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# A few spectral test objects
+#
+# xform -m gold -t 0 -1 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 -1 0 -i 1 -t 0 5.2 9.6
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+gold mesh spectra.18.vase
+23 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 -1 0 -i 1 -t 0 5.2 9.6
+0
+0
+# xform -m gold_smat -t 0 1 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 1 0 -i 1 -t 0 5.2 9.6
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+gold_smat mesh spectra.18.vase
+23 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 1 0 -i 1 -t 0 5.2 9.6
+0
+0
+# xform -m copper_smat -t 1 0 0
+# RCSid $Id: combined.rad,v 1.14 2023/11/17 21:22:27 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 1 0 0 -i 1 -t 0 5.2 9.6
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+copper_smat mesh spectra.18.vase
+23 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 1 0 0 -i 1 -t 0 5.2 9.6
+0
+0
+
+rainbow_smat polygon spectra.18.rainbow1
+0
+0
+12
+                 -6               5.21               10.6
+                 -2               5.21               10.6
+                 -2               5.21               11.6
+                 -6               5.21               11.6
+
+rainbow_smat polygon spectra.18.rainbow2
+0
+0
+12
+                 -6              10.19               11.6
+                 -2              10.19               11.6
+                 -2              10.19               10.6
+                 -6              10.19               10.6
