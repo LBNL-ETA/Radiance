@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.60 2023/07/11 02:22:30 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.61 2023/11/17 20:36:50 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -153,6 +153,18 @@ main(
 					fprintf(stderr, "%s: -pm unsupported\n",
 						argv[0]);
 					++i;
+					continue;
+				}
+				if (argv[i][2] == 'X') {
+					fprintf(stderr, "%s: -pXYZ unsupported\n",
+						argv[0]);
+					++i;
+					continue;
+				}
+				if (argv[i][2] == 'c') {
+					fprintf(stderr, "%s: -pc unsupported\n",
+						argv[0]);
+					i += 9;
 					continue;
 				}
 				if (argv[i][2] != 'a' || argv[i][3])
