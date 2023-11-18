@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.23 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.24 2023/11/18 18:14:26 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -321,7 +321,7 @@ getrenderopt(		/* get next render option */
 			check(3,"ff");
 			WLPART[0] = atof(av[1]);
 			WLPART[3] = atof(av[2]);
-			return(1);
+			return(2);
 		}
 		break;
 #endif
