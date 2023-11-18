@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.108 2023/11/18 16:21:58 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.109 2023/11/18 16:24:06 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -87,7 +87,7 @@ static double nextray(FVECT org, FVECT dir);
 static void tabin(RAY *r);
 static void ourtrace(RAY *r);
 
-static void  putscolor(const COLORV *scol);
+static void  putscolor(COLORV *scol);
 
 static oputf_t *ray_out[32], *every_out[32];
 static putf_t *putreal;
@@ -959,7 +959,7 @@ putf(RREAL *v, int n)		/* output binary float(s) */
 
 
 static void
-putscolor(const COLORV *scol)		/* output (spectral) color */
+putscolor(COLORV *scol)		/* output (spectral) color */
 {
 	static COLORMAT	xyz2myrgbmat;
 	SCOLOR		my_scol;
