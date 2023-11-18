@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.107 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.108 2023/11/18 16:21:58 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -253,6 +253,8 @@ setrtoutput(void)			/* set up output tables, return #comp */
 	case 'c':
 		if (outvals[1] || !strchr("vrx", outvals[0]))
 			error(USER, "color format only with -ov, -or, -ox");
+		if (nco < 3)
+			error(USER, "color format incompatible with -pY, -pS, -pM");
 		break;
 	default:
 		error(CONSISTENCY, "botched output format");
