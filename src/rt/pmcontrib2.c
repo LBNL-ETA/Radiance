@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmcontrib2.c,v 2.5 2018/11/08 00:54:07 greg Exp $";
+static const char RCSid[] = "$Id: pmcontrib2.c,v 2.6 2023/11/19 00:43:00 greg Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmcontrib2.c,v 2.5 2018/11/08 00:54:07 greg Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmcontrib2.c,v 2.5 2018/11/08 00:54:07 greg Exp $
+   $Id: pmcontrib2.c,v 2.6 2023/11/19 00:43:00 greg Exp $
 */
 
 
@@ -108,7 +108,7 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
    unsigned                i;
    PhotonSearchQueueNode   *sqn;
    float                   r2, invArea;
-   RREAL                   rayCoeff [3];
+   SCOLOR                   rayCoeff;
    Photon                  *photon;
    static char             warnPos = 1, warnDir = 1;
  
@@ -238,8 +238,8 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
                flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j] : 0;
          }
                      
-         multcolor(flux, rayCoeff);
-         addcolor(srcContrib -> cbin [srcBin], flux);
+         multscolor(flux, rayCoeff);
+         saddcolor(mcbin(srcContrib,srcBin), flux);
       }
    }
         
