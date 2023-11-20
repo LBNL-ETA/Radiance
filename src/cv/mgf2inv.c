@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 2.4 2014/03/06 00:40:37 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 2.5 2023/11/20 18:32:11 greg Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -16,6 +16,8 @@ static const char	RCSid[] = "$Id: mgf2inv.c,v 2.4 2014/03/06 00:40:37 greg Exp $
 #include <ctype.h>
 
 #include <string.h>
+
+#include "color.h"
 
 #include "mgf_parser.h"
 
