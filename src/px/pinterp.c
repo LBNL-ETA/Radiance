@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.50 2020/05/14 20:51:02 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.51 2023/11/20 21:44:29 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -72,7 +72,7 @@ COLR	backcolr = BLKCOLR;		/* background color */
 COLOR	backcolor = BLKCOLOR;		/* background color (float) */
 double	backz = 0.0;			/* background z value */
 int	normdist = 1;			/* i/o normalized distance? */
-char	ourfmt[LPICFMT+1] = PICFMT;	/* original picture format */
+char	ourfmt[MAXFMTLEN] = PICFMT;	/* original picture format */
 double	ourexp = -1;			/* original picture exposure */
 int	expadj = 0;			/* exposure adjustment (f-stops) */
 double	rexpadj = 1;			/* real exposure adjustment */

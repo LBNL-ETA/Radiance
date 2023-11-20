@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.39 2021/09/02 16:10:01 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.40 2023/11/20 21:44:29 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -61,7 +61,7 @@ struct {
 int  nfile;			/* number of files */
 
 int  echoheader = 1;
-char  ourfmt[LPICFMT+1] = PICFMT;
+char  ourfmt[MAXFMTLEN] = PICFMT;
 int  wrongformat = 0;
 double	common_expos = 1.;
 

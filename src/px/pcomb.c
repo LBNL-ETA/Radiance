@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.55 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.56 2023/11/20 21:44:29 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -33,7 +33,7 @@ int	nfiles;				/* number of input files */
 
 VIEW	*commvp = NULL;			/* common view parameters */
 
-char	ourfmt[LPICFMT+1] = PICFMT;	/* input picture format */
+char	ourfmt[MAXFMTLEN] = PICFMT;	/* input picture format */
 
 char	StandardInput[] = "<stdin>";
 char	Command[] = "<Command>";
