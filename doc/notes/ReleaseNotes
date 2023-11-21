@@ -2630,3 +2630,6 @@ tools were broken in the initial release.  (Hopefully, they are
 working now, but none have been tested as yet.)
 There was also an indexing bug in the spectral->RGB conversions
 that made reds into blues and vice versa, which has been fixed.
+
+Added i/o for spectral pictures to rmtxop, the first program that can
+ingest them.  (Only rtrace, rcontrib, and rfluxmtx can render them.)
