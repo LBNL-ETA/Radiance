@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: resolu.c,v 2.8 2023/06/21 15:43:16 greg Exp $";
+static const char	RCSid[] = "$Id: resolu.c,v 2.9 2023/11/21 18:47:03 greg Exp $";
 #endif
 /*
  * Read and write image resolutions.
@@ -19,10 +19,11 @@ char  resolu_buf[RESOLU_BUFLEN];	/* resolution line buffer */
 
 
 void
-fputresolu(ord, sl, ns, fp)		/* put out picture dimensions */
-int  ord;			/* scanline ordering */
-int  sl, ns;			/* scanline length and number */
-FILE  *fp;
+fputresolu(				/* put out picture dimensions */
+	int  ord,		/* scanline ordering */
+	int  sl, int ns,	/* scanline length and number */
+	FILE  *fp
+)
 {
 	RESOLU  rs;
 
@@ -38,9 +39,10 @@ FILE  *fp;
 
 
 int
-fgetresolu(sl, ns, fp)			/* get picture dimensions */
-int  *sl, *ns;			/* scanline length and number */
-FILE  *fp;
+fgetresolu(				/* get picture dimensions */
+	int  *sl, int *ns,		/* scanline length and number */
+	FILE  *fp
+)
 {
 	RESOLU  rs;
 
@@ -58,9 +60,10 @@ FILE  *fp;
 
 
 char *
-resolu2str(buf, rp)		/* convert resolution struct to line */
-char  *buf;
-register RESOLU  *rp;
+resolu2str(			/* convert resolution struct to line */
+	char  *buf,
+	RESOLU  *rp
+)
 {
 	if (rp->rt&YMAJOR)
 		sprintf(buf, "%cY %8d %cX %8d\n",
@@ -75,12 +78,13 @@ register RESOLU  *rp;
 
 
 int
-str2resolu(rp, buf)		/* convert resolution line to struct */
-register RESOLU  *rp;
-char  *buf;
+str2resolu(			/* convert resolution line to struct */
+	RESOLU  *rp,
+	char  *buf
+)
 {
-	register char  *xndx, *yndx;
-	register char  *cp;
+	char  *xndx, *yndx;
+	char  *cp;
 
 	if (buf == NULL)
 		return(0);
