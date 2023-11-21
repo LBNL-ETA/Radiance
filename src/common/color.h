@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.39 2023/11/17 20:02:07 greg Exp $ */
+/* RCSid $Id: color.h,v 2.40 2023/11/21 01:30:20 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -239,8 +239,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  COLRFMT		"32-bit_rle_rgbe"
 #define  CIEFMT			"32-bit_rle_xyze"
 #define  PICFMT			"32-bit_rle_???e"	/* matches either */
-#define  SPECFMT		"Radiance_rle_spectra"	/* spectral data w/ exponent */
-#define  LPICFMT		21			/* max format id len */
+#define  SPECFMT		"Radiance_spectra"	/* spectral data w/ exponent */
 
 				/* Number of spectral components */
 #define  NCOMPSTR		"NCOMP="
@@ -340,12 +339,12 @@ extern void	convertscolor(SCOLOR dst, int dnc, double dwl0, double dwl1,
 				/* compare scolor_rgb() and scolor_cie() */
 				/* also, pcolor_color() and pcolor_colr() */
 extern void	setscolor(SCOLOR scol, double r, double g, double b);
-extern void	scolor2color(COLOR col, SCOLOR scol, int ncs, float wlpt[4]);
-extern void	scolor2colr(COLR clr, SCOLOR scol, int ncs, float wlpt[4]);
+extern void	scolor2color(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolor2colr(COLR clr, SCOLOR scol, int ncs, const float wlpt[4]);
 extern void	scolor2scolr(SCOLR sclr, SCOLOR scol, int ncs);
 extern void	colr_color(COLOR col, COLR clr);
 extern void	scolr2scolor(SCOLOR scol, SCOLR sclr, int ncs);
-extern void	scolr2color(COLOR col, SCOLR sclr, int ncs, float wlpt[4]);
+extern void	scolr2color(COLOR col, SCOLR sclr, int ncs, const float wlpt[4]);
 extern void	colr_scolor(SCOLOR scol, COLR clr);
 extern void	setcolr(COLR clr, double r, double g, double b);
 extern void	setscolr(SCOLR sclr, double r, double g, double b);
@@ -372,8 +371,8 @@ extern int	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
 					/* most accurate spectral->tristim */
-extern void	scolor2cie(COLOR col, SCOLOR scol, int ncs, float wlpt[4]);
-extern void	scolor2rgb(COLOR col, SCOLOR scol, int ncs, float wlpt[4]);
+extern void	scolor2cie(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolor2rgb(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
 extern double	scolor_photopic(SCOLOR scol);
 extern double	scolor_scotopic(SCOLOR scol);
 extern double	scolor_melanopic(SCOLOR scol);

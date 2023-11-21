@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.28 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.29 2023/11/21 01:30:20 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -278,7 +278,7 @@ static double
 spec_dot(			/* spectrum dot-product with cumulative observer */
 	SCOLOR scol,
 	int  ncs,
-	float wlpt[4],
+	const float wlpt[4],
 	const unsigned short cumul[],
 	int  wlmin,
 	int  wlmax
@@ -313,7 +313,7 @@ scolor2cie(			/* accurate conversion from spectrum to XYZ */
 	COLOR col,
 	SCOLOR scol,
 	int ncs,
-	float wlpt[4]
+	const float wlpt[4]
 )
 {
 	if (ncs == 3) {		/* not a spectrum! */
@@ -331,7 +331,7 @@ scolor2rgb(			/* accurate conversion from spectrum to RGB */
 	COLOR col,
 	SCOLOR scol,
 	int ncs,
-	float wlpt[4]
+	const float wlpt[4]
 )
 {
 	COLOR	ciecolor;

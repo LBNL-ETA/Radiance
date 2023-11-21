@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.59 2023/07/01 15:25:26 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.60 2023/11/21 01:30:20 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.59 2023/07/01 15:25:26 greg Exp 
 #include <sys/mman.h>
 #endif
 
-static char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
+static const char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
 
 #define array_size(rm)	(sizeof(double)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
 #define mapped_size(rm)	((char *)(rm)->mtx + array_size(rm) - (char *)(rm)->mapped)
@@ -25,14 +25,19 @@ static char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
 RMATRIX *
 rmx_new(int nr, int nc, int n)
 {
-	RMATRIX	*dnew = (RMATRIX *)calloc(1, sizeof(RMATRIX));
+	RMATRIX	*dnew;
 
+	if (n <= 0)
+		return(NULL);
+
+	dnew = (RMATRIX *)calloc(1, sizeof(RMATRIX));
 	if (dnew) {
 		dnew->dtype = DTdouble;
 		dnew->nrows = nr;
 		dnew->ncols = nc;
 		dnew->ncomp = n;
 		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
+		memcpy(dnew->wlpart, WLPART, sizeof(dnew->wlpart));
 	}
 	return(dnew);
 }
@@ -44,6 +49,8 @@ rmx_prepare(RMATRIX *rm)
 	if (!rm) return(0);
 	if (rm->mtx)
 		return(1);
+	if ((rm->nrows <= 0) | (rm->ncols <= 0) | (rm->ncomp <= 0))
+		return(0);
 	rm->mtx = (double *)malloc(array_size(rm));
 	return(rm->mtx != NULL);
 }
@@ -81,8 +88,8 @@ rmx_free(RMATRIX *rm)
 int
 rmx_newtype(int dtyp1, int dtyp2)
 {
-	if ((dtyp1==DTxyze) | (dtyp1==DTrgbe) |
-			(dtyp2==DTxyze) | (dtyp2==DTrgbe)
+	if ((dtyp1==DTxyze) | (dtyp1==DTrgbe) | (dtyp1==DTspec) |
+			(dtyp2==DTxyze) | (dtyp2==DTrgbe) | (dtyp2==DTspec)
 			&& dtyp1 != dtyp2)
 		return(0);
 	if (dtyp1 < dtyp2)
@@ -121,8 +128,8 @@ get_dminfo(char *s, void *p)
 
 	if (headidval(NULL, s))
 		return(0);
-	if (!strncmp(s, "NCOMP=", 6)) {
-		ip->ncomp = atoi(s+6);
+	if (isncomp(s)) {
+		ip->ncomp = ncompval(s);
 		return(0);
 	}
 	if (!strncmp(s, "NROWS=", 6)) {
@@ -146,6 +153,10 @@ get_dminfo(char *s, void *p)
 		COLOR	ctmp;
 		colcorval(ctmp, s);
 		multcolor(ip->cexp, ctmp);
+		return(0);
+	}
+	if (iswlsplit(s)) {
+		wlsplitval(ip->wlpart, s);
 		return(0);
 	}
 	if (!formatval(fmt, s)) {
@@ -239,8 +250,10 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 
 	if (!scan)
 		return(0);
-	if (!rmx_prepare(rm))
+	if (!rmx_prepare(rm)) {
+		free(scan);
 		return(0);
+	}
 	for (i = 0; i < rm->nrows; i++) {
 	    double	*dp = rmx_lval(rm,i,0);
 	    if (freadscan(scan, rm->ncols, fp) < 0) {
@@ -251,6 +264,38 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 	        dp[0] = colval(scan[j],RED);
 	        dp[1] = colval(scan[j],GRN);
 	        dp[2] = colval(scan[j],BLU);
+	    }
+	}
+	free(scan);
+	return(1);
+}
+
+static int
+rmx_load_spec(RMATRIX *rm, FILE *fp)
+{
+	uby8	*scan;
+	SCOLOR	scol;
+	int	i, j, k;
+
+	if (rm->ncomp < 3)
+		return(0);
+	scan = (uby8 *)malloc((rm->ncomp+1)*rm->ncols);
+	if (!scan)
+		return(0);
+	if (!rmx_prepare(rm)) {
+		free(scan);
+		return(0);
+	}
+	for (i = 0; i < rm->nrows; i++) {
+	    double	*dp = rmx_lval(rm,i,0);
+	    if (freadscolrs(scan, rm->ncomp, rm->ncols, fp) < 0) {
+		free(scan);
+		return(0);
+	    }
+	    for (j = 0; j < rm->ncols; j++) {
+	    	scolr2scolor(scol, scan+j*(rm->ncomp+1), rm->ncomp);
+	    	for (k = 0; k < rm->ncomp; k++)
+	    		*dp++ = scol[k];
 	    }
 	}
 	free(scan);
@@ -339,6 +384,10 @@ rmx_load(const char *inspec, RMPref rmp)
 		if (!rmx_load_rgbe(dnew, fp))
 			goto loaderr;
 		break;
+	case DTspec:
+		if (!rmx_load_spec(dnew, fp))
+			goto loaderr;
+		break;
 	default:
 		goto loaderr;
 	}
@@ -353,12 +402,17 @@ rmx_load(const char *inspec, RMPref rmp)
 		funlockfile(fp);
 #endif
 						/* undo exposure? */
-	if (dnew->ncomp == 3 && (dnew->cexp[0] != 1.f) |
+	if ((dnew->cexp[0] != 1.f) |
 			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
-		double	cmlt[3];
+		double	cmlt[MAXCSAMP];
+		int	i;
 		cmlt[0] = 1./dnew->cexp[0];
 		cmlt[1] = 1./dnew->cexp[1];
 		cmlt[2] = 1./dnew->cexp[2];
+		if (dnew->ncomp > MAXCSAMP)
+			goto loaderr;
+		for (i = dnew->ncomp; i-- > 3; )
+			cmlt[i] = cmlt[1];
 		rmx_scale(dnew, cmlt);
 		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
 	}
@@ -376,8 +430,8 @@ static int
 rmx_write_ascii(const RMATRIX *rm, FILE *fp)
 {
 	const char	*fmt = (rm->dtype == DTfloat) ? " %.7e" :
-			(rm->dtype == DTrgbe) | (rm->dtype == DTxyze) ? " %.3e" :
-				" %.15e" ;
+			(rm->dtype == DTrgbe) | (rm->dtype == DTxyze) |
+			(rm->dtype == DTspec) ? " %.3e" : " %.15e" ;
 	int	i, j, k;
 
 	for (i = 0; i < rm->nrows; i++) {
@@ -450,6 +504,35 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
+static int
+rmx_write_spec(const RMATRIX *rm, FILE *fp)
+{
+	int	prevNCSAMP = NCSAMP;
+	uby8	*scan = (uby8 *)malloc((rm->ncomp+1)*rm->ncols);
+	int	ok = 1;
+	SCOLOR	scol;
+	int	i, j, k;
+
+	if (!scan)
+		return(0);
+	NCSAMP = rm->ncomp;		/* XXX: kosher? */
+	for (i = 0; i < rm->nrows; i++) {
+	    for (j = rm->ncols; j--; ) {
+	    	const double	*dp = rmx_lval(rm,i,j);
+	    	for (k = NCSAMP; k--; )
+	    		scol[k] = dp[k];
+		scolor2scolr(scan+j*(NCSAMP+1), scol, NCSAMP);
+	    }
+	    if (fwritescolrs(scan, rm->ncols, fp) < 0) {
+		ok = 0;
+		break;
+	    }
+	}
+	free(scan);
+	NCSAMP = prevNCSAMP;
+	return(ok);
+}
+
 /* Check if CIE XYZ primaries were specified */
 static int
 findCIEprims(const char *info)
@@ -488,17 +571,22 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
-	if (rm->ncomp == 3) {			/* write exposure? */
-		if ((rm->cexp[RED] != rm->cexp[GRN]) |
-				(rm->cexp[GRN] != rm->cexp[BLU]))
-			fputcolcor(rm->cexp, fp);
-		else if (rm->cexp[GRN] != 1.f)
-			fputexpos(rm->cexp[GRN], fp);
-	}
+						/* write exposure? */
+	if (rm->ncomp == 3 && (rm->cexp[RED] != rm->cexp[GRN]) |
+			(rm->cexp[GRN] != rm->cexp[BLU]))
+		fputcolcor(rm->cexp, fp);
+	else if (rm->cexp[GRN] != 1.f)
+		fputexpos(rm->cexp[GRN], fp);
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
-		fprintf(fp, "NROWS=%d\n", rm->nrows);
-		fprintf(fp, "NCOLS=%d\n", rm->ncols);
-		fprintf(fp, "NCOMP=%d\n", rm->ncomp);
+		if (dtype == DTspec) {
+			if (rm->ncomp < 3)
+				return(0);	/* bad # components */
+			fputwlsplit(rm->wlpart, fp);
+		} else {
+			fprintf(fp, "NROWS=%d\n", rm->nrows);
+			fprintf(fp, "NCOLS=%d\n", rm->ncols);
+		}
+		fputncomp(rm->ncomp, fp);
 	} else if ((rm->ncomp != 3) & (rm->ncomp != 1))
 		return(0);			/* wrong # components */
 	if ((dtype == DTfloat) | (dtype == DTdouble))
@@ -519,6 +607,10 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 	case DTxyze:
 		fprtresolu(rm->ncols, rm->nrows, fp);
 		ok = rmx_write_rgbe(rm, fp);
+		break;
+	case DTspec:
+		fprtresolu(rm->ncols, rm->nrows, fp);
+		ok = rmx_write_spec(rm, fp);
 		break;
 	default:
 		return(0);
@@ -561,6 +653,8 @@ rmx_copy(const RMATRIX *rm)
 		return(NULL);
 	rmx_addinfo(dnew, rm->info);
 	dnew->dtype = rm->dtype;
+	copycolor(dnew->cexp, rm->cexp);
+	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
 	memcpy(dnew->mtx, rm->mtx, array_size(dnew));
 	return(dnew);
 }
@@ -590,6 +684,8 @@ rmx_transpose(const RMATRIX *rm)
 		rmx_addinfo(dnew, "Transposed rows and columns\n");
 	}
 	dnew->dtype = rm->dtype;
+	copycolor(dnew->cexp, rm->cexp);
+	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
 	for (j = dnew->ncols; j--; )
 	    for (i = dnew->nrows; i--; )
 	    	memcpy(rmx_lval(dnew,i,j), rmx_lval(rm,j,i),
@@ -734,6 +830,7 @@ rmx_scale(RMATRIX *rm, const double sf[])
 	    }
 	if (rm->info)
 		rmx_addinfo(rm, "Applied scalar\n");
+	/* XXX: should record as exposure for COLR and SCOLR types? */
 	return(1);
 }
 
@@ -801,7 +898,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 	int	i, j;
 	CMATRIX	*cnew;
 
-	if (!rm || !rm->mtx | ((rm->ncomp != 3) & (rm->ncomp != 1)))
+	if (!rm || !rm->mtx | (rm->ncomp == 2))
 		return(NULL);
 	cnew = cm_alloc(rm->nrows, rm->ncols);
 	if (!cnew)
@@ -810,10 +907,21 @@ cm_from_rmatrix(const RMATRIX *rm)
 	    for (j = cnew->ncols; j--; ) {
 		const double	*dp = rmx_lval(rm,i,j);
 		COLORV		*cv = cm_lval(cnew,i,j);
-		if (rm->ncomp == 1)
-		    setcolor(cv, dp[0], dp[0], dp[0]);
-		else
+		switch (rm->ncomp) {
+		case 3:
 	    	    setcolor(cv, dp[0], dp[1], dp[2]);
+	    	    break;
+		case 1:
+		    setcolor(cv, dp[0], dp[0], dp[0]);
+		    break;
+		default: {
+			SCOLOR	scol;
+			int	k;
+			for (k = rm->ncomp; k--; )
+				scol[k] = dp[k];
+			scolor2color(cv, scol, rm->ncomp, rm->wlpart);
+		    } break;
+		}
 	    }
 	return(cnew);
 }

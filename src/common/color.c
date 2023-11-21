@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.29 2023/11/17 21:51:58 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.30 2023/11/21 01:30:20 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -109,7 +109,7 @@ scolor2color(			/* assign RGB color from spectrum */
 	COLOR col,
 	SCOLOR scol,		/* uses average over bands */
 	int ncs,
-	float wlpt[4]
+	const float wlpt[4]
 )
 {
 	const double	step = (wlpt[3] - wlpt[0])/(double)ncs;
@@ -136,7 +136,7 @@ scolor2colr(			/* assign RGBE from spectral color */
 	COLR clr,
 	SCOLOR scol,		/* uses average over bands */
 	int ncs,
-	float wlpt[4]
+	const float wlpt[4]
 )
 {
 	COLOR	col;
@@ -488,6 +488,26 @@ freadcolrs(			/* read in an encoded colr scanline */
 }
 
 
+/* read an nc-component common-exponent color scanline */
+int
+freadscolrs(uby8 *scanline, int nc, int len, FILE *fp)
+{
+	if (fread(scanline, nc+1, len, fp) != len)
+		return(-1);
+	return(0);
+}
+
+
+/* write an common-exponent spectral color scanline (NCSAMP) */
+int
+fwritescolrs(uby8 *sscanline, int len, FILE *fp)
+{
+	if (fwrite(sscanline, LSCOLR, len, fp) != len)
+		return(-1);
+	return(0);
+}
+
+
 int
 fwritescan(			/* write out a scanline */
 	COLOR  *scanline,
@@ -541,6 +561,41 @@ freadscan(			/* read in a scanline */
 			colr_color(scanline[0], clrscan[0]);
 	}
 	return(0);
+}
+
+
+/* read an nc-component color scanline */
+int
+freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
+{
+	uby8	*tscn = (uby8 *)tempbuffer((nc+1)*len);
+	int	i;
+
+	if (tscn == NULL || freadscolrs(tscn, nc, len, fp) < 0)
+		return(-1);
+	for (i = len; i-- > 0; ) {
+		scolr2scolor(sscanline, tscn, nc);
+		sscanline += nc;
+		tscn += nc+1;
+	}
+	return(0);
+}
+
+
+/* write an spectral color scanline (NCSAMP) */
+int
+fwritesscan(COLORV *sscanline, int len, FILE *fp)
+{
+	uby8	*tscn = (uby8 *)tempbuffer(LSCOLR*len);
+	int	i;
+
+	if (tscn == NULL)
+		return(-1);
+	for (i = 0; i < len; i++) {
+		scolor2scolr(tscn+i*LSCOLR, sscanline, NCSAMP);
+		sscanline += NCSAMP;
+	}
+	return(fwritescolrs(tscn, len, fp));
 }
 
 

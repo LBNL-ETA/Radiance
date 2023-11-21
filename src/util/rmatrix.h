@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.15 2022/03/05 01:45:21 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.16 2023/11/21 01:30:20 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -22,6 +22,7 @@ typedef struct {
 	void	*mapped;
 	double	*mtx;
 	COLOR	cexp;
+	float	wlpart[4];
 	int	nrows, ncols;
 	short	ncomp;
 	uby8	dtype;

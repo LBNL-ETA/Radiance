@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.20 2022/03/23 00:58:35 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.21 2023/11/21 01:30:20 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -418,6 +418,8 @@ main(int argc, char *argv[])
 					/* write result to stdout */
 	if (outfmt == DTfromHeader)
 		outfmt = mres->dtype;
+	if ((outfmt == DTrgbe) & (mres->ncomp > 3))
+		outfmt = DTspec;
 	if (outfmt != DTascii)
 		SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
