@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.32 2023/03/08 19:59:48 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.33 2023/11/21 19:22:38 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -51,6 +51,7 @@ const char	*file_type[] = {
 			"ascii",
 			COLRFMT,
 			CIEFMT,
+			SPECFMT,
 			DEPTH16FMT,
 			NORMAL32FMT,
 			"float",
@@ -65,7 +66,7 @@ const char	*file_type[] = {
 			NULL	/* terminator */
 		};
 				/* keep consistent with above */
-enum {TYP_UNKNOWN, TYP_TEXT, TYP_ASCII, TYP_RGBE, TYP_XYZE,
+enum {TYP_UNKNOWN, TYP_TEXT, TYP_ASCII, TYP_RGBE, TYP_XYZE, TYP_SPEC,
 		TYP_DEPTH, TYP_NORM, TYP_FLOAT, TYP_DOUBLE,
 		TYP_RBFMESH, TYP_OCTREE, TYP_TMESH,
 		TYP_ID8, TYP_ID16, TYP_ID24, TYP_BINARY};
@@ -242,6 +243,23 @@ color_check(COLOR c1, COLOR c2)
 	if (colval(c1,BLU) > colval(c1,p)) p = BLU;
 	
 	return(real_check(colval(c1,p), colval(c2,p)));
+}
+
+/* Compare two color spectra for equivalence */
+static int
+spec_check(COLORV *sc1, COLORV *sc2)
+{
+	int	p, k;
+
+	if (!real_check(scolor_mean(sc1), scolor_mean(sc2)))
+		return(0);
+
+	p = 0;				/* find max. component */
+	for (k = NCSAMP; --k; )
+		if (sc1[k] > sc1[p])
+			p = k;
+
+	return(real_check(sc1[p], sc2[p]));
 }
 
 /* Compare two normal directions for equivalence */
@@ -650,6 +668,24 @@ compare_text()
 	return(good_RMS());			/* final check for reals */
 }
 
+/* Set resolution based on NROWS, NCOLS in header */
+static int
+set_resolu(RESOLU *rs, LUTAB *htp)
+{
+	const char	*val;
+
+	rs->rt = PIXSTANDARD;
+	val = (const char *)lu_find(htp, "NROWS")->data;
+	if (!val) return(0);
+	rs->yr = atoi(val);
+	if (rs->yr <= 0) return(-1);
+	val = (const char *)lu_find(htp, "NCOLS")->data;
+	if (!val) return(0);
+	rs->xr = atoi(val);
+	if (rs->xr <= 0) return(-1);
+	return(1);
+}
+
 /* Check image/map resolutions */
 static int
 check_resolu(const char *class, RESOLU *r1p, RESOLU *r2p)
@@ -707,8 +743,7 @@ compare_hdr()
 			if (color_check(scan1[x], scan2[x]))
 				continue;
 			if (report != REP_QUIET) {
-				printf(
-				"%s: pixels at scanline %d offset %d differ\n",
+				printf("%s: pixels at scanline %d offset %d differ\n",
 					progname, y, x);
 				if (report >= REP_VERBOSE) {
 					printf("%s: (R,G,B)=(%g,%g,%g)\n",
@@ -719,6 +754,82 @@ compare_hdr()
 						f2name, colval(scan2[x],RED),
 						colval(scan2[x],GRN),
 						colval(scan2[x],BLU));
+				}
+			}
+			free(scan1);
+			free(scan2);
+			return(0);
+		}
+	}
+	free(scan1);
+	free(scan2);
+	return(good_RMS());			/* final check of RMS */
+}
+
+/* Compare two inputs that are known to be spectral images */
+static int
+compare_spec()
+{
+	static char	NCstr[] = NCOMPSTR;
+	RESOLU		rs1, rs2;
+	COLORV		*scan1, *scan2;
+	const char	*val;
+	int		x, y;
+
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as spectral images\n", stdout);
+	}
+	if (!(set_resolu(&rs1, &hdr1) || fgetsresolu(&rs1, f1in)))
+		return(0);
+	if (!(set_resolu(&rs2, &hdr2) || fgetsresolu(&rs2, f2in)))
+		return(0);
+	if (!check_resolu("Spectral image", &rs1, &rs2))
+		return(0);
+	NCstr[LNCOMPSTR-1] = '\0';
+	val = (const char *)lu_find(&hdr1, NCstr)->data;
+	if (!val || (NCSAMP = atoi(val)) < 3) {
+		if (report != REP_QUIET) {
+			if (val)
+				printf("%s: illegal # components (%d) for spectral image\n",
+					progname, NCSAMP);
+			else
+				printf("%s: missing %s in header for spectral image\n",
+					progname, NCstr);
+		}
+		return(0);
+	}
+	scan1 = (COLORV *)malloc(sizeof(COLORV)*NCSAMP*scanlen(&rs1));
+	scan2 = (COLORV *)malloc(sizeof(COLORV)*NCSAMP*scanlen(&rs2));
+	if (!scan1 | !scan2) {
+		fprintf(stderr, "%s: out of memory in compare_hdr()\n", progname);
+		exit(2);
+	}
+	for (y = 0; y < numscans(&rs1); y++) {
+		if ((freadsscan(scan1, NCSAMP, scanlen(&rs1), f1in) < 0) |
+				(freadsscan(scan2, NCSAMP, scanlen(&rs2), f2in) < 0)) {
+			if (report != REP_QUIET)
+				printf("%s: unexpected end-of-file\n", progname);
+			free(scan1);
+			free(scan2);
+			return(0);
+		}
+		for (x = 0; x < scanlen(&rs1); x++) {
+			if (spec_check(scan1+x*NCSAMP, scan2+x*NCSAMP))
+				continue;
+			if (report != REP_QUIET) {
+				int	k;
+				printf("%s: spectra at scanline %d offset %d differ\n",
+					progname, y, x);
+				if (report >= REP_VERBOSE) {
+					printf("%s: spectrum =", f1name);
+					for (k = 0; k < NCSAMP; k++)
+						printf(" %g", scan1[x*NCSAMP+k]);
+					fputc('\n', stdout);
+					printf("%s: spectrum =", f2name);
+					for (k = 0; k < NCSAMP; k++)
+						printf(" %g", scan2[x*NCSAMP+k]);
+					fputc('\n', stdout);
 				}
 			}
 			free(scan1);
@@ -1044,6 +1155,8 @@ main(int argc, char *argv[])
 	case TYP_RGBE:
 	case TYP_XYZE:
 		return( !compare_hdr() );
+	case TYP_SPEC:
+		return( !compare_spec() );
 	case TYP_DEPTH:
 		return( !compare_depth() );
 	case TYP_NORM:
