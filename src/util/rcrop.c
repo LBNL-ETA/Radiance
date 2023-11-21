@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.13 2022/04/07 16:58:30 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.14 2023/11/21 02:06:14 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -27,8 +27,8 @@ headline(char *s, void *p)
 {
 	if (formatval(fmt, s))
 		return(0);
-	if (!strncmp(s, "NCOMP=", 6)) {
-		ncomp = atoi(s+6);
+	if (isncomp(s)) {
+		ncomp = ncompval(s);
 		return(-(ncomp <= 0));
 	}
 	if (!strncmp(s, "NROWS=", 6)) {
@@ -321,7 +321,7 @@ main(int argc, char *argv[])
 	if (gotdims)			/* dimensions + format */
 		printf("NROWS=%d\nNCOLS=%d\n", nrows, ncols);
 	if (ncomp)
-		printf("NCOMP=%d\n", ncomp);
+		fputncomp(ncomp, stdout);
 	fputformat(fmt, stdout);	/* will align bytes if it can */
 	fputc('\n', stdout);		/* end of new header */
 	if (!gotdims) {			/* add resolution string? */
@@ -351,6 +351,9 @@ main(int argc, char *argv[])
 		asiz = -1;
 		if (!ncomp) ncomp = 3;
 		else ncomp *= (ncomp == 3);
+	} else if (!strcmp(fmt, SPECFMT)) {
+		asiz = ncomp+1;
+		ncomp = 1;		/* XXX assumes uncompressed */
 	} else if (strcasecmp(fmt, "ascii")) {
 		fputs(progname, stderr);
 		fputs(": unsupported format - ", stderr);
