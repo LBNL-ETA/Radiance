@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.23 2022/03/15 00:25:50 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.24 2023/11/21 02:16:59 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -32,7 +32,7 @@ Each file must have a header containing the following variables:
 NROWS={number of rows}
 NCOLS={number of columns}
 NCOMP={number of components}
-FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze}
+FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze|Radiance_spectra}
 .sp
 .fi
 The number of components indicates that each matrix element is actually
@@ -69,6 +69,11 @@ will be undone, similar to the
 .I pcomb(1)
 .I \-o
 option.
+Radiance spectral pictures with more than 3 components are also supported.
+These are typically produced by
+.I rtrace(1)
+or
+.I rfluxmtx(1).
 .PP
 Before each file, the
 .I \-t
@@ -159,12 +164,16 @@ By default, the values will be written in the lowest resolution format
 among the inputs, but the
 .I \-f
 option may be used to explicitly output components
-as ASCII (-fa), binary doubles (-fd), floats (-ff), or RGBE colors (-fc).
+as ASCII (-fa), binary doubles (-fd), floats (-ff), or common-exponent colors (-fc).
 In the latter case, the actual matrix dimensions are written in the resolution
 string rather than the header.
-Also, matrix results written as Radiance pictures must have either one
+Also, matrix results will be written as standard
+Radiance pictures if they have either one
 or three components.
 In the one-component case, the output is written as grayscale.
+If more than 3 components are in the final matrix and
+.I -fc
+is specified, the output will be a Radiance spectral picture.
 .PP
 The
 .I \-v
@@ -218,4 +227,4 @@ Greg Ward
 .SH "SEE ALSO"
 cnt(1), getinfo(1), histo(1), neaten(1), pcomb(1), rcalc(1),
 rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), rlam(1), 
-rsplit(1), tabfunc(1), total(1), wrapBSDF(1)
+rsplit(1), rtrace(1), tabfunc(1), total(1), wrapBSDF(1)

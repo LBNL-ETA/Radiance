@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcrop.1,v 1.5 2022/03/17 17:08:27 greg Exp $"
+.\" RCSid "$Id: rcrop.1,v 1.6 2023/11/21 02:16:59 greg Exp $"
 .TH RCROP 1 3/14/2022 RADIANCE
 .SH NAME
 rcrop - crop RADIANCE matrix or picture
@@ -46,6 +46,11 @@ and preserves the exposure in a way that is compatible with
 However, one must remember that rows correspond to Y
 coordinates, and the orientation is reversed from a standard
 picture, where Y=0 is the bottom scanline.
+Spectral pictures, as might be produced by
+.I rtrace(1)
+or
+.I rfluxmtx(1),
+are also supported.
 .PP
 All matrix formats are supported, including text (ASCII), binary float
 and double.
@@ -85,5 +90,5 @@ rmtxop -fa '!rcrop 15 0 1 0 mat1.mtx' '!rcrop 0 27 0 1 mat2.mtx' | getinfo -
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-evalglare(1), pcompos(1), rcalc(1), rcode_depth(1),
-rcode_norm(1), rcollate(1), rfluxmtx(1), rmtxop(1), rsplit(1)
+evalglare(1), pcompos(1), rcalc(1), rcode_depth(1), rcode_norm(1),
+rcollate(1), rfluxmtx(1), rmtxop(1), rsplit(1), rtrace(1)
