@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.33 2023/11/21 19:22:38 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.34 2023/11/21 20:01:39 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -245,6 +245,7 @@ color_check(COLOR c1, COLOR c2)
 	return(real_check(colval(c1,p), colval(c2,p)));
 }
 
+#if 1
 /* Compare two color spectra for equivalence */
 static int
 spec_check(COLORV *sc1, COLORV *sc2)
@@ -261,6 +262,26 @@ spec_check(COLORV *sc1, COLORV *sc2)
 
 	return(real_check(sc1[p], sc2[p]));
 }
+#else
+/* Compare two color spectra for equivalence */
+static int
+spec_check(COLORV *sc1, COLORV *sc2)
+{
+	COLOR	c1, c2;
+	int	p;
+
+	if (!real_check(scolor_mean(sc1), scolor_mean(sc2)))
+		return(0);
+					/* do comparisons in RGB space */
+	scolor_rgb(c1, sc1);
+	scolor_rgb(c2, sc2);
+
+	p = (colval(c1,GRN) > colval(c1,RED)) ? GRN : RED;
+	if (colval(c1,BLU) > colval(c1,p)) p = BLU;
+
+	return(real_check(colval(c1,p), colval(c2,p)));
+}
+#endif
 
 /* Compare two normal directions for equivalence */
 static int
