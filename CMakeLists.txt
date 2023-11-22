@@ -1,11 +1,26 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0048 NEW)
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
-  cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0074 NEW)
+
+# project-defined modules
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/resources/cmake/modules")
+
+# Get the project version.
+set(VERSIONFILE "${CMAKE_CURRENT_LIST_DIR}/src/rt/VERSION")
+if(EXISTS ${VERSIONFILE})
+  file(READ  ${VERSIONFILE} NAMEVERSION)
+  if(${NAMEVERSION} MATCHES "^([A-Za-z]+) +([0-9]+\\.[0-9]+)")
+    # project name must be lower case, or the CPack module fails
+    string(TOLOWER ${CMAKE_MATCH_1} PROGNAME)
+    project(${PROGNAME} VERSION ${CMAKE_MATCH_2} LANGUAGES C)
+  endif()
+else()
+  project(radiance LANGUAGES C)  
 endif()
 
-project(radiance VERSION 5.2.0)
+message("Project: " ${CMAKE_PROJECT_NAME} " " ${PROJECT_VERSION})
 
 set(PROJECT_VERSION_TWEAK "Unknown" CACHE STRING "Commit Hash")
 find_package(Git)
@@ -70,7 +85,7 @@ set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PR
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11 -std=c++11 -stdlib=libc++")
   add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
 endif()
 
 if(BUILD_LIBTIFF)
@@ -129,10 +144,22 @@ if(NOT BUILD_HEADLESS)
     get_filename_component(QT_LIBRARY_DIR ${QT_LIBRARY_DIR} PATH)
     get_filename_component(QT_LIBRARY_DIR "${QT_LIBRARY_DIR}/.." ABSOLUTE)
   endif()
+  if(APPLE)
+    set(X11_ROOT "/opt/X11")
+  endif()
   find_package(X11)
   if(APPLE)
      include_directories(${X11_INCLUDE_DIR})
-  endif()
+   endif()
+   if(APPLE AND X11_FOUND)
+     set(CMAKE_FIND_FRAMEWORK NEVER)
+     set(OpenGL_ROOT "/opt/X11")
+     find_package(OpenGL)
+     set(CMAKE_FIND_FRAMEWORK "")
+   else()
+     find_package(OpenGL)
+   endif()
+
 endif()
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)

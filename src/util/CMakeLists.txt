@@ -243,12 +243,12 @@ else()
     rtpict.pl
     vinfo.csh
   )
-  add_custom_target(trad ALL
-    COMMAND csh -f ${CMAKE_CURRENT_SOURCE_DIR}/tradinstall.csh ../../build/bin ../../build/lib
-  )
-  install(FILES
-    ${CMAKE_BINARY_DIR}/bin/trad
-    DESTINATION "bin"
-    PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
-  )
+  # add_custom_target(trad ALL
+  #   COMMAND csh -f ${CMAKE_CURRENT_SOURCE_DIR}/tradinstall.csh ../../build/bin ../../build/lib
+  # )
+  # install(FILES
+  #   ${CMAKE_BINARY_DIR}/bin/trad
+  #   DESTINATION "bin"
+  #   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
+  # )
 endif()

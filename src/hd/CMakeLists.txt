@@ -10,6 +10,7 @@ target_link_libraries(rhinfo rtrad)
 if(UNIX)
   set(VERSION_FILE "${radiance_BINARY_DIR}/src/hd/Version.c")
   create_version_file("${VERSION_FILE}")
+  add_library(version OBJECT "${VERSION_FILE}")
 
   add_executable(rholo
     holo.c
@@ -20,7 +21,7 @@ if(UNIX)
     rholo3.c
     rholo4.c
     viewbeams.c
-    ${VERSION_FILE}
+    $<TARGET_OBJECTS:version>
   )
   target_link_libraries(rholo rtrad)
 
@@ -33,7 +34,7 @@ if(UNIX)
     rhpict.c
     rhpict2.c
     viewbeams.c
-    ${VERSION_FILE}
+    $<TARGET_OBJECTS:version>
   )
   target_link_libraries(rhpict rtrad)
 
@@ -58,9 +59,27 @@ if(UNIX)
       target_link_libraries(x11.hdi rt)
     endif()
     install(TARGETS x11.hdi
-      RUNTIME DESTINATION "bin"
-    )
+      RUNTIME DESTINATION "bin/dev"
+      )
+
+    if(OPENGL_FOUND)
+      add_executable(ogl.hdi
+	rhd_ogl.c
+	rhdisp.c
+	rhdisp2.c
+	viewbeams.c
+	rhd_odraw.c
+	rhd_geom.c
+	holo.c)
+      target_link_libraries(
+	ogl.hdi rgl rtrad ${X11_LIBRARIES} ${OPENGL_LIBRARIES})
+      install(TARGETS ogl.hdi
+	RUNTIME DESTINATION "bin/dev"
+	)
+    endif()
+
   endif()
+    
 endif()
 
 install(TARGETS genrhgrid rhcopy rhinfo
