@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.21 2023/11/21 01:30:20 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.22 2023/11/27 22:04:45 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -7,23 +7,25 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.21 2023/11/21 01:30:20 greg Exp $
 
 #include <stdlib.h>
 #include <errno.h>
+#include <ctype.h>
 #include "rtio.h"
 #include "resolu.h"
 #include "rmatrix.h"
 #include "platform.h"
 
-#define MAXCOMP		16		/* #components we support */
+#define MAXCOMP		MAXCSAMP	/* #components we support */
 
-/* unary matrix operation(s) */
+/* Unary matrix operation(s) */
 typedef struct {
 	double		sca[MAXCOMP];		/* scalar coefficients */
 	double		cmat[MAXCOMP*MAXCOMP];	/* component transformation */
 	short		nsf;			/* number of scalars */
 	short		clen;			/* number of coefficients */
-	short		transpose;		/* do transpose? */
+	char		csym[11];		/* symbolic coefficients */
+	char		transpose;		/* do transpose? */
 } RUNARYOP;
 
-/* matrix input source and requested operation(s) */
+/* Matrix input source and requested operation(s) */
 typedef struct {
 	const char	*inspec;		/* input specification */
 	RMPref		rmp;			/* matrix preference */
@@ -50,21 +52,197 @@ loadmatrix(ROPMAT *rop)
 	return(1);
 }
 
+/* Compute conversion row from spectrum to one channel of RGB */
+static void
+rgbrow(ROPMAT *rop, int r, int p)
+{
+	const int	nc = rop->mtx->ncomp;
+	const float *	wlp = rop->mtx->wlpart;
+	int		i;
+
+	for (i = nc; i--; ) {
+		int	nmEnd = wlp[0] + (wlp[3] - wlp[0])*i/nc;
+		int	nmStart = wlp[0] + (wlp[3] - wlp[0])*(i+1)/nc;
+		COLOR	crgb;
+		spec_rgb(crgb, nmStart, nmEnd);
+		rop->preop.cmat[r*nc+i] = crgb[p];
+	}
+}
+
+/* Compute conversion row from spectrum to one channel of XYZ */
+static void
+xyzrow(ROPMAT *rop, int r, int p)
+{
+	const int	nc = rop->mtx->ncomp;
+	const float *	wlp = rop->mtx->wlpart;
+	int		i;
+
+	for (i = nc; i--; ) {
+		int	nmEnd = wlp[0] + (wlp[3] - wlp[0])*i/nc;
+		int	nmStart = wlp[0] + (wlp[3] - wlp[0])*(i+1)/nc;
+		COLOR	cxyz;
+		spec_cie(cxyz, nmStart, nmEnd);
+		rop->preop.cmat[r*nc+i] = cxyz[p];
+	}
+}
+
+/* Use the spectral sensitivity function to compute matrix coefficients */
+static void
+sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]))
+{
+	const int	nc = rop->mtx->ncomp;
+	int		i;
+
+	for (i = nc; i--; ) {
+		SCOLOR	sclr;
+		scolorblack(sclr);
+		sclr[i] = 1;
+		rop->preop.cmat[r*nc+i] = (*sf)(sclr, nc, rop->mtx->wlpart);
+	}
+}
+
+/* Check/set symbolic transform */
+static int
+checksymbolic(ROPMAT *rop)
+{
+	const int	nc = rop->mtx->ncomp;
+	const int	dt = rop->mtx->dtype;
+	int		i, j;
+
+	if (nc < 3) {
+		fprintf(stderr, "%s: -c '%s' requires at least 3 components\n",
+				rop->inspec, rop->preop.csym);
+		return(-1);
+	}
+	rop->preop.clen = strlen(rop->preop.csym) * nc;
+	if (rop->preop.clen > MAXCOMP*MAXCOMP) {
+		fprintf(stderr, "%s: -c '%s' results in too many components\n",
+				rop->inspec, rop->preop.csym);
+		return(-1);
+	}
+	for (j = 0; rop->preop.csym[j]; j++) {
+		int	comp = 0;
+		switch (rop->preop.csym[j]) {
+		case 'B':
+			++comp;
+			/* fall through */
+		case 'G':
+			++comp;
+			/* fall through */
+		case 'R':
+			if (dt == DTxyze) {
+				for (i = 3; i--; )
+					rop->preop.cmat[j*nc+i] = 1./WHTEFFICACY *
+							xyz2rgbmat[comp][i];
+			} else if (nc == 3)
+				rop->preop.cmat[j*nc+comp] = 1.;
+			else
+				rgbrow(rop, j, comp);
+			break;
+		case 'Z':
+			++comp;
+			/* fall through */
+		case 'Y':
+			++comp;
+			/* fall through */
+		case 'X':
+			if (dt == DTxyze) {
+				rop->preop.cmat[j*nc+comp] = 1.;
+			} else if (nc == 3) {
+				for (i = 3; i--; )
+					rop->preop.cmat[j*nc+i] =
+							rgb2xyzmat[comp][i];
+			} else if (comp == CIEY)
+				sensrow(rop, j, scolor2photopic);
+			else
+				xyzrow(rop, j, comp);
+
+			for (i = nc*(dt != DTxyze); i--; )
+				rop->preop.cmat[j*nc+i] *= WHTEFFICACY;
+			break;
+		case 'S':
+			sensrow(rop, j, scolor2scotopic);
+			for (i = nc; i--; )
+				rop->preop.cmat[j*nc+i] *= WHTSCOTOPIC;
+			break;
+		case 'M':
+			sensrow(rop, j, scolor2melanopic);
+			for (i = nc; i--; )
+				rop->preop.cmat[j*nc+i] *= WHTMELANOPIC;
+			break;
+		default:
+			fprintf(stderr, "%s: -c '%c' unsupported\n",
+				rop->inspec, rop->preop.csym[j]);
+			return(-1);
+		}
+	}
+					/* return recommended output type */
+	if (!strcmp(rop->preop.csym, "XYZ")) {
+		if (dt <= DTspec)
+			return(DTxyze);
+	} else if (!strcmp(rop->preop.csym, "RGB")) {
+		if (dt <= DTspec)
+			return(DTrgbe);
+	}
+	if ((nc > 3) & (dt <= DTspec))
+		return(DTfloat);	/* probably not actual spectrum */
+	return(0);
+}
+
 /* Get matrix and perform unary operations */
 static RMATRIX *
 loadop(ROPMAT *rop)
 {
+	int	outtype = 0;
 	RMATRIX	*mres;
-	int	i;
+	int	i, j;
 
 	if (loadmatrix(rop) < 0)		/* make sure we're loaded */
 		return(NULL);
 
-	if (rop->preop.nsf > 0) {		/* apply scalar(s) */
-		if (rop->preop.clen > 0) {
-			fputs("Options -s and -c are exclusive\n", stderr);
+	if (rop->preop.csym[0] &&		/* symbolic transform? */
+			(outtype = checksymbolic(rop)) < 0)
+		goto failure;
+	if (rop->preop.clen > 0) {		/* apply component transform? */
+		if (rop->preop.clen % rop->mtx->ncomp) {
+			fprintf(stderr, "%s: -c must have N x %d coefficients\n",
+					rop->inspec, rop->mtx->ncomp);
 			goto failure;
 		}
+		if (rop->preop.nsf > 0) {	/* scale transform, first */
+			if (rop->preop.nsf == 1) {
+				for (i = rop->preop.clen; i--; )
+					rop->preop.cmat[i] *= rop->preop.sca[0];
+ 			} else if (rop->preop.nsf != rop->mtx->ncomp) {
+				fprintf(stderr, "%s: -s must have one or %d factors\n",
+						rop->inspec, rop->mtx->ncomp);
+				goto failure;
+			} else {
+				for (j = rop->preop.clen/rop->preop.nsf; j--; )
+					for (i = rop->preop.nsf; i--; )
+						rop->preop.cmat[j*rop->preop.nsf+i] *=
+								rop->preop.sca[i];
+			}
+		}
+		mres = rmx_transform(rop->mtx, rop->preop.clen/rop->mtx->ncomp,
+					rop->preop.cmat);
+		if (mres == NULL) {
+			fprintf(stderr, "%s: matrix transform failed\n",
+						rop->inspec);
+			goto failure;
+		}
+		if (verbose)
+			fprintf(stderr, "%s: applied %d x %d transform%s\n",
+					rop->inspec, mres->ncomp,
+					rop->mtx->ncomp,
+					rop->preop.nsf ? " (* scalar)" : "");
+		rop->preop.nsf = 0;
+		if ((mres->ncomp > 3) & (mres->dtype <= DTspec))
+			outtype = DTfloat;	/* probably not actual spectrum */
+		rmx_free(rop->mtx);
+		rop->mtx = mres;
+	}
+	if (rop->preop.nsf > 0) {		/* apply scalar(s)? */
 		if (rop->preop.nsf == 1) {
 			for (i = rop->mtx->ncomp; --i; )
 				rop->preop.sca[i] = rop->preop.sca[0];
@@ -86,27 +264,7 @@ loadop(ROPMAT *rop)
 			fputs(" )\n", stderr);
 		}
 	}
-	if (rop->preop.clen > 0) {	/* apply transform */
-		if (rop->preop.clen % rop->mtx->ncomp) {
-			fprintf(stderr, "%s: -c must have N x %d coefficients\n",
-					rop->inspec, rop->mtx->ncomp);
-			goto failure;
-		}
-		mres = rmx_transform(rop->mtx, rop->preop.clen/rop->mtx->ncomp,
-					rop->preop.cmat);
-		if (mres == NULL) {
-			fprintf(stderr, "%s: matrix transform failed\n",
-						rop->inspec);
-			goto failure;
-		}
-		if (verbose)
-			fprintf(stderr, "%s: applied %d x %d transform\n",
-					rop->inspec, mres->ncomp,
-					rop->mtx->ncomp);
-		rmx_free(rop->mtx);
-		rop->mtx = mres;
-	}
-	if (rop->preop.transpose) {	/* transpose matrix? */
+	if (rop->preop.transpose) {		/* transpose matrix? */
 		mres = rmx_transpose(rop->mtx);
 		if (mres == NULL) {
 			fputs(rop->inspec, stderr);
@@ -122,6 +280,8 @@ loadop(ROPMAT *rop)
 	}
 	mres = rop->mtx;
 	rop->mtx = NULL;
+	if (outtype)
+		mres->dtype = outtype;
 	return(mres);
 failure:
 	rmx_free(rop->mtx);
@@ -373,12 +533,30 @@ main(int argc, char *argv[])
 				i += mop[nmats].preop.nsf =
 					get_factors(mop[nmats].preop.sca,
 							n, argv+i+1);
+				if (mop[nmats].preop.nsf <= 0) {
+					fprintf(stderr, "%s: -s missing arguments\n",
+							argv[0]);
+					goto userr;
+				}
 				break;
 			case 'c':
+				if (n && isupper(argv[i+1][0])) {
+					strlcpy(mop[nmats].preop.csym,
+						argv[++i],
+						sizeof(mop[0].preop.csym));
+					mop[nmats].preop.clen = 0;
+					break;
+				}
 				if (n > MAXCOMP*MAXCOMP) n = MAXCOMP*MAXCOMP;
 				i += mop[nmats].preop.clen =
 					get_factors(mop[nmats].preop.cmat,
 							n, argv+i+1);
+				if (mop[nmats].preop.clen <= 0) {
+					fprintf(stderr, "%s: -c missing arguments\n",
+							argv[0]);
+					goto userr;
+				}
+				mop[nmats].preop.csym[0] = '\0';
 				break;
 			case 'r':
 				if (argv[i][2] == 'f')
@@ -415,12 +593,15 @@ main(int argc, char *argv[])
 	mres = loadop(mop+nmats);
 	if (mres == NULL)
 		return(1);
-					/* write result to stdout */
-	if (outfmt == DTfromHeader)
+	if (outfmt == DTfromHeader)	/* check data type */
 		outfmt = mres->dtype;
-	if ((outfmt == DTrgbe) & (mres->ncomp > 3))
-		outfmt = DTspec;
-	if (outfmt != DTascii)
+	if (outfmt == DTrgbe) {
+		if (mres->ncomp > 3)
+			outfmt = DTspec;
+		else if (mres->dtype == DTxyze)
+			outfmt = DTxyze;
+	}
+	if (outfmt != DTascii)		/* write result to stdout */
 		SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
 	printargs(argc, argv, stdout);

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.24 2023/11/21 02:16:59 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.25 2023/11/27 22:04:45 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -11,9 +11,9 @@ rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matri
 ][
 .B \-t
 ][
-.B "\-s sf .."
-][
 .B "\-c ce .."
+][
+.B "\-s sf .."
 ][
 .B "\-rf|\-rb"
 ]
@@ -33,8 +33,8 @@ NROWS={number of rows}
 NCOLS={number of columns}
 NCOMP={number of components}
 FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze|Radiance_spectra}
-.sp
 .fi
+.sp
 The number of components indicates that each matrix element is actually
 composed of multiple elements, most commonly an RGB triple.
 This is essentially dividing the matrix into planes, where each component
@@ -78,23 +78,16 @@ or
 Before each file, the
 .I \-t
 and
-.I \-s
-or
 .I \-c
+and/or
+.I \-s
 options may be used to modify the matrix.
 The
 .I \-t
 option transposes the matrix, swapping rows and columns.
 The
-.I \-s
-option applies the given scalar factor(s) to the elements of the matrix.
-If only one factor is provided,
-it will be used for all components.
-If multiple factors are given, their number must match the number of matrix
-components.
-Alternatively, the
 .I \-c
-option may be used to "transform" the element values, possibly changing
+option can "transform" the element values, possibly changing
 the number of components in the matrix.
 For example, a 3-component matrix can be transformed into a single-component
 matrix by using
@@ -106,12 +99,42 @@ the first new component, and the second four coefficients
 yield the second new component.
 Note that the number of coefficients must be an even multiple of the number
 of original components.
-The
+Alternatively, a set of symbolic output components can be specified as capital
+letters, with the following definitions:
+.sp
+.nf
+R	- red channel
+G	- green channel
+B	- blue channel
+X	- CIE X channel
+Y	- CIE Y channel (aka., luminance or illuminance)
+Z	- CIE Z channel
+S	- scotopic luminance or illuminance
+M	- melanopic luminance or illuminance
+.fi
+.sp
+These letters may be given in any order as a single string, and if
+.I "-c RGB"
+or
+.I "-c XYZ"
+is specified along with a
+.I "-fc"
+option, the output will be written as a RGBE or XYZE picture, respectively.
+Note that conversion from a float or RGBE color space applies a conversion
+of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
+and the reverse happens for conversion from XYZE input to RGB or RGBE output.
+.PP
+Additionally, the
 .I \-s
-and
+option applies the given scalar factor(s) to the elements of the matrix.
+If only one factor is provided,
+it will be used for all components.
+If multiple factors are given, their number must match the number of matrix
+components
+.I after
+application of any
 .I \-c
-options are mutually exclusive, insofar as they cannot be applied together
-to the same input matrix.
+option for this input matrix or picture.
 .PP
 If present, the second and subsequent matrices on the command
 line are concatenated together, unless separated by a plus ('+'),
@@ -150,13 +173,13 @@ In the case of addition, multiplication, and division,
 the number of rows and columns of the prior result and the
 next matrix must match, and will not be changed by the operation.
 .PP
-A final transpose or scaling/transform operation may be applied to
+A final transpose or transform/scaling operation may be applied to
 the results by appending the
 .I \-t
 and
-.I \-s
-or
 .I \-c
+and/or
+.I \-s
 options after the last matrix on the command line.
 .PP
 Results are sent to the standard output.
@@ -164,7 +187,8 @@ By default, the values will be written in the lowest resolution format
 among the inputs, but the
 .I \-f
 option may be used to explicitly output components
-as ASCII (-fa), binary doubles (-fd), floats (-ff), or common-exponent colors (-fc).
+as ASCII (-fa), binary doubles (-fd), floats (-ff), or common-exponent
+colors/spectra (-fc).
 In the latter case, the actual matrix dimensions are written in the resolution
 string rather than the header.
 Also, matrix results will be written as standard
@@ -191,6 +215,13 @@ rmtxop -fc blinds.xml > blinds.hdr
 To extract the luminance values from a picture as an ASCII matrix:
 .IP "" .2i
 rmtxop -fa -c .265 .670 .065 image.hdr > image_lum.mtx
+.PP
+To render a melanopic illuminance image with
+.I rtrace\:
+.IP "" .2i
+vwrays -ff -x 1024 -y 1024 -vf myview.vf |
+rtrace -fff -cs 18 -co+ -i+ `vwrays -x 1024 -y 1024 -vf myview.vf -d` scene.oct |
+rmtxop -fc -c M - > scene_meli.hdr
 .PP
 To scale a matrix by 4 and add it to the transpose of another matrix:
 .IP "" .2i
@@ -225,6 +256,8 @@ evaluated from left to right.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), getinfo(1), histo(1), neaten(1), pcomb(1), rcalc(1),
+cnt(1), getinfo(1), histo(1), neaten(1), pcomb(1),
+ra_xyze(1), rcalc(1),
 rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), rlam(1), 
-rsplit(1), rtrace(1), tabfunc(1), total(1), wrapBSDF(1)
+rsplit(1), rtrace(1), tabfunc(1), total(1), vwrays(1),
+wrapBSDF(1)

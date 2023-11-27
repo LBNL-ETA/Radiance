@@ -2633,4 +2633,6 @@ that made reds into blues and vice versa, which has been fixed.
 
 Added i/o for spectral pictures to rmtxop, the first program that can
 ingest them.  (Only rtrace, rcontrib, and rfluxmtx can render them.)
+New symbolic rmtxop -c options, such as RGB, XYZ, S (for scotopic)
+and M (for melanopic) make color conversions simpler.
 Also added spectral picture support to rcrop and radcompare.

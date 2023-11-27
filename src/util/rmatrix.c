@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.60 2023/11/21 01:30:20 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.61 2023/11/27 22:04:45 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -507,7 +507,6 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 static int
 rmx_write_spec(const RMATRIX *rm, FILE *fp)
 {
-	int	prevNCSAMP = NCSAMP;
 	uby8	*scan = (uby8 *)malloc((rm->ncomp+1)*rm->ncols);
 	int	ok = 1;
 	SCOLOR	scol;
@@ -515,21 +514,19 @@ rmx_write_spec(const RMATRIX *rm, FILE *fp)
 
 	if (!scan)
 		return(0);
-	NCSAMP = rm->ncomp;		/* XXX: kosher? */
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = rm->ncols; j--; ) {
 	    	const double	*dp = rmx_lval(rm,i,j);
-	    	for (k = NCSAMP; k--; )
+	    	for (k = rm->ncomp; k--; )
 	    		scol[k] = dp[k];
-		scolor2scolr(scan+j*(NCSAMP+1), scol, NCSAMP);
+		scolor2scolr(scan+j*(rm->ncomp+1), scol, rm->ncomp);
 	    }
-	    if (fwritescolrs(scan, rm->ncols, fp) < 0) {
+	    if (fwritescolrs(scan, rm->ncomp, rm->ncols, fp) < 0) {
 		ok = 0;
 		break;
 	    }
 	}
 	free(scan);
-	NCSAMP = prevNCSAMP;
 	return(ok);
 }
 
