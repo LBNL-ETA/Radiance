@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.40 2023/11/21 01:30:20 greg Exp $ */
+/* RCSid $Id: color.h,v 2.41 2023/11/27 21:00:14 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -326,8 +326,8 @@ extern void	*tempbuffer(size_t len);
 extern int	setspectrsamp(int cn[4], float wlpt[4]);
 extern int	fwritecolrs(COLR *scanline, int len, FILE *fp);
 extern int	fwritescan(COLOR *scanline, int len, FILE *fp);
-extern int	fwritescolrs(uby8 *sscanline, int len, FILE *fp);
-extern int	fwritesscan(COLORV *sscanline, int len, FILE *fp);
+extern int	fwritescolrs(uby8 *sscanline, int nc, int len, FILE *fp);
+extern int	fwritesscan(COLORV *sscanline, int nc, int len, FILE *fp);
 extern int	freadcolrs(COLR *scanline, int len, FILE *fp);
 extern int	freadscan(COLOR *scanline, int len, FILE *fp);
 extern int	freadscolrs(uby8 *scanline, int nc, int len, FILE *fp);
@@ -373,6 +373,9 @@ extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
 					/* most accurate spectral->tristim */
 extern void	scolor2cie(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
 extern void	scolor2rgb(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2photopic(SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2scotopic(SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2melanopic(SCOLOR scol, int ncs, const float wlpt[4]);
 extern double	scolor_photopic(SCOLOR scol);
 extern double	scolor_scotopic(SCOLOR scol);
 extern double	scolor_melanopic(SCOLOR scol);

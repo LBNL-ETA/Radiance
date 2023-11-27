@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.29 2023/11/21 01:30:20 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.30 2023/11/27 21:00:14 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -346,14 +346,47 @@ scolor2rgb(			/* accurate conversion from spectrum to RGB */
 
 
 double
+scolor2photopic(		/* compute scotopic integral for spectral color */
+	SCOLOR  scol,
+	int ncs,
+	const float wlpt[4]
+)
+{
+	if (ncs == 3)
+		return bright(scol);
+
+	return(spec_dot(scol, ncs, wlpt, cie_y_cumul, CIE_Y_WLMIN, CIE_Y_WLMAX));
+}
+
+
+double
+scolor2scotopic(		/* compute Y channel for spectral color */
+	SCOLOR  scol,
+	int ncs,
+	const float wlpt[4]
+)
+{
+	return(spec_dot(scol, ncs, wlpt, scotopic_cumul, SCOTOPIC_WLMIN, SCOTOPIC_WLMAX));
+}
+
+
+double
+scolor2melanopic(		/* compute melanopic integral for spectral color */
+	SCOLOR  scol,
+	int ncs,
+	const float wlpt[4]
+)
+{
+	return(spec_dot(scol, ncs, wlpt, melanopic_cumul, MELANOPIC_WLMIN, MELANOPIC_WLMAX));
+}
+
+
+double
 scolor_photopic(		/* compute scotopic integral for spectral color */
 	SCOLOR  scol
 )
 {
-	if (NCSAMP == 3)
-		return bright(scol);
-
-	return(spec_dot(scol, NCSAMP, WLPART, cie_y_cumul, CIE_Y_WLMIN, CIE_Y_WLMAX));
+	return(scolor2photopic(scol, NCSAMP, WLPART));
 }
 
 
@@ -362,7 +395,7 @@ scolor_scotopic(		/* compute Y channel for spectral color */
 	SCOLOR  scol
 )
 {
-	return(spec_dot(scol, NCSAMP, WLPART, scotopic_cumul, SCOTOPIC_WLMIN, SCOTOPIC_WLMAX));
+	return(scolor2scotopic(scol, NCSAMP, WLPART));
 }
 
 
@@ -371,7 +404,7 @@ scolor_melanopic(		/* compute melanopic integral for spectral color */
 	SCOLOR  scol
 )
 {
-	return(spec_dot(scol, NCSAMP, WLPART, melanopic_cumul, MELANOPIC_WLMIN, MELANOPIC_WLMAX));
+	return(scolor2melanopic(scol, NCSAMP, WLPART));
 }
 
 
