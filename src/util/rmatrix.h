@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.17 2023/11/28 00:39:56 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.18 2023/11/28 21:07:20 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -49,6 +49,9 @@ extern int	rmx_newtype(int dtyp1, int dtyp2);
 
 /* Read matrix header from input stream (cannot be XML) */
 extern int	rmx_load_header(RMATRIX *rm, FILE *fp);
+
+/* Load next row as double (cannot be XML) */
+extern int	rmx_load_row(double *drp, const RMATRIX *rm, FILE *fp);
 
 /* Allocate & load post-header data from stream given type set in rm->dtype */
 extern int	rmx_load_data(RMATRIX *rm, FILE *fp);
