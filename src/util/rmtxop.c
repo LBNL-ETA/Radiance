@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.22 2023/11/27 22:04:45 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.23 2023/11/28 16:36:50 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -44,12 +44,8 @@ loadmatrix(ROPMAT *rop)
 		return(0);
 
 	rop->mtx = rmx_load(rop->inspec, rop->rmp);
-	if (rop->mtx == NULL) {
-		fputs(rop->inspec, stderr);
-		fputs(": cannot load matrix\n", stderr);
-		return(-1);
-	}
-	return(1);
+
+	return(!rop->mtx ? -1 : 1);
 }
 
 /* Compute conversion row from spectrum to one channel of RGB */
@@ -605,12 +601,8 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
 	printargs(argc, argv, stdout);
-	if (!rmx_write(mres, outfmt, stdout)) {
-		fprintf(stderr, "%s: error writing result matrix\n", argv[0]);
-		return(1);
-	}
-	/* rmx_free(mres); free(mop); */
-	return(0);
+
+	return(rmx_write(mres, outfmt, stdout) ? 0 : 1);
 userr:
 	fprintf(stderr,
 	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..][-rf|-rb] m1 [.+*/] .. > mres\n",
