@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.62 2023/11/28 00:39:56 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.63 2023/11/28 00:46:23 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -307,7 +307,7 @@ int
 rmx_load_header(RMATRIX *rm, FILE *fp)
 {
 	if (!rm | !fp)
-		return(-1);
+		return(0);
 	if (rm->info) {				/* clear state */
 		free(rm->info);
 		rm->info = NULL;
@@ -327,22 +327,23 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 		rm->ncomp = 3;
 		setcolor(rm->cexp, 1.f, 1.f, 1.f);
 		memcpy(rm->wlpart, WLPART, sizeof(rm->wlpart));
+		rm->swapin = 0;
 	}
 	SET_FILE_BINARY(fp);
 	rm->dtype = DTascii;			/* assumed w/o FORMAT */
 	if (getheader(fp, get_dminfo, rm) < 0) {
 		fputs("Unrecognized matrix format\n", stderr);
-		return(-1);
+		return(0);
 	}
 						/* resolution string? */
 	if ((rm->nrows <= 0) | (rm->ncols <= 0)) {
 		if (!fscnresolu(&rm->ncols, &rm->nrows, fp))
-			return(-1);
+			return(0);
 		if ((rm->dtype == DTrgbe) | (rm->dtype == DTxyze) &&
 				rm->ncomp != 3)
-			return(-1);
+			return(0);
 	}
-	return(rm->dtype);
+	return(1);
 }
 
 /* Allocate & load post-header data from stream given type set in rm->dtype */
@@ -408,7 +409,7 @@ rmx_load(const char *inspec, RMPref rmp)
 	flockfile(fp);
 #endif
 						/* load header info */
-	if (rmx_load_header(dnew = rmx_new(0,0,3), fp) < 0) {
+	if (!rmx_load_header(dnew = rmx_new(0,0,3), fp)) {
 		fprintf(stderr, "Bad header in: %s\n", inspec);
 		if (inspec[0] == '!') pclose(fp);
 		else fclose(fp);
