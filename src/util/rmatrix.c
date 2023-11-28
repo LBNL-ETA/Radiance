@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.65 2023/11/28 21:07:20 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.66 2023/11/28 21:28:11 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -486,13 +486,8 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 static int
 rmx_write_double(const RMATRIX *rm, FILE *fp)
 {
-	int	i;
-
-	for (i = 0; i < rm->nrows; i++)
-		if (putbinary(rmx_val(rm,i,0), sizeof(double)*rm->ncomp,
-					rm->ncols, fp) != rm->ncols)
-			return(0);
-	return(1);
+	return(putbinary(rm->mtx, sizeof(rm->mtx[0])*rm->ncomp,
+			rm->nrows*rm->ncols, fp) == rm->nrows*rm->ncols);
 }
 
 static int
