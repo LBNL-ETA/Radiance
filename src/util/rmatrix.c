@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.61 2023/11/27 22:04:45 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.62 2023/11/28 00:39:56 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -302,23 +302,89 @@ rmx_load_spec(RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
+/* Read matrix header from input stream (cannot be XML) */
+int
+rmx_load_header(RMATRIX *rm, FILE *fp)
+{
+	if (!rm | !fp)
+		return(-1);
+	if (rm->info) {				/* clear state */
+		free(rm->info);
+		rm->info = NULL;
+	}
+	if (rm->mtx) {				/* ...and data */
+#ifdef MAP_FILE
+		if (rm->mapped) {
+			munmap(rm->mapped, mapped_size(rm));
+			rm->mapped = NULL;
+		} else
+#endif
+			free(rm->mtx);
+		rm->mtx = NULL;
+	}
+	if (rm->nrows | rm->ncols | !rm->dtype) {
+		rm->nrows = rm->ncols = 0;
+		rm->ncomp = 3;
+		setcolor(rm->cexp, 1.f, 1.f, 1.f);
+		memcpy(rm->wlpart, WLPART, sizeof(rm->wlpart));
+	}
+	SET_FILE_BINARY(fp);
+	rm->dtype = DTascii;			/* assumed w/o FORMAT */
+	if (getheader(fp, get_dminfo, rm) < 0) {
+		fputs("Unrecognized matrix format\n", stderr);
+		return(-1);
+	}
+						/* resolution string? */
+	if ((rm->nrows <= 0) | (rm->ncols <= 0)) {
+		if (!fscnresolu(&rm->ncols, &rm->nrows, fp))
+			return(-1);
+		if ((rm->dtype == DTrgbe) | (rm->dtype == DTxyze) &&
+				rm->ncomp != 3)
+			return(-1);
+	}
+	return(rm->dtype);
+}
+
+/* Allocate & load post-header data from stream given type set in rm->dtype */
+int
+rmx_load_data(RMATRIX *rm, FILE *fp)
+{
+	switch (rm->dtype) {
+	case DTascii:
+		SET_FILE_TEXT(fp);
+		return(rmx_load_ascii(rm, fp));
+	case DTfloat:
+		return(rmx_load_float(rm, fp));
+	case DTdouble:
+		return(rmx_load_double(rm, fp));
+	case DTrgbe:
+	case DTxyze:
+		return(rmx_load_rgbe(rm, fp));
+	case DTspec:
+		return(rmx_load_spec(rm, fp));
+	default:
+		fputs("Unsupported data type in rmx_loaddata()\n", stderr);
+	}
+	return(0);
+}
+
 /* Load matrix from supported file type */
 RMATRIX *
 rmx_load(const char *inspec, RMPref rmp)
 {
 	FILE		*fp;
 	RMATRIX		*dnew;
+	int		ok;
 
 	if (!inspec)
 		inspec = stdin_name;
 	else if (!*inspec)
 		return(NULL);
-	if (inspec == stdin_name) {		/* reading from stdin? */
+	if (inspec == stdin_name)		/* reading from stdin? */
 		fp = stdin;
-	} else if (inspec[0] == '!') {
-		if (!(fp = popen(inspec+1, "r")))
-			return(NULL);
-	} else {
+	else if (inspec[0] == '!')
+		fp = popen(inspec+1, "r");
+	else {
 		const char	*sp = inspec;	/* check suffix */
 		while (*sp)
 			++sp;
@@ -332,66 +398,26 @@ rmx_load(const char *inspec, RMPref rmp)
 			dnew = rmx_from_cmatrix(cm);
 			cm_free(cm);
 			dnew->dtype = DTascii;
-			return(dnew);
-		}
-						/* else open it ourselves */
-		if (!(fp = fopen(inspec, "r")))
-			return(NULL);
+			return(dnew);		/* return here */
+		}				/* else open it ourselves */
+		fp = fopen(inspec, "r");
 	}
-	SET_FILE_BINARY(fp);
+	if (!fp)
+		return(NULL);
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
-	if (!(dnew = rmx_new(0,0,3))) {
-		fclose(fp);
+						/* load header info */
+	if (rmx_load_header(dnew = rmx_new(0,0,3), fp) < 0) {
+		fprintf(stderr, "Bad header in: %s\n", inspec);
+		if (inspec[0] == '!') pclose(fp);
+		else fclose(fp);
+		rmx_free(dnew);
 		return(NULL);
 	}
-	dnew->dtype = DTascii;			/* assumed w/o FORMAT */
-	if (getheader(fp, get_dminfo, dnew) < 0) {
-		fclose(fp);
-		return(NULL);
-	}
-	if ((dnew->nrows <= 0) | (dnew->ncols <= 0)) {
-		if (!fscnresolu(&dnew->ncols, &dnew->nrows, fp)) {
-			fclose(fp);
-			return(NULL);
-		}
-		if ((dnew->dtype == DTrgbe) | (dnew->dtype == DTxyze) &&
-				dnew->ncomp != 3) {
-			fclose(fp);
-			return(NULL);
-		}
-	}
-	switch (dnew->dtype) {
-	case DTascii:
-		SET_FILE_TEXT(fp);
-		if (!rmx_load_ascii(dnew, fp))
-			goto loaderr;
-		dnew->dtype = DTascii;		/* should leave double? */
-		break;
-	case DTfloat:
-		if (!rmx_load_float(dnew, fp))
-			goto loaderr;
-		dnew->dtype = DTfloat;
-		break;
-	case DTdouble:
-		if (!rmx_load_double(dnew, fp))
-			goto loaderr;
-		dnew->dtype = DTdouble;
-		break;
-	case DTrgbe:
-	case DTxyze:
-		if (!rmx_load_rgbe(dnew, fp))
-			goto loaderr;
-		break;
-	case DTspec:
-		if (!rmx_load_spec(dnew, fp))
-			goto loaderr;
-		break;
-	default:
-		goto loaderr;
-	}
-	if (fp != stdin) {
+	ok = rmx_load_data(dnew, fp);		/* allocate & load data */
+
+	if (fp != stdin) {			/* close input stream */
 		if (inspec[0] == '!')
 			pclose(fp);
 		else
@@ -401,6 +427,11 @@ rmx_load(const char *inspec, RMPref rmp)
 	else
 		funlockfile(fp);
 #endif
+	if (!ok) {				/* load failure? */
+		fprintf(stderr, "Error loading data from: %s\n", inspec);
+		rmx_free(dnew);
+		return(NULL);
+	}
 						/* undo exposure? */
 	if ((dnew->cexp[0] != 1.f) |
 			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
@@ -409,21 +440,18 @@ rmx_load(const char *inspec, RMPref rmp)
 		cmlt[0] = 1./dnew->cexp[0];
 		cmlt[1] = 1./dnew->cexp[1];
 		cmlt[2] = 1./dnew->cexp[2];
-		if (dnew->ncomp > MAXCSAMP)
-			goto loaderr;
+		if (dnew->ncomp > MAXCSAMP) {
+			fprintf(stderr, "Excess spectral components in: %s\n",
+					inspec);
+			rmx_free(dnew);
+			return(NULL);
+		}
 		for (i = dnew->ncomp; i-- > 3; )
 			cmlt[i] = cmlt[1];
 		rmx_scale(dnew, cmlt);
 		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
 	}
 	return(dnew);
-loaderr:					/* should report error? */
-	if (inspec[0] == '!')
-		pclose(fp);
-	else
-		fclose(fp);
-	rmx_free(dnew);
-	return(NULL);
 }
 
 static int
@@ -436,7 +464,7 @@ rmx_write_ascii(const RMATRIX *rm, FILE *fp)
 
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = 0; j < rm->ncols; j++) {
-		const double	*dp = rmx_lval(rm,i,j);
+		const double	*dp = rmx_val(rm,i,j);
 	        for (k = 0; k < rm->ncomp; k++)
 		    fprintf(fp, fmt, dp[k]);
 		fputc('\t', fp);
@@ -458,7 +486,7 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 	}
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
-	    	const double	*dp = rmx_lval(rm,i,j);
+	    	const double	*dp = rmx_val(rm,i,j);
 	        for (k = rm->ncomp; k--; )
 		    val[k] = (float)dp[k];
 		if (putbinary(val, sizeof(float), rm->ncomp, fp) != rm->ncomp)
@@ -473,7 +501,7 @@ rmx_write_double(const RMATRIX *rm, FILE *fp)
 	int	i;
 
 	for (i = 0; i < rm->nrows; i++)
-		if (putbinary(rmx_lval(rm,i,0), sizeof(double)*rm->ncomp,
+		if (putbinary(rmx_val(rm,i,0), sizeof(double)*rm->ncomp,
 					rm->ncols, fp) != rm->ncols)
 			return(0);
 	return(1);
@@ -489,7 +517,7 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = rm->ncols; j--; ) {
-	    	const double	*dp = rmx_lval(rm,i,j);
+	    	const double	*dp = rmx_val(rm,i,j);
 	    	if (rm->ncomp == 1)
 	    		setcolr(scan[j], dp[0], dp[0], dp[0]);
 	    	else
@@ -516,7 +544,7 @@ rmx_write_spec(const RMATRIX *rm, FILE *fp)
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = rm->ncols; j--; ) {
-	    	const double	*dp = rmx_lval(rm,i,j);
+	    	const double	*dp = rmx_val(rm,i,j);
 	    	for (k = rm->ncomp; k--; )
 	    		scol[k] = dp[k];
 		scolor2scolr(scan+j*(rm->ncomp+1), scol, rm->ncomp);
@@ -616,6 +644,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 #ifdef getc_unlocked
 	funlockfile(fp);
 #endif
+	if (!ok) fputs("Error writing matrix\n", stderr);
 	return(ok);
 }
 
@@ -685,7 +714,7 @@ rmx_transpose(const RMATRIX *rm)
 	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
 	for (j = dnew->ncols; j--; )
 	    for (i = dnew->nrows; i--; )
-	    	memcpy(rmx_lval(dnew,i,j), rmx_lval(rm,j,i),
+	    	memcpy(rmx_lval(dnew,i,j), rmx_val(rm,j,i),
 	    			sizeof(double)*dnew->ncomp);
 	return(dnew);
 }
@@ -712,7 +741,7 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	        for (k = mres->ncomp; k--; ) {
 		    double	d = 0;
 		    for (h = m1->ncols; h--; )
-			d += rmx_lval(m1,i,h)[k] * rmx_lval(m2,h,j)[k];
+			d += rmx_val(m1,i,h)[k] * rmx_val(m2,h,j)[k];
 		    rmx_lval(mres,i,j)[k] = d;
 		}
 	return(mres);
@@ -739,7 +768,7 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 		if (divide) {
 		    double	d;
 		    if (m2->ncomp == 1) {
-			d = rmx_lval(m2,i,j)[0];
+			d = rmx_val(m2,i,j)[0];
 			if (d == 0) {
 			    ++zeroDivides;
 			    for (k = m1->ncomp; k--; )
@@ -751,7 +780,7 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 			}
 		    } else
 		        for (k = m1->ncomp; k--; ) {
-			    d = rmx_lval(m2,i,j)[k];
+			    d = rmx_val(m2,i,j)[k];
 			    if (d == 0) {
 			        ++zeroDivides;
 				rmx_lval(m1,i,j)[k] = 0;
@@ -760,12 +789,12 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 			}
 		} else {
 		    if (m2->ncomp == 1) {
-			const double	d = rmx_lval(m2,i,j)[0];
+			const double	d = rmx_val(m2,i,j)[0];
 		        for (k = m1->ncomp; k--; )
 			    rmx_lval(m1,i,j)[k] *= d;
 		    } else
 		        for (k = m1->ncomp; k--; )
-			    rmx_lval(m1,i,j)[k] *= rmx_lval(m2,i,j)[k];
+			    rmx_lval(m1,i,j)[k] *= rmx_val(m2,i,j)[k];
 		}
 	if (zeroDivides) {
 		rmx_addinfo(m1, "WARNING: zero divide(s) corrupted results\n");
@@ -801,7 +830,7 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 		rmx_addinfo(msum, rmx_mismatch_warn);
 	for (i = msum->nrows; i--; )
 	    for (j = msum->ncols; j--; ) {
-	    	const double	*da = rmx_lval(madd,i,j);
+	    	const double	*da = rmx_val(madd,i,j);
 	    	double		*ds = rmx_lval(msum,i,j);
 		for (k = msum->ncomp; k--; )
 		     ds[k] += sf[k] * da[k];
@@ -853,7 +882,7 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	dnew->dtype = msrc->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; ) {
-		const double	*ds = rmx_lval(msrc,i,j);
+		const double	*ds = rmx_val(msrc,i,j);
 	        for (kd = dnew->ncomp; kd--; ) {
 		    double	d = 0;
 		    for (ks = msrc->ncomp; ks--; )
@@ -902,7 +931,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 		return(NULL);
 	for (i = cnew->nrows; i--; )
 	    for (j = cnew->ncols; j--; ) {
-		const double	*dp = rmx_lval(rm,i,j);
+		const double	*dp = rmx_val(rm,i,j);
 		COLORV		*cv = cm_lval(cnew,i,j);
 		switch (rm->ncomp) {
 		case 3:

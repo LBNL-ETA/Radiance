@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.16 2023/11/21 01:30:20 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.17 2023/11/28 00:39:56 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -30,6 +30,7 @@ typedef struct {
 } RMATRIX;
 
 #define rmx_lval(rm,r,c)	((rm)->mtx + (rm)->ncomp*((c)+(size_t)(rm)->ncols*(r)))
+#define rmx_val			rmx_lval
 
 /* Initialize a RMATRIX struct but don't allocate array space */
 extern RMATRIX	*rmx_new(int nr, int nc, int n);
@@ -45,6 +46,12 @@ extern void	rmx_free(RMATRIX *rm);
 
 /* Resolve data type based on two input types (returns 0 for mismatch) */
 extern int	rmx_newtype(int dtyp1, int dtyp2);
+
+/* Read matrix header from input stream (cannot be XML) */
+extern int	rmx_load_header(RMATRIX *rm, FILE *fp);
+
+/* Allocate & load post-header data from stream given type set in rm->dtype */
+extern int	rmx_load_data(RMATRIX *rm, FILE *fp);
 
 /* Load matrix from supported file type (NULL for stdin, '!' with command) */
 extern RMATRIX	*rmx_load(const char *inspec, RMPref rmp);
