@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.63 2023/11/28 00:46:23 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.64 2023/11/28 16:19:31 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -587,8 +587,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
-						/* complete header */
-	if (rm->info)
+	if (rm->info)				/* complete header */
 		fputs(rm->info, fp);
 	if (dtype == DTfromHeader)
 		dtype = rm->dtype;
@@ -604,21 +603,21 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 	else if (rm->cexp[GRN] != 1.f)
 		fputexpos(rm->cexp[GRN], fp);
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
-		if (dtype == DTspec) {
-			if (rm->ncomp < 3)
-				return(0);	/* bad # components */
-			fputwlsplit(rm->wlpart, fp);
-		} else {
+		if (dtype != DTspec) {
 			fprintf(fp, "NROWS=%d\n", rm->nrows);
 			fprintf(fp, "NCOLS=%d\n", rm->ncols);
-		}
+		} else if (rm->ncomp < 3)
+			return(0);		/* bad # components */
 		fputncomp(rm->ncomp, fp);
+		if (dtype == DTspec || (rm->ncomp > 3 &&
+				memcmp(rm->wlpart, WLPART, sizeof(WLPART))))
+			fputwlsplit(rm->wlpart, fp);
 	} else if ((rm->ncomp != 3) & (rm->ncomp != 1))
 		return(0);			/* wrong # components */
 	if ((dtype == DTfloat) | (dtype == DTdouble))
 		fputendian(fp);			/* important to record */
 	fputformat(cm_fmt_id[dtype], fp);
-	fputc('\n', fp);
+	fputc('\n', fp);			/* end of header */
 	switch (dtype) {			/* write data */
 	case DTascii:
 		ok = rmx_write_ascii(rm, fp);
