@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.24 2023/11/29 18:56:28 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.25 2023/11/29 18:57:10 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -168,7 +168,7 @@ checksymbolic(ROPMAT *rop)
 			break;
 		case 'A':		/* average component */
 			for (i = nc; i--; )
-				rop->preop->cmat[j*nc+i] = 1./(double)nc;
+				rop->preop.cmat[j*nc+i] = 1./(double)nc;
 			break;
 		default:
 			fprintf(stderr, "%s: -c '%c' unsupported\n",
