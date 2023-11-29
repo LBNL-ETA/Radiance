@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.23 2023/11/28 16:36:50 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.24 2023/11/29 18:56:28 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -92,7 +92,7 @@ sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]
 	for (i = nc; i--; ) {
 		SCOLOR	sclr;
 		scolorblack(sclr);
-		sclr[i] = 1;
+		sclr[i] = 1.f;
 		rop->preop.cmat[r*nc+i] = (*sf)(sclr, nc, rop->mtx->wlpart);
 	}
 }
@@ -156,15 +156,19 @@ checksymbolic(ROPMAT *rop)
 			for (i = nc*(dt != DTxyze); i--; )
 				rop->preop.cmat[j*nc+i] *= WHTEFFICACY;
 			break;
-		case 'S':
+		case 'S':		/* scotopic (il)luminance */
 			sensrow(rop, j, scolor2scotopic);
 			for (i = nc; i--; )
 				rop->preop.cmat[j*nc+i] *= WHTSCOTOPIC;
 			break;
-		case 'M':
+		case 'M':		/* melanopic (il)luminance */
 			sensrow(rop, j, scolor2melanopic);
 			for (i = nc; i--; )
 				rop->preop.cmat[j*nc+i] *= WHTMELANOPIC;
+			break;
+		case 'A':		/* average component */
+			for (i = nc; i--; )
+				rop->preop->cmat[j*nc+i] = 1./(double)nc;
 			break;
 		default:
 			fprintf(stderr, "%s: -c '%c' unsupported\n",
