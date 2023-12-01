@@ -1,11 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.25 2023/11/29 18:57:10 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.26 2023/12/01 02:05:00 greg Exp $";
 #endif
 /*
  * General component matrix operations.
  */
 
-#include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
 #include "rtio.h"
@@ -236,7 +235,7 @@ loadop(ROPMAT *rop)
 					rop->inspec, mres->ncomp,
 					rop->mtx->ncomp,
 					rop->preop.nsf ? " (* scalar)" : "");
-		rop->preop.nsf = 0;
+		rop->preop.nsf = 0;		/* now folded in */
 		if ((mres->ncomp > 3) & (mres->dtype <= DTspec))
 			outtype = DTfloat;	/* probably not actual spectrum */
 		rmx_free(rop->mtx);
@@ -449,15 +448,18 @@ get_factors(double da[], int n, char *av[])
 }
 
 static ROPMAT *
-grow_moparray(ROPMAT *mop, int n2alloc)
+resize_moparr(ROPMAT *mop, int n2alloc)
 {
 	int	nmats = 0;
+	int	i;
 
 	while (mop[nmats++].binop)
 		;
+	for (i = nmats; i > n2alloc; i--)
+		rmx_free(mop[i].mtx);
 	mop = (ROPMAT *)realloc(mop, n2alloc*sizeof(ROPMAT));
 	if (mop == NULL) {
-		fputs("Out of memory in grow_moparray()\n", stderr);
+		fputs("Out of memory in resize_moparr()\n", stderr);
 		exit(1);
 	}
 	if (n2alloc > nmats)
@@ -573,7 +575,7 @@ main(int argc, char *argv[])
 			}
 		}
 		if (nmats >= nall)
-			mop = grow_moparray(mop, nall += 2);
+			mop = resize_moparr(mop, nall += 2);
 	}
 	if (mop[0].inspec == NULL)	/* nothing to do? */
 		goto userr;
@@ -601,15 +603,12 @@ main(int argc, char *argv[])
 		else if (mres->dtype == DTxyze)
 			outfmt = DTxyze;
 	}
-	if (outfmt != DTascii)		/* write result to stdout */
-		SET_FILE_BINARY(stdout);
-	newheader("RADIANCE", stdout);
+	newheader("RADIANCE", stdout);	/* write result to stdout */
 	printargs(argc, argv, stdout);
-
 	return(rmx_write(mres, outfmt, stdout) ? 0 : 1);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..][-rf|-rb] m1 [.+*/] .. > mres\n",
+	"Usage: %s [-v][-f{adfc}][-t][-s sf .. | -c ce ..][-rf|-rb] m1 [.+*/] .. > mres\n",
 			argv[0]);
 	return(1);
 }

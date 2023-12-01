@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.18 2023/11/28 21:07:20 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.19 2023/12/01 02:05:00 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -13,8 +13,8 @@ extern "C" {
 #endif
 
 /* Preferred BSDF component:
-	transmission, reflection front (normal side), reflection back */
-typedef enum {RMPtrans=0, RMPreflF, RMPreflB} RMPref;
+	none, transmission, reflection front (normal side), reflection back */
+typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
 /* General [row][col][cmp] component matrix */
 typedef struct {
@@ -41,7 +41,10 @@ extern int	rmx_prepare(RMATRIX *rm);
 /* Call rmx_new() and rmx_prepare() */
 extern RMATRIX	*rmx_alloc(int nr, int nc, int n);
 
-/* Free a RMATRIX array */
+/* Clear state by freeing info and matrix data */
+extern void	rmx_reset(RMATRIX *rm);
+
+/* Free an RMATRIX struct and data */
 extern void	rmx_free(RMATRIX *rm);
 
 /* Resolve data type based on two input types (returns 0 for mismatch) */
@@ -62,7 +65,14 @@ extern RMATRIX	*rmx_load(const char *inspec, RMPref rmp);
 /* Append header information associated with matrix data */
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);
 
-/* Write matrix to file type indicated by dtype */
+/* Finish writing header data with resolution and format, returning type used */
+extern int	rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp);
+
+/* Write out matrix data (usually by row) */
+extern int	rmx_write_data(const double *dp, int nc, int len,
+				int dtype, FILE *fp);
+
+/* Write matrix using file format indicated by dtype */
 extern int	rmx_write(const RMATRIX *rm, int dtype, FILE *fp);
 
 /* Allocate and assign square identity matrix with n components */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.66 2023/11/28 21:28:11 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.67 2023/12/01 02:05:00 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -68,19 +68,33 @@ rmx_alloc(int nr, int nc, int n)
 	return(dnew);
 }
 
-/* Free a RMATRIX array */
+/* Clear state by freeing info and matrix data */
+void
+rmx_reset(RMATRIX *rm)
+{
+	if (!rm) return;
+	if (rm->info) {
+		free(rm->info);
+		rm->info = NULL;
+	}
+	if (rm->mtx) {
+#ifdef MAP_FILE
+		if (rm->mapped) {
+			munmap(rm->mapped, mapped_size(rm));
+			rm->mapped = NULL;
+		} else
+#endif
+			free(rm->mtx);
+		rm->mtx = NULL;
+	}
+}
+
+/* Free an RMATRIX struct and data */
 void
 rmx_free(RMATRIX *rm)
 {
 	if (!rm) return;
-	if (rm->info)
-		free(rm->info);
-#ifdef MAP_FILE
-	if (rm->mapped)
-		munmap(rm->mapped, mapped_size(rm));
-	else
-#endif
-		free(rm->mtx);
+	rmx_reset(rm);
 	free(rm);
 }
 
@@ -265,20 +279,7 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 {
 	if (!rm | !fp)
 		return(0);
-	if (rm->info) {				/* clear state */
-		free(rm->info);
-		rm->info = NULL;
-	}
-	if (rm->mtx) {				/* ...and data */
-#ifdef MAP_FILE
-		if (rm->mapped) {
-			munmap(rm->mapped, mapped_size(rm));
-			rm->mapped = NULL;
-		} else
-#endif
-			free(rm->mtx);
-		rm->mtx = NULL;
-	}
+	rmx_reset(rm);				/* clear state */
 	if (rm->nrows | rm->ncols | !rm->dtype) {
 		rm->nrows = rm->ncols = 0;
 		rm->ncomp = 3;
@@ -286,7 +287,6 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 		memcpy(rm->wlpart, WLPART, sizeof(rm->wlpart));
 		rm->swapin = 0;
 	}
-	SET_FILE_BINARY(fp);
 	rm->dtype = DTascii;			/* assumed w/o FORMAT */
 	if (getheader(fp, get_dminfo, rm) < 0) {
 		fputs("Unrecognized matrix format\n", stderr);
@@ -300,6 +300,10 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 				rm->ncomp != 3)
 			return(0);
 	}
+	if (rm->dtype == DTascii)		/* set input type (WINDOWS) */
+		SET_FILE_TEXT(fp);
+	else
+		SET_FILE_BINARY(fp);
 	return(1);
 }
 
@@ -348,8 +352,6 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 				(1./(1L<<20))*(double)array_size(rm));
 		return(0);
 	}
-	if (rm->dtype == DTascii)
-		SET_FILE_TEXT(fp);
 	for (i = 0; i < rm->nrows; i++)
 		if (!rmx_load_row(rmx_lval(rm,i,0), rm, fp))
 			return(0);
@@ -372,7 +374,7 @@ rmx_load(const char *inspec, RMPref rmp)
 		fp = stdin;
 	else if (inspec[0] == '!')
 		fp = popen(inspec+1, "r");
-	else {
+	else if (rmp != RMPnone) {
 		const char	*sp = inspec;	/* check suffix */
 		while (*sp)
 			++sp;
@@ -395,7 +397,7 @@ rmx_load(const char *inspec, RMPref rmp)
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
-						/* load header info */
+	SET_FILE_BINARY(fp);			/* load header info */
 	if (!rmx_load_header(dnew = rmx_new(0,0,3), fp)) {
 		fprintf(stderr, "Bad header in: %s\n", inspec);
 		if (inspec[0] == '!') pclose(fp);
@@ -443,102 +445,65 @@ rmx_load(const char *inspec, RMPref rmp)
 }
 
 static int
-rmx_write_ascii(const RMATRIX *rm, FILE *fp)
+rmx_write_ascii(const double *dp, int nc, int len, FILE *fp)
 {
-	const char	*fmt = (rm->dtype == DTfloat) ? " %.7e" :
-			(rm->dtype == DTrgbe) | (rm->dtype == DTxyze) |
-			(rm->dtype == DTspec) ? " %.3e" : " %.15e" ;
-	int	i, j, k;
-
-	for (i = 0; i < rm->nrows; i++) {
-	    for (j = 0; j < rm->ncols; j++) {
-		const double	*dp = rmx_val(rm,i,j);
-	        for (k = 0; k < rm->ncomp; k++)
-		    fprintf(fp, fmt, dp[k]);
+	while (len-- > 0) {
+		int	k = nc;
+		while (nc-- > 0)
+			fprintf(fp, " %.7e", *dp++);
 		fputc('\t', fp);
-	    }
-	    fputc('\n', fp);
 	}
-	return(1);
+	return(fputc('\n', fp) != EOF);
 }
 
 static int
-rmx_write_float(const RMATRIX *rm, FILE *fp)
+rmx_write_float(const double *dp, int len, FILE *fp)
 {
-	int	i, j, k;
-	float	val[100];
+	float	val;
 
-	if (rm->ncomp > 100) {
-		fputs("Unsupported # components in rmx_write_float()\n", stderr);
-		exit(1);
-	}
-	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++) {
-	    	const double	*dp = rmx_val(rm,i,j);
-	        for (k = rm->ncomp; k--; )
-		    val[k] = (float)dp[k];
-		if (putbinary(val, sizeof(float), rm->ncomp, fp) != rm->ncomp)
+	while (len--) {
+		val = *dp++;
+		if (putbinary(&val, sizeof(float), 1, fp) != 1)
 			return(0);
-	    }
+	}
 	return(1);
 }
 
 static int
-rmx_write_double(const RMATRIX *rm, FILE *fp)
+rmx_write_rgbe(const double *dp, int nc, int len, FILE *fp)
 {
-	return(putbinary(rm->mtx, sizeof(rm->mtx[0])*rm->ncomp,
-			rm->nrows*rm->ncols, fp) == rm->nrows*rm->ncols);
-}
+	COLR	*scan;
+	int	j;
 
-static int
-rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
-{
-	COLR	*scan = (COLR *)malloc(sizeof(COLR)*rm->ncols);
-	int	i, j;
+	if ((nc != 1) & (nc != 3)) return(0);
+	scan = (COLR *)tempbuffer(sizeof(COLR)*len);
+	if (!scan) return(0);
 
-	if (!scan)
-		return(0);
-	for (i = 0; i < rm->nrows; i++) {
-	    for (j = rm->ncols; j--; ) {
-	    	const double	*dp = rmx_val(rm,i,j);
-	    	if (rm->ncomp == 1)
+	for (j = 0; j < len; j++, dp += nc)
+	    	if (nc == 1)
 	    		setcolr(scan[j], dp[0], dp[0], dp[0]);
 	    	else
 	        	setcolr(scan[j], dp[0], dp[1], dp[2]);
-	    }
-	    if (fwritecolrs(scan, rm->ncols, fp) < 0) {
-		free(scan);
-		return(0);
-	    }
-	}
-	free(scan);
-	return(1);
+
+	return(fwritecolrs(scan, len, fp) >= 0);
 }
 
 static int
-rmx_write_spec(const RMATRIX *rm, FILE *fp)
+rmx_write_spec(const double *dp, int nc, int len, FILE *fp)
 {
-	uby8	*scan = (uby8 *)malloc((rm->ncomp+1)*rm->ncols);
-	int	ok = 1;
+	uby8	*scan;
 	SCOLOR	scol;
-	int	i, j, k;
+	int	j, k;
 
-	if (!scan)
-		return(0);
-	for (i = 0; i < rm->nrows; i++) {
-	    for (j = rm->ncols; j--; ) {
-	    	const double	*dp = rmx_val(rm,i,j);
-	    	for (k = rm->ncomp; k--; )
+	if (nc < 3) return(0);
+	scan = (uby8 *)tempbuffer((nc+1)*len);
+	if (!scan) return(0);
+	for (j = len; j--; dp += nc) {
+	    	for (k = nc; k--; )
 	    		scol[k] = dp[k];
-		scolor2scolr(scan+j*(rm->ncomp+1), scol, rm->ncomp);
-	    }
-	    if (fwritescolrs(scan, rm->ncomp, rm->ncols, fp) < 0) {
-		ok = 0;
-		break;
-	    }
+		scolor2scolr(scan+j*(nc+1), scol, nc);
 	}
-	free(scan);
-	return(ok);
+	return(fwritescolrs(scan, nc, len, fp) >= 0);
 }
 
 /* Check if CIE XYZ primaries were specified */
@@ -558,18 +523,13 @@ findCIEprims(const char *info)
 			(prims[BLU][CIEX] < .01) & (prims[BLU][CIEY] < .01));
 }
 
-/* Write matrix to file type indicated by dtype */
+/* Finish writing header data with resolution and format, returning type used */
 int
-rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
+rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 {
-	int	ok = 1;
-
 	if (!rm | !fp || !rm->mtx)
 		return(0);
-#ifdef getc_unlocked
-	flockfile(fp);
-#endif
-	if (rm->info)				/* complete header */
+	if (rm->info)
 		fputs(rm->info, fp);
 	if (dtype == DTfromHeader)
 		dtype = rm->dtype;
@@ -578,6 +538,11 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
+
+	if (dtype == DTascii)			/* set output type (WINDOWS) */
+		SET_FILE_TEXT(fp);
+	else
+		SET_FILE_BINARY(fp);
 						/* write exposure? */
 	if (rm->ncomp == 3 && (rm->cexp[RED] != rm->cexp[GRN]) |
 			(rm->cexp[GRN] != rm->cexp[BLU]))
@@ -600,29 +565,55 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		fputendian(fp);			/* important to record */
 	fputformat(cm_fmt_id[dtype], fp);
 	fputc('\n', fp);			/* end of header */
-	switch (dtype) {			/* write data */
+	if (dtype <= DTspec)
+		fprtresolu(rm->ncols, rm->nrows, fp);
+	return(dtype);
+}
+
+/* Write out matrix data (usually by row) */
+int
+rmx_write_data(const double *dp, int nc, int len, int dtype, FILE *fp)
+{
+	switch (dtype) {
 	case DTascii:
-		ok = rmx_write_ascii(rm, fp);
-		break;
+		return(rmx_write_ascii(dp, nc, len, fp));
 	case DTfloat:
-		ok = rmx_write_float(rm, fp);
-		break;
+		return(rmx_write_float(dp, nc*len, fp));
 	case DTdouble:
-		ok = rmx_write_double(rm, fp);
-		break;
+		return(putbinary(dp, sizeof(*dp)*nc, len, fp) == len);
 	case DTrgbe:
 	case DTxyze:
-		fprtresolu(rm->ncols, rm->nrows, fp);
-		ok = rmx_write_rgbe(rm, fp);
-		break;
+		return(rmx_write_rgbe(dp, nc, len, fp));
 	case DTspec:
-		fprtresolu(rm->ncols, rm->nrows, fp);
-		ok = rmx_write_spec(rm, fp);
-		break;
-	default:
-		return(0);
+		return(rmx_write_spec(dp, nc, len, fp));
 	}
-	ok &= (fflush(fp) == 0);
+	return(0);
+}
+
+/* Write matrix using file format indicated by dtype */
+int
+rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
+{
+	int	ok = 0;
+	int	i;
+						/* complete header */
+	dtype = rmx_write_header(rm, dtype, fp);
+	if (dtype <= 0)
+		return(0);
+#ifdef getc_unlocked
+	flockfile(fp);
+#endif
+	if (dtype == DTdouble)			/* write all at once? */
+		ok = rmx_write_data(rm->mtx, rm->ncomp,
+				rm->nrows*rm->ncols, dtype, fp);
+	else					/* else row by row */
+		for (i = 0; i < rm->nrows; i++) {
+			ok = rmx_write_data(rmx_val(rm,i,0), rm->ncomp,
+					rm->ncols, dtype, fp);
+			if (!ok) break;
+		}
+
+	if (ok) ok = (fflush(fp) == 0);
 #ifdef getc_unlocked
 	funlockfile(fp);
 #endif
@@ -654,7 +645,7 @@ rmx_copy(const RMATRIX *rm)
 {
 	RMATRIX	*dnew;
 
-	if (!rm)
+	if (!rm || !rm->mtx)
 		return(NULL);
 	dnew = rmx_alloc(rm->nrows, rm->ncols, rm->ncomp);
 	if (!dnew)
@@ -674,7 +665,7 @@ rmx_transpose(const RMATRIX *rm)
 	RMATRIX	*dnew;
 	int	i, j;
 
-	if (!rm)
+	if (!rm || !rm->mtx)
 		return(0);
 	if ((rm->nrows == 1) | (rm->ncols == 1)) {
 		dnew = rmx_copy(rm);
@@ -708,7 +699,8 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	RMATRIX	*mres;
 	int	i, j, k, h;
 
-	if (!m1 | !m2 || (m1->ncomp != m2->ncomp) | (m1->ncols != m2->nrows))
+	if (!m1 | !m2 || !m1->mtx | !m2->mtx |
+			(m1->ncomp != m2->ncomp) | (m1->ncols != m2->nrows))
 		return(NULL);
 	mres = rmx_alloc(m1->nrows, m2->ncols, m1->ncomp);
 	if (!mres)
@@ -736,7 +728,8 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 	int	zeroDivides = 0;
 	int	i, j, k;
 
-	if (!m1 | !m2 || (m1->ncols != m2->ncols) | (m1->nrows != m2->nrows))
+	if (!m1 | !m2 || !m1->mtx | !m2->mtx |
+			 (m1->ncols != m2->ncols) | (m1->nrows != m2->nrows))
 		return(0);
 	if ((m2->ncomp > 1) & (m2->ncomp != m1->ncomp))
 		return(0);
@@ -792,7 +785,7 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 	double	*mysf = NULL;
 	int	i, j, k;
 
-	if (!msum | !madd ||
+	if (!msum | !madd || !msum->mtx | !madd->mtx |
 			(msum->nrows != madd->nrows) |
 			(msum->ncols != madd->ncols) |
 			(msum->ncomp != madd->ncomp))
@@ -828,7 +821,7 @@ rmx_scale(RMATRIX *rm, const double sf[])
 {
 	int	i, j, k;
 
-	if (!rm | !sf)
+	if (!rm | !sf || !rm->mtx)
 		return(0);
 	for (i = rm->nrows; i--; )
 	    for (j = rm->ncols; j--; ) {
@@ -849,7 +842,7 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	int	i, j, ks, kd;
 	RMATRIX	*dnew;
 
-	if (!msrc | (n <= 0) | !cmat)
+	if (!msrc | (n <= 0) | !cmat || !msrc->mtx)
 		return(NULL);
 	dnew = rmx_alloc(msrc->nrows, msrc->ncols, n);
 	if (!dnew)
