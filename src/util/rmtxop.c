@@ -1,12 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.26 2023/12/01 02:05:00 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.27 2023/12/02 00:42:21 greg Exp $";
 #endif
 /*
  * General component matrix operations.
  */
 
 #include <errno.h>
-#include <ctype.h>
 #include "rtio.h"
 #include "resolu.h"
 #include "rmatrix.h"
@@ -16,12 +15,12 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.26 2023/12/01 02:05:00 greg Exp $
 
 /* Unary matrix operation(s) */
 typedef struct {
-	double		sca[MAXCOMP];		/* scalar coefficients */
 	double		cmat[MAXCOMP*MAXCOMP];	/* component transformation */
-	short		nsf;			/* number of scalars */
+	double		sca[MAXCOMP];		/* scalar coefficients */
+	const char	*csym;			/* symbolic coefs or file */
 	short		clen;			/* number of coefficients */
-	char		csym[11];		/* symbolic coefficients */
-	char		transpose;		/* do transpose? */
+	short		nsf;			/* number of scalars */
+	short		transpose;		/* do transpose? */
 } RUNARYOP;
 
 /* Matrix input source and requested operation(s) */
@@ -45,6 +44,66 @@ loadmatrix(ROPMAT *rop)
 	rop->mtx = rmx_load(rop->inspec, rop->rmp);
 
 	return(!rop->mtx ? -1 : 1);
+}
+
+static int	checksymbolic(ROPMAT *rop);
+
+/* Check/set transform based on a reference input file */
+static int
+checkreffile(ROPMAT *rop)
+{
+	static const char	*curRF = NULL;
+	static RMATRIX		refm;
+	const int		nc = rop->mtx->ncomp;
+	int			i;
+
+	if (!curRF || strcmp(rop->preop.csym, curRF)) {
+		FILE	*fp = fopen(rop->preop.csym, "rb");
+		if (!rmx_load_header(&refm, fp)) {
+			fprintf(stderr, "%s: cannot read info header\n",
+					rop->preop.csym);
+			curRF = NULL;
+			if (fp) fclose(fp);
+			return(-1);
+		}
+		fclose(fp);
+		curRF = rop->preop.csym;
+	}
+	if ((refm.ncomp == 3) & (refm.dtype != DTspec)) {
+		rop->preop.csym = (refm.dtype == DTxyze) ? "XYZ" : "RGB";
+		return(checksymbolic(rop));
+	}
+	if (refm.ncomp == 2) {
+		fprintf(stderr, "%s: cannot convert to 2 components\n",
+				curRF);
+		return(-1);
+	}
+	if (refm.ncomp == 1) {
+		rop->preop.csym = "Y";		/* XXX big assumption */
+		return(checksymbolic(rop));
+	}
+	if (refm.ncomp == nc &&
+			!memcmp(refm.wlpart, rop->mtx->wlpart, sizeof(refm.wlpart)))
+		return(0);			/* nothing to do */
+
+	if ((nc <= 3) | (nc > MAXCSAMP) | (refm.ncomp > MAXCSAMP)) {
+		fprintf(stderr, "%s: cannot resample from %d to %d components\n",
+				curRF, nc, refm.ncomp);
+		return(-1);
+	}
+	rop->preop.clen = refm.ncomp * nc;	/* compute spec to ref */
+
+	for (i = 0; i < nc; i++) {
+		SCOLOR	scstim, scresp;
+		int	j;
+		memset(scstim, 0, sizeof(COLORV)*nc);
+		scstim[i] = 1.f;
+		convertscolor(scresp, refm.ncomp, refm.wlpart[0], refm.wlpart[3],
+				scstim, nc, rop->mtx->wlpart[0], rop->mtx->wlpart[3]);
+		for (j = refm.ncomp; j-- > 0; )
+			rop->preop.cmat[j*nc + i] = scresp[j];
+	}
+	return(0);
 }
 
 /* Compute conversion row from spectrum to one channel of RGB */
@@ -90,7 +149,7 @@ sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]
 
 	for (i = nc; i--; ) {
 		SCOLOR	sclr;
-		scolorblack(sclr);
+		memset(sclr, 0, sizeof(COLORV)*nc);
 		sclr[i] = 1.f;
 		rop->preop.cmat[r*nc+i] = (*sf)(sclr, nc, rop->mtx->wlpart);
 	}
@@ -103,6 +162,9 @@ checksymbolic(ROPMAT *rop)
 	const int	nc = rop->mtx->ncomp;
 	const int	dt = rop->mtx->dtype;
 	int		i, j;
+					/* check suffix => reference file */
+	if (strchr(rop->preop.csym, '.') > rop->preop.csym)
+		return(checkreffile(rop));
 
 	if (nc < 3) {
 		fprintf(stderr, "%s: -c '%s' requires at least 3 components\n",
@@ -199,7 +261,7 @@ loadop(ROPMAT *rop)
 	if (loadmatrix(rop) < 0)		/* make sure we're loaded */
 		return(NULL);
 
-	if (rop->preop.csym[0] &&		/* symbolic transform? */
+	if (rop->preop.csym &&			/* symbolic transform? */
 			(outtype = checksymbolic(rop)) < 0)
 		goto failure;
 	if (rop->preop.clen > 0) {		/* apply component transform? */
@@ -471,13 +533,14 @@ resize_moparr(ROPMAT *mop, int n2alloc)
 int
 main(int argc, char *argv[])
 {
-	int	outfmt = DTfromHeader;
-	int	nall = 2;
-	ROPMAT	*mop = (ROPMAT *)calloc(nall, sizeof(ROPMAT));
-	int	nmats = 0;
-	RMATRIX	*mres = NULL;
-	int	stdin_used = 0;
-	int	i;
+	int		outfmt = DTfromHeader;
+	const char	*defCsym = NULL;
+	int		nall = 2;
+	ROPMAT		*mop = (ROPMAT *)calloc(nall, sizeof(ROPMAT));
+	int		nmats = 0;
+	RMATRIX		*mres = NULL;
+	int		stdin_used = 0;
+	int		i;
 					/* get options and arguments */
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] && !argv[i][1] &&
@@ -500,6 +563,8 @@ main(int argc, char *argv[])
 				mop[nmats].inspec = stdin_name;
 			} else
 				mop[nmats].inspec = argv[i];
+			if (!mop[nmats].preop.csym)
+				mop[nmats].preop.csym = defCsym;
 			if (nmats > 0 && !mop[nmats-1].binop)
 				mop[nmats-1].binop = '.';
 			nmats++;
@@ -541,11 +606,15 @@ main(int argc, char *argv[])
 					goto userr;
 				}
 				break;
+			case 'C':
+				if (!n || isflt(argv[i+1]))
+					goto userr;
+				defCsym = mop[nmats].preop.csym = argv[++i];
+				mop[nmats].preop.clen = 0;
+				break;
 			case 'c':
-				if (n && isupper(argv[i+1][0])) {
-					strlcpy(mop[nmats].preop.csym,
-						argv[++i],
-						sizeof(mop[0].preop.csym));
+				if (n && !isflt(argv[i+1])) {
+					mop[nmats].preop.csym = argv[++i];
 					mop[nmats].preop.clen = 0;
 					break;
 				}
@@ -558,7 +627,7 @@ main(int argc, char *argv[])
 							argv[0]);
 					goto userr;
 				}
-				mop[nmats].preop.csym[0] = '\0';
+				mop[nmats].preop.csym = NULL;
 				break;
 			case 'r':
 				if (argv[i][2] == 'f')

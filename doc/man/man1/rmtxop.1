@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.26 2023/11/29 18:56:28 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.27 2023/12/02 00:42:21 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -9,11 +9,13 @@ rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matri
 ][
 .B \-f[afdc]
 ][
-.B \-t
+.B "\-C {symbols|file}"
 ][
 .B "\-c ce .."
 ][
 .B "\-s sf .."
+][
+.B \-t
 ][
 .B "\-rf|\-rb"
 ]
@@ -99,8 +101,10 @@ the first new component, and the second four coefficients
 yield the second new component.
 Note that the number of coefficients must be an even multiple of the number
 of original components.
-Alternatively, a set of symbolic output components can be specified as capital
-letters, with the following definitions:
+.PP
+Alternatively, a set of symbolic output components may be given to the
+.I \-c
+option, with the following definitions:
 .sp
 .nf
 R	- red channel
@@ -118,12 +122,23 @@ These letters may be given in any order as a single string, and if
 .I "-c RGB"
 or
 .I "-c XYZ"
-is specified along with a
+is specified with
 .I "-fc"
 option, the output will be written as a RGBE or XYZE picture, respectively.
 Note that conversion from a float or RGBE color space applies a conversion
 of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
 and the reverse happens for conversion from XYZE input to RGB or RGBE output.
+.PP
+If a matrix or picture file is given to the
+.I \-c
+option, then the color space of that file will be used, instead.
+.PP
+The
+.I \-C
+option takes either a symbolic color space or an input file, and will be
+applied to all subsequent matrices that do not have their own associated
+.I \-c
+option.
 .PP
 Additionally, the
 .I \-s
