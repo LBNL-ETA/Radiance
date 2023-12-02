@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.67 2023/12/01 02:05:00 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.68 2023/12/02 16:28:35 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -292,15 +292,13 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 		fputs("Unrecognized matrix format\n", stderr);
 		return(0);
 	}
-						/* resolution string? */
-	if ((rm->nrows <= 0) | (rm->ncols <= 0)) {
-		if (!fscnresolu(&rm->ncols, &rm->nrows, fp))
-			return(0);
-		if ((rm->dtype == DTrgbe) | (rm->dtype == DTxyze) &&
-				rm->ncomp != 3)
-			return(0);
-	}
-	if (rm->dtype == DTascii)		/* set input type (WINDOWS) */
+	if ((rm->dtype == DTrgbe) | (rm->dtype == DTxyze) &&
+			rm->ncomp != 3)
+		return(0);
+	if (rm->ncols <= 0 &&			/* resolution string? */
+			!fscnresolu(&rm->ncols, &rm->nrows, fp))
+		return(0);
+	if (rm->dtype == DTascii)		/* set file type (WINDOWS) */
 		SET_FILE_TEXT(fp);
 	else
 		SET_FILE_BINARY(fp);
@@ -527,7 +525,7 @@ findCIEprims(const char *info)
 int
 rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 {
-	if (!rm | !fp || !rm->mtx)
+	if (!rm | !fp || !rm->mtx | (rm->ncols <= 0))
 		return(0);
 	if (rm->info)
 		fputs(rm->info, fp);
@@ -538,8 +536,10 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
+	if ((dtype == DTspec) & (rm->ncomp < 3))
+		return(0);
 
-	if (dtype == DTascii)			/* set output type (WINDOWS) */
+	if (dtype == DTascii)			/* set file type (WINDOWS) */
 		SET_FILE_TEXT(fp);
 	else
 		SET_FILE_BINARY(fp);
@@ -549,12 +549,13 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		fputcolcor(rm->cexp, fp);
 	else if (rm->cexp[GRN] != 1.f)
 		fputexpos(rm->cexp[GRN], fp);
-	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
-		if (dtype != DTspec) {
+						/* matrix size? */
+	if ((dtype > DTspec) | (rm->nrows <= 0)) {
+		if (rm->nrows > 0)
 			fprintf(fp, "NROWS=%d\n", rm->nrows);
-			fprintf(fp, "NCOLS=%d\n", rm->ncols);
-		} else if (rm->ncomp < 3)
-			return(0);		/* bad # components */
+		fprintf(fp, "NCOLS=%d\n", rm->ncols);
+	}
+	if (dtype >= DTspec) {			/* # components & split? */
 		fputncomp(rm->ncomp, fp);
 		if (dtype == DTspec || (rm->ncomp > 3 &&
 				memcmp(rm->wlpart, WLPART, sizeof(WLPART))))
@@ -565,7 +566,7 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		fputendian(fp);			/* important to record */
 	fputformat(cm_fmt_id[dtype], fp);
 	fputc('\n', fp);			/* end of header */
-	if (dtype <= DTspec)
+	if ((dtype <= DTspec) & (rm->nrows > 0))
 		fprtresolu(rm->ncols, rm->nrows, fp);
 	return(dtype);
 }
