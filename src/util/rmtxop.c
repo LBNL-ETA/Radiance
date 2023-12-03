@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.28 2023/12/03 02:28:33 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.29 2023/12/03 03:44:42 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -103,6 +103,7 @@ checkreffile(ROPMAT *rop)
 		for (j = refm.ncomp; j-- > 0; )
 			rop->preop.cmat[j*nc + i] = scresp[j];
 	}
+	memcpy(rop->mtx->wlpart, refm.wlpart, sizeof(rop->mtx->wlpart));
 	return(0);
 }
 
