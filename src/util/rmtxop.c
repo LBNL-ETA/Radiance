@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.27 2023/12/02 00:42:21 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.28 2023/12/03 02:28:33 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -274,15 +274,16 @@ loadop(ROPMAT *rop)
 			if (rop->preop.nsf == 1) {
 				for (i = rop->preop.clen; i--; )
 					rop->preop.cmat[i] *= rop->preop.sca[0];
- 			} else if (rop->preop.nsf != rop->mtx->ncomp) {
+ 			} else if (rop->preop.nsf*rop->mtx->ncomp != rop->preop.clen) {
 				fprintf(stderr, "%s: -s must have one or %d factors\n",
-						rop->inspec, rop->mtx->ncomp);
+						rop->inspec,
+						rop->preop.clen/rop->mtx->ncomp);
 				goto failure;
 			} else {
-				for (j = rop->preop.clen/rop->preop.nsf; j--; )
-					for (i = rop->preop.nsf; i--; )
-						rop->preop.cmat[j*rop->preop.nsf+i] *=
-								rop->preop.sca[i];
+				for (i = rop->preop.nsf; i--; )
+					for (j = rop->mtx->ncomp; j--; )
+						rop->preop.cmat[i*rop->mtx->ncomp+j]
+								*= rop->preop.sca[i];
 			}
 		}
 		mres = rmx_transform(rop->mtx, rop->preop.clen/rop->mtx->ncomp,
