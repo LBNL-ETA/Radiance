@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.68 2023/12/02 16:28:35 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.69 2023/12/04 22:02:40 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -31,14 +31,16 @@ rmx_new(int nr, int nc, int n)
 		return(NULL);
 
 	dnew = (RMATRIX *)calloc(1, sizeof(RMATRIX));
-	if (dnew) {
-		dnew->dtype = DTdouble;
-		dnew->nrows = nr;
-		dnew->ncols = nc;
-		dnew->ncomp = n;
-		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
-		memcpy(dnew->wlpart, WLPART, sizeof(dnew->wlpart));
-	}
+	if (!dnew)
+		return(NULL);
+
+	dnew->dtype = DTdouble;
+	dnew->nrows = nr;
+	dnew->ncols = nc;
+	dnew->ncomp = n;
+	setcolor(dnew->cexp, 1.f, 1.f, 1.f);
+	memcpy(dnew->wlpart, WLPART, sizeof(dnew->wlpart));
+
 	return(dnew);
 }
 
@@ -640,22 +642,28 @@ rmx_identity(const int dim, const int n)
 	return(rid);
 }
 
-/* Duplicate the given matrix */
+/* Duplicate the given matrix (may be unallocated) */
 RMATRIX *
 rmx_copy(const RMATRIX *rm)
 {
 	RMATRIX	*dnew;
 
-	if (!rm || !rm->mtx)
+	if (!rm)
 		return(NULL);
-	dnew = rmx_alloc(rm->nrows, rm->ncols, rm->ncomp);
+	dnew = rmx_new(rm->nrows, rm->ncols, rm->ncomp);
 	if (!dnew)
 		return(NULL);
+	if (rm->mtx) {
+		if (!rmx_prepare(dnew)) {
+			rmx_free(dnew);
+			return(NULL);
+		}
+		memcpy(dnew->mtx, rm->mtx, array_size(dnew));
+	}
 	rmx_addinfo(dnew, rm->info);
 	dnew->dtype = rm->dtype;
 	copycolor(dnew->cexp, rm->cexp);
 	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
-	memcpy(dnew->mtx, rm->mtx, array_size(dnew));
 	return(dnew);
 }
 
