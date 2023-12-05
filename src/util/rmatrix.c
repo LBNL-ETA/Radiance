@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.71 2023/12/05 21:13:38 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.72 2023/12/05 21:45:39 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -450,7 +450,7 @@ rmx_write_ascii(const double *dp, int nc, int len, FILE *fp)
 {
 	while (len-- > 0) {
 		int	k = nc;
-		while (nc-- > 0)
+		while (k-- > 0)
 			fprintf(fp, " %.7e", *dp++);
 		fputc('\t', fp);
 	}
