@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.70 2023/12/05 01:06:10 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.71 2023/12/05 21:13:38 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -374,14 +374,15 @@ rmx_load(const char *inspec, RMPref rmp)
 		fp = stdin;
 	else if (inspec[0] == '!')
 		fp = popen(inspec+1, "r");
-	else if (rmp != RMPnone) {
+	else {
 		const char	*sp = inspec;	/* check suffix */
 		while (*sp)
 			++sp;
 		while (sp > inspec && sp[-1] != '.')
 			--sp;
 		if (!strcasecmp(sp, "XML")) {	/* assume it's a BSDF */
-			CMATRIX	*cm = rmp==RMPtrans ? cm_loadBTDF(inspec) :
+			CMATRIX	*cm = rmp==RMPnone ? (CMATRIX *)NULL :
+					rmp==RMPtrans ? cm_loadBTDF(inspec) :
 					cm_loadBRDF(inspec, rmp==RMPreflB) ;
 			if (!cm)
 				return(NULL);

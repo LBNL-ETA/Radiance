@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.2 2023/12/05 20:05:36 greg Exp $";
+static const char RCSid[] = "$Id: rmtxcomb.c,v 2.3 2023/12/05 21:13:38 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -552,7 +552,7 @@ combine_input(ROPMAT *res, FILE *fout)
 			goto memerror;
 	}
 	if (mcat && mcat_last &&
-			!(tmp = rmx_new(1, res->imx.ncols, res->rmp->ncomp)))
+			!(tmp = rmx_alloc(1, res->imx.ncols, res->rmp->ncomp)))
 		goto memerror;
 	res->imx.nrows = 1;
 	if (!rmx_prepare(&res->imx))
@@ -797,7 +797,7 @@ main(int argc, char *argv[])
 	mop[nmats].inspec = "trailing_ops";
 					/* load final concatenation matrix */
 	if (mcat_spec && !(mcat = rmx_load(mcat_spec, RMPnone))) {
-		fprintf(stderr, "%s: error loading concatenation matrix: %s",
+		fprintf(stderr, "%s: error loading concatenation matrix: %s\n",
 				argv[0], mcat_spec);
 		return(1);
 	}
@@ -835,6 +835,8 @@ main(int argc, char *argv[])
 					argv[0], mcat_spec);
 			return(1);
 		}
+		if (!split_input(&mop[nmats]))
+			return(1);
 		mop[nmats].rmp->ncols = mcat->ncols;
 	}
 	newheader("RADIANCE", stdout);	/* write output header */
