@@ -7,6 +7,8 @@ cmake_policy(SET CMP0074 NEW)
 # project-defined modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/resources/cmake/modules")
 
+set(SUPPORTED_LANGUAGES C CXX)
+
 # Get the project version.
 set(VERSIONFILE "${CMAKE_CURRENT_LIST_DIR}/src/rt/VERSION")
 if(EXISTS ${VERSIONFILE})
@@ -14,10 +16,10 @@ if(EXISTS ${VERSIONFILE})
   if(${NAMEVERSION} MATCHES "^([A-Za-z]+) +([0-9]+\\.[0-9]+)")
     # project name must be lower case, or the CPack module fails
     string(TOLOWER ${CMAKE_MATCH_1} PROGNAME)
-    project(${PROGNAME} VERSION ${CMAKE_MATCH_2} LANGUAGES C)
+    project(${PROGNAME} VERSION ${CMAKE_MATCH_2} LANGUAGES ${SUPPORTED_LANGUAGES})
   endif()
 else()
-  project(radiance LANGUAGES C)  
+    project(radiance LANGUAGES ${SUPPORTED_LANGUAGES})
 endif()
 
 message("Project: " ${CMAKE_PROJECT_NAME} " " ${PROJECT_VERSION})
