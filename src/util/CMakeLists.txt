@@ -58,6 +58,9 @@ target_link_libraries(rcollate rtrad)
 add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
 target_link_libraries(rmtxop rtrad)
 
+add_executable(rmtxcomb rmtxcomb.c rmatrix.c cmbsdf.c cmatrix.c)
+target_link_libraries(rmtxcomb rtrad)
+
 add_executable(wrapBSDF wrapBSDF.c)
 target_link_libraries(wrapBSDF rtrad)
 
@@ -150,6 +153,7 @@ install(TARGETS
   rcrop
   rfluxmtx
   rmtxop
+  rmtxcomb
   rsensor
   rttree_reduce
   vwrays

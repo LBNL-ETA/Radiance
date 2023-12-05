@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.69 2023/12/04 22:02:40 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.70 2023/12/05 01:06:10 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -527,7 +527,7 @@ findCIEprims(const char *info)
 int
 rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 {
-	if (!rm | !fp || !rm->mtx | (rm->ncols <= 0))
+	if (!rm | !fp || rm->ncols <= 0)
 		return(0);
 	if (rm->info)
 		fputs(rm->info, fp);
