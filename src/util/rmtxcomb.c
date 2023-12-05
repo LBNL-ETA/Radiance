@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.1 2023/12/05 01:06:10 greg Exp $";
+static const char RCSid[] = "$Id: rmtxcomb.c,v 2.2 2023/12/05 20:05:36 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -273,8 +273,7 @@ checksymbolic(ROPMAT *rop)
 	} else if (!strcmp(rop->preop.csym, "RGB")) {
 		if (dt <= DTspec)
 			rop->rmp->dtype = DTrgbe;
-	}
-	if (rop->rmp->dtype == DTspec)
+	} else if (rop->rmp->dtype == DTspec)
 		rop->rmp->dtype = DTfloat;
 	return(1);
 }
@@ -301,11 +300,17 @@ get_component_xfm(ROPMAT *rop)
 			while (i--)
 				rop->preop.sca[i] = 1.;
 		}
-		if (rop->preop.nsf == 1)
-			rop->preop.sca[0] /= rop->rmp->cexp[GRN];
-		else if (rop->preop.nsf == 3)
+		if (rop->preop.nsf == 1) {
+			if (rop->rmp->ncomp == 3) {
+				rop->preop.sca[2] = rop->preop.sca[1] =
+						rop->preop.sca[0];
+				rop->preop.nsf = 3;
+			} else
+				rop->preop.sca[0] /= bright(rop->rmp->cexp);
+		}
+		if (rop->preop.nsf == 3) {
 			opcolor(rop->preop.sca, /=, rop->rmp->cexp);
-		else if (rop->preop.nsf > 3) {	/* punt */
+		} else if (rop->preop.nsf > 3) {	/* punt */
 			double	mult = 1./bright(rop->rmp->cexp);
 			for (i = rop->preop.nsf; i--; )
 				rop->preop.sca[i] *= mult;
@@ -338,7 +343,7 @@ get_component_xfm(ROPMAT *rop)
 		if (!split_input(rop))		/* get our own struct */
 			return(0);
 		rop->rmp->ncomp = rop->preop.clen / rop->imx.ncomp;
-		if (rop->rmp->dtype <= DTspec)
+		if ((rop->rmp->ncomp > 3) & (rop->rmp->dtype <= DTspec))
 			rop->rmp->dtype = DTfloat;	/* probably not actual spectrum */
 	} else if (rop->preop.nsf > 0) {	/* else use scalar(s)? */
 		if (rop->preop.nsf == 1) {
@@ -435,7 +440,7 @@ l_chanin(char *nam)
 		errno = EDOM;
 		return(.0);
 	}
-	if (!mi)				/* asking for #inputs? */
+	if (inp < .5)			/* asking for #inputs? */
 		return(nmats);
 
 	if (nargum() >= 2) {
@@ -521,7 +526,7 @@ output_headinfo(FILE *fp)
 static int
 combine_input(ROPMAT *res, FILE *fout)
 {
-	int	user_set_r, user_set_c;
+	int	set_r, set_c;
 	RMATRIX	*tmp = NULL;
 	int	co_set;
 	int	i;
@@ -561,20 +566,26 @@ combine_input(ROPMAT *res, FILE *fout)
 		scompile("co(p)=select(p,ro,go,bo)", NULL, 0);
 		co_set = 1;
 	}
-	user_set_r = vardefined("r");
-	user_set_c = vardefined("c");
+	if (co_set) {			/* don't override user */
+		set_r = !vardefined("r");
+		set_c = !vardefined("c");
+	} else				/* save a little time */
+		set_r = set_c = 0;
 					/* read/process row-by-row */
 	for (cur_row = 0; cur_row < in_nrows; cur_row++) {
 	    RMATRIX	*mres = NULL;
 	    for (i = 0; i < nmats; i++) {
-		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp))
+		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
+			fprintf(stderr, "%s: read error at row %d\n",
+					mop[i].inspec, cur_row);
 			return(0);
+		}
 		if (!apply_op(mop[i].rmp, &mop[i].imx, &mop[i].preop))
 			return(0);
 	    }
-	    if (!user_set_r) varset("r", '=', cur_row);
+	    if (set_r) varset("r", '=', cur_row);
 	    for (cur_col = 0; cur_col < in_ncols; cur_col++) {
-	    	if (!user_set_c) varset("c", '=', cur_col);
+	    	if (set_c) varset("c", '=', cur_col);
 		for (cur_chan = 0; cur_chan < in_ncomp; cur_chan++) {
 		    const int	ndx = cur_col*in_ncomp + cur_chan;
 		    eclock++;
@@ -583,7 +594,7 @@ combine_input(ROPMAT *res, FILE *fout)
 		    	for (i = nmats; i--; )
 		    		res->imx.mtx[ndx] += mop[i].rmp->mtx[ndx];
 		    } else if (co_set > 0) {
-		    	double	dchan = cur_chan;
+		    	double	dchan = cur_chan+1;
 		    	res->imx.mtx[ndx] = funvalue("co", 1, &dchan);
 		    } else
 			res->imx.mtx[ndx] = varvalue("co");
@@ -612,13 +623,21 @@ combine_input(ROPMAT *res, FILE *fout)
 	    			res->rmp->ncols, res->rmp->dtype, fout))
 	    	return(0);
 	}
+#if 0		/* we're about to exit, so who cares? */
 	rmx_free(tmp);			/* clean up */
-	if (res->rmp != &res->imx) {
-		rmx_free(res->rmp);
-		res->rmp = NULL;
-	}
+	rmx_reset(res->rmp);
 	rmx_reset(&res->imx);
-	return(1);
+	for (i = 0; i < nmats; i++) {
+		rmx_reset(mop[i].rmp);
+		rmx_reset(&mop[i].imx);
+		if (mop[i].inspec[0] == '!')
+			pclose(mop[i].infp);
+		else if (mop[i].inspec != stdin_name)
+			fclose(mop[i].infp);
+		mop[i].infp = NULL;
+	}
+#endif
+	return(fflush(fout) != EOF);
 memerror:
 	fputs("Out of buffer space in combine_input()\n", stderr);
 	return(0);
@@ -818,26 +837,14 @@ main(int argc, char *argv[])
 		}
 		mop[nmats].rmp->ncols = mcat->ncols;
 	}
-	if (outfmt == DTfromHeader)	/* set final output format */
-		outfmt = mop[nmats].rmp->dtype;
-	if (outfmt == DTrgbe) {
-		if (mop[nmats].rmp->ncomp > 3)
-			outfmt = DTspec;
-		else if (mop[nmats].rmp->dtype == DTxyze)
-			outfmt = DTxyze;
-	}
-	mop[nmats].rmp->dtype = outfmt;
-	if (outfmt != DTascii)
-		SET_FILE_BINARY(stdout);
-					/* write output header */
-	newheader("RADIANCE", stdout);
+	newheader("RADIANCE", stdout);	/* write output header */
 	if (echoheader)
 		output_headinfo(stdout);
 	printargs(argc, argv, stdout);
 	fputnow(stdout);
-	mop[nmats].rmp->dtype = rmx_write_header(mop[nmats].rmp, mop[nmats].rmp->dtype, stdout);
-	if (mop[nmats].rmp->dtype <= 0) {
-		fprintf(stderr, "%s: unexpected error writing header!\n", argv[0]);
+	mop[nmats].rmp->dtype = rmx_write_header(mop[nmats].rmp, outfmt, stdout);
+	if (!mop[nmats].rmp->dtype) {
+		fprintf(stderr, "%s: unsupported output format\n", argv[0]);
 		return(1);
 	}
 					/* process & write rows */
