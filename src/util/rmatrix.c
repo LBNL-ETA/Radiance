@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.72 2023/12/05 21:45:39 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.73 2023/12/06 17:57:34 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -666,6 +666,30 @@ rmx_copy(const RMATRIX *rm)
 	copycolor(dnew->cexp, rm->cexp);
 	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
 	return(dnew);
+}
+
+/* Replace data in first matrix with data from second */
+int
+rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
+{
+	if (!rdst | !rsrc || (rdst->nrows != rsrc->nrows) |
+			(rdst->ncols != rsrc->ncols) |
+			(rdst->ncomp != rsrc->ncomp))
+		return(0);
+
+	if (dometa) {		/* transfer everything? */
+		rmx_reset(rdst);
+		*rdst = *rsrc;
+		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
+		return(1);
+	}
+	if (rdst->mapped)
+		return(0);	/* XXX can't handle this case */
+				/* just matrix data -- leave metadata */
+	if (rdst->mtx) free(rdst->mtx);
+	rdst->mtx = rsrc->mtx;
+	rsrc->mtx = NULL;
+	return(1);
 }
 
 /* Allocate and assign transposed matrix */

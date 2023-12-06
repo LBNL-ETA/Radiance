@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.3 2023/12/05 21:13:38 greg Exp $";
+static const char RCSid[] = "$Id: rmtxcomb.c,v 2.4 2023/12/06 17:57:34 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -343,8 +343,10 @@ get_component_xfm(ROPMAT *rop)
 		if (!split_input(rop))		/* get our own struct */
 			return(0);
 		rop->rmp->ncomp = rop->preop.clen / rop->imx.ncomp;
-		if ((rop->rmp->ncomp > 3) & (rop->rmp->dtype <= DTspec))
+		if ((rop->rmp->ncomp > 3) & (rop->rmp->dtype <= DTspec)) {
 			rop->rmp->dtype = DTfloat;	/* probably not actual spectrum */
+			memcpy(rop->rmp->wlpart, WLPART, sizeof(rop->rmp->wlpart));
+		}
 	} else if (rop->preop.nsf > 0) {	/* else use scalar(s)? */
 		if (rop->preop.nsf == 1) {
 			for (i = rop->rmp->ncomp; --i; )
@@ -362,19 +364,14 @@ get_component_xfm(ROPMAT *rop)
 static int
 apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 {
-/*
-	if (!dst | !src | !ro || (dst->nrows != src->nrows) |
-			(dst->ncols != src->ncols))
-		return(0);
-*/
 	if (ro->clen > 0) {
 		RMATRIX	*res = rmx_transform(src, dst->ncomp, ro->cmat);
 		if (!res) {
 			fputs("Error in call to rmx_transform()\n", stderr);
 			return(0);
 		}
-		if (dst->mtx) free(dst->mtx);
-		dst->mtx = res->mtx; res->mtx = NULL;
+		if (!rmx_transfer_data(dst, res, 0))
+			return(0);
 		rmx_free(res);
 	} else if (dst != src)
 		memcpy(dst->mtx, src->mtx,
@@ -609,8 +606,8 @@ combine_input(ROPMAT *res, FILE *fout)
 	    	mres = rmx_multiply(tmp, mcat);
 	    	if (!mres)
 	    		goto multerror;
-		if (res->rmp->mtx) free(res->rmp->mtx);
-	    	res->rmp->mtx = mres->mtx; mres->mtx = NULL;
+		if (!rmx_transfer_data(res->rmp, mres, 0))
+			return(0);
 	    } else /* mcat && !mcat_last */ {
 	    	mres = rmx_multiply(&res->imx, mcat);
 	    	if (!mres)

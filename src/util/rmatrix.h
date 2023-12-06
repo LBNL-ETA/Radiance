@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.19 2023/12/01 02:05:00 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.20 2023/12/06 17:57:34 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -80,6 +80,9 @@ extern RMATRIX	*rmx_identity(int dim, int n);
 
 /* Duplicate the given matrix */
 extern RMATRIX	*rmx_copy(const RMATRIX *rm);
+
+/* Replace data in first matrix with data from second */
+extern int	rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa);
 
 /* Allocate and assign transposed matrix */
 extern RMATRIX	*rmx_transpose(const RMATRIX *rm);
