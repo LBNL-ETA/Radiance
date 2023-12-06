@@ -1,10 +1,12 @@
-.\" RCSid "$Id: rmtxcomb.1,v 1.1 2023/12/06 01:27:00 greg Exp $"
+.\" RCSid "$Id: rmtxcomb.1,v 1.2 2023/12/06 17:56:57 greg Exp $"
 .TH RMTXCOMB 12/5/2023 RADIANCE
 .SH NAME
 rmtxcomb - combine and convert matrices a row at a time
 .SH SYNOPSIS
 .B rmtxcomb
 [
+.B \-h
+][
 .B \-w
 ][
 .B \-f[afdc]
@@ -38,7 +40,9 @@ and
 .I \-f
 options, similar to the
 .I pcomb(1)
-command.
+and
+.I rcalc(1)
+commands.
 (The definitions in each
 .I \-f source
 file are read and compiled from the RADIANCE library where it is found.)\0
@@ -231,6 +235,10 @@ If more than 3 components are in the final matrix and
 is specified, the output will be a Radiance spectral picture.
 .PP
 The
+.I \-h
+option may be used to reduce the information header size, which
+can grow disproportionately, otherwise.
+The
 .I \-w
 option turns off warnings about divide-by-zero and other non-fatal
 calculation errors.
@@ -244,6 +252,13 @@ Divide one set of matrix elements by the Euclidean sum of two others:
 .IP "" .2i
 rmtxcomb -e "co=ci(1)/sqrt(ci(2)^2+ci(3)^2)" inp1.mtx 
 inp2.mtx inp3.mtx > out.mtx
+.PP
+Compute the absolute and relative differences between melanopic and photopic values
+in a spectral image:
+.IP "" .2i
+rmtxcomb -fa -C MY -e "abs(x):if(x,x,-x)"
+-e "co(p)=select(p,abs(ci(1,1)-ci(1,2)),(ci(1,1)-ci(1,2))/ci(1,2))"
+input_spec.hsr > compare.mtx
 .PP
 Concatenate a spectral flux coefficient matrix with a spectral sky
 matrix to compute a set of melanopic lux values:
@@ -305,6 +320,6 @@ currently accept XML files as inputs.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-dctimestep(1), getinfo(1), pcomb(1), ra_xyze(1), rcalc(1),
+dctimestep(1), icalc(1), getinfo(1), pcomb(1), ra_xyze(1), rcalc(1),
 rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), 
 rmtxop(1), rtrace(1), vwrays(1)

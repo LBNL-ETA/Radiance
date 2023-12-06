@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.13 2023/12/06 01:27:00 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.14 2023/12/06 17:56:57 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -41,7 +41,8 @@ but an arbitrary mapping can be assigned with the
 .I \-e
 and
 .I \-f
-options.
+options, similar to
+.I rcalc(1).
 (The variable and function definitions in each
 .I \-f source
 file are read and compiled from the RADIANCE library
@@ -229,4 +230,5 @@ RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), icalc(1), pcompos(1), pfilt(1), rmtxcomb(1), rmtxop(1), rpict(1)
+getinfo(1), icalc(1), pcompos(1), pfilt(1), rcalc(1),
+rmtxcomb(1), rmtxop(1), rpict(1)
