@@ -1,0 +1,310 @@
+.\" RCSid "$Id: rmtxcomb.1,v 1.1 2023/12/06 01:27:00 greg Exp $"
+.TH RMTXCOMB 12/5/2023 RADIANCE
+.SH NAME
+rmtxcomb - combine and convert matrices a row at a time
+.SH SYNOPSIS
+.B rmtxcomb
+[
+.B \-w
+][
+.B \-f[afdc]
+][
+.B "\-f file"
+][
+.B "\-e expr"
+][
+.B "\-C {symbols|file}"
+][
+.B "\-c ce .."
+][
+.B "\-s sf .."
+]
+.B "m1 .."
+[
+.B "\-m mcat"
+]
+.SH DESCRIPTION
+.I Rmtxcomb
+combines inputs given on the command line,
+one matrix row or picture scanline at a time.
+By default, the result is a linear combination of
+the matrix elements or pixels transformed by
+.I \-c
+specifications and scaled by
+.I \-s
+coefficients, but an arbitrary mapping can be assigned with the
+.I \-e
+and
+.I \-f
+options, similar to the
+.I pcomb(1)
+command.
+(The definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.)\0
+.PP
+If any
+.I \-c
+or
+.I \-s
+options follow the last input matrix, output results will be transformed
+and/or scaled accordingly.
+These operations are discussed in greater detail further on.
+A single concatenation matrix may be applied after element operations
+using the
+.I \-m
+option.
+Matrix concatenation will happen before or after any trailing
+operations, depending on relative command line placement.
+.PP
+Each input file must have a header containing the following metadata:
+.sp
+.nf
+NROWS={number of rows}
+NCOLS={number of columns}
+NCOMP={number of components}
+FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze|Radiance_spectra}
+.fi
+.sp
+The number of components indicates that each matrix element is actually
+composed of multiple elements, most commonly an RGB triple.
+This is essentially dividing the matrix into planes, where each component
+participates in a separate calculation.
+If an appropriate header is not present, it may be added with a call to
+.I rcollate(1).
+A matrix may be read from the standard input using a hyphen by itself ('-')
+in the appropriate place on the command line.
+Similarly, any of the inputs may be read from a command
+instead of a file by
+using quotes and a beginning exclamation point ('!').
+.PP
+In the case of Radiance picture files,
+the number of columns is the X-dimension of the picture, and
+the number of rows is the Y-dimension.
+The picture must be in standard pixel ordering, and the zeroeth row
+is at the top with the zeroeth column on the left.
+Any exposure changes that were applied to the pictures before
+.I rmtxcomb
+will be undone, similar to the
+.I "pcomb \-o"
+option.
+Radiance spectral pictures with more than 3 components are also supported.
+These are typically produced by
+.I rtrace(1)
+or
+.I rfluxmtx(1).
+.PP
+Before each input, the
+.I \-c
+and/or
+.I \-s
+options may be used to modify the matrix elements.
+The
+.I \-c
+option can "transform" the element values, possibly changing
+the number of components in the matrix.
+For example, a 3-component matrix can be transformed into a single-component
+matrix by using
+.I \-c
+with three coefficients.
+A four-component matrix can be turned into a two-component matrix using 8
+coefficients, where the first four coefficients will be used to compute
+the first new component, and the second four coefficients
+yield the second new component.
+Note that the number of coefficients must be an even multiple of the number
+of original components.
+.PP
+Alternatively, a set of symbolic output components may be given to the
+.I \-c
+option, with the following definitions:
+.sp
+.nf
+R	- red channel
+G	- green channel
+B	- blue channel
+X	- CIE X channel
+Y	- CIE Y channel (aka., luminance or illuminance)
+Z	- CIE Z channel
+S	- scotopic luminance or illuminance
+M	- melanopic luminance or illuminance
+A	- average component value
+.fi
+.sp
+These letters may be given in any order as a single string, and if
+.I "-c RGB"
+or
+.I "-c XYZ"
+is specified for an input picture or the
+.I "-fc"
+option is given, the output will be written as a RGBE or XYZE picture.
+Note that conversion from a float or RGBE color space applies a conversion
+of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
+and the reverse happens for conversion from XYZE input to RGB or RGBE output.
+.PP
+If a matrix or picture file path is given to the
+.I \-c
+option, then the color space of that file will be used, instead.
+.PP
+The
+.I \-C
+option takes either a symbolic color space or an input file, and will be
+applied to all subsequent matrices that do not have their own associated
+.I \-c
+option.
+.PP
+Additionally, the
+.I \-s
+option applies the given scalar factor(s) to the elements of the matrix.
+If only one factor is provided,
+it will be used for all components.
+If multiple factors are given, their number must match the number of matrix
+components
+.I after
+application of any
+.I \-c
+option for this input matrix or picture, even if the
+.I \-s
+option appears first.
+.PP
+The number of components in all input
+matrices after applying any
+.I -c
+transform must agree.
+Similarly, the number of rows and columns of all results must match
+exactly.
+(The
+.I rcrop(1)
+utility may be used to trim inputs if necessary.)\0
+.PP
+If the
+.I \-e
+or
+.I \-f
+options are used to define a "co" variable or "co(p)" function,
+this will be evaluated at each output
+component for the current element.
+The "co" variable defines identical operations for all components,
+whereas "co(p)" may specify different operations for each component.
+The element position is defined
+by the "r" and "c" variables, where
+.I r
+goes from 0 to "nrows" minus one, and
+.I c
+goes from 0 to "ncols" minus one.
+Component p from input i is accessed with the "ci(i,p)" function,
+and the number of components is defined by the "ncomp" constant.
+If given as "ci(i)", the function returns the current component
+being evaluated by
+.I rmtxcomb.
+A different component may be referenced using th second argument.
+For example, "ci(1,2)" accesses
+the second component from the first input.
+If the input is a picture, the the constants "R", "G", and "B"
+are conveniently defined as the channel numbers 1, 2, and 3,
+respectively.
+For color or spectral inputs, the function "wl(p)" gives the
+central wavelength for channel
+.I p
+in nanometers.
+For convenience and compatibility with
+.I pcomb,
+the functions "ri(i)", "gi(i)", and "bi(i)" are predefined as
+"ci(i,R)", "ci(i,G)", and "ci(i,B)", respectively.
+Accordingly, the "ro", "go", and "bo" 
+variables may be used in place of "co(R)", "co(G)", and "co(B)".
+Finally, the total number of input files is set in the constant "nfiles".
+.PP
+Results are sent to the standard output.
+By default, the values will be written in the lowest precision format
+among the inputs, but the
+.I \-f[adfc]
+option may be used to explicitly output components
+as ASCII (-fa), binary doubles (-fd), floats (-ff), or common-exponent
+colors/spectra (-fc).
+In the latter case, the actual matrix dimensions are written in the resolution string rather than the header.
+Also, matrix results will be written as standard
+Radiance pictures if they have either one
+or three components.
+In the one-component case, the output is written as grayscale.
+If more than 3 components are in the final matrix and
+.I -fc
+is specified, the output will be a Radiance spectral picture.
+.PP
+The
+.I \-w
+option turns off warnings about divide-by-zero and other non-fatal
+calculation errors.
+.SH EXAMPLES
+To convert two hyperspectral inputs to RGB color space,
+average them together, and write them out as a RADIANCE picture:
+.IP "" .2i
+rmtxcomb -C RGB -s .5 img1.spc -s .5 img2.spc > avg.hdr
+.PP
+Divide one set of matrix elements by the Euclidean sum of two others:
+.IP "" .2i
+rmtxcomb -e "co=ci(1)/sqrt(ci(2)^2+ci(3)^2)" inp1.mtx 
+inp2.mtx inp3.mtx > out.mtx
+.PP
+Concatenate a spectral flux coefficient matrix with a spectral sky
+matrix to compute a set of melanopic lux values:
+.IP "" .2i
+rmtxcomb view_spec.mtx -m sky_spec.mtx -c M > melux.mtx
+.SH NOTES
+The
+.I rmtxcomb
+tool was created to overcome some limitations of
+.I rmtxop
+and
+.I pcomb,
+whose capabilities somewhat overlap.
+The former loads each matrix into memory before operations,
+and element components take 8 bytes apiece, adding up quickly.
+Very large matrices therefore present a problem with that tool.
+Furthermore, 
+.I rmtxop
+does not allow arbitrary expressions, limiting
+what can be accomplished easily on the command-line.
+In contrast,
+.I pcomb
+is fully programmable and operates on its input using a 4-byte/component
+scanline window, so it can handle much larger input dimensions.
+However, its results are always written out as RGBE or XYZE pictures,
+whose values must be positive and whose precision is around 1%.
+Also, unlike
+.I rmtxop,
+.I pcomb
+has not been extended to handle RADIANCE hyperspectral images.
+.PP
+The
+.I rmtxcomb
+tool is a compromise that exceeds the capabilities of either of
+its predecessors in certain circumstances.
+In particular, very large matrices may be combined using
+arbitrary, user-defined operations, and the convenient
+color conversions of
+.I rmtxop
+are supported for both input and output.
+Finally, a single matrix may be concatenated after operations,
+permitting a flux transfer matrix with millions of rows to
+pass through.
+Generally speaking,
+.I rmtxcomb
+should be preferred over
+.I rmtxop
+for any operations in can handle, which is everything except
+multiple matrix concatenations and transpose
+operations, which are handled more efficiently by
+.I rcollate(1)
+in any case.
+That said, there is no significant difference for
+simple operations on smallish matrices, and note that only
+.I rmtxop
+and
+.I dctimestep(1)
+currently accept XML files as inputs.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+dctimestep(1), getinfo(1), pcomb(1), ra_xyze(1), rcalc(1),
+rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), 
+rmtxop(1), rtrace(1), vwrays(1)

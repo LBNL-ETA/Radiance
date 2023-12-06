@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.27 2023/12/02 00:42:21 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.28 2023/12/06 01:27:00 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -28,7 +28,7 @@ rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matri
 .I Rmtxop
 loads and concatenates or adds/multiplies/divides
 together component matrix files given on the command line.
-Each file must have a header containing the following variables:
+Each file must have a header containing the following metadata:
 .sp
 .nf
 NROWS={number of rows}
@@ -45,8 +45,7 @@ If an appropriate header is not present, it may be added with a call to
 .I rcollate(1).
 A matrix may be read from the standard input using a hyphen by itself ('-')
 in the appropriate place on the command line.
-.PP
-Any of the matrix inputs may be read from a command
+Similarly, any of the inputs may be read from a command
 instead of a file by
 using quotes and a beginning exclamation point ('!').
 .PP
@@ -77,7 +76,7 @@ These are typically produced by
 or
 .I rfluxmtx(1).
 .PP
-Before each file, the
+Before each input, the
 .I \-t
 and
 .I \-c
@@ -122,14 +121,14 @@ These letters may be given in any order as a single string, and if
 .I "-c RGB"
 or
 .I "-c XYZ"
-is specified with
+is specified for an input picture or the
 .I "-fc"
-option, the output will be written as a RGBE or XYZE picture, respectively.
+option is given, the output will be written as a RGBE or XYZE picture.
 Note that conversion from a float or RGBE color space applies a conversion
 of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
 and the reverse happens for conversion from XYZE input to RGB or RGBE output.
 .PP
-If a matrix or picture file is given to the
+If a matrix or picture file path is given to the
 .I \-c
 option, then the color space of that file will be used, instead.
 .PP
@@ -150,7 +149,9 @@ components
 .I after
 application of any
 .I \-c
-option for this input matrix or picture.
+option for this input matrix or picture, even if the
+.I \-s
+option appears first.
 .PP
 If present, the second and subsequent matrices on the command
 line are concatenated together, unless separated by a plus ('+'),
@@ -199,14 +200,14 @@ and/or
 options after the last matrix on the command line.
 .PP
 Results are sent to the standard output.
-By default, the values will be written in the lowest resolution format
+By default, the values will be written in the lowest precision format
 among the inputs, but the
-.I \-f
+.I \-f[adfc]
 option may be used to explicitly output components
 as ASCII (-fa), binary doubles (-fd), floats (-ff), or common-exponent
 colors/spectra (-fc).
-In the latter case, the actual matrix dimensions are written in the resolution
-string rather than the header.
+In the latter case, the actual matrix dimensions are written in
+the resolution string rather than the header.
 Also, matrix results will be written as standard
 Radiance pictures if they have either one
 or three components.
@@ -272,8 +273,6 @@ evaluated from left to right.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), getinfo(1), histo(1), neaten(1), pcomb(1),
-ra_xyze(1), rcalc(1),
-rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), rlam(1), 
-rsplit(1), rtrace(1), tabfunc(1), total(1), vwrays(1),
-wrapBSDF(1)
+cnt(1), dctimestep(1), getinfo(1), pcomb(1), ra_xyze(1), rcalc(1),
+rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1),
+rmtxcomb(1), rtrace(1), vwrays(1), wrapBSDF(1)

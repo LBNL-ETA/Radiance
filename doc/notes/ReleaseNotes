@@ -2642,3 +2642,15 @@ all subsequent input files that do not have their own -c right ahead
 of them.
 
 Added spectral picture support to rcrop and radcompare.
+
+Added new utility, rmtxcomb, which is hard to type and hard to
+pronounce, and probably equally difficult to use.  Sort of a
+combination of rmtxop and pcomb, it works with all the inputs and
+outputs that rmtxop handles, but allows for general expressions
+like those in pcomb for putting matrices together, working on
+an element at a time.  (No resizing of matrices or accessing
+neighboring elements, as permitted in pcomb.)  It saves memory
+over rmtxop by operating on a row at a time, so can handle
+input and output matrices with any number of rows.  It does
+provide for a single matrix-multiplication operation at the end,
+which only requires memory for that final matrix.
