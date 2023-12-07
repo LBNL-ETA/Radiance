@@ -1,14 +1,16 @@
-/* RCSid: $Id: pfilt.h,v 2.1 2004/03/29 00:34:23 schorsch Exp $ */
+/* RCSid: $Id: pfilt.h,v 2.2 2023/12/07 21:15:54 greg Exp $ */
 /*
  * Header file for picture filtering
  */
 #ifndef _RAD_PFILT_H_
 #define _RAD_PFILT_H_
 
+#include  "standard.h"
+#include  "color.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 extern double  CHECKRAD;	/* radius over which gaussian is summed */
 extern double  rad;		/* output pixel radius for filtering */
@@ -62,4 +64,3 @@ extern void dothresh(int  xcent, int  ycent,
 }
 #endif
 #endif /* _RAD_PFILT_H_ */
-

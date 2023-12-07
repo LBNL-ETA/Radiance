@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.19 2018/07/26 23:50:40 greg Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.20 2023/12/07 21:15:54 greg Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -7,11 +7,6 @@ static const char RCSid[] = "$Id: pf3.c,v 2.19 2018/07/26 23:50:40 greg Exp $";
  *     8/13/86
  */
 
-#include  "standard.h"
-
-#include  <string.h>
-
-#include  "color.h"
 #include  "pfilt.h"
 
 #define  RSCA		1.13	/* square-radius multiplier: sqrt(4/PI) */

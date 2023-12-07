@@ -1,21 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pf2.c,v 2.9 2022/04/21 03:11:55 greg Exp $";
+static const char	RCSid[] = "$Id: pf2.c,v 2.10 2023/12/07 21:15:54 greg Exp $";
 #endif
 /*
  *  pf2.c - routines used by pfilt.
  */
 
-#include  <stdio.h>
-#include  <stdlib.h>
-#include  <math.h>
-
-#include  "rterror.h"
-#include  "random.h"
-#include  "color.h"
 #include  "pfilt.h"
-
-#define	 PI		3.14159265359
-#define	 FTINY		(1e-6)
+#include  "random.h"
 
 #define	 AVGLVL		0.5	/* target mean brightness */
 
