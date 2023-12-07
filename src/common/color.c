@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.31 2023/11/27 21:00:14 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.32 2023/12/07 23:16:58 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -492,6 +492,11 @@ freadcolrs(			/* read in an encoded colr scanline */
 int
 freadscolrs(uby8 *scanline, int nc, int len, FILE *fp)
 {
+	if (nc < 3)
+		return(-1);
+	if (nc == 3)
+		return(freadcolrs((COLR *)scanline, len, fp));
+
 	if (fread(scanline, nc+1, len, fp) != len)
 		return(-1);
 	return(0);
@@ -502,6 +507,11 @@ freadscolrs(uby8 *scanline, int nc, int len, FILE *fp)
 int
 fwritescolrs(uby8 *sscanline, int nc, int len, FILE *fp)
 {
+	if (nc < 3)
+		return(-1);
+	if (nc == 3)
+		return(fwritecolrs((COLR *)sscanline, len, fp));
+
 	if (fwrite(sscanline, nc+1, len, fp) != len)
 		return(-1);
 	return(0);
@@ -509,7 +519,7 @@ fwritescolrs(uby8 *sscanline, int nc, int len, FILE *fp)
 
 
 int
-fwritescan(			/* write out a scanline */
+fwritescan(		/* write out an RGB or XYZ scanline */
 	COLOR  *scanline,
 	int  len,
 	FILE  *fp
@@ -536,7 +546,7 @@ fwritescan(			/* write out a scanline */
 
 
 int
-freadscan(			/* read in a scanline */
+freadscan(		/* read in an RGB or XYZ scanline */
 	COLOR  *scanline,
 	int  len,
 	FILE  *fp
@@ -582,7 +592,7 @@ freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
 }
 
 
-/* write an spectral color scanline (NCSAMP) */
+/* write an nc-component spectral color scanline */
 int
 fwritesscan(COLORV *sscanline, int nc, int len, FILE *fp)
 {
