@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.73 2023/12/06 17:57:34 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.74 2023/12/08 00:12:31 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -539,7 +539,7 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
-	if ((dtype == DTspec) & (rm->ncomp < 3))
+	if ((dtype == DTspec) & (rm->ncomp <= 3))
 		return(0);
 
 	if (dtype == DTascii)			/* set file type (WINDOWS) */
@@ -560,8 +560,8 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 	}
 	if (dtype >= DTspec) {			/* # components & split? */
 		fputncomp(rm->ncomp, fp);
-		if (dtype == DTspec || (rm->ncomp > 3 &&
-				memcmp(rm->wlpart, WLPART, sizeof(WLPART))))
+		if (rm->ncomp > 3 &&
+				memcmp(rm->wlpart, WLPART, sizeof(WLPART)))
 			fputwlsplit(rm->wlpart, fp);
 	} else if ((rm->ncomp != 3) & (rm->ncomp != 1))
 		return(0);			/* wrong # components */

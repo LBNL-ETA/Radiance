@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.4 2023/12/06 17:57:34 greg Exp $";
+static const char RCSid[] = "$Id: rmtxcomb.c,v 2.5 2023/12/08 00:12:31 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -89,7 +89,7 @@ checkreffile(ROPMAT *rop)
 		fclose(fp);
 		curRF = rop->preop.csym;
 	}
-	if ((refm.ncomp == 3) & (refm.dtype != DTspec)) {
+	if (refm.ncomp == 3) {
 		rop->preop.csym = (refm.dtype == DTxyze) ? "XYZ" : "RGB";
 		return(checksymbolic(rop));
 	}

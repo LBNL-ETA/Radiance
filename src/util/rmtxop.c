@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.29 2023/12/03 03:44:42 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.30 2023/12/08 00:12:31 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -69,7 +69,7 @@ checkreffile(ROPMAT *rop)
 		fclose(fp);
 		curRF = rop->preop.csym;
 	}
-	if ((refm.ncomp == 3) & (refm.dtype != DTspec)) {
+	if (refm.ncomp == 3) {
 		rop->preop.csym = (refm.dtype == DTxyze) ? "XYZ" : "RGB";
 		return(checksymbolic(rop));
 	}
@@ -245,8 +245,7 @@ checksymbolic(ROPMAT *rop)
 	} else if (!strcmp(rop->preop.csym, "RGB")) {
 		if (dt <= DTspec)
 			return(DTrgbe);
-	}
-	if ((nc > 3) & (dt <= DTspec))
+	} else if (dt == DTspec)
 		return(DTfloat);	/* probably not actual spectrum */
 	return(0);
 }
