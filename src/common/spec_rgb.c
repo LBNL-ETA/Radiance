@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.30 2023/11/27 21:00:14 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.31 2023/12/08 18:48:09 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -270,7 +270,7 @@ int  e
 	COLOR  ciecolor;
 
 	spec_cie(ciecolor, s, e);
-	cie_rgb(col, ciecolor);
+	colortrans(col, xyz2rgbmat, ciecolor);
 }
 
 
