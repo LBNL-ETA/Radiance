@@ -1,4 +1,4 @@
-/* RCSid: $Id: pfilt.h,v 2.2 2023/12/07 21:15:54 greg Exp $ */
+/* RCSid: $Id: pfilt.h,v 2.3 2023/12/08 17:56:26 greg Exp $ */
 /*
  * Header file for picture filtering
  */
@@ -32,30 +32,30 @@ extern int  xbrad;		/* x box size */
 extern int  ybrad;		/* y box size */
 
 extern int  barsize;		/* size of input scan bar */
-extern COLOR  **scanin;		/* input scan bar */
-extern COLOR  *scanout;		/* output scan line */
-extern COLOR  **scoutbar;	/* output scan bar (if thresh > 0) */
+extern COLORV  **scanin;	/* input scan bar */
+extern COLORV  *scanout;	/* output scan line */
+extern COLORV  **scoutbar;	/* output scan bar (if thresh > 0) */
 extern float  **greybar;	/* grey-averaged input values */
 extern int  obarsize;		/* size of output scan bar */
 extern int  orad;		/* output window radius */
 
 extern int  wrapfilt;		/* wrap filter horizontally? */
 
-typedef double brightfunc_t(COLOR c);
+typedef double brightfunc_t(SCOLOR c);
 extern brightfunc_t *ourbright;	/* brightness calculation function */
 
 	/* defined in pf2.c */
 extern void pass1init(void);		/* prepare for first pass */
 extern void pass1default(void);		/* for single pass */
-extern void pass1scan(COLOR *scan, int  y);	/* process first pass scanline */
+extern void pass1scan(COLORV *scan, int  y);	/* process first pass scanline */
 extern void pass2init(void);		/* prepare for final pass */
-extern void pass2scan(COLOR *scan, int  y);	/* process final pass scanline */
+extern void pass2scan(COLORV *scan, int  y);	/* process final pass scanline */
 
 	/* defined in pf3.c */
 extern void initmask(void);			/* initialize gaussian lookup table */
-extern void dobox(COLOR  csum, int  xcent, int  ycent,
+extern void dobox(SCOLOR  csum, int  xcent, int  ycent,
 		int  c, int  r);		/* simple box filter */
-extern void dogauss(COLOR  csum, int  xcent, int  ycent,
+extern void dogauss(SCOLOR  csum, int  xcent, int  ycent,
 		int  c, int  r);	/* gaussian filter */
 extern void dothresh(int  xcent, int  ycent,
 		int  ccent, int  rcent);	/* gaussian threshold filter */

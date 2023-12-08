@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxcomb.1,v 1.2 2023/12/06 17:56:57 greg Exp $"
+.\" RCSid "$Id: rmtxcomb.1,v 1.3 2023/12/08 17:56:26 greg Exp $"
 .TH RMTXCOMB 12/5/2023 RADIANCE
 .SH NAME
 rmtxcomb - combine and convert matrices a row at a time
@@ -284,7 +284,7 @@ In contrast,
 is fully programmable and operates on its input using a 4-byte/component
 scanline window, so it can handle much larger input dimensions.
 However, its results are always written out as RGBE or XYZE pictures,
-whose values must be positive and whose precision is around 1%.
+whose values must be positive and whose precision is +/-1%.
 Also, unlike
 .I rmtxop,
 .I pcomb
@@ -317,9 +317,16 @@ simple operations on smallish matrices, and note that only
 and
 .I dctimestep(1)
 currently accept XML files as inputs.
+Also, the resizing function of
+.I pcomb
+is not supported in
+.I rmtxcomb,
+and should instead be handled by
+.I pfilt(1).
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-dctimestep(1), icalc(1), getinfo(1), pcomb(1), ra_xyze(1), rcalc(1),
+dctimestep(1), icalc(1), getinfo(1), pcomb(1), pfilt(1),
+ra_xyze(1), rcalc(1),
 rcollate(1), rcontrib(1), rcrop(1), rfluxmtx(1), 
 rmtxop(1), rtrace(1), vwrays(1)

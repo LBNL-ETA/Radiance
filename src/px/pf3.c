@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.20 2023/12/07 21:15:54 greg Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.21 2023/12/08 17:56:26 greg Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -78,7 +78,7 @@ memerr:
 
 void
 dobox(			/* simple box filter */
-	COLOR  csum,
+	SCOLOR  csum,
 	int  xcent,
 	int  ycent,
 	int  c,
@@ -89,10 +89,10 @@ dobox(			/* simple box filter */
 	double  d;
 	int  y;
 	int  x, offs;
-	COLOR	*scan;
+	COLORV	*scan, *scp;
 	
 	wsum = 0;
-	setcolor(csum, 0.0, 0.0, 0.0);
+	scolorblack(csum);
 	for (y = ycent+1-ybrad; y <= ycent+ybrad; y++) {
 		if (y < 0) continue;
 		if (y >= yres) break;
@@ -108,19 +108,20 @@ dobox(			/* simple box filter */
 			if (d < -0.5) continue;
 			if (d >= 0.5) break;
 			wsum++;
-			addcolor(csum, scan[x+offs]);
+			scp = scan + (x+offs)*NCSAMP;
+			saddscolor(csum, scp);
 		}
 	}
 	if (wsum > 1) {
 		d = 1.0/wsum;
-		scalecolor(csum, d);
+		scalescolor(csum, d);
 	}
 }
 
 
 void
 dogauss(		/* gaussian filter */
-	COLOR  csum,
+	SCOLOR  csum,
 	int  xcent,
 	int  ycent,
 	int  c,
@@ -128,13 +129,13 @@ dogauss(		/* gaussian filter */
 )
 {
 	double  dy, dx, weight, wsum;
-	COLOR  ctmp;
+	SCOLOR  ctmp;
 	int  y;
 	int  x, offs;
-	COLOR	*scan;
+	COLORV	*scan;
 
 	wsum = FTINY;
-	setcolor(csum, 0.0, 0.0, 0.0);
+	scolorblack(csum);
 	for (y = ycent-yrad; y <= ycent+yrad; y++) {
 		if (y < 0) continue;
 		if (y >= yres) break;
@@ -147,13 +148,13 @@ dogauss(		/* gaussian filter */
 			dx = (x_c*(x+.5) - (c+.5))/rad;
 			weight = lookgauss(dx*dx + dy*dy);
 			wsum += weight;
-			copycolor(ctmp, scan[x+offs]);
-			scalecolor(ctmp, weight);
-			addcolor(csum, ctmp);
+			copyscolor(ctmp, scan+(x+offs)*NCSAMP);
+			scalescolor(ctmp, weight);
+			saddscolor(csum, ctmp);
 		}
 	}
 	weight = 1.0/wsum;
-	scalecolor(csum, weight);
+	scalescolor(csum, weight);
 }
 
 
@@ -202,7 +203,7 @@ dothresh(	/* gaussian threshold filter */
 			if (d < -0.5) continue;
 			if (d >= 0.5) break;
 			sumans(x, y, rcent, ccent,
-			pickfilt((*ourbright)(scanin[y%barsize][x+offs])));
+			pickfilt((*ourbright)(scanin[y%barsize]+(x+offs)*NCSAMP)));
 		}
 	}
 }
@@ -279,17 +280,17 @@ sumans(		/* sum input pixel to output */
 )
 {
 	double  dy2, dx;
-	COLOR  pval, ctmp;
+	SCOLOR  pval, ctmp;
 	int  ksiz, r, offs;
 	double  pc, pr, norm;
 	int  i, c;
-	COLOR	*scan;
+	COLORV	*scan, *scp;
 	/*
 	 * This normalization method fails at the picture borders because
 	 * a different number of input pixels contribute there.
 	 */
-	scan = scanin[py%barsize] + (px < 0 ? xres : px >= xres ? -xres : 0);
-	copycolor(pval, scan[px]);
+	scan = scanin[py%barsize] + (px < 0 ? xres : px >= xres ? -xres : 0)*NCSAMP;
+	copyscolor(pval, scan+px*NCSAMP);
 	pc = x_c*(px+.5);
 	pr = y_r*(py+.5);
 	ksiz = CHECKRAD*m*rad + 1;
@@ -324,10 +325,11 @@ sumans(		/* sum input pixel to output */
 			offs = c < 0 ? ncols : c >= ncols ? -ncols : 0;
 			if ((offs != 0) & !wrapfilt)
 				continue;
-			copycolor(ctmp, pval);
+			copyscolor(ctmp, pval);
 			dx = norm*warr[i++];
-			scalecolor(ctmp, dx);
-			addcolor(scan[c+offs], ctmp);
+			scalescolor(ctmp, dx);
+			scp = scan + (c+offs)*NCSAMP;
+			saddscolor(scp, ctmp);
 		}
 	}
 }

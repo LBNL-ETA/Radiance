@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.35 2023/12/07 21:15:54 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.36 2023/12/08 17:56:26 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -69,9 +69,9 @@ int  xbrad;			/* x box size */
 int  ybrad;			/* y box size */
 
 int  barsize;			/* size of input scan bar */
-COLOR  **scanin;		/* input scan bar */
-COLOR  *scanout;		/* output scan line */
-COLOR  **scoutbar;		/* output scan bar (if thresh > 0) */
+COLORV  **scanin;		/* input scan bar */
+COLORV  *scanout;		/* output scan line */
+COLORV  **scoutbar;		/* output scan bar (if thresh > 0) */
 float  **greybar;		/* grey-averaged input values */
 int  obarsize = 0;		/* size of output scan bar */
 int  orad = 0;			/* output window radius */
@@ -79,8 +79,6 @@ int  orad = 0;			/* output window radius */
 char  *progname;
 
 static gethfunc headline;
-static brightfunc_t rgb_bright;
-static brightfunc_t xyz_bright;
 static void copyfile(FILE  *in, FILE  *out);
 static void pass1(FILE  *in);
 static void pass2(FILE  *in);
@@ -268,6 +266,10 @@ main(
 				progname);
 		quit(1);
 	}
+	if (NCSAMP < 3) {
+		fprintf(stderr, "%s: bad number of components\n", progname);
+		quit(1);
+	}
 					/* add new header info. */
 	printargs(i, argv, stdout);
 					/* get picture size */
@@ -318,7 +320,7 @@ main(
 
 static double
 rgb_bright(
-	COLOR  clr
+	SCOLOR  clr
 )
 {
 	return(bright(clr));
@@ -327,10 +329,19 @@ rgb_bright(
 
 static double
 xyz_bright(
-	COLOR  clr
+	SCOLOR  clr
 )
 {
-	return(clr[CIEY]);
+	return(colval(clr,CIEY));
+}
+
+
+static double
+spec_bright(
+	SCOLOR  clr
+)
+{
+	return(pbright(clr));
 }
 
 
@@ -349,12 +360,18 @@ headline(				/* process line from header */
 		inpaspect *= aspectval(s);
 	else if (isexpos(s))		/* get exposure */
 		hotlvl *= exposval(s);
+	else if (isncomp(s))		/* get #components (spectral) */
+		NCSAMP = ncompval(s);
+	else if (iswlsplit(s))		/* get wavelength partitions */
+		wlsplitval(WLPART, s);
 	else if (formatval(fmt, s)) {	/* get format */
 		wrongformat = 0;
 		if (!strcmp(COLRFMT, fmt))
 			ourbright = rgb_bright;
 		else if (!strcmp(CIEFMT, fmt))
 			ourbright = xyz_bright;
+		else if (!strcmp(SPECFMT, fmt))
+			ourbright = spec_bright;
 		else
 			wrongformat = !globmatch(PICFMT, fmt);
 	} else if (isview(s) && sscanview(&ourview, s) > 0)
@@ -387,17 +404,17 @@ pass1(				/* first pass of picture file */
 )
 {
 	int  i;
-	COLOR  *scan;
+	COLORV  *scan;
 
 	pass1init();
 
-	scan = (COLOR *)malloc(xres*sizeof(COLOR));
+	scan = (COLORV *)malloc(xres*NCSAMP*sizeof(COLORV));
 	if (scan == NULL) {
 		fprintf(stderr, "%s: out of memory\n", progname);
 		quit(1);
 	}
 	for (i = 0; i < yres; i++) {
-		if (freadscan(scan, xres, in) < 0) {
+		if (freadsscan(scan, NCSAMP, xres, in) < 0) {
 			nrows = (long)nrows * i / yres;	/* adjust frame */
 			if (nrows <= 0) {
 				fprintf(stderr, "%s: empty frame\n", progname);
@@ -412,7 +429,7 @@ pass1(				/* first pass of picture file */
 		}
 		pass1scan(scan, i);
 	}
-	free((void *)scan);
+	free(scan);
 }
 
 
@@ -432,8 +449,8 @@ pass2(			/* last pass on file, write to stdout */
 		ycent = (r+.5)*yres/nrows;
 		while (yread <= ycent+yrad) {
 			if (yread < yres) {
-				if (freadscan(scanin[yread%barsize],
-						xres, in) < 0) {
+				if (freadsscan(scanin[yread%barsize],
+						NCSAMP, xres, in) < 0) {
 					fprintf(stderr,
 						"%s: truncated input (y=%d)\n",
 						progname, yres-1-yread);
@@ -450,18 +467,18 @@ pass2(			/* last pass on file, write to stdout */
 			if (thresh > FTINY)
 				dothresh(xcent, ycent, c, r);
 			else if (rad > FTINY)
-				dogauss(scanout[c], xcent, ycent, c, r);
+				dogauss(scanout+c*NCSAMP, xcent, ycent, c, r);
 			else
-				dobox(scanout[c], xcent, ycent, c, r);
+				dobox(scanout+c*NCSAMP, xcent, ycent, c, r);
 		}
-		if (scanout != NULL && fwritescan(scanout, ncols, stdout) < 0) {
+		if (scanout != NULL && fwritesscan(scanout, NCSAMP, ncols, stdout) < 0) {
 			fprintf(stderr, "%s: write error in pass2\n", progname);
 			quit(1);
 		}
 	}
 					/* skip leftover input */
 	while (yread < yres) {
-		if (freadscan(scanin[0], xres, in) < 0)
+		if (freadsscan(scanin[0], NCSAMP, xres, in) < 0)
 			break;
 		yread++;
 	}
@@ -497,27 +514,27 @@ scan2init(void)			/* prepare scanline arrays */
 		yrad = ybrad;
 	}
 	barsize = 2*yrad + 1;
-	scanin = (COLOR **)malloc(barsize*sizeof(COLOR *));
+	scanin = (COLORV **)malloc(barsize*sizeof(COLORV *));
 	if (scanin == NULL)
 		goto memerr;
 	for (i = 0; i < barsize; i++) {
-		scanin[i] = (COLOR *)malloc(xres*sizeof(COLOR));
+		scanin[i] = (COLORV *)malloc(xres*NCSAMP*sizeof(COLORV));
 		if (scanin[i] == NULL)
 			goto memerr;
 	}
 	if (obarsize > 0) {
-		scoutbar = (COLOR **)malloc(obarsize*sizeof(COLOR *));
+		scoutbar = (COLORV **)malloc(obarsize*sizeof(COLORV *));
 		greybar = (float **)malloc(obarsize*sizeof(float *));
 		if ((scoutbar == NULL) | (greybar == NULL))
 			goto memerr;
 		for (i = 0; i < obarsize; i++) {
-			scoutbar[i] = (COLOR *)malloc(ncols*sizeof(COLOR));
+			scoutbar[i] = (COLORV *)malloc(ncols*NCSAMP*sizeof(COLORV));
 			greybar[i] = (float *)malloc(ncols*sizeof(float));
 			if ((scoutbar[i] == NULL) | (greybar[i] == NULL))
 				goto memerr;
 		}
 	} else {
-		scanout = (COLOR *)malloc(ncols*sizeof(COLOR));
+		scanout = (COLORV *)malloc(ncols*NCSAMP*sizeof(COLORV));
 		if (scanout == NULL)
 			goto memerr;
 	}
@@ -528,7 +545,7 @@ scan2init(void)			/* prepare scanline arrays */
 			fputaspect(d, stdout);
 	}
 					/* record exposure */
-	d = (*ourbright)(exposure);
+	d = bright(exposure);
 	if (!FEQ(d,1.0))
 		fputexpos(d, stdout);
 					/* record color correction */
@@ -553,7 +570,7 @@ scan2sync(			/* synchronize grey averages and output scan */
 )
 {
 	static int  nextrow = 0;
-	COLOR  ctmp;
+	SCOLOR  ctmp;
 	int  ybot;
 	int  c;
 					/* average input scanlines */
@@ -564,7 +581,7 @@ scan2sync(			/* synchronize grey averages and output scan */
 			greybar[nextrow%obarsize][c] = (*ourbright)(ctmp);
 		}
 					/* and zero output scanline */
-		memset((char *)scoutbar[nextrow%obarsize], '\0', ncols*sizeof(COLOR));
+		memset(scoutbar[nextrow%obarsize], 0, ncols*NCSAMP*sizeof(COLORV));
 		nextrow++;
 	}
 					/* point to top scanline for output */
@@ -581,7 +598,7 @@ scan2flush(void)			/* flush output buffer */
 	int  r;
 
 	for (r = nrows-orad; r < nrows; r++)
-		if (fwritescan(scoutbar[r%obarsize], ncols, stdout) < 0)
+		if (fwritesscan(scoutbar[r%obarsize], NCSAMP, ncols, stdout) < 0)
 			break;
 	if (fflush(stdout) < 0) {
 		fprintf(stderr, "%s: write error at end of pass2\n", progname);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pf2.c,v 2.10 2023/12/07 21:15:54 greg Exp $";
+static const char	RCSid[] = "$Id: pf2.c,v 2.11 2023/12/08 17:56:26 greg Exp $";
 #endif
 /*
  *  pf2.c - routines used by pfilt.
@@ -24,7 +24,7 @@ HOTPIX	*head;			/* head of avgbrt pixel list */
 
 double	sprdfact;		/* computed spread factor */
 
-static void starpoint(COLOR  fcol, int  x, int  y, HOTPIX	 *hp);
+static void starpoint(SCOLOR fcol, int  x, int  y, HOTPIX	 *hp);
 
 
 void
@@ -47,7 +47,7 @@ pass1default(void)			/* for single pass */
 
 void
 pass1scan(		/* process first pass scanline */
-	COLOR	*scan,
+	COLORV	*scan,
 	int  y
 )
 {
@@ -57,7 +57,7 @@ pass1scan(		/* process first pass scanline */
 
 	for (x = 0; x < xres; x++) {
 	
-		cbrt = (*ourbright)(scan[x]);
+		cbrt = (*ourbright)(scan+x*NCSAMP);
 
 		if (cbrt <= 0)
 			continue;
@@ -73,10 +73,10 @@ pass1scan(		/* process first pass scanline */
 						progname);
 				quit(1);
 			}
-			copycolor(hp->val, scan[x]);
+			scolor_color(hp->val, scan+x*NCSAMP);
 			hp->x = x;
 			hp->y = y;
-			hp->slope = tan(PI*(0.5-(irandom(npts)+0.5)/npts));
+			hp->slope = ttan(PI*(0.5-(irandom(npts)+0.5)/npts));
 			hp->next = head;
 			head = hp;
 		}
@@ -96,14 +96,14 @@ pass2init(void)			/* prepare for final pass */
 
 	scalecolor(exposure,  AVGLVL/avgbrt);
 	
-	sprdfact = spread / (hotlvl * (*ourbright)(exposure))
+	sprdfact = spread / (hotlvl * bright(exposure))
 			* ((double)xres*xres + (double)yres*yres) / 4.0;
 }
 
 
 void
 pass2scan(		/* process final pass scanline */
-	COLOR	*scan,
+	COLORV	*scan,
 	int  y
 )
 {
@@ -130,16 +130,16 @@ pass2scan(		/* process final pass scanline */
 		if (xmax >= xres)
 			xmax = xres-1;
 		for (x = xmin; x <= xmax; x++)
-			starpoint(scan[x], x, y, hp);
+			starpoint(scan+x*NCSAMP, x, y, hp);
 	}
 	for (x = 0; x < xres; x++)
-		multcolor(scan[x], exposure);
+		smultcolor(scan+x*NCSAMP, exposure);
 }
 
 
 static void
 starpoint(		/* pixel is on the star's point */
-	COLOR  fcol,
+	SCOLOR  fcol,
 	int  x,
 	int  y,
 	HOTPIX	 *hp
@@ -155,8 +155,8 @@ starpoint(		/* pixel is on the star's point */
 			return;
 		copycolor(ctmp, hp->val);
 		scalecolor(ctmp, d2);
-		addcolor(fcol, ctmp);
+		saddcolor(fcol, ctmp);
 	} else if (d2 > FTINY) {
-		addcolor(fcol, hp->val);
+		saddcolor(fcol, hp->val);
 	}
 }

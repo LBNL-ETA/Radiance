@@ -2654,3 +2654,5 @@ over rmtxop by operating on a row at a time, so can handle
 input and output matrices with any number of rows.  It does
 provide for a single matrix-multiplication operation at the end,
 which only requires memory for that final matrix.
+
+Added support for filtering hyperspectral images to pfilt.

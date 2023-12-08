@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pfilt.1,v 1.5 2010/10/06 03:45:29 greg Exp $"
+.\" RCSid "$Id: pfilt.1,v 1.6 2023/12/08 17:56:26 greg Exp $"
 .TH PFILT 1 11/8/96 RADIANCE
 .SH NAME
 pfilt - filter a RADIANCE picture
@@ -12,7 +12,8 @@ pfilt - filter a RADIANCE picture
 ]
 .SH DESCRIPTION
 .I Pfilt
-performs anti-aliasing and scaling on a RADIANCE picture.
+performs anti-aliasing and scaling on a RADIANCE picture
+or hyperspectral image.
 The program makes two passes on the picture file in order to
 set the exposure to the correct average value.
 If no
@@ -144,5 +145,6 @@ RAYPATH		directories to search for lamp lookup table
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), ies2rad(1), pcompos(1), pflip(1), pinterp(1),
-pvalue(1), protate(1), rad(1), rpict(1), ximage(1)
+getinfo(1), ies2rad(1), pcomb(1), pcompos(1), pflip(1), pinterp(1),
+pvalue(1), protate(1), rad(1), rmtxcomb(1), rmtxop(1),
+rpict(1), ximage(1)
