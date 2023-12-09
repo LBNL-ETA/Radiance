@@ -2656,3 +2656,6 @@ provide for a single matrix-multiplication operation at the end,
 which only requires memory for that final matrix.
 
 Added support for filtering hyperspectral images to pfilt.
+
+Added support for 1- and 3-component float matrix i/o to
+pcomb to allow for better interoperability.

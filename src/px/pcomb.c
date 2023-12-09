@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.56 2023/11/20 21:44:29 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.57 2023/12/09 23:46:51 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -23,6 +23,7 @@ struct {
 	FILE	*fp;		/* stream pointer */
 	VIEW	vw;		/* view for picture */
 	RESOLU	rs;		/* image resolution and orientation */
+	int	infloat;	/* input is floating point (#comp)? */
 	float	pa;		/* pixel aspect ratio */
 	COLOR	*scan[WINSIZ];	/* input scanline window */
 	COLOR	coef;		/* coefficient */
@@ -34,6 +35,7 @@ int	nfiles;				/* number of input files */
 VIEW	*commvp = NULL;			/* common view parameters */
 
 char	ourfmt[MAXFMTLEN] = PICFMT;	/* input picture format */
+int	outfloat = 0;			/* #component float output? */
 
 char	StandardInput[] = "<stdin>";
 char	Command[] = "<Command>";
@@ -120,6 +122,11 @@ main(
 				echoheader = !echoheader;
 				continue;
 			case 'f':
+				if (argv[a][2]) {
+					outfloat = (argv[a][2] == 'f');
+					continue;
+				}
+				/* fall through */
 			case 'e':
 				a++;
 				continue;
@@ -198,6 +205,8 @@ main(
 			case 'h':
 				continue;
 			case 'f':
+				if (argv[a][2])
+					continue;
 				fpath = getpath(argv[++a], getrlibpath(), 0);
 				if (fpath == NULL) {
 					eputs(argv[0]);
@@ -222,25 +231,33 @@ main(
 		eputs(": illegal output resolution\n");
 		quit(1);
 	}
-						/* complete header */
-	printargs(argc, argv, stdout);
+	if (!vardefined(vbrtout))		/* single or 3-channel? */
+		outfloat *= 3;
+
+	printargs(argc, argv, stdout);		/* complete header */
 	if (commvp != NULL) {
 		fputs(VIEWSTR, stdout);
 		fprintview(commvp, stdout);
 		fputc('\n', stdout);
 	}
-	if (strcmp(ourfmt, PICFMT))
-		fputformat(ourfmt, stdout);	/* print format if known */
-	putchar('\n');
-	fprtresolu(xres, yres, stdout);
-						/* combine pictures */
-	combine();
+	if (outfloat) {				/* print format if known */
+		printf("NROWS=%d\nNCOLS=%d\n", yres, xres);
+		fputncomp(outfloat, stdout);
+		fputendian(stdout);
+		fputformat("float", stdout);
+	} else if (strcmp(ourfmt, PICFMT))
+		fputformat(ourfmt, stdout);
+	fputc('\n', stdout);			/* end header */
+	if (!outfloat)
+		fprtresolu(xres, yres, stdout);
+
+	combine();				/* combine pictures */
 	quit(0);
 usage:
 	eputs("Usage: ");
 	eputs(argv[0]);
 	eputs(
-" [-w][-h][-x xr][-y yr][-e expr][-f file] [ [-o][-s f][-c r g b] hdr ..]\n");
+" [-w][-h][-ff][-x xr][-y yr][-e expr][-f file] [ [-o][-s f][-c r g b] hdr ..]\n");
 	quit(1);
 	return 1; /* pro forma return */
 }
@@ -255,6 +272,7 @@ headline(			/* check header line & echo if requested */
 	int	orig = *(int *)p;
 	char	fmt[MAXFMTLEN];
 	double	d;
+	int	bigend;
 	COLOR	ctmp;
 
 	if (isheadid(s))			/* header id */
@@ -263,10 +281,31 @@ headline(			/* check header line & echo if requested */
 		if (globmatch(ourfmt, fmt)) {
 			wrongformat = 0;
 			strcpy(ourfmt, fmt);
-		} else
+		} else if (!strcmp("float", fmt))
+			input[nfiles].infloat *= -1;
+		else
 			wrongformat = globmatch(PICFMT, fmt) ? 1 : -1;
 		return(0);	/* don't echo */
 	}
+	if ((bigend = isbigendian(s)) >= 0) {
+		if (bigend != nativebigendian()) {
+			eputs(input[nfiles].name);
+			eputs(": unsupported input byte ordering\n");
+			quit(1);
+		}
+		return(0);	/* don't echo */
+	}
+	if (!strncmp("NROWS=", s, 6)) {		/* X-resolution */
+		input[nfiles].rs.yr = atoi(s+6);
+		return(0);	/* don't echo */
+	}
+	if (!strncmp("NCOLS=", s, 6)) {		/* Y-resolution */
+		input[nfiles].rs.xr = atoi(s+6);
+		return(0);	/* don't echo */
+	}
+	if (isncomp(s))				/* # components */
+		input[nfiles].infloat *= ncompval(s);
+
 	if (orig) {				/* undo exposure? */
 		if (isexpos(s)) {
 			d = 1./exposval(s);
@@ -306,14 +345,26 @@ checkfile(int orig)			/* ready a file */
 	int	i;
 					/* process header */
 	gotview = 0;
+	input[nfiles].infloat = -1;
+	input[nfiles].rs.rt = PIXSTANDARD;
+	input[nfiles].rs.xr = input[nfiles].rs.yr = 0;
 	if (echoheader) {
 		fputs(input[nfiles].name, stdout);
 		fputs(":\n", stdout);
 	}
 	getheader(input[nfiles].fp, headline, &orig);
+
+	if (input[nfiles].infloat <= 0)
+		input[nfiles].infloat = 0;
+	else if ((input[nfiles].infloat != 3) &
+				(input[nfiles].infloat != 1)) {
+		eputs(input[nfiles].name);
+		eputs(": unsupported number of components\n");
+		quit(1);
+	}
 	if (wrongformat < 0) {
 		eputs(input[nfiles].name);
-		eputs(": not a Radiance picture\n");
+		eputs(": not a Radiance picture or float matrix\n");
 		quit(1);
 	}
 	if (wrongformat > 0) {
@@ -324,7 +375,8 @@ checkfile(int orig)			/* ready a file */
 		input[nfiles].vw.type = 0;
 	else if (commvp == NULL)
 		commvp = &input[nfiles].vw;
-	if (!fgetsresolu(&input[nfiles].rs, input[nfiles].fp)) {
+	if ((input[nfiles].rs.xr <= 0) | (input[nfiles].rs.yr <= 0) &&
+			!fgetsresolu(&input[nfiles].rs, input[nfiles].fp)) {
 		eputs(input[nfiles].name);
 		eputs(": bad picture size\n");
 		quit(1);
@@ -429,8 +481,7 @@ combine(void)			/* combine pictures */
 		eclock++;
 		if (brtdef != NULL) {
 		    d = evalue(brtdef);
-		    if (d < 0.0)
-			d = 0.0;
+		    d *= (outfloat > 0) | (d >= 0);
 		    setcolor(scanout[xpos], d, d, d);
 		} else {
 		    for (j = 0; j < 3; j++) {
@@ -441,18 +492,33 @@ combine(void)			/* combine pictures */
 			    for (i = 0; i < nfiles; i++)
 				d += colval(input[i].scan[MIDSCN][xscan],j);
 			}
-			if (d < 0.0)
-			    d = 0.0;
+			d *= (outfloat > 0) | (d >= 0);
 			colval(scanout[xpos],j) = d;
 		    }
 		}
 	    }
-	    if (fwritescan(scanout, xres, stdout) < 0) {
-		    perror("write error");
-		    quit(1);
+	    switch (outfloat) {
+	    case 3:			/* writing out float triplets */
+	    	if (fwrite(scanout, sizeof(float)*3, xres, stdout) != xres)
+		    goto writerr;
+	    	break;
+	    case 1:			/* writing out gray float values */
+	    	for (xpos = 0; xpos < xres; xpos++)
+		    if (putbinary(&scanout[xpos][CIEY],
+		    		sizeof(float), 1, stdout) != 1)
+		    	goto writerr;
+	    	break;
+	    default:			/* writing out Radiance picture */
+	   	if (fwritescan(scanout, xres, stdout) < 0)
+	    	    goto writerr;
+		break;
 	    }
 	}
 	efree((char *)scanout);
+	return;
+writerr:
+    perror("write error");
+    quit(1);
 }
 
 
@@ -471,14 +537,28 @@ advance(void)			/* read in data for next scanline */
 			input[i].scan[0] = st;
 			if (yscan <= MIDSCN)		/* hit bottom? */
 				continue;
-			if (freadscan(st, xmax, input[i].fp) < 0) {  /* read */
-				eputs(input[i].name);
-				eputs(": read error\n");
-				quit(1);
-			}
+				 			 /* read scanline */
+			if (input[i].infloat) {
+				if (fread(st, sizeof(float)*input[i].infloat,
+						xmax, input[i].fp) != xmax)
+					goto readerr;
+				if (input[i].infloat == 1) {
+					const COLORV	*f = st[0] + xmax;
+					int		x = xmax;
+					while (x-- > 0)
+						st[x][BLU] = st[x][GRN] =
+							st[x][RED] = *--f;
+				}
+			} else if (freadscan(st, xmax, input[i].fp) < 0)
+				goto readerr;
 			for (j = 0; j < xmax; j++)	/* adjust color */
 				multcolor(st[j], input[i].coef);
 		}
+	return;
+readerr:
+	eputs(input[i].name);
+	eputs(": read error\n");
+	quit(1);
 }
 
 
@@ -609,15 +689,17 @@ l_ray(		/* return ray origin or direction */
 		return((double)nfiles);
 	fn = d - 0.5;
 	if (ltick[fn] != eclock) {		/* need to compute? */
-		lorg[fn][0] = lorg[fn][1] = lorg[fn][2] = 0.0;
-		ldir[fn][0] = ldir[fn][1] = ldir[fn][2] = 0.0;
-		ldist[fn] = -1.0;
-		if (input[fn].vw.type == 0)
+		if (input[fn].vw.type == 0) {
+			lorg[fn][0] = lorg[fn][1] = lorg[fn][2] = 0.0;
+			ldir[fn][0] = ldir[fn][1] = ldir[fn][2] = 0.0;
+			ldist[fn] = -1.0;
 			errno = EDOM;
-		else {
+		} else {
 			pix2loc(loc, &input[fn].rs, xscan, ymax-1-yscan);
 			ldist[fn] = viewray(lorg[fn], ldir[fn],
 					&input[fn].vw, loc[0], loc[1]);
+			if (ldist[fn] < -FTINY)
+				errno = EDOM;
 		}
 		ltick[fn] = eclock;
 	}

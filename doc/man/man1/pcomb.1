@@ -1,13 +1,15 @@
-.\" RCSid "$Id: pcomb.1,v 1.14 2023/12/06 17:56:57 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.15 2023/12/09 23:46:50 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
-pcomb - combine RADIANCE pictures
+pcomb - combine RADIANCE pictures and/or float matrices
 .SH SYNOPSIS
 .B pcomb
 [
 .B -h
 ][
 .B -w
+][
+.B -ff
 ][
 .B "\-x xres"
 ][
@@ -29,10 +31,10 @@ pcomb - combine RADIANCE pictures
 ]
 .SH DESCRIPTION
 .I Pcomb
-combines equal-sized RADIANCE pictures and sends the result to the
-standard output.
+combines equal-sized RADIANCE pictures or raw float matrices
+and sends the result to the standard output.
 By default, the result is just a linear combination of
-the input pictures multiplied by
+the input pixels multiplied by
 .I \-s
 and
 .I \-c
@@ -49,7 +51,10 @@ file are read and compiled from the RADIANCE library
 where it is found.)\0
 Negative coefficients and functions are allowed, and
 .I pcomb
-will produce color values of zero where they would be negative.
+will produce color values of zero where they would be negative
+unless the
+.I \-ff
+option is used to specify floating-point matrix output.
 .PP
 The variables
 .I ro,
@@ -65,16 +70,16 @@ The predefined functions
 .I gi(n)
 and
 .I bi(n)
-give the red, green and blue input values for
-picture
+give the red, green and blue values for
+input
 .I n.
 To access a pixel that is nearby the current one, these functions
 also accept optional x and y offsets.
 For example,
 .I ri(3,-2,1)
-would return the red component of the pixel from picture 3
+would return the red component of the pixel from input 3
 that is left 2 and up 1 from the current position.
-Although x offsets may be as large as width of the picture,
+Although x offsets may be as large as width of the input,
 y offsets are limited to a small window (+/- 32 pixels) due to efficiency
 considerations.
 However, it is not usually necessary to worry about this problem --
@@ -83,7 +88,7 @@ returned instead.
 .PP
 For additional convenience, the function
 .I li(n)
-is defined as the input brightness for picture
+is defined as the input brightness for input
 .I n.
 This function also accepts x and y offsets.
 .PP
@@ -115,7 +120,7 @@ The constant functions
 .I "re(n), ge(n), be(n),"
 and
 .I le(n)
-give the exposure values for picture
+give the exposure values for input
 .I n,
 and
 .I pa(n)
@@ -123,13 +128,13 @@ gives the corresponding pixel aspect ratio.
 Exposure values will be set to 1.0 for inputs with the
 .I \-o
 option set.
-Finally, for pictures with stored view parameters,
+Finally, for inputs with stored view parameters,
 the functions
 .I "Ox(n), Oy(n)"
 and
 .I Oz(n)
 return the ray origin in world coordinates for the current pixel
-in picture
+in input
 .I n,
 and
 .I "Dx(n), Dy(n)"
@@ -148,8 +153,8 @@ If the current pixel is outside the view region,
 will return a negative value, and
 .I S(n)
 will return zero.
-The first input picture with a view is assumed to correspond to the
-view of the output picture, which is written into the header.
+The first input input with a view is assumed to correspond to the
+view of the output, which is written into the header.
 .PP
 The
 .I \-h
@@ -165,7 +170,7 @@ calculations.
 The
 .I \-o
 option indicates that original pixel values are to be used for the next
-picture, undoing any previous exposure changes or color correction.
+input, undoing any previous exposure changes or color correction.
 .PP
 The
 .I \-x
@@ -197,13 +202,14 @@ the definitions of
 and
 .I bo
 will be used to compute each output pixel.
-This is useful for producing simple test pictures for various
+This is useful for producing simple test inputs for various
 purposes.
 (Theoretically, one could write a complete renderer using just the
 functional language...)
 .PP
 The standard input can be specified with a hyphen ('-').
-A command that produces a RADIANCE picture can be given in place of a file 
+A command that produces a RADIANCE picture or float matrix
+can be given in place of a file 
 by preceeding it with an exclamation point ('!').
 .SH EXAMPLES
 To produce a picture showing the difference between pic1 and pic2:
