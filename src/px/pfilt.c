@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.36 2023/12/08 17:56:26 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.37 2023/12/09 02:33:14 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -266,7 +266,7 @@ main(
 				progname);
 		quit(1);
 	}
-	if (NCSAMP < 3) {
+	if (setspectrsamp(CNDX, WLPART) < 0) {
 		fprintf(stderr, "%s: bad number of components\n", progname);
 		quit(1);
 	}
