@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.5 2023/12/08 00:12:31 greg Exp $";
+static const char RCSid[] = "$Id: rmtxcomb.c,v 2.6 2023/12/11 15:13:39 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -563,9 +563,9 @@ combine_input(ROPMAT *res, FILE *fout)
 		scompile("co(p)=select(p,ro,go,bo)", NULL, 0);
 		co_set = 1;
 	}
-	if (co_set) {			/* don't override user */
-		set_r = !vardefined("r");
-		set_c = !vardefined("c");
+	if (co_set) {			/* set if user wants, didn't set */
+		set_r = varlookup("r") != NULL && !vardefined("r");
+		set_c = varlookup("c") != NULL && !vardefined("c");
 	} else				/* save a little time */
 		set_r = set_c = 0;
 					/* read/process row-by-row */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.57 2023/12/09 23:46:51 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.58 2023/12/11 15:13:39 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -453,6 +453,7 @@ static void
 combine(void)			/* combine pictures */
 {
 	EPNODE	*coldef[3], *brtdef;
+	int	set_x, set_y;
 	COLOR	*scanout;
 	double	d;
 	int	i, j;
@@ -467,6 +468,9 @@ combine(void)			/* combine pictures */
 		brtdef = eparse(vbrtout);
 	else
 		brtdef = NULL;
+						/* what to set */
+	set_x = varlookup(vxpos) != NULL && !vardefined(vxpos);
+	set_y = varlookup(vypos) != NULL && !vardefined(vypos);
 						/* allocate scanline */
 	scanout = (COLOR *)emalloc(xres*sizeof(COLOR));
 						/* set input position */
@@ -474,10 +478,10 @@ combine(void)			/* combine pictures */
 						/* combine files */
 	for (ypos = yres-1; ypos >= 0; ypos--) {
 	    advance();
-	    varset(vypos, '=', (double)ypos);
+	    if (set_y) varset(vypos, '=', (double)ypos);
 	    for (xpos = 0; xpos < xres; xpos++) {
 		xscan = (xpos+.5)*xmax/xres;
-		varset(vxpos, '=', (double)xpos);
+		if (set_x) varset(vxpos, '=', (double)xpos);
 		eclock++;
 		if (brtdef != NULL) {
 		    d = evalue(brtdef);
