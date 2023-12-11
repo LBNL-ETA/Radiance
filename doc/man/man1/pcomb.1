@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.17 2023/12/11 01:02:18 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.18 2023/12/11 01:08:43 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures and/or float matrices
@@ -214,7 +214,7 @@ by preceeding it with an exclamation point ('!').
 .SH EXAMPLES
 To produce a picture showing the difference between pic1 and pic2:
 .IP "" .2i
-pcomb \-e 'ro=ri(1)\-ri(2);go=gi(1)\-gi(2);bo=bi(1)\-bi(2)' pic1 pic2 > diff
+pcomb \-e "ro=ri(1)\-ri(2);go=gi(1)\-gi(2);bo=bi(1)\-bi(2)" pic1 pic2 > diff
 .PP
 Or, more efficiently:
 .IP "" .2i
@@ -222,7 +222,7 @@ pcomb pic1 \-s \-1 pic2 > diff
 .PP
 To precompute the gamma correction for a picture:
 .IP "" .2i
-pcomb \-e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' inp.hdr > gam.hdr
+pcomb \-e "ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4" inp.hdr > gam.hdr
 .PP
 To perform some special filtering:
 .IP "" .2i
@@ -230,15 +230,16 @@ pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.hdr > filtered.hdr
 .PP
 To make a picture of a dot:
 .IP "" .2i
-pcomb \-x 100 \-y 100 \-e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2\-25^2,0,1)' > dot
+pcomb \-x 100 \-y 100 \-e "ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2\-25^2,0,1)" > dot
 .PP
 Use a depth buffer to superimpose 3-D gridlines on rendered image:
 .IP "" .2i
 rcollate -hi -ff -o 3000x3000 raw_orig.zbf
-| pcomb -e 't=gi(2);Px=Ox(1)+t*Dx(1);Py=Oy(1)+t*Dy(1);Pz=Oz(1)+t*Dz(1)'
--e 'frac(x):x-floor(x)' -e 'Rg:0;Gg:0;Bg:1;gsiz:0.04' 
--e 'ingr=gsiz-min(frac(Px),frac(Py),frac(Pz))' 
--e 'ro=if(ingr,Rg,ri(1));go=if(ingr,Gg,gi(1));bo=if(ingr,Bg,bi(1))'
+| pcomb -e "frac(x):x-floor(x);EPS:.0001"
+-e "t=gi(2);Px=Ox(1)+t*Dx(1)-EPS;Py=Oy(1)+t*Dy(1)-EPS;Pz=Oz(1)+t*Dz(1)-EPS"
+-e "Rg:0;Gg:0;Bg:1;gsiz:0.03" 
+-e "ingr=gsiz-min(frac(Px),frac(Py),frac(Pz))" 
+-e "ro=if(ingr,Rg,ri(1));go=if(ingr,Gg,gi(1));bo=if(ingr,Bg,bi(1))"
 raw_orig.hdr - > trans_def_grid.hdr
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
