@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.49 2023/12/11 17:21:59 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.50 2023/12/11 18:33:53 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -294,14 +294,20 @@ main(int  argc, char  *argv[])
 				sens_curve = NULL;
 				} break;
 			case 'Y':			/* photopic response */
+				if (argv[i][3])
+					goto badopt;
 				sens_curve = scolor_photopic;
 				out_scalefactor = WHTEFFICACY;
 				break;
 			case 'S':			/* scotopic response */
+				if (argv[i][3])
+					goto badopt;
 				sens_curve = scolor_scotopic;
 				out_scalefactor = WHTSCOTOPIC;
 				break;
 			case 'M':			/* melanopic response */
+				if (argv[i][3])
+					goto badopt;
 				sens_curve = scolor_melanopic;
 				out_scalefactor = WHTMELANOPIC;
 				break;
