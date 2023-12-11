@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.28 2023/11/17 23:30:07 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.29 2023/12/11 19:21:43 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -18,7 +18,7 @@ my %rtraceC = ('-dt',1, '-dc',1, '-dj',1, '-ds',1, '-dr',1, '-dp',1,
 		'-ap',2, '-am',1, '-ac',1, '-aC',1,
 		'-cs',1, '-cw',2, '-pc',8, '-pXYZ',0);
 # boolean rtrace options
-my @boolO = ('-w', '-bv', '-dv', '-i', '-u');
+my @boolO = ('-w', '-bv', '-dv', '-i', '-u', '-co');
 # view options and the associated number of arguments
 my %vwraysC = ('-vf',1, '-vtv',0, '-vtl',0, '-vth',0, '-vta',0, '-vts',0, '-vtc',0,
 		'-x',1, '-y',1, '-vp',3, '-vd',3, '-vu',3, '-vh',1, '-vv',1,
@@ -35,6 +35,8 @@ my @pvalueA = ('pvalue', '-r');
 my $outpatt = '^-o[vrxlLRXnNsmM]+';
 my $refDepth = "";
 my $irrad = 0;
+my $specout = 0;
+my $ncsamp = 3;
 my $persist = 0;
 my $ambounce = 0;
 my $ambcache = 1;
@@ -61,9 +63,13 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 				$irrad = ! $irrad;
 			} elsif ("$ARGV[0]" =~ /^-i[-+01tfynTFYN]/) {
 				$irrad = ("$ARGV[0]" =~ /^-i[+1tyTY]/);
+			} elsif ("$ARGV[0]" eq '-co') {
+				$specout = ! $specout;
+			} elsif ("$ARGV[0]" =~ /^-co[-+01tfynTFYN]/) {
+				$specout = ("$ARGV[0]" =~ /^-co[+1tyTY]/);
 			}
-			push @rtraceA, $ARGV[0];
-			push @rpictA, shift(@ARGV);
+			push(@rpictA, $ARGV[0]) if ("$ARGV[0]" !~ /^-co/);
+			push @rtraceA, shift(@ARGV);
 			next OPTION;
 		}
 	}
@@ -92,9 +98,13 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 			$ambfile = "$ARGV[1]";
 		} elsif ("$ARGV[0]" eq '-pXYZ') {
 			push @pvalueA, $ARGV[0];
+			$specout = 0;
 		} elsif ("$ARGV[0]" eq '-pc') {
 			push @pvalueA, '-p';
 			push @pvalueA, @ARGV[1..8];
+			$specout = 0;
+		} elsif ("$ARGV[0]" eq '-cs') {
+			$ncsamp = $ARGV[1];
 		}
 		push @rtraceA, $ARGV[0];
 		push @rpictA, shift(@ARGV);
@@ -135,6 +145,9 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 }
 die "Number of processes must be positive" if ($nprocs <= 0);
+if ($specout) {
+	$specout = ($ncsamp > 3);
+}
 if (defined $outdir) {		# check conflicting options
 	die "Options -o and -o* are mutually exclusive\n" if (defined $outpic);
 	die "Options -z and -o* are mutually exclusive\n" if (defined $outzbf);
@@ -145,7 +158,7 @@ if (defined $outpic) {		# redirect output?
 }
 #####################################################################
 ##### May as well run rpict?
-if ($nprocs == 1 && $persist == 0 && !defined($outdir)) {
+if ($specout == 0 && $nprocs == 1 && $persist == 0 && !defined($outdir)) {
 	push(@rpictA, $ARGV[0]) if ($#ARGV == 0);
 	exec @rpictA ;
 }
@@ -159,7 +172,7 @@ my @res = split(/\s/, `@vwraysA -d`);
 #####################################################################
 ##### Resort pixels to reduce ambient cache collisions?
 if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
-	if (!defined($outzbf) && !defined($outdir)) {
+	if ($specout == 0 && !defined($outzbf) && !defined($outdir)) {
 		# Straight picture output, so just shuffle sample order
 		system "cnt -s $res[1] $res[3] > /tmp/ord$$.txt";
 		die "cnt error\n" if ( $? );
@@ -178,16 +191,17 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 	print STDERR "Running $ores[0] by $ores[1] overture calculation " .
 			"to populate '$ambfile'...\n";
 	system "cnt -s @ores | @vwraysA -i -ff -x $ores[0] -y $ores[1] -pj 0 " .
-		"| @rtraceA -ff -ov '$oct' > /dev/null";
+		"| @rtraceA -ff -ov -pY '$oct' > /dev/null";
 	die "Failure running overture\n" if ( $? );
 	print STDERR "Finished overture.\n";
 }
 #####################################################################
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
+	my $picvt = $specout ? 'rmtxcomb -fc -' : "@pvalueA -df";
 	exec "@vwraysA -ff | @rtraceA -fff -olv @res '$oct' | " .
-		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of3 - | " .
-		"@pvalueA -df | getinfo -a 'VIEW=$view'";
+		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of$ncsamp - | " .
+		$picvt . " | getinfo -a 'VIEW=$view'";
 }
 #####################################################################
 ##### Base case with output picture only?
@@ -215,12 +229,18 @@ my %rtoutC = (
 # Arguments for rsplit based on output file type
 my %rcodeC = (
 	'.hdr',	['-of3', "!@pvalueA -df -u"],
+	'.hsr', ["-of$ncsamp", '!rmtxcomb -fc -'],
 	'.dpt',	['-of', "!rcode_depth$refDepth -ff"],
 	'.nrm',	['-of3', '!rcode_norm -ff'],
 	'.idx',	['-oa', '!rcode_ident "-t	"']
 );
+if ($specout) {		# adjust actions for -co+ option
+	$rtoutC{'v'} = 'radiance.hsr';
+	$rtoutC{'r'} = 'r_refl.hsr';
+	$rtoutC{'x'} = 'r_unrefl.hsr';
+}
 if ($irrad) {		# adjust actions for -i+ option
-	$rtoutC{'v'} = 'irradiance.hdr';
+	$rtoutC{'v'} = $specout ? 'irradiance.hsr' : 'irradiance.hdr';
 	delete $rtoutC{'r'};
 	delete $rtoutC{'x'};
 	delete $rtoutC{'R'};

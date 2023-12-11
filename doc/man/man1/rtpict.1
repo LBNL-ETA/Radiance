@@ -1,11 +1,13 @@
-.\" RCSid "$Id: rtpict.1,v 1.12 2023/01/05 19:25:21 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.13 2023/12/11 19:21:43 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
-rtpict - generate a RADIANCE picture or layered image using rtrace
+rtpict - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
 .SH SYNOPSIS
 .B rtpict
 .B "-n nproc"
 [
+.B -co
+][
 .B "-o[vrxlLRXnNsmM] out_dir"
 ][
 .B "-d ref_depth/unit"
@@ -19,18 +21,22 @@ rtpict - generate a RADIANCE picture or layered image using rtrace
 .B octree
 .SH DESCRIPTION
 .I Rtpict
-is a script that generates a picture from the RADIANCE scene given in
+is a script that generates a picture or hyperspectral image
+from the RADIANCE scene given in
 .I octree
 and sends it to the standard output, or to a file specified with the
 .I \-o
 option.
 Most options and defaults are the same as
 .I rpict(1),
-although a few switches are silently ignored.
-Options incompatible with multi-processing can generate an error.
+although a few options are silently ignored, and the
+.I rtrace(1)
+.I \-co
+boolean switch is supported.
+Options incompatible with multi-processing may generate an error.
 .PP
 The
-.I rtrace(1)
+.I rtrace
 tool is called with
 .I vwrays(1)
 to perform the actual work.
@@ -78,7 +84,16 @@ M	material.idx
 Different encodings are associated with different data types.
 Color data (from the 'v', 'r', and 'x' types) will be converted to
 a flat RGBE picture by
-.I pvalue(1).
+.I pvalue(1),
+unless the
+.I \-co+
+option is specified and
+.I \-cs
+is greater than 3.
+In this case, a hyperspectral image will be generated for each
+of the value types, converted by
+.I rmtxcomb(1)
+and with its suffix set to ".hsr" rather than ".hdr".
 Distances (from the 'l', 'L', 'R', and 'X' types) will be
 converted to a 16-bit representation by
 .I rcode_depth(1),
@@ -98,7 +113,10 @@ If the
 option is used to turn on irradiane output, then the picture associated
 with the 'v' type will be renamed
 .I "irradiance.hdr"
-and some other output types become irrelevant (i.e., 'r', 'x', 'R', and 'X').
+or
+.I "irradiance.hsr"
+and some other output types become irrelevant
+(i.e., 'r', 'x', 'R', and 'X').
 If one or more of the associated output files already exists in the
 destination directory, an error will be printed and the command will abort.
 .SH EXAMPLES
@@ -109,9 +127,14 @@ rtpict -n 4 -vf mypers.vf -ab 1 -af scene.amb scene.oct > scene_pers.hdr
 To render radiance, first surface distance, and normals in a layered image:
 .IP "" .2i
 rtpict -n 8 -vf fish.vf @render.opt -ovLn fisholay scene.oct
+.PP
+To render a hyperspectral irradiance image with 18 spectral samples:
+.IP "" .2i
+rtpict -vf inside.vf -cs 18 -co+ scene.oct > scene_inside.hsr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
 getinfo(1), mkpmap(1), oconv(1), pfilt(1), 
 pvalue(1), rad(1), rcode_depth(1), rcode_norm(1), rcode_ident(1),
-rcrop(1), rpiece(1), rpict(1), rsplit(1), rtrace(1), rvu(1), vwrays(1)
+rcrop(1), rmtxop(1), rmtxcomb(1),
+rpiece(1), rpict(1), rsplit(1), rtrace(1), rvu(1), vwrays(1)

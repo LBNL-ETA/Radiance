@@ -2659,3 +2659,6 @@ Added support for filtering hyperspectral images to pfilt.
 
 Added support for 1- and 3-component float matrix i/o to
 pcomb to allow for better interoperability.
+
+Added support for -co+ option to rtpict, so it can directly
+produce hyperspectral images.
