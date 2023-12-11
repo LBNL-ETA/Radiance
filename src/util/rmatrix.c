@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.74 2023/12/08 00:12:31 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.75 2023/12/11 19:00:22 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -539,7 +539,9 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
-	if ((dtype == DTspec) & (rm->ncomp <= 3))
+	if ((dtype < DTspec) & (rm->ncomp > 3))
+		dtype = DTspec;
+	else if ((dtype == DTspec) & (rm->ncomp <= 3))
 		return(0);
 
 	if (dtype == DTascii)			/* set file type (WINDOWS) */
