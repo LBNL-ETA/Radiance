@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.15 2023/12/09 23:46:50 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.16 2023/12/11 01:00:27 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures and/or float matrices
@@ -231,6 +231,15 @@ pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.hdr > filtered.hdr
 To make a picture of a dot:
 .IP "" .2i
 pcomb \-x 100 \-y 100 \-e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2\-25^2,0,1)' > dot
+.PP
+Use a depth buffer to superimpose 3-D gridlines on rendered image:
+.IP "" .2i
+rcollate -hi -ff -o 3000x3000 raw_orig.zbf
+| pcomb -e 't=gi(2);Px=Ox(1)+t*Dx(1);Py=Oy(1)+t*Dy(1);Pz=Oz(1)+t*Dz(1)'
+-e 'frac(x):x-floor(x)' -e 'Rg:0;Gg:0;Bg:1;gsiz:0.04' 
+-e 'ingr=gsiz-min(frac(Px),frac(Py),frac(Pz))' 
+-e 'ro=if(ingr,Rg,ri(1));go=if(ingr,Gg,gi(1));bo=if(ingr,Bg,bi(1))'
+raw_orig.hdr - > trans_def_grid.hdr
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
