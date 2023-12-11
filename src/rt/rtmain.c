@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.48 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.49 2023/12/11 17:21:59 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -313,10 +313,13 @@ main(int  argc, char  *argv[])
 		case 'c':				/* output spectral results */
 			if (argv[i][2] != 'o')
 				goto badopt;
-			rval = (out_prims == NULL);
+			rval = (out_prims == NULL) & (sens_curve == NULL);
 			check_bool(3,rval);
-			if (rval) out_prims = NULL;
-			else if (out_prims == NULL) out_prims = stdprims;
+			if (rval) {
+				out_prims = NULL;
+				sens_curve = NULL;
+			} else if (out_prims == NULL)
+				out_prims = stdprims;
 			break;
 #endif
 #ifdef  PERSIST
@@ -565,6 +568,9 @@ printdefaults(void)			/* print default values to stdout */
 {
 	char  *cp;
 
+	printf(erract[WARNING].pf != NULL ?
+			"-w+\t\t\t\t# warning messages on\n" :
+			"-w-\t\t\t\t# warning messages off\n");
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
@@ -602,9 +608,6 @@ printdefaults(void)			/* print default values to stdout */
 		case '~': printf(" tilde"); break;
 		}
 	fputc('\n', stdout);
-	if (NCSAMP > 3)
-		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
-				"-co+\t\t\t\t# output spectral values\n");
 	if (sens_curve == scolor_photopic)
 		printf("-pY\t\t\t\t# photopic output\n");
 	else if (sens_curve == scolor_scotopic)
@@ -621,8 +624,8 @@ printdefaults(void)			/* print default values to stdout */
 				out_prims[GRN][0], out_prims[GRN][1],
 				out_prims[BLU][0], out_prims[BLU][1],
 				out_prims[WHT][0], out_prims[WHT][1]);
-	printf(erract[WARNING].pf != NULL ?
-			"-w+\t\t\t\t# warning messages on\n" :
-			"-w-\t\t\t\t# warning messages off\n");
+	if (NCSAMP > 3)
+		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
+				"-co+\t\t\t\t# output spectral values\n");
 	print_rdefaults();
 }
