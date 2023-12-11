@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.15 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.16 2023/12/11 23:57:32 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -132,7 +132,7 @@ ambvalOK(			/* check consistency of ambient value */
 	if (av->rad[0] > av->rad[1]+FTINY) return(0);
 	if (badflt(av->gpos[0]) | badflt(av->gpos[1])) return(0);
 	if (badflt(av->gdir[0]) | badflt(av->gdir[1])) return(0);
-	for (i = AMB_CNDX[3]; i-- > 0; )
+	for (i = NCSAMP; i-- > 0; )
 		if ((av->val[i] < 0.) | (av->val[i] >= FHUGE))
 			return(0);
 	return(1);
