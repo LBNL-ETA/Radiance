@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.110 2023/12/11 18:33:53 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.111 2023/12/11 18:54:42 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -684,12 +684,7 @@ oputr(				/* print mirrored contribution */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
-
-	cval[0] = colval(r->mcol,RED);
-	cval[1] = colval(r->mcol,GRN);
-	cval[2] = colval(r->mcol,BLU);
-	(*putreal)(cval, 3);
+	putscolor(r->mcol);
 }
 
 
