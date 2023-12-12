@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.75 2023/12/11 19:00:22 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.76 2023/12/12 18:45:53 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -685,12 +685,16 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
 		return(1);
 	}
+#ifdef MAP_FILE			/* just matrix data -- leave metadata */
 	if (rdst->mapped)
-		return(0);	/* XXX can't handle this case */
-				/* just matrix data -- leave metadata */
-	if (rdst->mtx) free(rdst->mtx);
+		munmap(rdst->mapped, mapped_size(rdst));
+	else
+#endif
+	if (rdst->mtx)
+		free(rdst->mtx);
+	rdst->mapped = rsrc->mapped;
 	rdst->mtx = rsrc->mtx;
-	rsrc->mtx = NULL;
+	rsrc->mapped = NULL; rsrc->mtx = NULL;
 	return(1);
 }
 
