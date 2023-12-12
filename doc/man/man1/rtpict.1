@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtpict.1,v 1.14 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.15 2023/12/12 17:18:27 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
 rtpict - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
@@ -130,7 +130,7 @@ rtpict -n 8 -vf fish.vf @render.opt -ovLn fisholay scene.oct
 .PP
 To render a hyperspectral irradiance image with 18 spectral samples:
 .IP "" .2i
-rtpict -vf inside.vf -cs 18 -co+ scene.oct > scene_inside.hsr
+rtpict -vf inside.vf -i+ -cs 18 -co+ scene.oct > scene_inside.hsr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
