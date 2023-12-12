@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.35 2023/11/17 20:02:07 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.36 2023/12/12 20:12:47 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -1484,7 +1484,7 @@ or:
 <p>
 	The first two real arguments indicate the extrema of the
 	spectral range in nanometers.
-	Subsequent real values correspond to multipliers in at each wavelength.
+	Subsequent real values correspond to multipliers at each wavelength.
 	The nmA wavelength may be greater or less than nmB,
 	but they may not be equal, and their ordering matches
 	the order of the spectral values.
@@ -1548,7 +1548,7 @@ or:
 <p>
 	Like the spectrum primitive, the wavelength range is specified
 	in the first two real arguments, and additional real values are
-	accessible to the sval function.
+	set in the evaluation context.
 	This function is fed a wavelenth sample
 	between nmA and nmB as its only argument,
 	and it returns the corresponding spectral intensity.
