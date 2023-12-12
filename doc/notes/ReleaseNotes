@@ -2643,7 +2643,7 @@ of them.
 
 Added spectral picture support to rcrop and radcompare.
 
-Added new utility, rmtxcomb, which is hard to type and hard to
+Added new utility, rcomb, which is hard to type and hard to
 pronounce, and probably equally difficult to use.  Sort of a
 combination of rmtxop and pcomb, it works with all the inputs and
 outputs that rmtxop handles, but allows for general expressions

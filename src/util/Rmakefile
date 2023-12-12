@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.103 2023/12/05 01:06:10 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.104 2023/12/12 16:31:45 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -24,7 +24,7 @@ LIBDIR = /usr/local/lib/ray
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare radcompare \
-		rcode_depth rcode_norm rcode_ident dcglare rcrop rmtxcomb
+		rcode_depth rcode_norm rcode_ident dcglare rcrop rcomb
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -138,8 +138,8 @@ rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
 	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
 -lrtrad $(MLIB)
 
-rmtxcomb:	rmtxcomb.o rmatrix.o cmatrix.o cmbsdf.o
-	$(CC) $(CFLAGS) -o rmtxcomb rmtxcomb.o rmatrix.o cmatrix.o cmbsdf.o \
+rcomb:	rcomb.o rmatrix.o cmatrix.o cmbsdf.o
+	$(CC) $(CFLAGS) -o rcomb rcomb.o rmatrix.o cmatrix.o cmbsdf.o \
 -lrtrad $(MLIB)
 
 wrapBSDF:	wrapBSDF.o

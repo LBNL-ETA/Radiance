@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtpict.1,v 1.13 2023/12/11 19:21:43 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.14 2023/12/12 16:31:45 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
 rtpict - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
@@ -92,7 +92,7 @@ option is specified and
 is greater than 3.
 In this case, a hyperspectral image will be generated for each
 of the value types, converted by
-.I rmtxcomb(1)
+.I rcomb(1)
 and with its suffix set to ".hsr" rather than ".hdr".
 Distances (from the 'l', 'L', 'R', and 'X' types) will be
 converted to a 16-bit representation by
@@ -136,5 +136,5 @@ Greg Ward
 .SH "SEE ALSO"
 getinfo(1), mkpmap(1), oconv(1), pfilt(1), 
 pvalue(1), rad(1), rcode_depth(1), rcode_norm(1), rcode_ident(1),
-rcrop(1), rmtxop(1), rmtxcomb(1),
+rcomb(1), rcrop(1), rmtxop(1),
 rpiece(1), rpict(1), rsplit(1), rtrace(1), rvu(1), vwrays(1)

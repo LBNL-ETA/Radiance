@@ -1,9 +1,9 @@
-.\" RCSid "$Id: rmtxcomb.1,v 1.5 2023/12/11 19:21:43 greg Exp $"
-.TH RMTXCOMB 12/5/2023 RADIANCE
+.\" RCSid "$Id: rcomb.1,v 1.1 2023/12/12 16:31:45 greg Exp $"
+.TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
-rmtxcomb - combine and convert matrices a row at a time
+rcomb - combine and convert matrices a row at a time
 .SH SYNOPSIS
-.B rmtxcomb
+.B rcomb
 [
 .B \-h
 ][
@@ -26,7 +26,7 @@ rmtxcomb - combine and convert matrices a row at a time
 .B "\-m mcat"
 ]
 .SH DESCRIPTION
-.I Rmtxcomb
+.I Rcomb
 combines inputs given on the command line,
 one matrix row or picture scanline at a time.
 By default, the result is a linear combination of
@@ -88,7 +88,7 @@ the number of rows is the Y-dimension.
 The picture must be in standard pixel ordering, and the zeroeth row
 is at the top with the zeroeth column on the left.
 Any exposure changes that were applied to the pictures before
-.I rmtxcomb
+.I rcomb
 will be undone, similar to the
 .I "pcomb \-o"
 option.
@@ -199,7 +199,7 @@ Component p from input i is accessed with the "ci(i,p)" function,
 and the number of components is defined by the "ncomp" constant.
 If given as "ci(i)", the function returns the current component
 being evaluated by
-.I rmtxcomb.
+.I rcomb.
 A different component may be referenced using th second argument.
 For example, "ci(1,2)" accesses
 the second component from the first input.
@@ -246,27 +246,27 @@ calculation errors.
 To convert two hyperspectral inputs to RGB color space,
 average them together, and write them out as a RADIANCE picture:
 .IP "" .2i
-rmtxcomb -C RGB -s .5 img1.spc -s .5 img2.spc > avg.hdr
+rcomb -C RGB -s .5 img1.spc -s .5 img2.spc > avg.hdr
 .PP
 Divide one set of matrix elements by the Euclidean sum of two others:
 .IP "" .2i
-rmtxcomb -e "co=ci(1)/sqrt(ci(2)^2+ci(3)^2)" inp1.mtx 
+rcomb -e "co=ci(1)/sqrt(ci(2)^2+ci(3)^2)" inp1.mtx 
 inp2.mtx inp3.mtx > out.mtx
 .PP
 Compute the absolute and relative differences between melanopic and photopic values
 in a spectral image:
 .IP "" .2i
-rmtxcomb -fa -C MY -e "abs(x):if(x,x,-x)"
+rcomb -fa -C MY -e "abs(x):if(x,x,-x)"
 -e "co(p)=select(p,abs(ci(1,1)-ci(1,2)),(ci(1,1)-ci(1,2))/ci(1,2))"
 input_spec.hsr > compare.mtx
 .PP
 Concatenate a spectral flux coefficient matrix with a spectral sky
 matrix to compute a set of melanopic lux values:
 .IP "" .2i
-rmtxcomb view_spec.mtx -m sky_spec.mtx -c M > melux.mtx
+rcomb view_spec.mtx -m sky_spec.mtx -c M > melux.mtx
 .SH NOTES
 The
-.I rmtxcomb
+.I rcomb
 tool was created to overcome some limitations of
 .I rmtxop
 and
@@ -291,7 +291,7 @@ has not been extended to handle RADIANCE hyperspectral images
 or more general matrix data.
 .PP
 The
-.I rmtxcomb
+.I rcomb
 tool is a compromise that exceeds the capabilities of either of
 its predecessors in certain circumstances.
 In particular, very large matrices may be combined using
@@ -303,7 +303,7 @@ Finally, a single matrix may be concatenated after operations,
 permitting a flux transfer matrix with millions of rows to
 pass through.
 Generally speaking,
-.I rmtxcomb
+.I rcomb
 should be preferred over
 .I rmtxop
 for any operations in can handle, which is everything except
@@ -320,7 +320,7 @@ currently accept XML files as inputs.
 Also, the resizing function of
 .I pcomb
 is not supported in
-.I rmtxcomb,
+.I rcomb,
 and should instead be handled by
 .I pfilt(1).
 .SH AUTHOR

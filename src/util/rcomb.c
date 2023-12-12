@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxcomb.c,v 2.6 2023/12/11 15:13:39 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.1 2023/12/12 16:31:45 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
