@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.20 2023/11/15 18:02:52 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.21 2023/12/13 23:26:16 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -81,8 +81,10 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  PAT_SPECTRUM	53		/* constant spectrum */
 #define  PAT_SPECFILE	54		/* spectrum file */
 #define  PAT_SPECFUNC	55		/* spectral function */
+#define  PAT_SPECDATA	56		/* spectral data file */
+#define  PAT_SPECPICT	57		/* hyperspectral picture */
 				/* number of object types */
-#define  NUMOTYPE	56
+#define  NUMOTYPE	58
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -113,7 +115,7 @@ extern FUN  ofun[];			/* our type list */
 #define  islight(t)	(ofun[t].flags & T_L)
 #define  isvlight(t)	(ofun[t].flags & T_LV)
 #define  hasdata(t)	(ofun[t].flags & (T_D|T_I))
-#define  hasfunc(t)	(ofun[t].flags & (T_F|T_D|T_I) && (t)!=PAT_SPECFILE)
+#define  hasfunc(t)	(ofun[t].flags & T_F)
 #define  hastext(t)	(ofun[t].flags & T_E)
 #define  isflat(t)	(((t)==OBJ_FACE) | ((t)==OBJ_RING))
 
@@ -145,7 +147,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "plasfunc",	T_M|T_F,	o_default }, \
 				{ "metfunc",	T_M|T_F,	o_default }, \
 				{ "brightfunc",	T_P|T_F,	o_default }, \
-				{ "brightdata",	T_P|T_D,	o_default }, \
+				{ "brightdata",	T_P|T_D|T_F,	o_default }, \
 				{ "brighttext",	T_P|T_E,	o_default }, \
 				{ "colorpict",	T_P|T_I,	o_default }, \
 				{ "glow",	T_M|T_L,	o_default }, \
@@ -157,18 +159,18 @@ extern FUN  ofun[];			/* our type list */
 				{ "mirror",	T_M|T_LV,	o_default }, \
 				{ "transfunc",	T_M|T_F,	o_default }, \
 				{ "BRTDfunc",	T_M|T_F,	o_default }, \
-				{ "BSDF",	T_M|T_D,	o_default }, \
-				{ "aBSDF",	T_M|T_D,	o_default }, \
-				{ "plasdata",	T_M|T_D,	o_default }, \
-				{ "metdata",	T_M|T_D,	o_default }, \
-				{ "transdata",	T_M|T_D,	o_default }, \
+				{ "BSDF",	T_M|T_D|T_F,	o_default }, \
+				{ "aBSDF",	T_M|T_D|T_F,	o_default }, \
+				{ "plasdata",	T_M|T_D|T_F,	o_default }, \
+				{ "metdata",	T_M|T_D|T_F,	o_default }, \
+				{ "transdata",	T_M|T_D|T_F,	o_default }, \
 				{ "colorfunc",	T_P|T_F,	o_default }, \
 				{ "antimatter",	T_M,		o_default }, \
-				{ "colordata",	T_P|T_D,	o_default }, \
+				{ "colordata",	T_P|T_D|T_F,	o_default }, \
 				{ "colortext",	T_P|T_E,	o_default }, \
-				{ "texdata",	T_T|T_D,	o_default }, \
+				{ "texdata",	T_T|T_D|T_F,	o_default }, \
 				{ "mixfunc",	T_X|T_F,	o_default }, \
-				{ "mixdata",	T_X|T_D,	o_default }, \
+				{ "mixdata",	T_X|T_D|T_F,	o_default }, \
 				{ "mixtext",	T_X|T_E,	o_default }, \
 				{ "mixpict",	T_X|T_I,	o_default }, \
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
@@ -177,6 +179,8 @@ extern FUN  ofun[];			/* our type list */
 				{ "spectrum",	T_P,		o_default }, \
 				{ "specfile",	T_P|T_D,	o_default }, \
 				{ "specfunc",	T_P|T_F,	o_default }, \
+				{ "specdata",	T_P|T_D|T_F,	o_default }, \
+				{ "specpict",	T_P|T_I|T_F,	o_default }, \
 			}
 
 

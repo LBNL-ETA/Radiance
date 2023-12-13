@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.10 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.11 2023/12/13 23:26:16 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -31,7 +31,7 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.10 2023/11/17 20:02:07 greg Exp $
  *  A spectral function is given as:
  *
  *	modifier specfunc name
- *	2+ sval filename xf
+ *	2+ sfunc filename xf
  *	0
  *	2+ nmA nmB A3 ..
  *
@@ -39,7 +39,7 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.10 2023/11/17 20:02:07 greg Exp $
  *  can be found.  The list of real arguments can be accessed by
  *  definitions in the file.  The xf is a transformation
  *  to get from the original coordinates to the current coordinates.
- *  For the "specfunc" primitive, sval(nm) is a function of wavelength
+ *  For the "specfunc" primitive, sfunc(nm) is a function of wavelength
  *  and must be defined from nmA to nmB, and should average to 1 over
  *  its range.
  */

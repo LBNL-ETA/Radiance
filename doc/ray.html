@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.37 2023/12/12 20:25:22 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.38 2023/12/13 23:26:16 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -1552,6 +1552,61 @@ or:
 	This function is fed a wavelenth sample
 	between nmA and nmB as its only argument,
 	and it returns the corresponding spectral intensity.
+
+<dt>
+       <a NAME="Specdata">
+       <b>Specdata</b>
+       </a>
+
+<dd>
+	Specdata is like brightdata and colordata, but with more
+	than 3 specular samples.
+
+<pre>
+	mod specdata id
+	3+n+
+		func datafile
+		funcfile x1 x2 .. xn transform
+	0
+	m A1 A2 .. Am
+</pre>
+
+<p>
+	The data file must have one more dimension than the coordinate
+	variable count, as this final dimension corresponds to the covered
+	spectrum.
+	The starting and ending wavelengths are specified in "datafile"
+	as well as the number of spectral samples.
+	The function "func" will be called with two parameters, the
+	interpolated spectral value for the current coordinate and the
+	associated wavelength.
+	If the spectrum is broken into 12 components, then 12 calls
+	will be made to "func" for the relevant ray evaluation.
+
+<dt>
+       <a NAME="Specpict">
+       <b>Specpict</b>
+       </a>
+
+<dd>
+	Specpict is a special case of specdata, where the pattern is
+	a hyperspectral image stored in the common-exponent file format.
+	The dimensions of the image data are determined by the picture
+	just as with the colorpict primitive.
+
+<pre>
+	mod specpict id
+	5+
+		func specfile
+		funcfile u v transform
+	0
+	m A1 A2 .. Am
+</pre>
+
+<p>
+	The function "func" is called with the interpolated pixel value
+	and the wavelength sample in nanometers, the same as specdata,
+	with as many calls made as there are components in "specfile".
 
 </dl>
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.35 2023/03/17 18:43:45 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.36 2023/12/13 23:26:16 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -81,7 +81,7 @@ getdata(				/* get data array dname */
 		error(SYSTEM, errmsg);
 	}
 							/* get dimensions */
-	if (fgetval(fp, 'i', (char *)&asize) <= 0)
+	if (fgetval(fp, 'i', &asize) <= 0)
 		goto scanerr;
 	if ((asize <= 0) | (asize > MAXDDIM)) {
 		sprintf(errmsg, "bad number of dimensions for \"%s\"", dname);
@@ -94,11 +94,11 @@ getdata(				/* get data array dname */
 	dp->nd = asize;
 	asize = 1;
 	for (i = 0; i < dp->nd; i++) {
-		if (fgetval(fp, DATATY, (char *)&dp->dim[i].org) <= 0)
+		if (fgetval(fp, DATATY, &dp->dim[i].org) <= 0)
 			goto scanerr;
-		if (fgetval(fp, DATATY, (char *)&dp->dim[i].siz) <= 0)
+		if (fgetval(fp, DATATY, &dp->dim[i].siz) <= 0)
 			goto scanerr;
-		if (fgetval(fp, 'i', (char *)&dp->dim[i].ne) <= 0)
+		if (fgetval(fp, 'i', &dp->dim[i].ne) <= 0)
 			goto scanerr;
 		if (dp->dim[i].ne < 2)
 			goto scanerr;
@@ -109,8 +109,7 @@ getdata(				/* get data array dname */
 			if (dp->dim[i].p == NULL)
 				goto memerr;
 			for (j = 0; j < dp->dim[i].ne; j++)
-				if (fgetval(fp, DATATY,
-						(char *)&dp->dim[i].p[j]) <= 0)
+				if (fgetval(fp, DATATY, &dp->dim[i].p[j]) <= 0)
 					goto scanerr;
 			for (j = 1; j < dp->dim[i].ne-1; j++)
 				if ((dp->dim[i].p[j-1] < dp->dim[i].p[j]) !=
@@ -126,20 +125,19 @@ getdata(				/* get data array dname */
 		goto memerr;
 	
 	for (i = 0; i < asize; i++)
-		if (fgetval(fp, DATATY, (char *)&dp->arr.d[i]) <= 0)
+		if (fgetval(fp, DATATY, &dp->arr.d[i]) <= 0)
 			goto scanerr;
 	fclose(fp);
 	i = hash(dname);
 	dp->next = dtab[i];
 	return(dtab[i] = dp);
-
 memerr:
 	error(SYSTEM, "out of memory in getdata");
 scanerr:
 	sprintf(errmsg, "%s in data file \"%s\"",
 			feof(fp) ? "unexpected EOF" : "bad format", dfname);
 	error(USER, errmsg);
-	return NULL; /* pro forma return */
+	return NULL;	/* pro forma return */
 }
 
 
@@ -153,11 +151,10 @@ headaspect(			/* check string for aspect ratio */
 
 	if (isaspect(s))
 		*(double*)iap *= aspectval(s);
-	else if (formatval(fmt, s) && !globmatch(PICFMT, fmt))
+	else if (formatval(fmt, s) && strcmp(fmt, COLRFMT))
 		*(double*)iap = 0.0;
 	return(0);
 }
-
 
 DATARRAY *
 getpict(				/* get picture pname */
@@ -188,11 +185,10 @@ getpict(				/* get picture pname */
 
 	pp[0].name = savestr(pname);
 
-	if ((fp = fopen(pfname, "r")) == NULL) {
+	if ((fp = fopen(pfname, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open picture file \"%s\"", pfname);
 		error(SYSTEM, errmsg);
 	}
-	SET_FILE_BINARY(fp);
 						/* get dimensions */
 	inpaspect = 1.0;
 	getheader(fp, headaspect, &inpaspect);
@@ -238,7 +234,7 @@ getpict(				/* get picture pname */
 			copycolr(pp[0].arr.c[i], scanin[x]);
 		}
 	}
-	free((void *)scanin);
+	free(scanin);
 	fclose(fp);
 	i = hash(pname);
 	pp[0].next = dtab[i];		/* link into picture list */
@@ -248,13 +244,119 @@ getpict(				/* get picture pname */
 	pp[1].type = GRN;
 	pp[2].type = BLU;
 	return(dtab[i] = pp);
-
 memerr:
 	error(SYSTEM, "out of memory in getpict");
 readerr:
 	sprintf(errmsg, "bad picture file \"%s\"", pfname);
 	error(USER, errmsg);
-	return NULL; /* pro forma return */
+	return NULL;	/* pro forma return */
+}
+
+
+/* header info type for hyperspectral image */
+typedef struct {
+	float	wlpart[4];	/* wavelength partitions */
+	int	nc;		/* number of components */
+	double	inpaspect;	/* pixel aspect ratio */
+} SPECINFO;
+
+static int
+specheadline(				/* get info for spectral image */
+	char  *s,
+	void  *cdp
+)
+{
+	SPECINFO	*sip = (SPECINFO *)cdp;
+	char		fmt[MAXFMTLEN];
+
+	if (isaspect(s))
+		sip->inpaspect *= aspectval(s);
+	else if (isncomp(s))
+		sip->nc = ncompval(s);
+	else if (iswlsplit(s))
+		wlsplitval(sip->wlpart, s);
+	else if (formatval(fmt, s) && strcmp(fmt, SPECFMT))
+		return(-1);
+	return(0);
+}
+
+DATARRAY *
+getspec(		/* load hyperspectral image as data */
+	char *sname
+)
+{
+	SPECINFO	si;
+	char		*pfname;
+	FILE		*fp;
+	int		sl, ns;
+	int		y, i;
+	DATARRAY	*pp;
+						/* look for array in list */
+	for (pp = dtab[hash(sname)]; pp != NULL; pp = pp->next)
+		if (!strcmp(sname, pp->name))
+			return(pp);		/* found! */
+
+	if ((pfname = getpath(sname, getrlibpath(), R_OK)) == NULL) {
+		sprintf(errmsg, "cannot find hyperspectral image \"%s\"", sname);
+		error(SYSTEM, errmsg);
+	}
+	if ((fp = fopen(pfname, "rb")) == NULL) {
+		sprintf(errmsg, "cannot open hyperspectral image \"%s\"", pfname);
+		error(SYSTEM, errmsg);
+	}
+	si.wlpart[3] = 0;
+	si.nc = 0;
+	si.inpaspect = 1.0;
+	if (getheader(fp, specheadline, &si) < 0 ||
+			(si.nc <= 3) | (si.nc > MAXCSAMP) | (si.wlpart[3] < 1) ||
+			!fscnresolu(&sl, &ns, fp))
+		goto readerr;
+
+	if ((pp = (DATARRAY *)malloc(sizeof(DATARRAY))) == NULL)
+		goto memerr;
+
+	pp->name = savestr(sname);
+	pp->type = SPECTY;
+	pp->nd = 3;
+	pp->dim[0].ne = ns;
+	pp->dim[1].ne = sl;
+	pp->dim[0].org =
+	pp->dim[1].org = 0.0;
+	if (sl <= ns*si.inpaspect) {
+		pp->dim[0].siz = si.inpaspect * (double)ns/sl;
+		pp->dim[1].siz = 1.0;
+	} else {
+		pp->dim[0].siz = 1.0;
+		pp->dim[1].siz = (double)sl/ns / si.inpaspect;
+	}
+	pp->dim[2].ne = si.nc;
+	pp->dim[2].siz = si.wlpart[3] - si.wlpart[0];
+	pp->dim[2].org = si.wlpart[0] + 0.5*pp->dim[2].siz/si.nc;
+	pp->dim[2].siz *= (si.nc - 1.0)/si.nc;
+	pp->dim[0].p = pp->dim[1].p = pp->dim[2].p = NULL;
+	i = ns*sl*(si.nc+1);
+#if PSIZWARN
+	if (i > PSIZWARN) {			/* memory warning */
+		sprintf(errmsg, "hyperspectral image \"%s\" using %.1f MB of memory",
+				sname, i*(1.0/(1024*1024)));
+		error(WARNING, errmsg);
+	}
+#endif
+	if ((pp->arr.s = (uby8 *)malloc(i)) == NULL)
+		goto memerr;
+	for (y = 0; y < ns; y++)		/* read each scanline */
+		if (freadscolrs(pp->arr.s + y*sl*(si.nc+1), si.nc, sl, fp) < 0)
+			goto readerr;
+	fclose(fp);
+	i = hash(sname);			/* insert in hash table */
+	pp->next = dtab[i];
+	return(dtab[i] = pp);
+memerr:
+	error(SYSTEM, "out of memory in getspec");
+readerr:
+	sprintf(errmsg, "bad hyperspectral image \"%s\"", pfname);
+	error(USER, errmsg);
+	return NULL;	/* pro forma return */
 }
 
 
@@ -279,15 +381,12 @@ freedata(			/* release data array reference */
 		while ((dp = dpl->next) != NULL)
 			if ((dta == NULL) | (dta == dp)) {
 				dpl->next = dp->next;
-				if (dp->type == DATATY)
-					free((void *)dp->arr.d);
-				else
-					free((void *)dp->arr.c);
+				free(dp->arr.p);
 				for (i = 0; i < dp->nd; i++)
 					if (dp->dim[i].p != NULL)
-						free((void *)dp->dim[i].p);
+						free(dp->dim[i].p);
 				freestr(dp->name);
-				free((void *)dp);
+				free(dp);
 			} else
 				dpl = dp;
 		dtab[hval++] = head.next;
@@ -316,7 +415,8 @@ datavalue(		/* interpolate data value at a point */
 			sd.dim[i].org = dp->dim[i+1].org;
 			sd.dim[i].siz = dp->dim[i+1].siz;
 			sd.dim[i].p = dp->dim[i+1].p;
-			asize *= sd.dim[i].ne = dp->dim[i+1].ne;
+			asize *= (sd.dim[i].ne = dp->dim[i+1].ne) +
+				((sd.type==SPECTY) & (i==sd.nd-1));
 		}
 	}
 					/* get independent variable */
@@ -343,8 +443,10 @@ datavalue(		/* interpolate data value at a point */
 			else
 				upper = i;
 		} while (i != (lower + upper) >> 1);
+
 		if (i > dp->dim[0].ne - 2)
 			i = dp->dim[0].ne - 2;
+
 		x = i + (pt[0] - dp->dim[0].p[i]) /
 				(dp->dim[0].p[i+1] - dp->dim[0].p[i]);
 	}
@@ -353,18 +455,31 @@ datavalue(		/* interpolate data value at a point */
 		if (dp->type == DATATY) {
 			sd.arr.d = dp->arr.d + i*asize;
 			y0 = datavalue(&sd, pt+1);
-			sd.arr.d = dp->arr.d + (i+1)*asize;
+			sd.arr.d += asize;
+			y1 = datavalue(&sd, pt+1);
+		} else if (dp->type == SPECTY) {
+			sd.arr.s = dp->arr.s + i*asize;
+			y0 = datavalue(&sd, pt+1);
+			sd.arr.s += asize;
 			y1 = datavalue(&sd, pt+1);
 		} else {
 			sd.arr.c = dp->arr.c + i*asize;
 			y0 = datavalue(&sd, pt+1);
-			sd.arr.c = dp->arr.c + (i+1)*asize;
+			sd.arr.c += asize;
 			y1 = datavalue(&sd, pt+1);
 		}
 	} else {
 		if (dp->type == DATATY) {
 			y0 = dp->arr.d[i];
 			y1 = dp->arr.d[i+1];
+		} else if (dp->type == SPECTY) {
+			if (dp->arr.s[dp->dim[0].ne]) {
+				double	f = ldexp(1.0, -(COLXS+8) +
+						(int)dp->arr.s[dp->dim[0].ne]);
+				y0 = (dp->arr.s[i] + 0.5)*f;
+				y1 = (dp->arr.s[i+1] + 0.5)*f;
+			} else
+				y0 = y1 = 0.0;
 		} else {
 			y0 = colrval(dp->arr.c[i],dp->type);
 			y1 = colrval(dp->arr.c[i+1],dp->type);

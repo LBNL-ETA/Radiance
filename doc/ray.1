@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.45 2023/12/12 20:25:22 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.46 2023/12/13 23:26:16 greg Exp $"
 .\" Print using the -ms macro package
 .DA 11/13/2023
 .LP
@@ -1259,6 +1259,47 @@ set in the evaluation context.
 This function is fed a wavelenth sample
 between nmA and nmB as its only argument,
 and it returns the corresponding spectral intensity.
+.LP
+.UL Specdata
+.PP
+Specdata is like brightdata and colordata, but with more
+than 3 specular samples.
+.DS
+mod specdata id
+3+n+
+	func datafile
+	funcfile x1 x2 .. xn transform
+0
+m A1 A2 .. Am
+.DE
+The data file must have one more dimension than the coordinate
+variable count, as this final dimension corresponds to the covered
+spectrum.
+The starting and ending wavelengths are specified in "datafile"
+as well as the number of spectral samples.
+The function "func" will be called with two parameters, the
+interpolated spectral value for the current coordinate and the
+associated wavelength.
+If the spectrum is broken into 12 components, then 12 calls
+will be made to "func" for the relevant ray evaluation.
+.LP
+.UL Specpict
+.PP
+Specpict is a special case of specdata, where the pattern is
+a hyperspectral image stored in the common-exponent file format.
+The dimensions of the image data are determined by the picture
+just as with the colorpict primitive.
+.DS
+mod specpict id
+5+
+	func specfile
+	funcfile u v transform
+0
+m A1 A2 .. Am
+.DE
+The function "func" is called with the interpolated pixel value
+and the wavelength sample in nanometers, the same as specdata,
+with as many calls made as there are components in "specfile".
 .NH 3
 Mixtures
 .PP

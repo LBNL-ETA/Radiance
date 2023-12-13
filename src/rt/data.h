@@ -1,4 +1,4 @@
-/* RCSid $Id: data.h,v 2.7 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: data.h,v 2.8 2023/12/13 23:26:16 greg Exp $ */
 /*
  * Header for data file loading and computation routines.
  */
@@ -12,10 +12,11 @@ extern "C" {
 
 #define  DATATYPE	float		/* single precision to save space */
 #define  DATATY		'f'		/* format for DATATYPE */
+#define  SPECTY		'c'		/* format for SCOLR */
 
 typedef struct datarray {
 	char  *name;			/* name of our data */
-	short  type;			/* DATATY, RED, GRN or BLU */
+	short  type;			/* DATATY, SPECTY, RED, GRN or BLU */
 	short  nd;			/* number of dimensions */
 	struct {
 		DATATYPE  org, siz;		/* coordinate domain */
@@ -24,7 +25,9 @@ typedef struct datarray {
 	} dim[MAXDDIM];			/* dimension specifications */
 	union {
 		DATATYPE  *d;			/* float data */
-		COLR  *c;			/* RGB data */
+		COLR  *c;			/* RGBE data */
+		uby8  *s;			/* spectral data */
+		void  *p;			/* generic pointer */
 	}  arr;				/* the data */
 	struct datarray  *next;		/* next array in list */
 } DATARRAY;			/* a data array */
@@ -32,6 +35,7 @@ typedef struct datarray {
 
 extern DATARRAY	*getdata(char *dname);
 extern DATARRAY	*getpict(char *pname);
+extern DATARRAY *getspec(char *sname);
 extern void	freedata(DATARRAY *dta);
 extern double	datavalue(DATARRAY *dp, double *pt);
 
