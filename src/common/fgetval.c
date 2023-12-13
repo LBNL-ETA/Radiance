@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetval.c,v 2.8 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: fgetval.c,v 2.9 2023/12/13 20:53:27 greg Exp $";
 #endif
 /*
  * Read white space separated values from stream
@@ -10,18 +10,18 @@ static const char	RCSid[] = "$Id: fgetval.c,v 2.8 2004/03/28 20:33:12 schorsch E
 #include  "rtio.h"
 
 #include  <stdlib.h>
-#include  <math.h>
 #include  <ctype.h>
 
 int
-fgetval(fp, ty, vp)			/* get specified data word */
-register FILE	*fp;
-int	ty;
-void	*vp;	/* type depends on ty */
+fgetval(				/* get specified data word */
+	FILE	*fp,
+	int	ty,
+	void	*vp	/* type depends on ty */
+)
 {
 	char	wrd[64];
-	register char	*cp;
-	register int	c;
+	char	*cp;
+	int	c;
 					/* elide comments (# to EOL) */
 	do {
 		while ((c = getc(fp)) != EOF && isspace(c))
