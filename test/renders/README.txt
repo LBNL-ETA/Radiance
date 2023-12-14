@@ -1,4 +1,4 @@
-# RCSid $Id: README.txt,v 1.2 2018/12/04 00:32:20 greg Exp $
+# RCSid $Id: README.txt,v 1.3 2023/12/14 20:26:32 greg Exp $
 
 ref/	Subdirectory containing reference outputs for comparison
 
@@ -23,6 +23,7 @@ mixtex.rif	Test of BSDF types and photon-mapping
 patterns.rif	Test of various pattern types and alias behavior
 prism1.rif	Test of prism1 type (single virtual source)
 prism2.rif	Test of prism2 type (dual virtual sources)
+spectra.rif	Test of spectral pattern types
 tfunc.rif	Test of BRTDfunc, transfunc and mkillum
 trans.rif	Test of anisotropic types, plasfunc and metfunc, mixtures
 trans2.rif	Test of trans2 and mkillum (again)
@@ -32,6 +33,7 @@ chrome.mat	Chrome material used in mesh model
 gold.mat	Gold material used in prism1 and prism2 models
 mixtex.mat	Nine test materials used in mixtex model
 patterns.mat	Nine test materials and aliases used in patterns model
+spectral.mat	Spectral test materials
 
 antimatter_portal.rad	Cut-away hole seen in mirror model
 ball_in_cube.rad	Example of dielectric and interface materials
@@ -61,6 +63,7 @@ rect_fixture.rad	A single rectangular light fixture with distribution
 rect_opening.rad	Rectangular opening in window wall
 saucer.rad	A shaped disk for material testing
 sawtooth.rad	Object with sawtooth profile for genBSDF input (not referenced)
+spectral_objs.rad	Some test objects for spectral rendering
 spotcones.rad	Cones enclosing spotlight regions for testing mist type
 spotlights.rad	Color spotlights
 sunset_sky.rad	Captured sky with disk covering sun position
@@ -85,6 +88,8 @@ flower.hdr	Image of flower used in various *pict types
 sunset.hdr	Captured sunset for environment map out window
 vase.hdr	Vase local texture map
 
+copper_gold.dat	Blend from copper to gold spectra
+copper_spec.dat	Copper spectral reflectivity
 flower.dat	Flower.hdr converted to a 10x10 gray data file
 glass_illB.dat	Distribution computed by mkillum for glass_ill.rad
 glass_illG.dat	Distribution computed by mkillum for glass_ill.rad
