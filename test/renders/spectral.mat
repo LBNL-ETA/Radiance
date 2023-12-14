@@ -1,4 +1,4 @@
-# RCSid $Id: spectral.mat,v 1.1 2023/11/17 21:22:27 greg Exp $
+# RCSid $Id: spectral.mat,v 1.2 2023/12/14 00:57:05 greg Exp $
 #
 # Spectral material definitions
 #
@@ -34,6 +34,16 @@ void specfunc rainbow_spec
 0
 3 380 780 30
 
+void specdata gold+copper_alloy_spec
+4 noop copper_gold.dat . ".5+.5*cos(PI*Py)"
+0
+0
+
+void specpict mini_me_spec
+5 clip spfish.hsr . 3.25-Py -3-Px
+0
+0
+
 gold_spec metal gold_smat
 0
 0
@@ -45,6 +55,16 @@ copper_spec metal copper_smat
 5 1 1 1 1 0
 
 rainbow_spec plastic rainbow_smat
+0
+0
+5 1 1 1 0 0
+
+gold+copper_alloy_spec metal gold+copper_alloy
+0
+0
+5 1 1 1 1 0
+
+mini_me_spec plastic mini_me_mat
 0
 0
 5 1 1 1 0 0

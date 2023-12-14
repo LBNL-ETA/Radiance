@@ -2662,3 +2662,7 @@ pcomb to allow for better interoperability.
 
 Added support for -co+ option to rtpict, so it can directly
 produce hyperspectral images.
+
+Added new "specdata" and "specpict" primitives to support
+interpolated spectral data files and hyperspectral images
+as patterns.

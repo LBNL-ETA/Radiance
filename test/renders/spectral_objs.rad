@@ -1,4 +1,4 @@
-# RCSid $Id: spectral_objs.rad,v 1.1 2023/11/17 21:22:27 greg Exp $
+# RCSid $Id: spectral_objs.rad,v 1.2 2023/12/14 00:57:05 greg Exp $
 #
 # A few spectral test objects
 #
@@ -26,3 +26,39 @@ rainbow_smat polygon rainbow2
 	-2	4.99	2
 	-2	4.99	1
 	-6	4.99	1
+
+gold+copper_alloy cylinder gold+copper
+0
+0
+7
+	-5	2	.5
+	-5	3	.5
+	.5
+
+gold+copper_alloy ring gold+copper_cap0
+0
+0
+8
+	-5	2	.5
+	0	-1	0
+	0	.5
+
+
+gold+copper_alloy ring gold+copper_cap1
+0
+0
+8
+	-5	3	.5
+	0	1	0
+	0	.5
+
+# 4	-5	2.5	.5	.5
+
+mini_me_mat polygon mini_me
+0
+0
+12
+	-3	3.25	.05
+	-4	3.25	.05
+	-4	1.75	.05
+	-3	1.75	.05
