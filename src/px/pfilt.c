@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.37 2023/12/09 02:33:14 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.38 2023/12/14 19:03:19 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -238,7 +238,7 @@ main(
 			fin = stdin;
 		else {
 			tfname = mktemp(template);
-			if ((fin = fopen(tfname, "w+")) == NULL) {
+			if ((fin = fopen(tfname, "w+b")) == NULL) {
 				fprintf(stderr, "%s: can't create ", progname);
 				fprintf(stderr, "temp file \"%s\"\n", tfname);
 				quit(1);
@@ -250,7 +250,7 @@ main(
 			}
 		}
 	} else if (i == argc-1) {
-		if ((fin = fopen(argv[i], "r")) == NULL) {
+		if ((fin = fopen(argv[i], "rb")) == NULL) {
 			fprintf(stderr, "%s: can't open file \"%s\"\n",
 						progname, argv[i]);
 			quit(1);
