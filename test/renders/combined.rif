@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.6 2021/02/20 07:56:29 greg Exp $
+# RCSid $Id: combined.rif,v 1.7 2023/12/14 01:17:22 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -15,7 +15,7 @@ objects = gymbal.rad illum_tfunc.rad illum_trans2.rad
 objects = mirror.rad mist.rad porsches.rad prism1.rad
 objects = prism2.rad rect_fixture.rad rect_opening.rad saucer.rad
 objects = spotcones.rad spotlights.rad sunset_sky.rad
-objects = torus.rad trans_pane.rad vase.rad woman.rad
+objects = torus.rad trans_pane.rad vase.rad woman.rad spectral_objs.rad
 objects = vase.rtm woman.rtm porsche.octf
 
 oconv = -f
