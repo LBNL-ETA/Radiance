@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.11 2023/12/13 23:26:16 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.12 2023/12/14 00:51:12 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -295,8 +295,6 @@ p_specdata(			/* varied spectrum from (N+1)-D file */
 	dp = getdata(m->oargs.sarg[1]);
 	if (dp->nd < 2)
 		objerror(m, USER, "need at least 2-dimensional data");
-	if (dp->dim[dp->nd-1].ne > MAXCSAMP)
-		objerror(m, USER, "too many spectral samples in data file");
 	i = (1 << (dp->nd-1)) - 1;
 	mf = getfunc(m, 2, i<<3, 0);
 	setfunc(m, r);
