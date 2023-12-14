@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.21 2023/12/08 17:56:26 greg Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.22 2023/12/14 18:53:58 greg Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -102,7 +102,7 @@ dobox(			/* simple box filter */
 		scan = scanin[y%barsize];
 		for (x = xcent+1-xbrad; x <= xcent+xbrad; x++) {
 			offs = x < 0 ? xres : x >= xres ? -xres : 0;
-			if (offs && !wrapfilt)
+			if ((offs != 0) & !wrapfilt)
 				continue;
 			d = x_c < 1.0 ? x_c*x - (c+.5) : (double)(x - xcent);
 			if (d < -0.5) continue;
@@ -143,7 +143,7 @@ dogauss(		/* gaussian filter */
 		scan = scanin[y%barsize];
 		for (x = xcent-xrad; x <= xcent+xrad; x++) {
 			offs = x < 0 ? xres : x >= xres ? -xres : 0;
-			if (offs && !wrapfilt)
+			if ((offs != 0) & !wrapfilt)
 				continue;
 			dx = (x_c*(x+.5) - (c+.5))/rad;
 			weight = lookgauss(dx*dx + dy*dy);
@@ -180,7 +180,7 @@ dothresh(	/* gaussian threshold filter */
 		for (c = -orad; c <= orad; c++) {
 			offs = ccent+c < 0 ? ncols :
 					ccent+c >= ncols ? -ncols : 0;
-			if (offs && !wrapfilt)
+			if ((offs != 0) & !wrapfilt)
 				continue;
 			x = ringndx[c*c + r*r];
 			if (x < 0) continue;
@@ -197,13 +197,13 @@ dothresh(	/* gaussian threshold filter */
 		if (d >= 0.5) break;
 		for (x = xcent+1-xbrad; x <= xcent+xbrad; x++) {
 			offs = x < 0 ? xres : x >= xres ? -xres : 0;
-			if (offs && !wrapfilt)
+			if ((offs != 0) & !wrapfilt)
 				continue;
 			d = x_c < 1.0 ? x_c*x - (ccent+.5) : (double)(x - xcent);
 			if (d < -0.5) continue;
 			if (d >= 0.5) break;
 			sumans(x, y, rcent, ccent,
-			pickfilt((*ourbright)(scanin[y%barsize]+(x+offs)*NCSAMP)));
+				pickfilt((*ourbright)(scanin[y%barsize]+(x+offs)*NCSAMP)));
 		}
 	}
 }
