@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.41 2023/11/27 21:00:14 greg Exp $ */
+/* RCSid $Id: color.h,v 2.42 2023/12/14 19:54:03 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -116,7 +116,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define scolr_color(col,sclr)	scolr2color(col,sclr,NCSAMP,WLPART)
 
 #define  sopcolor(sc1,op,c2)	{SCOLOR _sct;\
-					setscolor(_sct,c2[RED],c2[GRN],c2[BLU]);\
+				  setscolor(_sct,(c2)[RED],(c2)[GRN],(c2)[BLU]);\
 					sopscolor(sc1,op,_sct);}
 
 #define  saddcolor(sc1,c2)	sopcolor(sc1,+=,c2)
