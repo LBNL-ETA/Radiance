@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.37 2023/11/17 22:03:14 greg Exp $
+# RCSid $Id: Makefile,v 1.38 2023/12/15 16:31:32 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -39,7 +39,8 @@ clean:
 batch1:	test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-xform test-oconv test-rad test-obj2mesh
 
-batch2:	test-rfluxmtx test-mist-def test-glass-def test-glass-fish test-glass-up
+batch2:	test-rfluxmtx test-mist-def test-glass-def test-glass-fish test-glass-up \
+test-spectra-fish
 
 batch3:	test-inst-def test-inst-fish test-trans2-def test-trans2-fish test-trans2-win \
 test-dielectric-def test-dielectric-fish
