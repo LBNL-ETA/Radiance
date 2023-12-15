@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.42 2023/12/14 19:54:03 greg Exp $ */
+/* RCSid $Id: color.h,v 2.43 2023/12/15 03:42:31 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -244,14 +244,14 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 				/* Number of spectral components */
 #define  NCOMPSTR		"NCOMP="
 #define  LNCOMPSTR		6
-#define  isncomp(hl)		(!strncmp(hl,NCOMPSTR,LNCOMPSTR))
+#define  isncomp(hl)		!strncmp(hl,NCOMPSTR,LNCOMPSTR)
 #define  ncompval(hl)		atoi((hl)+LNCOMPSTR)
 #define  fputncomp(nc,fp)	fprintf(fp,"%s%d\n",NCOMPSTR,nc)
 
 				/* 4 wavelength partitions for (IR+)R,G,B(+UV) */
 #define  WLSPLTSTR		"WAVELENGTH_SPLITS="
 #define  LWLSPLTSTR		18
-#define  iswlsplit(hl)		(!strncmp(hl,WLSPLTSTR,LWLSPLTSTR))
+#define  iswlsplit(hl)		!strncmp(hl,WLSPLTSTR,LWLSPLTSTR)
 #define  wlsplitval(w,hl)	(sscanf((hl)+LWLSPLTSTR,"%f %f %f %f",\
 					&(w)[0],&(w)[1],&(w)[2],&(w)[3]) == 4)
 #define  fputwlsplit(w,fp)	fprintf(fp,"%s %g %g %g %g\n",WLSPLTSTR,\
@@ -260,21 +260,21 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 				/* macros for exposures */
 #define  EXPOSSTR		"EXPOSURE="
 #define  LEXPOSSTR		9
-#define  isexpos(hl)		(!strncmp(hl,EXPOSSTR,LEXPOSSTR))
+#define  isexpos(hl)		!strncmp(hl,EXPOSSTR,LEXPOSSTR)
 #define  exposval(hl)		atof((hl)+LEXPOSSTR)
 #define  fputexpos(ex,fp)	fprintf(fp,"%s%.4e\n",EXPOSSTR,ex)
 
 				/* macros for pixel aspect ratios */
 #define  ASPECTSTR		"PIXASPECT="
 #define  LASPECTSTR		10
-#define  isaspect(hl)		(!strncmp(hl,ASPECTSTR,LASPECTSTR))
+#define  isaspect(hl)		!strncmp(hl,ASPECTSTR,LASPECTSTR)
 #define  aspectval(hl)		atof((hl)+LASPECTSTR)
 #define  fputaspect(pa,fp)	fprintf(fp,"%s%f\n",ASPECTSTR,pa)
 
 				/* macros for primary specifications */
 #define  PRIMARYSTR		"PRIMARIES="
 #define  LPRIMARYSTR		10
-#define  isprims(hl)		(!strncmp(hl,PRIMARYSTR,LPRIMARYSTR))
+#define  isprims(hl)		!strncmp(hl,PRIMARYSTR,LPRIMARYSTR)
 #define  primsval(p,hl)		(sscanf((hl)+LPRIMARYSTR, \
 					"%f %f %f %f %f %f %f %f", \
 					&(p)[RED][CIEX],&(p)[RED][CIEY], \
@@ -292,7 +292,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 				/* macros for color correction */
 #define  COLCORSTR		"COLORCORR="
 #define  LCOLCORSTR		10
-#define  iscolcor(hl)		(!strncmp(hl,COLCORSTR,LCOLCORSTR))
+#define  iscolcor(hl)		!strncmp(hl,COLCORSTR,LCOLCORSTR)
 #define  colcorval(cc,hl)	sscanf((hl)+LCOLCORSTR,"%f %f %f", \
 					&(cc)[RED],&(cc)[GRN],&(cc)[BLU])
 #define  fputcolcor(cc,fp)	fprintf(fp,"%s %f %f %f\n",COLCORSTR, \

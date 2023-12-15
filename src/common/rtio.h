@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.29 2023/06/08 17:48:01 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.30 2023/12/15 03:42:31 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -41,9 +41,9 @@ extern "C" {
 
 #define  LATLONSTR	"LATLONG="
 #define  LLATLONSTR	8
-#define  islatlon(hl)		(!strncmp(hl,LATLONSTR,LLATLONSTR))
-#define  latlonval(ll,hl)	sscanf((hl)+LLATLONSTR, "%f %f", \
-						&(ll)[0],&(ll)[1])
+#define  islatlon(hl)		!strncmp(hl,LATLONSTR,LLATLONSTR)
+#define  latlonval(ll,hl)	(sscanf((hl)+LLATLONSTR, "%f %f", \
+						&(ll)[0],&(ll)[1]) == 2)
 #define  fputlatlon(lat,lon,fp)	fprintf(fp,"%s %.6f %.6f\n",LATLONSTR,lat,lon)
 					/* defined in header.c */
 extern void	newheader(const char *t, FILE *fp);
