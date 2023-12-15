@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.38 2023/12/14 19:03:19 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.39 2023/12/15 01:57:45 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -78,13 +78,75 @@ int  orad = 0;			/* output window radius */
 
 char  *progname;
 
-static gethfunc headline;
-static void copyfile(FILE  *in, FILE  *out);
-static void pass1(FILE  *in);
-static void pass2(FILE  *in);
+static void copyfile(FILE  *infp, FILE  *out);
+static void pass1(FILE  *infp);
+static void pass2(FILE  *infp);
 static void scan2init(void);
 static void scan2sync(int  r);
 static void scan2flush(void);
+
+
+static double
+rgb_bright(
+	SCOLOR  clr
+)
+{
+	return(bright(clr));
+}
+
+
+static double
+xyz_bright(
+	SCOLOR  clr
+)
+{
+	return(colval(clr,CIEY));
+}
+
+
+static double
+spec_bright(
+	SCOLOR  clr
+)
+{
+	return(pbright(clr));
+}
+
+
+brightfunc_t	*ourbright = rgb_bright;
+
+
+static int
+headline(				/* process line from header */
+	char	*s,
+	void	*p
+)
+{
+	char  fmt[MAXFMTLEN];
+
+	fputs(s, stdout);		/* copy to output */
+	if (isaspect(s))		/* get aspect ratio */
+		inpaspect *= aspectval(s);
+	else if (isexpos(s))		/* get exposure */
+		hotlvl *= exposval(s);
+	else if (isncomp(s))		/* get #components (spectral) */
+		NCSAMP = ncompval(s);
+	else if (iswlsplit(s))		/* get wavelength partitions */
+		wlsplitval(WLPART, s);
+	else if (formatval(fmt, s)) {	/* get format */
+		wrongformat = 0;
+		if (!strcmp(COLRFMT, fmt))
+			ourbright = rgb_bright;
+		else if (!strcmp(CIEFMT, fmt))
+			ourbright = xyz_bright;
+		else if (!strcmp(SPECFMT, fmt))
+			ourbright = spec_bright;
+		else
+			wrongformat = !globmatch(PICFMT, fmt);
+	} else if (isview(s) && sscanview(&ourview, s) > 0)
+		gotview++;
+	return(0);
+}
 
 
 int
@@ -266,7 +328,8 @@ main(
 				progname);
 		quit(1);
 	}
-	if (setspectrsamp(CNDX, WLPART) < 0) {
+	if ((ourbright == spec_bright) ^ (NCSAMP > 3) ||
+			setspectrsamp(CNDX, WLPART) < 0) {
 		fprintf(stderr, "%s: bad number of components\n", progname);
 		quit(1);
 	}
@@ -318,77 +381,15 @@ main(
 }
 
 
-static double
-rgb_bright(
-	SCOLOR  clr
-)
-{
-	return(bright(clr));
-}
-
-
-static double
-xyz_bright(
-	SCOLOR  clr
-)
-{
-	return(colval(clr,CIEY));
-}
-
-
-static double
-spec_bright(
-	SCOLOR  clr
-)
-{
-	return(pbright(clr));
-}
-
-
-brightfunc_t *ourbright = rgb_bright;
-
-static int
-headline(				/* process line from header */
-	char	*s,
-	void	*p
-)
-{
-	char  fmt[MAXFMTLEN];
-
-	fputs(s, stdout);		/* copy to output */
-	if (isaspect(s))		/* get aspect ratio */
-		inpaspect *= aspectval(s);
-	else if (isexpos(s))		/* get exposure */
-		hotlvl *= exposval(s);
-	else if (isncomp(s))		/* get #components (spectral) */
-		NCSAMP = ncompval(s);
-	else if (iswlsplit(s))		/* get wavelength partitions */
-		wlsplitval(WLPART, s);
-	else if (formatval(fmt, s)) {	/* get format */
-		wrongformat = 0;
-		if (!strcmp(COLRFMT, fmt))
-			ourbright = rgb_bright;
-		else if (!strcmp(CIEFMT, fmt))
-			ourbright = xyz_bright;
-		else if (!strcmp(SPECFMT, fmt))
-			ourbright = spec_bright;
-		else
-			wrongformat = !globmatch(PICFMT, fmt);
-	} else if (isview(s) && sscanview(&ourview, s) > 0)
-		gotview++;
-	return(0);
-}
-
-
 static void
 copyfile(			/* copy a file */
-	FILE  *in,
+	FILE  *infp,
 	FILE  *out
 )
 {
 	int  c;
 
-	while ((c = getc(in)) != EOF)
+	while ((c = getc(infp)) != EOF)
 		putc(c, out);
 
 	if (ferror(out)) {
@@ -400,7 +401,7 @@ copyfile(			/* copy a file */
 
 static void
 pass1(				/* first pass of picture file */
-	FILE  *in
+	FILE  *infp
 )
 {
 	int  i;
@@ -414,7 +415,7 @@ pass1(				/* first pass of picture file */
 		quit(1);
 	}
 	for (i = 0; i < yres; i++) {
-		if (freadsscan(scan, NCSAMP, xres, in) < 0) {
+		if (freadsscan(scan, NCSAMP, xres, infp) < 0) {
 			nrows = (long)nrows * i / yres;	/* adjust frame */
 			if (nrows <= 0) {
 				fprintf(stderr, "%s: empty frame\n", progname);
@@ -435,7 +436,7 @@ pass1(				/* first pass of picture file */
 
 static void
 pass2(			/* last pass on file, write to stdout */
-	FILE  *in
+	FILE  *infp
 )
 {
 	int  yread;
@@ -450,7 +451,7 @@ pass2(			/* last pass on file, write to stdout */
 		while (yread <= ycent+yrad) {
 			if (yread < yres) {
 				if (freadsscan(scanin[yread%barsize],
-						NCSAMP, xres, in) < 0) {
+						NCSAMP, xres, infp) < 0) {
 					fprintf(stderr,
 						"%s: truncated input (y=%d)\n",
 						progname, yres-1-yread);
@@ -460,7 +461,7 @@ pass2(			/* last pass on file, write to stdout */
 			}
 			yread++;
 		}
-		if (obarsize > 0)
+		if (obarsize > 0)	/* => thresh > FTINY */
 			scan2sync(r);
 		for (c = 0; c < ncols; c++) {
 			xcent = (c+.5)*xres/ncols;
@@ -478,7 +479,8 @@ pass2(			/* last pass on file, write to stdout */
 	}
 					/* skip leftover input */
 	while (yread < yres) {
-		if (freadsscan(scanin[0], NCSAMP, xres, in) < 0)
+		if (freadscolrs((uby8 *)tempbuffer(xres*(NCSAMP+1)),
+					NCSAMP, xres, infp) < 0)
 			break;
 		yread++;
 	}
