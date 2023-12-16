@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.43 2023/12/15 03:42:31 greg Exp $ */
+/* RCSid $Id: color.h,v 2.44 2023/12/16 01:00:02 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -107,7 +107,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 
 #define  scolrblack(c)		memset(c,0,LSCOLR)
 
-#define  scolorblack(c)		memset(c,0,sizeof(COLORV)*MAXCSAMP)
+#define  scolorblack(c)		memset(c,0,sizeof(COLORV)*NCSAMP)
 
 #define scolor_color(col,scol)	scolor2color(col,scol,NCSAMP,WLPART)
 #define scolor_colr(clr,scol)	scolor2colr(clr,scol,NCSAMP,WLPART)
