@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum3.c,v 2.14 2016/09/15 22:34:41 greg Exp $";
+static const char RCSid[] = "$Id: mkillum3.c,v 2.15 2023/12/16 18:35:27 greg Exp $";
 #endif
 /*
  * Routines to print mkillum objects
@@ -7,8 +7,6 @@ static const char RCSid[] = "$Id: mkillum3.c,v 2.14 2016/09/15 22:34:41 greg Exp
 
 #include  "mkillum.h"
 #include  "paths.h"
-
-#define  brt(col)	(.263*(col)[0]+.655*(col)[1]+.082*(col)[2])
 
 char	DATORD[] = "RGB";		/* data ordering */
 char	DATSUF[] = ".dat";		/* data file suffix */
@@ -140,8 +138,8 @@ flatout(		/* write hemispherical distribution */
 		fprintf(dfp, "2\n%f %f %d\n%f %f %d\n",
 				1.+.5/n, .5/n, n+1,
 				0., 2.*PI, m+1);
-		brightout(Ninv, 1, m, 1./il->nsamps/brt(il->col), dfp);
-		brightout(da, n, m, 1./il->nsamps/brt(il->col), dfp);
+		brightout(Ninv, 1, m, 1./il->nsamps/bright(il->col), dfp);
+		brightout(da, n, m, 1./il->nsamps/bright(il->col), dfp);
 		fputeol(dfp);
 		fclose(dfp);
 		printf(" %s", dfname(il, 0));
@@ -197,9 +195,9 @@ roundout(			/* write spherical distribution */
 		fprintf(dfp, "2\n%f %f %d\n%f %f %d\n",
 				1.+1./n, -1.-1./n, n+2,
 				0., 2.*PI, m+1);
-		brightout(Ninv, 1, m, 1./il->nsamps/brt(il->col), dfp);
-		brightout(da, n, m, 1./il->nsamps/brt(il->col), dfp);
-		brightout(Sinv, 1, m, 1./il->nsamps/brt(il->col), dfp);
+		brightout(Ninv, 1, m, 1./il->nsamps/bright(il->col), dfp);
+		brightout(da, n, m, 1./il->nsamps/bright(il->col), dfp);
+		brightout(Sinv, 1, m, 1./il->nsamps/bright(il->col), dfp);
 		fputeol(dfp);
 		fclose(dfp);
 		printf(" %s", dfname(il, 0));
@@ -235,7 +233,7 @@ illumout(		/* print illum object */
 		cout[1] = il->col[1];
 		cout[2] = il->col[2];
 	} else {
-		cout[0] = cout[1] = cout[2] = brt(il->col);
+		cout[0] = cout[1] = cout[2] = bright(il->col);
 	}
 	printf("\n0\n3 %f %f %f\n", cout[0], cout[1], cout[2]);
 
@@ -294,7 +292,7 @@ average(		/* evaluate average value for distribution */
 		il->col[2] /= (double)il->nsamps;
 	}
 					/* brighter than minimum? */
-	return(brt(il->col) > il->minbrt+FTINY);
+	return(bright(il->col) > il->minbrt+FTINY);
 }
 
 
@@ -357,9 +355,9 @@ brightout(	/* put out brightness distribution data */
 
 	for (i = 0; i < n; i++) {
 		for (j = 0; j < m; j++) {
-			fputnum(mult*brt(da), fp);
+			fputnum(mult*bright(da), fp);
 			da += 3;
 		}
-		fputnum(mult*brt(da-3*m), fp);	/* wrap phi */
+		fputnum(mult*bright(da-3*m), fp);	/* wrap phi */
 	}
 }
