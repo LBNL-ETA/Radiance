@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.22 2023/11/17 20:02:08 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.23 2023/12/16 03:30:35 greg Exp $";
 #endif
 
 /*
@@ -522,7 +522,6 @@ comp_sensor(
 	char	*err;
 	int	nt, np;
 	SCOLOR	vsum;
-	COLOR	cres;
 	RAY	rr;
 	double	sf;
 	int	i, j;
@@ -592,13 +591,11 @@ comp_sensor(
 			}
 		}
 	}
-						/* finish our calculation */
-	while (ray_presult(&rr, 0) > 0) {
+	while (ray_presult(&rr, 0) > 0) {	/* finish our calculation */
 		smultscolor(rr.rcol, rr.rcoef);
 		saddscolor(vsum, rr.rcol);
 	}
-						/* print our result */
-	scolor_rgb(cres, vsum);
-	printf("%.4e %.4e %.4e\n", colval(cres,RED),
-				colval(cres,GRN), colval(cres,BLU));
+	for (i = 0; i < NCSAMP; i++)		/* print our result */
+		printf(" %.4e", vsum[i]);
+	fputc('\n', stdout);
 }

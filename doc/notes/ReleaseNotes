@@ -2666,3 +2666,7 @@ produce hyperspectral images.
 Added new "specdata" and "specpict" primitives to support
 interpolated spectral data files and hyperspectral images
 as patterns.
+
+Added support for multispectal sampling in rsensor, which will
+put out as many color channels as specified in any -cs option
+(default is 3 for RGB).
