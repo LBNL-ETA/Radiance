@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.18 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.19 2023/12/18 20:19:48 greg Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -80,12 +80,14 @@ writamb(			/* write binary ambient values to stdout */
 			return;
 		if (!dataonly)
 			fscanf(fp, "%*s");
-		if (fscanf(fp, FVFORMAT, &norm[0], &norm[1], &norm[2]) != 3)
+		if (fscanf(fp, FVFORMAT, &norm[0], &norm[1], &norm[2]) != 3 ||
+				normalize(norm) == 0)
 			return;
 		av.ndir = encodedir(norm);
 		if (!dataonly)
 			fscanf(fp, "%*s");
-		if (fscanf(fp, FVFORMAT, &norm[0], &norm[1], &norm[2]) != 3)
+		if (fscanf(fp, FVFORMAT, &norm[0], &norm[1], &norm[2]) != 3 ||
+				normalize(norm) == 0)
 			return;
 		av.udir = encodedir(norm);
 		if (!dataonly)
