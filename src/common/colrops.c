@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.12 2011/05/20 02:06:38 greg Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.13 2023/12/18 18:54:38 greg Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -22,12 +22,13 @@ static uby8	(*g_bval)[256] = NULL;
 
 
 int
-setcolrcor(f, a2)		/* set brightness correction */
-double	(*f)(double,double);
-double	a2;
+setcolrcor(			/* set brightness correction */
+	double	(*f)(double,double),
+	double	a2
+)
 {
 	double	mult;
-	register int	i, j;
+	int	i, j;
 					/* allocate tables */
 	if (g_bval == NULL && (g_bval =
 			(uby8 (*)[256])bmalloc((MAXGSHIFT+1)*256)) == NULL)
@@ -44,12 +45,13 @@ double	a2;
 
 
 int
-setcolrinv(f, a2)		/* set inverse brightness correction */
-double	(*f)(double,double);
-double	a2;
+setcolrinv(			/* set inverse brightness correction */
+	double	(*f)(double,double),
+	double	a2
+)
 {
 	double	mult;
-	register int	i, j;
+	int	i, j;
 					/* allocate tables */
 	if (g_mant == NULL && (g_mant = (uby8 *)bmalloc(256)) == NULL)
 		return(-1);
@@ -70,8 +72,9 @@ double	a2;
 
 
 int
-setcolrgam(g)			/* set gamma conversion */
-double	g;
+setcolrgam(				/* set gamma conversion */
+	double	g
+)
 {
 	if (setcolrcor(pow, 1.0/g) < 0)
 		return(-1);
@@ -80,11 +83,12 @@ double	g;
 
 
 int
-colrs_gambs(scan, len)		/* convert scanline of colrs to gamma bytes */
-register COLR	*scan;
-int	len;
+colrs_gambs(			/* convert scanline of colrs to gamma bytes */
+	COLR	*scan,
+	int	len
+)
 {
-	register int	i, expo;
+	int	i, expo;
 
 	if (g_bval == NULL)
 		return(-1);
@@ -130,11 +134,12 @@ int	len;
 
 
 int
-gambs_colrs(scan, len)		/* convert gamma bytes to colr scanline */
-register COLR	*scan;
-int	len;
+gambs_colrs(		/* convert gamma bytes to colr scanline */
+	COLR	*scan,
+	int	len
+)
 {
-	register int	nexpo;
+	int	nexpo;
 
 	if ((g_mant == NULL) | (g_nexp == NULL))
 		return(-1);
@@ -167,10 +172,11 @@ int	len;
 
 
 void
-shiftcolrs(scan, len, adjust)	/* shift a scanline of colors by 2^adjust */
-register COLR	*scan;
-register int	len;
-register int	adjust;
+shiftcolrs(		/* shift a scanline of colors by 2^adjust */
+	COLR	*scan,
+	int	len,
+	int	adjust
+)
 {
 	int	minexp;
 
@@ -189,13 +195,14 @@ register int	adjust;
 
 
 void
-normcolrs(scan, len, adjust)	/* normalize a scanline of colrs */
-register COLR  *scan;
-int  len;
-int  adjust;
+normcolrs(		/* normalize a scanline of colrs */
+	COLR  *scan,
+	int  len,
+	int  adjust
+)
 {
-	register int  c;
-	register int  shift;
+	int  c;
+	int  shift;
 
 	while (len-- > 0) {
 		shift = scan[0][EXP] + adjust - COLXS;
