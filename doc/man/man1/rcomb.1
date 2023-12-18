@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.1 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.2 2023/12/18 23:04:05 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -195,6 +195,10 @@ by the "r" and "c" variables, where
 goes from 0 to "nrows" minus one, and
 .I c
 goes from 0 to "ncols" minus one.
+(Note that "nrows" may be zero if unspecified in inputs, and this
+is a unique capability of
+.I rcomb
+to handle these.)\0
 Component p from input i is accessed with the "ci(i,p)" function,
 and the number of components is defined by the "ncomp" constant.
 If given as "ci(i)", the function returns the current component

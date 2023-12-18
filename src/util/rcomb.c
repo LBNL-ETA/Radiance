@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.1 2023/12/12 16:31:45 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.2 2023/12/18 23:04:05 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -45,8 +45,8 @@ int		nmats = 0;			/* number of actual inputs */
 RMATRIX		*mcat = NULL;			/* final concatenation */
 int		mcat_last = 0;			/* goes after trailing ops? */
 
-int		in_nrows;			/* input row count */
-#define in_ncols	(mop[0].rmp->ncols)	/* input column count */
+int		in_nrows;			/* number of input rows (or 0) */
+#define in_ncols	(mop[0].rmp->ncols)	/* number of input columns */
 #define in_ncomp	(mop[0].rmp->ncomp)	/* input #components */
 
 extern int	nowarn;				/* turn off warnings? */
@@ -469,17 +469,19 @@ initialize(RMATRIX *imp)
 			fprintf(stderr, "%s: warning - data type mismatch\n",
 					mop[i].inspec);
 		if (!i) {
-			imp->nrows = in_nrows = mop[0].rmp->nrows;
 			imp->ncols = mop[0].rmp->ncols;
 			imp->ncomp = mop[0].rmp->ncomp;
 			memcpy(imp->wlpart, mop[0].rmp->wlpart, sizeof(imp->wlpart));
-		} else if ((mop[i].rmp->nrows != imp->nrows) |
-				(mop[i].rmp->ncols != imp->ncols) |
-				(mop[i].rmp->ncomp != imp->ncomp)) {
+		} else if ((mop[i].rmp->ncols != imp->ncols) |
+				(mop[i].rmp->ncomp != imp->ncomp) |
+				((in_nrows > 0) & (mop[i].rmp->nrows > 0) &
+					(mop[i].rmp->nrows != in_nrows))) {
 			fprintf(stderr, "%s: mismatch in size or #components\n",
 					mop[i].inspec);
 			return(0);
 		}			/* XXX should check wlpart? */
+		if (in_nrows <= 0)
+			in_nrows = imp->nrows = mop[i].rmp->nrows;
 	}				/* set up .cal environment */
 	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
 	esupport &= ~(E_OUTCHAN|E_INCHAN);
@@ -569,10 +571,12 @@ combine_input(ROPMAT *res, FILE *fout)
 	} else				/* save a little time */
 		set_r = set_c = 0;
 					/* read/process row-by-row */
-	for (cur_row = 0; cur_row < in_nrows; cur_row++) {
+	for (cur_row = 0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row++) {
 	    RMATRIX	*mres = NULL;
 	    for (i = 0; i < nmats; i++) {
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
+			if (in_nrows <= 0)	/* normal end? */
+				goto loop_exit;
 			fprintf(stderr, "%s: read error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
@@ -620,6 +624,7 @@ combine_input(ROPMAT *res, FILE *fout)
 	    			res->rmp->ncols, res->rmp->dtype, fout))
 	    	return(0);
 	}
+loop_exit:
 #if 0		/* we're about to exit, so who cares? */
 	rmx_free(tmp);			/* clean up */
 	rmx_reset(res->rmp);
