@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.36 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.37 2023/12/19 20:22:36 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -400,7 +400,7 @@ readrays(FILE *fp)
 	}
 	return;
 missingData:
-	sprintf(errmsg, "insufficient data in -i%s", rspec);
+	sprintf(errmsg, "insufficient data or read error for -i%s", rspec);
 	error(USER, errmsg);
 }
 

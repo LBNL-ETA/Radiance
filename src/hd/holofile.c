@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.61 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.62 2023/12/19 20:22:36 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -18,9 +18,9 @@ static const char	RCSid[] = "$Id: holofile.c,v 3.61 2018/10/05 19:19:16 greg Exp
 
 #ifndef CACHESIZE
 #ifdef SMLMEM
-#define CACHESIZE	10
+#define CACHESIZE	100
 #else
-#define CACHESIZE	100	/* default cache size (Mbytes, 0==inf) */
+#define CACHESIZE	1000	/* default cache size (Mbytes, 0==inf) */
 #endif
 #endif
 #ifndef FREEBEAMS
