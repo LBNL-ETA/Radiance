@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.31 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.32 2023/12/19 00:39:03 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -127,6 +127,9 @@ option is given, the output will be written as a RGBE or XYZE picture.
 Note that conversion from a float or RGBE color space applies a conversion
 of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
 and the reverse happens for conversion from XYZE input to RGB or RGBE output.
+Lower case versions of all these components are also supported, the only
+difference is that the aforementioned efficacy factors
+will be left out of the conversion.
 .PP
 If a matrix or picture file path is given to the
 .I \-c

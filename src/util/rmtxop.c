@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.30 2023/12/08 00:12:31 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.31 2023/12/19 00:39:03 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -162,6 +162,7 @@ checksymbolic(ROPMAT *rop)
 {
 	const int	nc = rop->mtx->ncomp;
 	const int	dt = rop->mtx->dtype;
+	double		cf = 1;
 	int		i, j;
 					/* check suffix => reference file */
 	if (strchr(rop->preop.csym, '.') > rop->preop.csym)
@@ -182,28 +183,37 @@ checksymbolic(ROPMAT *rop)
 		int	comp = 0;
 		switch (rop->preop.csym[j]) {
 		case 'B':
+		case 'b':
 			++comp;
 			/* fall through */
 		case 'G':
+		case 'g':
 			++comp;
 			/* fall through */
 		case 'R':
+		case 'r':
+			if (rop->preop.csym[j] <= 'Z')
+				cf = 1./WHTEFFICACY;
 			if (dt == DTxyze) {
 				for (i = 3; i--; )
-					rop->preop.cmat[j*nc+i] = 1./WHTEFFICACY *
-							xyz2rgbmat[comp][i];
+					rop->preop.cmat[j*nc+i] = cf*xyz2rgbmat[comp][i];
 			} else if (nc == 3)
 				rop->preop.cmat[j*nc+comp] = 1.;
 			else
 				rgbrow(rop, j, comp);
 			break;
 		case 'Z':
+		case 'z':
 			++comp;
 			/* fall through */
 		case 'Y':
+		case 'y':
 			++comp;
 			/* fall through */
 		case 'X':
+		case 'x':
+			if ((rop->preop.csym[j] <= 'Z') & (dt != DTxyze))
+				cf = WHTEFFICACY;
 			if (dt == DTxyze) {
 				rop->preop.cmat[j*nc+comp] = 1.;
 			} else if (nc == 3) {
@@ -215,20 +225,27 @@ checksymbolic(ROPMAT *rop)
 			else
 				xyzrow(rop, j, comp);
 
-			for (i = nc*(dt != DTxyze); i--; )
-				rop->preop.cmat[j*nc+i] *= WHTEFFICACY;
+			for (i = nc*(cf != 1); i--; )
+				rop->preop.cmat[j*nc+i] *= cf;
 			break;
 		case 'S':		/* scotopic (il)luminance */
+			cf = WHTSCOTOPIC;
+			/* fall through */
+		case 's':
 			sensrow(rop, j, scolor2scotopic);
-			for (i = nc; i--; )
-				rop->preop.cmat[j*nc+i] *= WHTSCOTOPIC;
+			for (i = nc*(cf != 1); i--; )
+				rop->preop.cmat[j*nc+i] *= cf;
 			break;
 		case 'M':		/* melanopic (il)luminance */
+			cf = WHTMELANOPIC;
+			/* fall through */
+		case 'm':
 			sensrow(rop, j, scolor2melanopic);
-			for (i = nc; i--; )
-				rop->preop.cmat[j*nc+i] *= WHTMELANOPIC;
+			for (i = nc*(cf != 1); i--; )
+				rop->preop.cmat[j*nc+i] *= cf;
 			break;
 		case 'A':		/* average component */
+		case 'a':
 			for (i = nc; i--; )
 				rop->preop.cmat[j*nc+i] = 1./(double)nc;
 			break;
