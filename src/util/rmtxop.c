@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.31 2023/12/19 00:39:03 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.32 2023/12/19 16:09:20 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -256,10 +256,10 @@ checksymbolic(ROPMAT *rop)
 		}
 	}
 					/* return recommended output type */
-	if (!strcmp(rop->preop.csym, "XYZ")) {
+	if (!strcasecmp(rop->preop.csym, "XYZ")) {
 		if (dt <= DTspec)
 			return(DTxyze);
-	} else if (!strcmp(rop->preop.csym, "RGB")) {
+	} else if (!strcasecmp(rop->preop.csym, "RGB")) {
 		if (dt <= DTspec)
 			return(DTrgbe);
 	} else if (dt == DTspec)
