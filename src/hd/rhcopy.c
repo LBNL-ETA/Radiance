@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.37 2023/12/19 20:22:36 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.38 2023/12/19 20:49:05 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -51,7 +51,7 @@ typedef struct {
 } RAYPAR;
 
 static int openholo(char *fname, int append);
-static void addray(RAYPAR *rp);
+static int addray(RAYPAR *rp);
 static int readval(RREAL *v, int n, FILE *fp);
 static void readrays(FILE *fp);
 static int writeval(RREAL *v, int n, FILE *fp);
@@ -228,7 +228,7 @@ openholo(		/* open existing holodeck file for i/o */
 	return(n);
 }
 
-void
+int
 addray(		/* add a ray to our output holodeck */
 	RAYPAR *rp
 )
@@ -241,6 +241,7 @@ addray(		/* add a ray to our output holodeck */
 	double	d0, d1;
 	unsigned	dc;
 	RAYVAL	*rv;
+	int	nsects = 0;
 				/* check each output section */
 	for (sn = nholosects; sn--; ) {
 		hp = hdlist[sn];
@@ -271,7 +272,9 @@ addray(		/* add a ray to our output holodeck */
 		rv->r[0][0] = rr[0][0]; rv->r[0][1] = rr[0][1];
 		rv->r[1][0] = rr[1][0]; rv->r[1][1] = rr[1][1];
 		copycolr(rv->v, rp->cv);
+		++nsects;
 	}
+	return nsects;
 }
 
 /* Read n-vector from file stream */
@@ -325,6 +328,8 @@ readval(RREAL *v, int n, FILE *fp)
 static void
 readrays(FILE *fp)
 {
+	unsigned long	nread=0, ngood=0;
+
 	if (iofmt != 'a')
 		SET_FILE_BINARY(fp);
 #ifdef getc_unlocked
@@ -379,6 +384,7 @@ readrays(FILE *fp)
 			if (!flags)	/* got nothing, so may be normal EOF */
 				return;
 		}
+		++nread;
 		if (flags & (BAD_DIR|BAD_LEN))
 			continue;	/* just a bad ray is all -- skip */
 		if (!(flags & GOT_VAL))
@@ -396,11 +402,12 @@ readrays(FILE *fp)
 			} else
 				goto missingData;
 		}
-		addray(&ryp);		/* add our ray to holodeck */
+		ngood += (addray(&ryp) > 0);	/* add our ray to holodeck */
 	}
 	return;
 missingData:
-	sprintf(errmsg, "insufficient data or read error for -i%s", rspec);
+	sprintf(errmsg, "insufficient data or read error with -i%s after %lu rays read (%lu used)",
+			rspec, nread, ngood);
 	error(USER, errmsg);
 }
 
