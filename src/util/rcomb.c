@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.4 2023/12/19 16:09:20 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.5 2023/12/19 20:38:38 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -592,7 +592,7 @@ combine_input(ROPMAT *res, FILE *fout)
 	    RMATRIX	*mres = NULL;
 	    for (i = 0; i < nmats; i++) {
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
-			if (in_nrows <= 0)	/* normal end? */
+			if (cur_row > in_nrows)	/* unknown #input rows? */
 				goto loop_exit;
 			fprintf(stderr, "%s: read error at row %d\n",
 					mop[i].inspec, cur_row);
