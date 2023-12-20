@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.15 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.16 2023/12/20 23:09:34 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -95,7 +95,7 @@ psectstats(		/* print statistical information for section */
 	int	scount[NHBINS];
 	int	minsamp = 10000, maxsamp = 0;
 	FVECT	vt;
-	double	sqrtmaxp;
+	double	sqrtmaxp, median;
 	int	bmin, bmax, cnt;
 	int	i;
 
@@ -119,18 +119,18 @@ psectstats(		/* print statistical information for section */
 	for (i = NHBINS; i--; )
 		scount[i] = 0;
 	for (i = nbeams(hp); i > 0; i--)
-		scount[(int)(NHBINS*sqrt((double)hp->bi[i].nrd)/sqrtmaxp)]++;
-	for (cnt = 0, i = 0; i < NHBINS && cnt<<1 < nbeams(hp); i++)
+		scount[(int)((NHBINS-FTINY)*sqrt((double)hp->bi[i].nrd)/sqrtmaxp)]++;
+	for (cnt = i = 0; i < NHBINS && cnt<<1 < nbeams(hp); i++)
 		cnt += scount[i];
+	median = (i-.5)*(i-.5)*(maxsamp+1)*(1./(NHBINS*NHBINS));
+	if (median < minsamp) median = minsamp;
 	fprintf(fp, "\tSamples per beam:        [min,med,max]= [%d,%.0f,%d]\n",
-			minsamp,
-			(i-.5)*(i-.5)*(maxsamp+1)/(NHBINS*NHBINS),
-			maxsamp);
+			minsamp, median, maxsamp);
 	fprintf(fp, "\tHistogram: [minsamp,maxsamp)= #beams\n");
 	bmax = 0;
 	for (i = 0; i < NHBINS; i++) {
 		bmin = bmax;
-		bmax = (i+1)*(i+1)*(maxsamp+1)/(NHBINS*NHBINS);
+		bmax = (i+1)*(i+1)*(maxsamp+1)*(1./(NHBINS*NHBINS));
 		fprintf(fp, "\t\t[%d,%d)= %d\n", bmin, bmax, scount[i]);
 	}
 }
