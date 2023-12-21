@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.76 2023/12/12 18:45:53 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.77 2023/12/21 23:58:05 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -393,8 +393,10 @@ rmx_load(const char *inspec, RMPref rmp)
 		}				/* else open it ourselves */
 		fp = fopen(inspec, "r");
 	}
-	if (!fp)
+	if (!fp) {
+		fprintf(stderr, "Cannot open for reading: %s\n", inspec);
 		return(NULL);
+	}
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
