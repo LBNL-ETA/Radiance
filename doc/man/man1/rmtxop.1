@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.32 2023/12/19 00:39:03 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.33 2023/12/25 16:29:56 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -273,6 +273,12 @@ be the same.
 Note that this only applies to concatenation;
 element-wise addition, multiplication, and division are always
 evaluated from left to right.
+.SH BUGS
+The
+.I rmtxop
+command currently ignores the "PRIMARIES" setting in input
+headers, and does not produce any on output, even in
+circumstances where it would make sense to.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
