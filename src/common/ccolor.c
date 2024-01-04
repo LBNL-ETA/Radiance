@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.12 2024/01/04 01:55:42 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.13 2024/01/04 16:14:50 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -210,16 +210,16 @@ c_equiv(C_COLOR *c1, C_COLOR *c2)
 
 	if (c1 == c2)
 		return(1);
-	c_ccvt(c1, C_CSXY);		/* first check chromaticities */
-	c_ccvt(c2, C_CSXY);
+	if ((c1->flags ^ c2->flags) & (C_CDXY|C_CDSPEC))
+		return(0);		/* defined differently, so no */
+	c_ccvt(c1, C_CSXY);
+	c_ccvt(c2, C_CSXY);		/* first check chromaticities */
 	if (fabs(c1->cx - c2->cx) + fabs(c1->cy - c2->cy) > .015)
 		return(0);		/* mismatch means definitely different */
-	if (c1->flags & c2->flags & C_CDXY)
-		return(1);		/* done if both defined as (x,y) */
-	c_ccvt(c1, C_CSSPEC);		/* else compare spectra */
-	c_ccvt(c2, C_CSSPEC);
+	if (c1->flags & C_CDXY)
+		return(1);		/* done if defined as (x,y) */
 	thresh = C_CMAXV/200*(c1->ssum + c2->ssum);
-	for (i = 0; i < C_CNSS; i++)
+	for (i = 0; i < C_CNSS; i++)	/* else compare spectra */
 		if (labs(c1->ssamp[i]*c2->ssum - c2->ssamp[i]*c1->ssum) > thresh)
 			return(0);
 	return(1);
