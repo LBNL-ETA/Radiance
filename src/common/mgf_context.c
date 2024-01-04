@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf_context.c,v 3.3 2023/09/20 21:56:13 greg Exp $";
+static const char	RCSid[] = "$Id: mgf_context.c,v 3.4 2024/01/04 01:55:42 greg Exp $";
 #endif
 /*
  * Context handlers
@@ -442,7 +442,7 @@ setspectrum(			/* convert a spectrum */
 					/* get bounds */
 	if (ac < 4)
 		return(MG_EARGC);
-	if (!isflt(av[0]) || !isflt(av[1]))
+	if (!isflt(av[0]) | !isflt(av[1]))
 		return(MG_ETYPE);
 	wlmin = atof(av[0]);
 	wlmax = atof(av[1]);

@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.9 2023/11/15 18:02:52 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.10 2024/01/04 01:55:42 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -62,6 +62,8 @@ extern int	c_bbtemp(C_COLOR *clr, double tk);
 extern double	c_sset(C_COLOR *clr, double wlmin, double wlmax,
 				const float spec[], int nwl);
 extern void	c_ccvt(C_COLOR *clr, int fl);	/* fix color representation */
+						/* are colors equivalent? */
+extern int	c_equiv(C_COLOR *c1, C_COLOR *c2);
 extern int	c_isgrey(C_COLOR *clr);		/* check if color is grey */
 						/* mix two colors */
 extern void	c_cmix(C_COLOR *cres, double w1, C_COLOR *c1,

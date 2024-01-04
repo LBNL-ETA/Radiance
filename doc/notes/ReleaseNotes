@@ -2643,9 +2643,8 @@ of them.
 
 Added spectral picture support to rcrop and radcompare.
 
-Added new utility, rcomb, which is hard to type and hard to
-pronounce, and probably equally difficult to use.  Sort of a
-combination of rmtxop and pcomb, it works with all the inputs and
+Added new utility, rcomb, which is something like a combination
+of rmtxop and pcomb, it works with all the inputs and
 outputs that rmtxop handles, but allows for general expressions
 like those in pcomb for putting matrices together, working on
 an element at a time.  (No resizing of matrices or accessing
@@ -2670,3 +2669,6 @@ as patterns.
 Added support for multispectal sampling in rsensor, which will
 put out as many color channels as specified in any -cs option
 (default is 3 for RGB).
+
+Added ability of mgf2rad to convert spectral data at least
+for light, glow, plastic, and metal primitive types.

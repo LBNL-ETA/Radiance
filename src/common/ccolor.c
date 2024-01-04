@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.11 2017/04/13 00:42:01 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.12 2024/01/04 01:55:42 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -135,7 +135,7 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 	if ((nwl <= 1) | (spec == NULL) | (wlmin >= C_CMAXWL) |
 			(wlmax <= C_CMINWL) | (wlmin >= wlmax))
 		return(0.);
-	wlstep = (wlmax - wlmin)/(nwl-1);
+	wlstep = (wlmax - wlmin)/(nwl-1.);
 	while (wlmin < C_CMINWL) {
 		wlmin += wlstep;
 		--nwl; ++spec;
@@ -184,11 +184,11 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 		if ((wl < wlmin) | (wl > wlmax))
 			clr->ssamp[i] = 0;
 		else {
-			while (wl0 + wlstep < wl+1e-7) {
+			while (wl0 + wlstep < wl+.01) {
 				wl0 += wlstep;
 				pos++;
 			}
-			if ((wl+1e-7 >= wl0) & (wl-1e-7 <= wl0))
+			if ((wl+.01 >= wl0) & (wl-.01 <= wl0))
 				clr->ssamp[i] = scale*va[pos] + frand();
 			else		/* interpolate if necessary */
 				clr->ssamp[i] = frand() + scale / wlstep *
@@ -199,6 +199,32 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 	clr->flags = C_CDSPEC|C_CSSPEC;
 	return(yval);
 }
+
+
+/* check if colors are equivalent */
+int
+c_equiv(C_COLOR *c1, C_COLOR *c2)
+{
+	long	thresh;
+	int	i;
+
+	if (c1 == c2)
+		return(1);
+	c_ccvt(c1, C_CSXY);		/* first check chromaticities */
+	c_ccvt(c2, C_CSXY);
+	if (fabs(c1->cx - c2->cx) + fabs(c1->cy - c2->cy) > .015)
+		return(0);		/* mismatch means definitely different */
+	if (c1->flags & c2->flags & C_CDXY)
+		return(1);		/* done if both defined as (x,y) */
+	c_ccvt(c1, C_CSSPEC);		/* else compare spectra */
+	c_ccvt(c2, C_CSSPEC);
+	thresh = C_CMAXV/200*(c1->ssum + c2->ssum);
+	for (i = 0; i < C_CNSS; i++)
+		if (labs(c1->ssamp[i]*c2->ssum - c2->ssamp[i]*c1->ssum) > thresh)
+			return(0);
+	return(1);
+}
+
 
 /* check if color is grey */
 int
@@ -220,11 +246,11 @@ c_ccvt(C_COLOR *clr, int fl)
 	double	x, y, z;
 	int	i;
 
-	fl &= ~clr->flags;			/* ignore what's done */
-	if (!fl)				/* everything's done! */
+	fl &= ~clr->flags;		/* ignore what's done */
+	if (!fl)			/* everything's done! */
 		return;
 	if (!(clr->flags & (C_CSXY|C_CSSPEC))) {
-		*clr = c_dfcolor;		/* nothing was set! */
+		*clr = c_dfcolor;	/* nothing was set! */
 		return;
 	}
 	if (fl & C_CSXY) {		/* cspec -> cxy */

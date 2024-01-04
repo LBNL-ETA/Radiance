@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.32 2021/04/15 23:51:04 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.33 2024/01/04 01:55:42 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: mgf2rad.c,v 2.32 2021/04/15 23:51:04 greg Exp 
 #include "mgf_parser.h"
 #include "color.h"
 #include "tmesh.h"
+#include "lookup.h"
 
 #define putv(v)		printf("%18.12g %18.12g %18.12g\n",(v)[0],(v)[1],(v)[2])
 
@@ -27,6 +28,7 @@ FILE	*matfp;				/* material output file */
 
 
 extern int r_comment(int ac, char **av);
+extern int r_color(int ac, char **av);
 extern int r_cone(int ac, char **av);
 extern int r_cyl(int ac, char **av);
 extern int r_sph(int ac, char **av);
@@ -38,7 +40,8 @@ extern char * material(void);
 extern char * object(void);
 extern char * addarg(char *op, char *arg);
 extern void do_tri(char *mat, C_VERTEX *cv1, C_VERTEX *cv2, C_VERTEX *cv3, int iv);
-extern void cvtcolor(COLOR radrgb, register C_COLOR *ciec, double intensity);
+extern void cvtcolor(COLOR radrgb, C_COLOR *ciec, double intensity);
+extern char * specolor(COLOR radrgb, C_COLOR *ciec, double intensity);
 
 
 int
@@ -57,9 +60,9 @@ main(
 	mg_ehand[MG_E_COLOR] = c_hcolor;	/* they get color */
 	mg_ehand[MG_E_CONE] = r_cone;		/* we do cones */
 	mg_ehand[MG_E_CMIX] = c_hcolor;		/* they mix colors */
-	mg_ehand[MG_E_CSPEC] = c_hcolor;	/* they get spectra */
 	mg_ehand[MG_E_CXY] = c_hcolor;		/* they get chromaticities */
-	mg_ehand[MG_E_CCT] = c_hcolor;		/* they get color temp's */
+	mg_ehand[MG_E_CSPEC] = r_color;		/* we get spectra */
+	mg_ehand[MG_E_CCT] = r_color;		/* we get color temp's */
 	mg_ehand[MG_E_CYL] = r_cyl;		/* we do cylinders */
 	mg_ehand[MG_E_ED] = c_hmaterial;	/* they get emission */
 	mg_ehand[MG_E_FACE] = r_face;		/* we do faces */
@@ -137,8 +140,8 @@ userr:
 
 int
 r_comment(		/* repeat a comment verbatim */
-	register int	ac,
-	register char	**av
+	int	ac,
+	char	**av
 )
 {
 	putchar('#');		/* use Radiance comment character */
@@ -148,6 +151,21 @@ r_comment(		/* repeat a comment verbatim */
 	}
 	putchar('\n');
 	return(MG_OK);
+}
+
+
+int
+r_color(		/* call color handler & remember name */
+	int	ac,
+	char	**av
+)
+{
+	int	rval = c_hcolor(ac, av);
+
+	if (rval == MG_OK)
+		c_ccolor->client_data = c_ccname;
+
+	return(rval);
 }
 
 
@@ -320,8 +338,8 @@ r_face(			/* convert a face */
 	static int	nfaces;
 	int		myi = invert;
 	char	*mat;
-	register int	i;
-	register C_VERTEX	*cv;
+	int	i;
+	C_VERTEX	*cv;
 	FVECT	v;
 
 					/* check argument count and type */
@@ -381,8 +399,8 @@ r_ies(				/* convert an IES luminaire file */
 	char	combuf[128];
 	char	fname[48];
 	char	*oname;
-	register char	*op;
-	register int	i;
+	char	*op;
+	int	i;
 					/* check argument count */
 	if (ac < 2)
 		return(MG_EARGC);
@@ -452,7 +470,7 @@ do_tri(		/* put out smoothed triangle */
 	C_VERTEX	*cvt;
 	FVECT	v1, v2, v3;
 	FVECT	n1, n2, n3;
-	register int	i;
+	int	i;
 
 	if (iv) {			/* swap vertex order if inverted */
 		cvt = cv1;
@@ -497,6 +515,7 @@ char *
 material(void)			/* get (and print) current material */
 {
 	char	*mname = "mat";
+	char	*pname;
 	COLOR	radrgb, c2;
 	double	d;
 
@@ -507,15 +526,15 @@ material(void)			/* get (and print) current material */
 				/* else update output */
 	c_cmaterial->clock = 0;
 	if (c_cmaterial->ed > .1) {	/* emitter */
-		cvtcolor(radrgb, &c_cmaterial->ed_c,
+		pname = specolor(radrgb, &c_cmaterial->ed_c,
 				emult*c_cmaterial->ed/(PI*WHTEFFICACY));
 		if (glowdist < FHUGE) {		/* do a glow */
-			fprintf(matfp, "\nvoid glow %s\n0\n0\n", mname);
+			fprintf(matfp, "\n%s glow %s\n0\n0\n", pname, mname);
 			fprintf(matfp, "4 %f %f %f %f\n", colval(radrgb,RED),
 					colval(radrgb,GRN),
 					colval(radrgb,BLU), glowdist);
 		} else {
-			fprintf(matfp, "\nvoid light %s\n0\n0\n", mname);
+			fprintf(matfp, "\n%s light %s\n0\n0\n", pname, mname);
 			fprintf(matfp, "3 %f %f %f\n", colval(radrgb,RED),
 					colval(radrgb,GRN),
 					colval(radrgb,BLU));
@@ -552,7 +571,7 @@ material(void)			/* get (and print) current material */
 				colval(radrgb,GRN), colval(radrgb,BLU),
 				c_cmaterial->nr);
 		return(mname);
-		}
+	}
 					/* check for trans */
 	if (c_cmaterial->td > .01 || c_cmaterial->ts > .01) {
 		double	a5, a6;
@@ -584,11 +603,11 @@ material(void)			/* get (and print) current material */
 		return(mname);
 	}
 					/* check for plastic */
-	if (c_cmaterial->rs < .08 && (c_cmaterial->rs < .1*c_cmaterial->rd ||
+	if (c_cmaterial->rs < .1 && (c_cmaterial->rs < .1*c_cmaterial->rd ||
 					c_isgrey(&c_cmaterial->rs_c))) {
-		cvtcolor(radrgb, &c_cmaterial->rd_c,
+		pname = specolor(radrgb, &c_cmaterial->rd_c,
 					c_cmaterial->rd/(1.-c_cmaterial->rs));
-		fprintf(matfp, "\nvoid plastic %s\n0\n0\n", mname);
+		fprintf(matfp, "\n%s plastic %s\n0\n0\n", pname, mname);
 		fprintf(matfp, "5 %f %f %f %f %f\n", colval(radrgb,RED),
 				colval(radrgb,GRN), colval(radrgb,BLU),
 				c_cmaterial->rs, c_cmaterial->rs_a);
@@ -597,11 +616,20 @@ material(void)			/* get (and print) current material */
 		return(mname);
 	}
 					/* else it's metal */
-						/* average colors */
-	cvtcolor(radrgb, &c_cmaterial->rd_c, c_cmaterial->rd);
-	cvtcolor(c2, &c_cmaterial->rs_c, c_cmaterial->rs);
-	addcolor(radrgb, c2);
-	fprintf(matfp, "\nvoid metal %s\n0\n0\n", mname);
+						/* compute color */
+	if (c_equiv(&c_cmaterial->rd_c, &c_cmaterial->rs_c)) {
+		pname = specolor(radrgb, &c_cmaterial->rs_c, c_cmaterial->rs+c_cmaterial->rd);
+	} else if (c_cmaterial->rd <= .05f) {
+		pname = specolor(radrgb, &c_cmaterial->rs_c, c_cmaterial->rs);
+		cvtcolor(c2, &c_cmaterial->rd_c, c_cmaterial->rd);
+		addcolor(radrgb, c2);
+	} else {
+		pname = "void";
+		cvtcolor(radrgb, &c_cmaterial->rd_c, c_cmaterial->rd);
+		cvtcolor(c2, &c_cmaterial->rs_c, c_cmaterial->rs);
+		addcolor(radrgb, c2);
+	}
+	fprintf(matfp, "\n%s metal %s\n0\n0\n", pname, mname);
 	fprintf(matfp, "5 %f %f %f %f %f\n", colval(radrgb,RED),
 			colval(radrgb,GRN), colval(radrgb,BLU),
 			c_cmaterial->rs/(c_cmaterial->rd + c_cmaterial->rs),
@@ -615,11 +643,11 @@ material(void)			/* get (and print) current material */
 void
 cvtcolor(	/* convert a CIE XYZ color to RGB */
 	COLOR	radrgb,
-	register C_COLOR	*ciec,
+	C_COLOR	*ciec,
 	double	intensity
 )
 {
-	static COLOR	ciexyz;
+	COLOR	ciexyz;
 
 	c_ccvt(ciec, C_CSXY);		/* get xy representation */
 	ciexyz[1] = intensity;
@@ -629,12 +657,68 @@ cvtcolor(	/* convert a CIE XYZ color to RGB */
 }
 
 
+static int	/* new spectrum definition? */
+newspecdef(C_COLOR *spc)
+{
+	static LUTAB	spc_tab = LU_SINIT(NULL,free);
+	LUENT	*lp = lu_find(&spc_tab, (const char *)spc->client_data);
+
+	if (lp == NULL)			/* should never happen */
+		return(1);
+	if (lp->data == NULL) {		/* new entry */
+		lp->key = (char *)spc->client_data;
+		lp->data = (char *)malloc(sizeof(C_COLOR));
+	} else if (c_equiv(spc, (C_COLOR *)lp->data))
+		return(0);		/* unchanged */
+
+	if (lp->data != NULL)		/* else remember if we can */
+		*(C_COLOR *)lp->data = *spc;
+	return(1);			/* good as new */
+}
+
+
+char *
+specolor(	/* check if color has spectra and output accordingly */
+	COLOR	radrgb,
+	C_COLOR	*clr,
+	double	intensity
+)
+{
+	static char	spname[128];
+	double	mult;
+	int	i;
+
+	if (!(clr->flags & C_CDSPEC)) {		/* not defined spectrally? */
+		cvtcolor(radrgb, clr, intensity);
+		return("void");
+	}
+	setcolor(radrgb, intensity, intensity, intensity);
+	if (clr->client_data != NULL) {		/* get name if available */
+		strcpy(spname, (char *)clr->client_data);
+		strcat(spname, "*");		/* make sure it's special */
+		if (!newspecdef(clr))		/* output already? */
+			return(spname);
+	} else
+		strcpy(spname, "spec*");
+	c_ccvt(clr, C_CSEFF);			/* else output spectrum prim */
+	fprintf(matfp, "\nvoid spectrum %s\n0\n0\n", spname);
+	fprintf(matfp, "%d %d %d", C_CNSS+2, C_CMINWL, C_CMAXWL);
+	mult = (C_CNSS*c_dfcolor.eff)/(clr->ssum*clr->eff);
+	for (i = 0; i < C_CNSS; i++) {
+		if (!((i+1)%6)) fputc('\n', matfp);
+		fprintf(matfp, "\t%.5f", clr->ssamp[i]*mult);
+	}
+	fputc('\n', matfp);
+	return(spname);
+}
+
+
 char *
 object(void)			/* return current object name */
 {
 	static char	objbuf[64];
-	register int	i;
-	register char	*cp;
+	int	i;
+	char	*cp;
 	int	len;
 						/* tracked by obj_handler */
 	i = obj_nnames - sizeof(objbuf)/16;
@@ -653,8 +737,8 @@ object(void)			/* return current object name */
 
 char *
 addarg(				/* add argument and advance pointer */
-	register char *op,
-	register char *arg
+	char *op,
+	char *arg
 )
 {
 	*op = ' ';
