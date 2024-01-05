@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.90 2023/09/22 18:01:32 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.91 2024/01/05 18:04:28 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -195,7 +195,7 @@ my $ns = 2**$ttlog2;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
 my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
-$rfluxmtx .= " -n $nproc -c $nsamp";
+$rfluxmtx .= " -n $nproc -c $nsamp -cs 3";
 if ( !defined $recovery ) {
 	open(MYAVH, "> $td/savedARGV.txt");
 	foreach (@savedARGV) {
