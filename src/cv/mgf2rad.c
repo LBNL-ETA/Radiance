@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.33 2024/01/04 01:55:42 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.34 2024/01/05 16:33:36 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -686,13 +686,18 @@ specolor(	/* check if color has spectra and output accordingly */
 {
 	static char	spname[128];
 	double	mult;
-	int	i;
+	int	cbeg, cend, i;
 
 	if (!(clr->flags & C_CDSPEC)) {		/* not defined spectrally? */
 		cvtcolor(radrgb, clr, intensity);
 		return("void");
 	}
 	setcolor(radrgb, intensity, intensity, intensity);
+	for (cbeg = 0; cbeg < C_CNSS; cbeg++)	/* trim zeros off beginning */
+		if (clr->ssamp[cbeg])
+			break;
+	if (cbeg >= C_CNSS)			/* should never happen! */
+		return("void");
 	if (clr->client_data != NULL) {		/* get name if available */
 		strcpy(spname, (char *)clr->client_data);
 		strcat(spname, "*");		/* make sure it's special */
@@ -701,11 +706,14 @@ specolor(	/* check if color has spectra and output accordingly */
 	} else
 		strcpy(spname, "spec*");
 	c_ccvt(clr, C_CSEFF);			/* else output spectrum prim */
+	for (cend = 0; !clr->ssamp[C_CNSS-1-cend]; cend++)
+		;				/* trim zeros off end */
 	fprintf(matfp, "\nvoid spectrum %s\n0\n0\n", spname);
-	fprintf(matfp, "%d %d %d", C_CNSS+2, C_CMINWL, C_CMAXWL);
+	fprintf(matfp, "%d %d %d", C_CNSS+2-cbeg-cend,
+		C_CMINWL+cbeg*C_CWLI, C_CMAXWL-cend*C_CWLI);
 	mult = (C_CNSS*c_dfcolor.eff)/(clr->ssum*clr->eff);
-	for (i = 0; i < C_CNSS; i++) {
-		if (!((i+1)%6)) fputc('\n', matfp);
+	for (i = cbeg; i < C_CNSS-cend; i++) {
+		if (!((i-cbeg+1)%6)) fputc('\n', matfp);
 		fprintf(matfp, "\t%.5f", clr->ssamp[i]*mult);
 	}
 	fputc('\n', matfp);
