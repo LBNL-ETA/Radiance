@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.29 2023/12/11 19:21:43 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.30 2024/01/05 18:33:26 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -198,7 +198,7 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 #####################################################################
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
-	my $picvt = $specout ? 'rmtxcomb -fc -' : "@pvalueA -df";
+	my $picvt = $specout ? 'rcomb -fc -' : "@pvalueA -df";
 	exec "@vwraysA -ff | @rtraceA -fff -olv @res '$oct' | " .
 		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of$ncsamp - | " .
 		$picvt . " | getinfo -a 'VIEW=$view'";
@@ -229,7 +229,7 @@ my %rtoutC = (
 # Arguments for rsplit based on output file type
 my %rcodeC = (
 	'.hdr',	['-of3', "!@pvalueA -df -u"],
-	'.hsr', ["-of$ncsamp", '!rmtxcomb -fc -'],
+	'.hsr', ["-of$ncsamp", '!rcomb -fc -'],
 	'.dpt',	['-of', "!rcode_depth$refDepth -ff"],
 	'.nrm',	['-of3', '!rcode_norm -ff'],
 	'.idx',	['-oa', '!rcode_ident "-t	"']
