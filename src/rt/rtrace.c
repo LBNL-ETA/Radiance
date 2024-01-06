@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.111 2023/12/11 18:54:42 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.112 2024/01/06 01:21:34 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -959,16 +959,16 @@ putscolor(COLORV *scol)		/* output (spectral) color */
 	static COLORMAT	xyz2myrgbmat;
 	SCOLOR		my_scol;
 	COLOR		col;
-					/* apply scalefactor if any */
-	if (out_scalefactor != 1.) {
+					/* single channel output? */
+	if (sens_curve != NULL) {
+		RREAL	v = (*sens_curve)(scol) * out_scalefactor;
+		(*putreal)(&v, 1);
+		return;
+	}
+	if (out_scalefactor != 1.) {	/* apply scalefactor if any */
 		copyscolor(my_scol, scol);
 		scalescolor(my_scol, out_scalefactor);
 		scol = my_scol;
-	}
-	if (sens_curve != NULL) {	/* single channel output */
-		RREAL	v = (*sens_curve)(scol);
-		(*putreal)(&v, 1);
-		return;
 	}
 	if (out_prims == NULL) {	/* full spectral reporting */
 		if (outform == 'c') {
