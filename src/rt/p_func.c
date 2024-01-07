@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.11 2023/12/13 23:26:16 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.12 2024/01/07 18:04:16 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -105,7 +105,6 @@ p_specfunc(			/* compute spectral pattern */
 	SCOLOR  scval;
 	double	wl, wlmin, wlmax, wlstep;
 	int	ns, i;
-	MFUNC	*mf;
 
 	if ((m->oargs.nsargs < 2) | (m->oargs.nfargs < 2))
 		objerror(m, USER, "bad # arguments");
@@ -123,13 +122,13 @@ p_specfunc(			/* compute spectral pattern */
 		return(0);
 	}
 	wlstep = (wlmax - wlmin)/(double)MAXCSAMP;
-	mf = getfunc(m, 1, 0, 0);
+	getfunc(m, 1, 0, 0);
 	setfunc(m, r);
 	errno = 0;
 	ns = (wlmax - wlmin)/wlstep + .1;
 	wl = wlmax - .5*wlstep;
 	for (i = ns; i-- > 0; wl -= wlstep) {
-		double	ws = wl + 0.9*(1.-frandom())*wlstep;
+		double	ws = wl + 0.9*(.5-frandom())*wlstep;
 		scsamp[i] = funvalue(m->oargs.sarg[0], 1, &ws);
 		if ((errno == EDOM) | (errno == ERANGE)) {
 			objerror(m, WARNING, "compute error");
