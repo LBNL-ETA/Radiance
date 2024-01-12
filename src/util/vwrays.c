@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.24 2022/04/09 17:18:08 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.25 2024/01/12 17:29:10 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -109,6 +109,7 @@ main(
 			break;
 		case 'c':			/* repeat count */
 			repeatcnt = atoi(argv[++i]);
+			if (repeatcnt < 1) repeatcnt = 1;
 			break;
 		case 'p':			/* pixel aspect or jitter */
 			if (argv[i][2] == 'a')
@@ -154,6 +155,8 @@ main(
 				(vw.vaft > FTINY) ? " -ld+" : "");
 		return(0);
 	}
+	if ((repeatcnt > 1) & (pj > FTINY))
+		initurand(1024);
 	if (fromstdin)
 		pix2rays(stdin);
 	else
@@ -172,10 +175,20 @@ jitterloc(
 	RREAL	loc[2]
 )
 {
-	if (pj > FTINY) {
-		loc[0] += pj*(.5 - frandom())/rs.xr;
-		loc[1] += pj*(.5 - frandom())/rs.yr;
-	}
+	static int	nsamp;
+	double		xyr[2];
+
+	if (pj <= FTINY)
+		return;
+
+	if (repeatcnt == 1) {
+		xyr[0] = frandom();
+		xyr[1] = frandom();
+	} else				/* stratify samples */
+		multisamp(xyr, 2, urand(nsamp++));
+
+	loc[0] += pj*(.5 - xyr[0])/rs.xr;
+	loc[1] += pj*(.5 - xyr[1])/rs.yr;
 }
 
 
