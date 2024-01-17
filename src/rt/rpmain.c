@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.29 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.30 2024/01/17 01:31:08 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -270,6 +270,11 @@ main(int  argc, char  *argv[])
 			goto badopt;
 		}
 	}
+					/* set/check spectral sampling */
+	rval = setspectrsamp(CNDX, WLPART);
+	if (rval < 0)
+		error(USER, "unsupported spectral sampling");
+
 	err = setview(&ourview);	/* set viewing parameters */
 	if (err != NULL)
 		error(USER, err);

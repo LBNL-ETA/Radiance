@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.33 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.34 2024/01/17 01:31:08 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -330,6 +330,10 @@ main(int argc, char *argv[])
 		error(USER, "missing required modifier argument");
 					/* override some option settings */
 	override_options();
+					/* set/check spectral sampling */
+	rval = setspectrsamp(CNDX, WLPART);
+	if (rval < 0)
+		error(USER, "unsupported spectral sampling");
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
