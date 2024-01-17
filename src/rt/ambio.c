@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.16 2023/12/11 23:57:32 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.17 2024/01/17 17:35:35 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -165,8 +165,8 @@ readambval(			/* read ambient value from stream */
 	} else {
 		SCOLOR	scol;
 		scolr2scolor(scol, sclr, AMB_CNDX[3]);
-		convertscolor(av->val, NCSAMP, WLPART[0], WLPART[3],
-				scol, AMB_CNDX[3], AMB_WLPART[0], AMB_WLPART[3]);
+		convertscolorcol(av->val, scol, AMB_CNDX[3],
+				AMB_WLPART[0], AMB_WLPART[3]);
 	}
 	return(feof(fp) ? 0 : ambvalOK(av));
 }

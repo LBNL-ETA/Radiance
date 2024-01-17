@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.12 2023/12/14 00:51:12 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.13 2024/01/17 17:35:35 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -226,8 +226,7 @@ p_spectrum(			/* simple constant spectrum */
 			sinp[i] = (COLORV)m->oargs.farg[i+2];
 		hstep = 0.5 * (m->oargs.farg[1] - m->oargs.farg[0]) /
 				(m->oargs.nfargs-3.0);
-		convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
-				sinp, m->oargs.nfargs-2,
+		convertscolorcol(scval, sinp, m->oargs.nfargs-2,
 				m->oargs.farg[0]-hstep, m->oargs.farg[1]+hstep);
 		free(sinp);
 		m->os = (void *)scval;
@@ -265,8 +264,8 @@ p_specfile(			/* constant spectrum from 1-D data file */
 			double	wl = dp->dim[0].org + i*step;
 			sinp[i] = (COLORV)datavalue(dp, &wl);
 		}
-		convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
-				sinp, dp->dim[0].ne, dp->dim[0].org-.5*step,
+		convertscolorcol(scval, sinp, dp->dim[0].ne,
+				dp->dim[0].org-.5*step,
 				dp->dim[0].org+dp->dim[0].siz+.5*step);
 		free(sinp);
 		m->os = (void *)scval;
@@ -318,8 +317,7 @@ p_specdata(			/* varied spectrum from (N+1)-D file */
 		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
-	convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
-			scdat, dp->dim[dp->nd-1].ne,
+	convertscolorcol(scval, scdat, dp->dim[dp->nd-1].ne,
 			dp->dim[dp->nd-1].org-.5*step,
 			dp->dim[dp->nd-1].org+dp->dim[dp->nd-1].siz+.5*step);
 	free(scdat);
@@ -365,8 +363,7 @@ p_specpict(			/* interpolate hyperspectral image data */
 		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
-	convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
-			scdat, dp->dim[2].ne,
+	convertscolorcol(scval, scdat, dp->dim[2].ne,
 			dp->dim[2].org-.5*step,
 			dp->dim[2].org+dp->dim[2].siz+.5*step);
 	smultscolor(r->pcol, scval);

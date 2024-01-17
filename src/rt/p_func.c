@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.12 2024/01/07 18:04:16 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.13 2024/01/17 17:35:35 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -135,8 +135,7 @@ p_specfunc(			/* compute spectral pattern */
 			return(0);
 		}
 	}
-	convertscolor(scval, NCSAMP, WLPART[0], WLPART[3],
-			scsamp, ns, wlmin, wlmax);
+	convertscolorcol(scval, scsamp, ns, wlmin, wlmax);
 	smultscolor(r->pcol, scval);
 	return(0);
 }
