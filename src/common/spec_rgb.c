@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.31 2023/12/08 18:48:09 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.32 2024/01/17 17:36:20 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: spec_rgb.c,v 2.31 2023/12/08 18:48:09 greg Exp
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "color.h"
 
 #define CEPS	1e-4			/* color epsilon */
@@ -405,6 +406,33 @@ scolor_melanopic(		/* compute melanopic integral for spectral color */
 )
 {
 	return(scolor2melanopic(scol, NCSAMP, WLPART));
+}
+
+
+void
+convertscolorcol(		/* any uniform spectrum to working */
+	SCOLOR rcol,
+	const COLORV src[],
+	int snc,
+	double swl0,
+	double swl1
+)
+{
+	if (NCSAMP > 3) {		/* spectrum -> spectrum */
+		convertscolor(rcol, NCSAMP, WLPART[0], WLPART[3],
+				src, snc, swl0, swl1);
+	} else if ((snc <= MAXCSAMP) & (swl0 > swl1)) {
+		float	wlpt[4];	/* no intermediate conversion needed */
+		wlpt[0] = swl0; wlpt[3] = swl1;
+		wlpt[1] = WLPART[1]; wlpt[2] = WLPART[2];
+		scolor2rgb(rcol, (COLORV *)src, snc, wlpt);
+	} else {
+		SCOLOR	dcol;		/* else convert spectrum first */
+		int	dnc = snc*(WLPART[0] - WLPART[3])/fabs(swl0 - swl1) + .99;
+		if (dnc > MAXCSAMP) dnc = MAXCSAMP;
+		convertscolor(dcol, dnc, WLPART[0], WLPART[3], src, snc, swl0, swl1);
+		scolor2rgb(rcol, dcol, dnc, WLPART);
+	}
 }
 
 

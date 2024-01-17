@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.44 2023/12/16 01:00:02 greg Exp $ */
+/* RCSid $Id: color.h,v 2.45 2024/01/17 17:36:20 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *
@@ -21,8 +21,8 @@
  *  to tristimulus should use scolor_rgb() or scolor_cie().
  *
  *  A new Radiance format is provided for spectral pictures,
- *  and spectral colors must be converted by caller using
- *  convertscolor() if the sampling doesn't match.
+ *  and spectral colors must be converted by caller if the
+ *  sampling doesn't match.
  */
 #ifndef _RAD_COLOR_H_
 #define _RAD_COLOR_H_
@@ -370,6 +370,9 @@ extern int	compxyzWBmat(COLORMAT mat, float wht1[2],
 extern int	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
+					/* any uniform spectrum to working */
+extern void	convertscolorcol(SCOLOR rcol, const COLORV src[], int snc,
+					double swl0, double swl1);
 					/* most accurate spectral->tristim */
 extern void	scolor2cie(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
 extern void	scolor2rgb(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
