@@ -1,4 +1,4 @@
-# RCSid $Id: spectral.mat,v 1.2 2023/12/14 00:57:05 greg Exp $
+# RCSid $Id: spectral.mat,v 1.3 2024/01/17 18:57:54 greg Exp $
 #
 # Spectral material definitions
 #
@@ -32,7 +32,7 @@ void specfile copper_spec
 void specfunc rainbow_spec
 8 xrainbow rainbow.cal -s 4 -t -6 0 0
 0
-3 380 780 30
+3 380 780 45
 
 void specdata gold+copper_alloy_spec
 4 noop copper_gold.dat . ".5+.5*cos(PI*Py)"
