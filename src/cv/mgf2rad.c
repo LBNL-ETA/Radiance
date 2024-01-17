@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.34 2024/01/05 16:33:36 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.35 2024/01/17 00:43:45 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -25,6 +25,8 @@ double	glowdist = FHUGE;		/* glow test distance */
 double  emult = 1.;			/* emitter multiplier */
 
 FILE	*matfp;				/* material output file */
+
+int	dospectra = 0;			/* output spectral colors? */
 
 
 extern int r_comment(int ac, char **av);
@@ -107,6 +109,9 @@ main(
 			}
 			printf(" %s", argv[i]);
 			break;
+		case 's':			/* spectral color output? */
+			dospectra = !dospectra;
+			break;
 		default:
 			goto userr;
 		}
@@ -132,7 +137,7 @@ main(
 		}
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-g dist][-e mult][-m matf] [file.mgf] ..\n",
+	fprintf(stderr, "Usage: %s [-s][-g dist][-e mult][-m matf] [file.mgf] ..\n",
 			argv[0]);
 	exit(1);
 }
@@ -688,9 +693,9 @@ specolor(	/* check if color has spectra and output accordingly */
 	double	mult;
 	int	cbeg, cend, i;
 
-	if (!(clr->flags & C_CDSPEC)) {		/* not defined spectrally? */
+	if (!dospectra | !(clr->flags & C_CDSPEC)) {
 		cvtcolor(radrgb, clr, intensity);
-		return("void");
+		return("void");			/* just use RGB */
 	}
 	setcolor(radrgb, intensity, intensity, intensity);
 	for (cbeg = 0; cbeg < C_CNSS; cbeg++)	/* trim zeros off beginning */

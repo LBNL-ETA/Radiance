@@ -1,10 +1,12 @@
-.\" RCSid "$Id: mgf2rad.1,v 1.3 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: mgf2rad.1,v 1.4 2024/01/17 00:43:45 greg Exp $"
 .TH MGF2RAD 1 4/12/95 RADIANCE
 .SH NAME
 mgf2rad - convert Materials and Geometry Format file to RADIANCE description
 .SH SYNOPSIS
 .B mgf2rad
 [
+.B \-s
+][
 .B "\-m matfile"
 ][
 .B "\-e mult"
@@ -53,6 +55,15 @@ into a single file, since no output is produced for unreferenced
 materials; i.e. translating just the MGF materials does not work.
 .PP
 The
+.I \-s
+option turns on spectral data conversion, producing "spectrum"
+modifiers in the output as supported by RADIANCE 6.0 and later.
+If you do not plan to employ spectral rendering, then it is
+better to have
+.I mgf2rad
+convert to RGB colors, which is the default.
+.PP
+The
 .I \-e
 option may be used to multiply all the emission values by the
 given
@@ -69,12 +80,12 @@ and are not generally useful to most users.
 To translate two MGF files into one RADIANCE materials file and
 one geometry file:
 .IP "" .2i
-mgf2rad \-m materials.rad building1.mgf building2.mgf > building1+2.rad
+mgf2rad -m materials.rad building1.mgf building2.mgf > building1+2.rad
 .PP
 To create an octree directly from two MGF files and one RADIANCE
-file:
+file, including spectra:
 .IP "" .2i
-oconv '\\!mgf2rad materials.mgf scene.mgf' source.rad > scene.oct
+oconv '!mgf2rad -s materials.mgf scene.mgf' source.rad > scene.oct
 .SH FILES
 tmesh.cal	Used to smooth polygonal geometry
 .br

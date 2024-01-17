@@ -2671,6 +2671,7 @@ put out as many color channels as specified in any -cs option
 (default is 3 for RGB).
 
 Added ability of mgf2rad to convert spectral data at least
-for light, glow, plastic, and metal primitive types.
+for light, glow, plastic, and metal primitive types.  Need
+to use new '-s' option to get new output.
 
 Added handling of spectral images to rcode2bmp script.
