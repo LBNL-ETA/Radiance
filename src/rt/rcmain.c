@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.34 2024/01/17 01:31:08 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.35 2024/01/18 00:28:54 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -331,8 +331,7 @@ main(int argc, char *argv[])
 					/* override some option settings */
 	override_options();
 					/* set/check spectral sampling */
-	rval = setspectrsamp(CNDX, WLPART);
-	if (rval < 0)
+	if (setspectrsamp(CNDX, WLPART) < 0)
 		error(USER, "unsupported spectral sampling");
 					/* initialize object types */
 	initotypes();

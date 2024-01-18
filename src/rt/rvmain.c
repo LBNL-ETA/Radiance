@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.20 2024/01/17 01:31:08 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.21 2024/01/18 00:28:54 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -192,8 +192,7 @@ main(int argc, char *argv[])
 		}
 	}
 					/* set/check spectral sampling */
-	rval = setspectrsamp(CNDX, WLPART);
-	if (rval < 0)
+	if (setspectrsamp(CNDX, WLPART) <= 0)
 		error(USER, "unsupported spectral sampling");
 
 	err = setview(&ourview);	/* set viewing parameters */
