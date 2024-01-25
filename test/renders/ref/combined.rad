@@ -12781,7 +12781,7 @@ void specfile copper_spec
 void specfunc rainbow_spec
 14 xrainbow rainbow.cal -s 4 -t -6 0 0 -i 1 -t 0 5.2 9.6
 0
-3                380                780                 30
+3                380                780                 45
 
 void specdata gold+copper_alloy_spec
 10 noop copper_gold.dat . .5+.5*cos(PI*Py) -i 1 -t 0 5.2 9.6
