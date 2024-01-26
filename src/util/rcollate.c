@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.44 2024/01/25 19:25:50 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.45 2024/01/26 00:47:17 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -618,7 +618,7 @@ headline(char *s, void *p)
 			fmtid = fmt;
 			return(0);
 		}
-		if ((comp_size == 1) & (n_comp > 1))
+		if (!check & (comp_size == 1) & (n_comp > 1))
 			return(0);		/* byte exception - skip check */
 		if (!strcmp(fmt, fmtid))
 			return(0);
@@ -644,7 +644,7 @@ headline(char *s, void *p)
 		return(0);
 	}
 	if (!strncmp(s, "NCOMP=", 6)) {
-		if ((comp_size == 1) & (n_comp > 1))
+		if (!check & (comp_size == 1) & (n_comp > 1))
 			return(0);		/* byte exception - ignore */
 		n = atoi(s+6);
 		if ((n_comp > 0) & (n != n_comp)) {

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.18 2024/01/25 19:25:50 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.19 2024/01/26 00:47:17 greg Exp $"
 .TH RCOLLATE 1 9/5/2013 RADIANCE
 .SH NAME
 rcollate - resize or re-order matrix data
@@ -115,9 +115,13 @@ options are not required, but will be checked against the header
 information if provided.
 An exception is made for
 .I \-fbN
-where N>1, when no checks are made against the header,
-and the given length is assumed
-to be the exact size (in bytes) of each data record.
+where N>1 and the
+.I \-c
+option is not present.
+In this case, the header may indicate a different format or number of
+components
+and the specified byte length is taken instead to be the exact size
+of each data record.
 .PP
 The transpose option,
 .I \-t
