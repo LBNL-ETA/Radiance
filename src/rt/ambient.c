@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.120 2023/11/22 16:21:48 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.121 2024/01/29 19:24:00 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -634,6 +634,7 @@ initambfile(		/* initialize ambient file */
 	if (mybuf == NULL)
 		mybuf = (char *)bmalloc(BUFSIZ+8);
 	setbuf(ambfp, mybuf);
+retry:
 	if (cre8) {			/* new file */
 		newheader("RADIANCE", ambfp);
 		fprintf(ambfp, "%s -av %g %g %g -aw %d -ab %d -aa %g ",
@@ -659,9 +660,16 @@ initambfile(		/* initialize ambient file */
 		fputformat(AMBFMT, ambfp);
 		fputc('\n', ambfp);
 		putambmagic(ambfp);
-	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp))
+	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp)) {
+#ifndef  F_SETLKW
+		static int	ntries = 0;
+		if (++ntries < 4 && ftell(ambfp) == 0) {
+			sleep(2);
+			goto retry;
+		}
+#endif
 		error(USER, "bad/incompatible ambient file");
-
+	}
 	if ((AMB_CNDX != CNDX) | (AMB_WLPART != WLPART)) {
 		if (setspectrsamp(AMB_CNDX, AMB_WLPART) < 0)
 			error(USER, "bad wavelength sampling in ambient file");
