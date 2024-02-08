@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.13 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.14 2024/02/08 02:26:01 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -110,6 +110,12 @@ If it is not given,
 .I N
 defaults to 1, which is just the Tregenza sky.
 (Use "h=-rN" for left-handed coordinates.)
+.TP
+.BI h =cie
+Divide the hemisphere into CIE sky scanner directions, which is
+similar to Tregenza but with different starting azimuths and
+reversing row direction at each new altitude.
+(Use "h=-cie" for left-handed coordinates.)
 .TP
 .BI h =scN
 Subdivide the hemisphere using the Shirley-Chiu square-to-disk mapping with an

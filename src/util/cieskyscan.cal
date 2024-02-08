@@ -1,0 +1,53 @@
+{ RCSid $Id: cieskyscan.cal,v 2.1 2024/02/08 02:26:01 greg Exp $ }
+{
+	Compute CIE standard sky scanner bin (cbin)
+	Different azimuth origin, alignment, and winding than Tregenza/Reinhart
+
+	Dx,Dy,Dz	- Incident direction (normalized, towards surface face)
+	rNx,rNy,rNz	- Surface normal (normalized, away from surface)
+	Ux,Uy,Uz	- Up direction vector (does not need to be normalized)
+
+	Modified from reinhartb.cal
+
+	Feburary 2024	G. Ward
+}
+				{ Useful factors and functions }
+DEGREE : PI/180;
+Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x))) / DEGREE;
+posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
+Atan2(y,x) : posangle(atan2(y,x));
+
+				{ Set to -1 for left-handed coordinate system }
+RHS = 1;
+				{ Default axis orientation (+Y == north) }
+rNx = 0; rNy = 0; rNz = -1;
+Ux = 0; Uy = 1; Uz = 0;
+				{ Compute oriented axis angles }
+inc_dz = -Dx*rNx-Dy*rNy-Dz*rNz;
+inc_rx = -RHS*(Dx*(Uy*rNz-Uz*rNy) + Dy*(Uz*rNx-Ux*rNz) + Dz*(Ux*rNy-Uy*rNx));
+inc_ry = Dx*Ux+Dy*Uy+Dz*Uz + inc_dz*(rNx*Ux+rNy*Uy+rNz*Uz);
+
+r_alt = Asin(inc_dz);
+c_azi = Atan2(-inc_rx,-inc_ry);
+
+calpha : 90/7.5;		{ Separation between rows in degrees }
+				{ Number of patches per row }
+cnaz(r) : select(r+1, 30, 30, 24, 24, 18, 12, 6, 1);
+
+caccum(r) : if(r-.5, cnaz(r-1) + caccum(r-1), 0);
+
+c_row = floor(r_alt/calpha);
+
+c_inc = 360/cnaz(c_row);
+
+fwd_row = floor(c_row/2+1.25) - c_row/2 - .75;
+
+c_azn = if(359.9999 - c_azi,
+		if(fwd_row, floor(c_azi/c_inc),
+			cnaz(c_row)-1 - floor(c_azi/c_inc)),
+		0);
+
+				{ Final bin value, -1 for "ground" }
+cbin = if (r_alt, caccum(c_row) + c_azn, -1);
+
+Ncbins : caccum(8);		{ total number of bins }

@@ -2678,3 +2678,8 @@ Added handling of spectral images to rcode2bmp script.
 
 Minor change to rcollate to allow explicit byte records to
 be any specified length without checks against header input.
+
+Added new hemisphere type to rfluxmtx, "h=cie" for CIE sky
+scanner positions.  These are 145 patches with identical
+row counts to Tregenza, but starting from a different
+azimuth and reversing row directions at adjacent altitudes.

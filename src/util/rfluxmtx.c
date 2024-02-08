@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.55 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.56 2024/02/08 02:26:01 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -41,6 +41,7 @@ char		*shirchiufn = "disk2square.cal";
 char		*kfullfn = "klems_full.cal";
 char		*khalffn = "klems_half.cal";
 char		*kquarterfn = "klems_quarter.cal";
+char		*ciefn = "cieskyscan.cal";
 
 					/* string indicating parameters */
 const char	PARAMSTART[] = "@rfluxmtx";
@@ -499,6 +500,14 @@ finish_receiver(void)
 		calfn = kquarterfn; kquarterfn = NULL;
 		binf = "kqbin";
 		nbins = "Nkqbins";
+	} else if (!strcasecmp(curparams.hemis, "cie")) {
+		calfn = ciefn; ciefn = NULL;
+		sprintf(sbuf, "rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g,RHS=%c1",
+			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
+			curparams.vup[0], curparams.vup[1], curparams.vup[2],
+			curparams.sign);
+		binv = "cbin";
+		nbins = "Ncbins";
 	} else {
 		fprintf(stderr, "%s: unrecognized hemisphere sampling: h=%s\n",
 				progname, curparams.hemis);
