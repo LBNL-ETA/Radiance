@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.5 2023/12/19 20:38:38 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.6 2024/02/09 19:58:56 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -680,7 +680,9 @@ resize_inparr(int n2alloc)
 {
 	int	i;
 
-	for (i = nmats; i > n2alloc; i--) {
+	if (n2alloc == nall)
+		return;
+	for (i = nall; i > n2alloc; i--) {
 		rmx_reset(&mop[i].imx);
 		if (mop[i].rmp != &mop[i].imx)
 			rmx_free(mop[i].rmp);
@@ -690,8 +692,8 @@ resize_inparr(int n2alloc)
 		fputs("Out of memory in resize_inparr()\n", stderr);
 		exit(1);
 	}
-	if (n2alloc > nmats)
-		memset(mop+nmats, 0, (n2alloc-nmats)*sizeof(ROPMAT));
+	if (n2alloc > nall)
+		memset(mop+nall, 0, (n2alloc-nall)*sizeof(ROPMAT));
 	nall = n2alloc;
 }
 
