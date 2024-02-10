@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.5 2024/01/17 21:50:15 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.6 2024/02/10 19:32:32 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -207,7 +207,7 @@ and the number of components is defined by the "ncomp" constant.
 If given as "ci(i)", the function returns the current component
 being evaluated by
 .I rcomb.
-A different component may be referenced using th second argument.
+A different component may be referenced using the second argument.
 For example, "ci(1,2)" accesses
 the second component from the first input.
 If the input is a picture, the the constants "R", "G", and "B"
@@ -222,7 +222,8 @@ For convenience and compatibility with
 the functions "ri(i)", "gi(i)", and "bi(i)" are predefined as
 "ci(i,R)", "ci(i,G)", and "ci(i,B)", respectively.
 Accordingly, the "ro", "go", and "bo" 
-variables may be used in place of "co(R)", "co(G)", and "co(B)".
+variables may be used in place of "co(R)", "co(G)", and "co(B)",
+but all three must be defined for this substitution to take place.
 Finally, the total number of input files is set in the constant "nfiles".
 .PP
 Results are sent to the standard output.
