@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objtriangulate.c,v 2.2 2021/04/19 19:40:03 greg Exp $";
+static const char RCSid[] = "$Id: objtriangulate.c,v 2.3 2024/02/13 21:06:00 greg Exp $";
 #endif
 /*
  * Turn all faces with > 3 sides to triangles in Wavefront .OBJ scene
@@ -88,8 +88,10 @@ mktriangles(Scene *sc, Face *f, void *p)
 	mysf.rev = (polyArea(poly) < .0);
 	i = polyTriangulate(poly, addtriangle);
 	polyFree(poly);
-					/* flag face if replaced */
-	f->flags |= (i > 0)*FACE_DUPLICATE;
+	if (i > 0)			/* flag face */
+		f->flags |= FACE_DUPLICATE;
+	else
+		f->flags |= FACE_DEGENERATE;
 	return(i);
 }
 
