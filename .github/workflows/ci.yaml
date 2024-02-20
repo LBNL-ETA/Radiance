@@ -271,8 +271,79 @@ jobs:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
 
+build_OSX_arm64:
+    name: "Build for OSX arm64"
+    runs-on: macos-14
+    timeout-minutes: 20
+    needs: cvs_import
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
-  build_Linux:
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+      
+      - name: override update version
+        run: |
+          git fetch
+          git checkout cvsimport
+          cp checkVersion.py ../checkVersion.py
+          git checkout master
+          cp ../checkVersion.py checkVersion.py
+          python checkVersion.py
+        shell: bash
+
+      - name: Install XQuartz
+        run: |
+          wget https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.7.11/XQuartz-2.7.11.dmg
+          sudo hdiutil attach XQuartz-2.7.11.dmg
+          sudo installer -package /Volumes/XQuartz-2.7.11/XQuartz.pkg -target / 
+
+      - name: Compile
+        env:
+          CMAKE_OSX_ARCHITECTURES: x86_64
+        run: |
+          mkdir build
+          cd build
+          cmake -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j8
+
+      - name: Run CPack
+        run: |
+          cd build
+          sudo cpack -G ZIP .
+          echo "=============================="
+      
+      - name: Build pkg installer
+        run: |
+          cd ./build/_CPack_Packages/Darwin/ZIP/
+          sudo cp -r ./radiance*/usr/local/radiance .
+          ls
+          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
+          sudo cp -r radiance_Darwin.pkg ../../../../Radiance_OSX.pkg
+          du -h -d=0 *
+
+        
+      - name: Zip Build Artifact and list files
+        run: |
+          mkdir OSXBuild
+          sudo cp Radiance_OSX.pkg ./OSXBuild/Radiance_OSX_arm64.pkg
+
+          sudo mv ./build/_CPack_Packages/Darwin/ZIP/radiance-*-Darwin/usr/local/radiance ./radiance
+          sudo zip -r Radiance_OSX.zip ./radiance
+          sudo cp ./Radiance_OSX.zip ./OSXBuild/Radiance_OSX_arm64.zip
+
+          sudo zip -r Radiance_OSX_arm64_both.zip ./OSXBuild
+          ls -R
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: Radiance_OSX_arm64_both
+          path: Radiance_OSX_arm64_both.zip
+          
+build_Linux:
     name: "Build for Linux"
     runs-on: ubuntu-20.04
     timeout-minutes: 20
@@ -1202,6 +1273,7 @@ jobs:
         run: |
           unzip Radiance_Windows_both/Radiance_Windows_both.zip
           unzip Radiance_OSX_both/Radiance_OSX_both.zip
+          unzip Radiance_OSX_arm64_both/Radiance_OSX_arm64_both.zip
 
       - name: Get Git log
         id: get_release_note
@@ -1305,7 +1377,27 @@ jobs:
           asset_path: OSXBuild/Radiance_OSX.zip
           asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
           asset_content_type: application/zip
+      
+      - name: Release Asset Radiance_OSX_arm64 pkg
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: OSXBuild/Radiance_OSX_arm64.pkg
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX_arm64.pkg
+          asset_content_type: application/pkg
 
+      - name: Release Asset Radiance_OSX_arm64 zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: OSXBuild/Radiance_OSX_arm64.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX_arm64.zip
+          asset_content_type: application/zip
+      
       - name: Release Asset Radiance_Auxiliary
         uses: actions/upload-release-asset@v1
         env:
