@@ -271,7 +271,7 @@ jobs:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
 
-build_OSX_arm64:
+  build_OSX_arm64:
     name: "Build for OSX arm64"
     runs-on: macos-14
     timeout-minutes: 20
