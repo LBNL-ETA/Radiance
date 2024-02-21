@@ -290,7 +290,7 @@ jobs:
           cp checkVersion.py ../checkVersion.py
           git checkout master
           cp ../checkVersion.py checkVersion.py
-          python checkVersion.py
+          python3 checkVersion.py
         shell: bash
 
       - name: Install XQuartz
