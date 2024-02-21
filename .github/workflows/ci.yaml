@@ -304,7 +304,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
           make -j8
 
       - name: Run CPack
