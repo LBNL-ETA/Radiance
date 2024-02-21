@@ -295,9 +295,8 @@ jobs:
 
       - name: Install XQuartz
         run: |
-          wget https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.7.11/XQuartz-2.7.11.dmg
-          sudo hdiutil attach XQuartz-2.7.11.dmg
-          sudo installer -package /Volumes/XQuartz-2.7.11/XQuartz.pkg -target / 
+          wget https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.8.5/XQuartz-2.8.5.pkg
+          sudo installer -package XQuartz-2.8.5.pkg -target / 
 
       - name: Compile
         env:
