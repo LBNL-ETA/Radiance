@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.11 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.12 2024/02/22 17:45:27 greg Exp $";
 #endif
 /*
  * 3D warping routines.
@@ -39,8 +39,8 @@ static void done3dgrid(struct grid3d *gp);
 
 double
 wpdist2(			/* compute square of distance between points */
-	register W3VEC	p1,
-	register W3VEC	p2
+	W3VEC	p1,
+	W3VEC	p2
 )
 {
 	double	d, d2;
@@ -56,7 +56,7 @@ int
 warp3d(		/* warp 3D point according to the given map */
 	W3VEC	po,
 	W3VEC	pi,
-	register WARP3D	*wp
+	WARP3D	*wp
 )
 {
 	int	rval = W3OK;
@@ -84,11 +84,11 @@ gridpoint(	/* compute grid position for ipt */
 	GNDX	ndx,
 	W3VEC	rem,
 	W3VEC	ipt,
-	register struct grid3d	*gp
+	struct grid3d	*gp
 )
 {
 	int	rval = W3OK;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < 3; i++) {
 		rem[i] = (ipt[i] - gp->gmin[i])/gp->gstep[i];
@@ -110,14 +110,14 @@ static int
 get3dgpt(		/* get value for voxel */
 	W3VEC	ov,
 	GNDX	ndx,
-	register WARP3D	*wp
+	WARP3D	*wp
 )
 {
 	W3VEC	gpt;
-	register LUENT	*le;
+	LUENT	*le;
 	KEYDP	*kd;
 	int	rval = W3OK;
-	register int	i;
+	int	i;
 
 	le = lu_find(&wp->grid.gtab, ndx);
 	if (le == NULL)
@@ -153,7 +153,7 @@ get3dgin(	/* interpolate from warp grid */
 	W3VEC	cv[8];
 	GNDX	gi;
 	int	rval = W3OK;
-	register int	i;
+	int	i;
 					/* get corner values */
 	for (i = 0; i < 8; i++) {
 		gi[0] = ndx[0] + (i & 1);
@@ -177,7 +177,7 @@ l3interp(		/* trilinear interpolation (recursive) */
 )
 {
 	W3VEC	v0, v1;
-	register int	i;
+	int	i;
 
 	if (--n) {
 		l3interp(v0, cl, dv, n);
@@ -195,12 +195,12 @@ static int
 warp3dex(		/* compute warp using 1/r^2 weighted avg. */
 	W3VEC	ov,
 	W3VEC	pi,
-	register WARP3D	*wp
+	WARP3D	*wp
 )
 {
 	double	d2, w, wsum;
 	W3VEC	vt;
-	register int	i;
+	int	i;
 
 	vt[0] = vt[1] = vt[2] = 0.;
 	wsum = 0.;
@@ -227,7 +227,7 @@ new3dw(			/* allocate and initialize WARP3D struct */
 	int	flgs
 )
 {
-	register WARP3D  *wp;
+	WARP3D  *wp;
 
 	if ((flgs & (W3EXACT|W3FAST)) == (W3EXACT|W3FAST)) {
 		eputs("new3dw: only one of W3EXACT or W3FAST\n");
@@ -279,7 +279,7 @@ cleanup:
 
 extern int
 set3dwfl(		/* reset warp flags */
-	register WARP3D	*wp,
+	WARP3D	*wp,
 	int	flgs
 )
 {
@@ -297,14 +297,14 @@ set3dwfl(		/* reset warp flags */
 
 int
 add3dpt(		/* add 3D point pair to warp structure */
-	register WARP3D	*wp,
+	WARP3D	*wp,
 	W3VEC	pti,
 	W3VEC	pto
 )
 {
 	double	d2;
-	register W3VEC	*na;
-	register int	i;
+	W3VEC	*na;
+	int	i;
 
 	if (wp->npts == 0) {			/* initialize */
 		wp->ip = (W3VEC *)malloc(AHUNK*sizeof(W3VEC));
@@ -352,13 +352,13 @@ add3dpt(		/* add 3D point pair to warp structure */
 
 extern void
 free3dw(			/* free WARP3D data */
-	register WARP3D	*wp
+	WARP3D	*wp
 )
 {
 	done3dgrid(&wp->grid);
-	free((void *)wp->ip);
-	free((void *)wp->ov);
-	free((void *)wp);
+	free(wp->ip);
+	free(wp->ov);
+	free(wp);
 }
 
 
@@ -373,13 +373,13 @@ gridhash(			/* hash a grid point index */
 
 static int
 new3dgrid(			/* initialize interpolating grid for warp */
-	register WARP3D	*wp
+	WARP3D	*wp
 )
 {
 	W3VEC	gmax;
 	double	gridstep, d;
 	int	n;
-	register int	i;
+	int	i;
 				/* free old grid (if any) */
 	done3dgrid(&wp->grid);
 				/* check parameters */
@@ -422,7 +422,7 @@ new3dgrid(			/* initialize interpolating grid for warp */
 
 static void
 done3dgrid(			/* free interpolating grid for warp */
-	register struct grid3d	*gp
+	struct grid3d	*gp
 )
 {
 	if (gp->gn[0] == 0)
