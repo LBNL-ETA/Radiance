@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.28 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.29 2024/02/22 02:07:40 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -99,7 +99,7 @@ short	mbneu[NMBNEU] = {Black,Neutral35,Neutral5,Neutral65,Neutral8,White};
 #define  RG_CORR	04	/* corrected color region */
 
 #ifndef  DISPCOM
-#define  DISPCOM	"ximage -op \"%s\""
+#define  DISPCOM	"ximage -e auto -op \"%s\""
 #endif
 
 int	scanning = 1;		/* scanned input (or recorded output)? */
@@ -234,7 +234,7 @@ main(
 		getcolors();
 	compute();			/* compute color mapping */
 	if (rawmap) {			/* print out raw correspondence */
-		register int	j;
+		int	j;
 
 		printf("# Color correspondence produced by:\n#\t\t");
 		printargs(argc, argv, stdout);
@@ -283,7 +283,7 @@ static void
 init(void)				/* initialize */
 {
 	double	quad[4][2];
-	register int	i;
+	int	i;
 					/* make coordinate transformation */
 	quad[0][0] = bounds[0][0];
 	quad[0][1] = bounds[0][1];
@@ -323,16 +323,16 @@ chartndx(			/* find color number for position */
 	mx3d_transform(ipos, imgxfm, cpos);
 	cpos[0] /= cpos[2];
 	cpos[1] /= cpos[2];
-	if (cpos[0] < 0. || cpos[0] >= 6. || cpos[1] < 0. || cpos[1] >= 4.)
+	if ((cpos[0] < 0.) | (cpos[0] >= 6.) | (cpos[1] < 0.) | (cpos[1] >= 4.))
 		return(RG_BORD);
 	ix = cpos[0];
 	iy = cpos[1];
 	fx = cpos[0] - ix;
 	fy = cpos[1] - iy;
 	*np = iy*6 + ix;
-	if (fx >= 0.35 && fx < 0.65 && fy >= 0.35 && fy < 0.65)
+	if ((fx >= 0.35) & (fx < 0.65) & (fy >= 0.35) & (fy < 0.65))
 		return(RG_CENT);
-	if (fx < 0.05 || fx >= 0.95 || fy < 0.05 || fy >= 0.95)
+	if ((fx < 0.05) | (fx >= 0.95) | (fy < 0.05) | (fy >= 0.95))
 		return(RG_BORD);
 	if (fx >= 0.5)			/* right side is corrected */
 		return(RG_CORR);
@@ -348,7 +348,7 @@ getpicture(void)				/* load in picture colors */
 	int	ccount[24];
 	double	d;
 	int	y, i;
-	register int	x;
+	int	x;
 
 	scanln = (COLR *)malloc(xmax*sizeof(COLR));
 	if (scanln == NULL) {
@@ -438,7 +438,7 @@ bresp(		/* piecewise linear interpolation of primaries */
 	COLOR	x
 )
 {
-	register int	i, n;
+	int	i, n;
 
 	for (i = 0; i < 3; i++) {
 		for (n = 0; n < NMBNEU-2; n++)
@@ -459,7 +459,7 @@ compute(void)			/* compute color mapping */
 	COLOR	clrin[24], clrout[24];
 	long	cflags;
 	COLOR	ctmp;
-	register int	i, n;
+	int	i, n;
 					/* did we get what we need? */
 	if ((inpflags & REQFLGS) != REQFLGS) {
 		fprintf(stderr, "%s: missing required input colors\n",
@@ -469,7 +469,7 @@ compute(void)			/* compute color mapping */
 					/* compute piecewise luminance curve */
 	for (i = 0; i < NMBNEU; i++) {
 		copycolor(bramp[i][0], inpRGB[mbneu[i]]);
-		for (n = i ? 3 : 0; n--; )
+		for (n = 3*(i>0); n--; )
 			if (colval(bramp[i][0],n) <=
 					colval(bramp[i-1][0],n)+1e-7) {
 				fprintf(stderr,
@@ -488,7 +488,7 @@ compute(void)			/* compute color mapping */
 			colval(colmin,i) = colval(bramp[0][0],i) -
 				colval(bramp[0][1],i) *
 				(colval(bramp[1][0],i)-colval(bramp[0][0],i)) /
-				(colval(bramp[1][1],i)-colval(bramp[1][0],i));
+				(colval(bramp[1][1],i)-colval(bramp[0][1],i));
 			colval(colmax,i) = colval(bramp[NMBNEU-2][0],i) +
 				(1.-colval(bramp[NMBNEU-2][1],i)) *
 				(colval(bramp[NMBNEU-1][0],i) -
@@ -507,10 +507,9 @@ compute(void)			/* compute color mapping */
 				n++;
 			}
 		compsoln(clrin, clrout, n);
-		if (irrad > 0.99 && irrad < 1.01)	/* check gamut */
-			for (i = 0; i < 24; i++)
-				if (cflags & 1L<<i && cvtcolor(ctmp, mbRGB[i]))
-					gmtflags |= 1L<<i;
+		for (i = 0; i < 24; i++)	/* check gamut */
+			if (cflags & 1L<<i && cvtcolor(ctmp, inpRGB[i]))
+				gmtflags |= 1L<<i;
 	} while (cflags & gmtflags);
 	if (gmtflags & MODFLGS)
 		fprintf(stderr,
@@ -523,7 +522,7 @@ static void
 putmapping(void)			/* put out color mapping */
 {
 	static char	cchar[3] = {'r', 'g', 'b'};
-	register int	i, j;
+	int	i, j;
 					/* print brightness mapping */
 	for (j = 0; j < 3; j++) {
 		printf("%cxa(i) : select(i", cchar[j]);
@@ -579,7 +578,7 @@ compsoln(		/* solve 3xN system using least-squares */
 	double	mat[3][3], invmat[3][3];
 	double	det;
 	double	colv[3], rowv[3];
-	register int	i, j, k;
+	int	i, j, k;
 
 	if (n < 3) {
 		fprintf(stderr, "%s: too few colors to match!\n", progname);
@@ -634,7 +633,7 @@ compsoln(		/* solve 3xN system using least-squares */
 static void
 cwarp(void)				/* compute color warp map */
 {
-	register int	i;
+	int	i;
 
 	if ((wcor = new3dw(W3EXACT)) == NULL)
 		goto memerr;
@@ -685,7 +684,7 @@ cresp(		/* transform color according to matrix */
 static void
 xyY2RGB(		/* convert xyY to RGB */
 	COLOR	rgbout,
-	register float	xyYin[3]
+	float	xyYin[3]
 )
 {
 	COLOR	ctmp;
@@ -706,7 +705,7 @@ picdebug(void)			/* put out debugging picture */
 	static COLOR	blkcol = BLKCOLOR;
 	COLOR	*scan;
 	int	y, i;
-	register int	x, rg;
+	int	x, rg;
 
 	if (fseek(stdin, 0L, 0) == EOF) {
 		fprintf(stderr, "%s: cannot seek on input picture\n", progname);
@@ -765,7 +764,7 @@ clrdebug(void)			/* put out debug picture from color input */
 	COLR	*scan;
 	COLOR	ctmp, ct2;
 	int	y, i;
-	register int	x, rg;
+	int	x, rg;
 						/* convert colors */
 	for (i = 0; i < 24; i++) {
 		copycolor(ctmp, mbRGB[i]);
