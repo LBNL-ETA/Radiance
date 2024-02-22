@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.13 2024/01/17 17:35:35 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.14 2024/02/22 20:11:54 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -141,6 +141,10 @@ p_cdata(			/* interpolate color data */
 	}
 	col[0] = datavalue(dp, pt);
 	for (i = 1; i < 3; i++) {
+		if (!strcmp(m->oargs.sarg[3+i], m->oargs.sarg[3])) {
+			col[i] = col[0];	/* same data */
+			continue;
+		}
 		dp = getdata(m->oargs.sarg[3+i]);
 		if (dp->nd != nv)
 			objerror(m, USER, "dimension error");
