@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.29 2024/02/22 02:07:40 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.30 2024/02/22 17:45:54 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -128,6 +128,7 @@ static int chartndx(int	x, int y, int	*np);
 static void getpicture(void);
 static void getcolors(void);
 static void bresp(COLOR	y, COLOR	x);
+static void ibresp(COLOR	y, COLOR	x);
 static void compute(void);
 static void putmapping(void);
 static void compsoln(COLOR	cin[], COLOR	cout[], int	n);
@@ -434,8 +435,8 @@ getcolors(void)			/* get xyY colors from standard input */
 
 static void
 bresp(		/* piecewise linear interpolation of primaries */
-	COLOR	y,
-	COLOR	x
+	COLOR	y,		/* y is linear output */
+	COLOR	x		/* x is non-linear input */
 )
 {
 	int	i, n;
@@ -449,6 +450,27 @@ bresp(		/* piecewise linear interpolation of primaries */
 				(colval(x,i) - colval(bramp[n][0],i)) *
 						colval(bramp[n+1][1],i)) /
 			(colval(bramp[n+1][0],i) - colval(bramp[n][0],i));
+	}
+}
+
+
+static void
+ibresp(		/* inverse mapping (delinearization) */
+	COLOR	x,		/* x is non-linear output */
+	COLOR	y		/* y is linear input */
+)
+{
+	int	i, n;
+
+	for (i = 0; i < 3; i++) {
+		for (n = 0; n < NMBNEU-2; n++)
+			if (colval(y,i) < colval(bramp[n+1][1],i))
+				break;
+		colval(x,i) = ((colval(bramp[n+1][1],i) - colval(y,i)) *
+						colval(bramp[n][0],i) +
+				(colval(y,i) - colval(bramp[n][1],i)) *
+						colval(bramp[n+1][0],i)) /
+			(colval(bramp[n+1][1],i) - colval(bramp[n][1],i));
 	}
 }
 
@@ -479,38 +501,35 @@ compute(void)			/* compute color mapping */
 		copycolor(bramp[i][1], mbRGB[mbneu[i]]);
 	}
 					/* compute color space gamut */
-	if (scanning) {
-		copycolor(colmin, cblack);
-		copycolor(colmax, cwhite);
-		scalecolor(colmax, irrad);
-	} else
-		for (i = 0; i < 3; i++) {
-			colval(colmin,i) = colval(bramp[0][0],i) -
-				colval(bramp[0][1],i) *
-				(colval(bramp[1][0],i)-colval(bramp[0][0],i)) /
-				(colval(bramp[1][1],i)-colval(bramp[0][1],i));
-			colval(colmax,i) = colval(bramp[NMBNEU-2][0],i) +
-				(1.-colval(bramp[NMBNEU-2][1],i)) *
-				(colval(bramp[NMBNEU-1][0],i) -
-					colval(bramp[NMBNEU-2][0],i)) /
-				(colval(bramp[NMBNEU-1][1],i) -
-					colval(bramp[NMBNEU-2][1],i));
-		}
+	copycolor(colmin, cblack);
+	copycolor(colmax, cwhite);
+	scalecolor(colmax, irrad);
+	if (!scanning) {
+		ibresp(colmin, colmin);
+		ibresp(colmax, colmax);
+	}
 					/* compute color mapping */
 	do {
 		cflags = inpflags & ~gmtflags;
 		n = 0;				/* compute transform matrix */
-		for (i = 0; i < 24; i++)
-			if (cflags & 1L<<i) {
+		for (i = 0; i < 24; i++) {
+			if (!(cflags & 1L<<i))
+				continue;
+			if (scanning) {
 				bresp(clrin[n], inpRGB[i]);
 				copycolor(clrout[n], mbRGB[i]);
-				n++;
+			} else {
+				copycolor(clrin[n], inpRGB[i]);
+				ibresp(clrout[n], mbRGB[i]);
 			}
+			n++;
+		}
 		compsoln(clrin, clrout, n);
 		for (i = 0; i < 24; i++)	/* check gamut */
 			if (cflags & 1L<<i && cvtcolor(ctmp, inpRGB[i]))
 				gmtflags |= 1L<<i;
 	} while (cflags & gmtflags);
+
 	if (gmtflags & MODFLGS)
 		fprintf(stderr,
 		"%s: warning - some moderate colors are out of gamut\n",
