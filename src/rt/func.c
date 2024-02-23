@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.39 2022/03/30 16:00:56 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.40 2024/02/23 03:45:52 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -203,7 +203,7 @@ freefunc(			/* free memory associated with modifier */
 	if ((f = (MFUNC *)m->os) == NULL)
 		return;
 	for (i = 0; f->ep[i] != NULL; i++)
-		epfree(f->ep[i]);
+		epfree(f->ep[i],1);
 	if (f->ctx[0]) {			/* done with definitions */
 		calcontext(f->ctx);
 		i = varvalue(REFVNAME)-.5;	/* reference_count-- */
@@ -290,6 +290,7 @@ loadfunc(			/* load definition file */
 		error(SYSTEM, errmsg);
 	}
 	fcompile(ffname);
+	doptimize(1);		/* optimize definitions */
 }
 
 

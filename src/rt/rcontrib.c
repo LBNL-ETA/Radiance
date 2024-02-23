@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.43 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.44 2024/02/23 03:45:52 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -68,7 +68,7 @@ RNUMBER	lastdone = 0;			/* last ray output */
 
 static void	trace_contrib(RAY *r);	/* our trace callback */
 
-static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
+static void mcfree(void *p) { epfree((*(MODCONT *)p).binv,1); free(p); }
 
 LUTAB	modconttab = LU_SINIT(NULL,mcfree);	/* modifier lookup table */
 
