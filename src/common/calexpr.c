@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.42 2022/04/08 23:32:25 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.43 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -111,7 +111,7 @@ eval(			/* evaluate an expression string */
     ep = eparse(expr);
     esupport = prev_support;	/* as you were */
     rval = evalue(ep);
-    epfree(ep);
+    epfree(ep,1);
     return(rval);
 }
 
@@ -168,10 +168,11 @@ epcmp(			/* compare two expressions for equivalence */
 
 void
 epfree(			/* free a parse tree */
-    EPNODE	 *epar
+    EPNODE	 *epar,
+    int		frep
 )
 {
-    EPNODE  *ep;
+    EPNODE	*ep;
 
     switch (epar->type) {
 
@@ -190,15 +191,47 @@ epfree(			/* free a parse tree */
 	    break;
 
 	default:
-	    while ((ep = epar->v.kid) != NULL) {
-		epar->v.kid = ep->sibling;
-		epfree(ep);
-	    }
+	    if (epar->nkids < 0) {
+	    	ep = epar->v.kid - epar->nkids;
+	    	while (ep > epar->v.kid)
+	    		epfree(--ep, 0);
+		efree(ep);	/* free array space */
+	    } else
+	    	while ((ep = epar->v.kid) != NULL) {
+		    epar->v.kid = ep->sibling;
+		    epfree(ep, 1);
+		}
 	    break;
 
     }
+    if (frep)
+    	efree(epar);
+}
 
-    efree(epar);
+
+void
+epoptimize(			/* realloc lists as arrays if > length 3 */
+	EPNODE	*epar
+)
+{
+    EPNODE	*ep;
+
+    if (epar->nkids > 3) {	/* do this node if > 3 kids */
+        int	n = 1;
+    	epar->v.kid = (EPNODE *)erealloc(epar->v.kid,
+    					sizeof(EPNODE)*epar->nkids);
+    	while (n < epar->nkids) {
+	    ep = epar->v.kid[n-1].sibling;
+	    epar->v.kid[n] = *ep;
+	    efree(ep);		/* not epfree()! */
+	    epar->v.kid[n-1].sibling = epar->v.kid + n;
+	    n++;
+	}
+	epar->nkids = -epar->nkids;
+    }
+    if (epar->nkids)		/* do children if any */
+    	for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
+	    epoptimize(ep);
 }
 
 				/* the following used to be a switch */
@@ -328,26 +361,16 @@ ekid(			/* return pointer to a node's nth kid */
     int  n
 )
 {
-
-    for (ep = ep->v.kid; ep != NULL; ep = ep->sibling)
-	if (--n < 0)
-	    break;
-
+    if (ep->nkids < 0) {	/* allocated array? */
+    	if (n >= -ep->nkids)
+	    return(NULL);
+    	return(ep->v.kid + n);
+    }
+    ep = ep->v.kid;		/* else get from list */
+    while (n-- > 0)
+    	if ((ep = ep->sibling) == NULL)
+		break;
     return(ep);
-}
-
-
-int
-nekids(			/* return # of kids for node ep */
-    EPNODE	 *ep
-)
-{
-    int  n = 0;
-
-    for (ep = ep->v.kid; ep != NULL; ep = ep->sibling)
-	n++;
-
-    return(n);
 }
 
 
@@ -494,17 +517,22 @@ syntax(			/* report syntax error and quit */
 void
 addekid(			/* add a child to ep */
     EPNODE	 *ep,
-    EPNODE	*ekid
+    EPNODE	*ek
 )
 {
+    if (ep->nkids < 0) {
+    	eputs("Cannot add child after optimization\n");
+    	quit(1);
+    }
+    ep->nkids++;
     if (ep->v.kid == NULL)
-	ep->v.kid = ekid;
+	ep->v.kid = ek;
     else {
 	for (ep = ep->v.kid; ep->sibling != NULL; ep = ep->sibling)
 	    ;
-	ep->sibling = ekid;
+	ep->sibling = ek;
     }
-    ekid->sibling = NULL;
+    ek->sibling = NULL;
 }
 
 
@@ -629,11 +657,11 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 				ep3->v.num = 1./ep3->v.num;
 			} else if (ep3->v.num == 0) {
 				ep1->sibling = NULL;	/* (E2 * 0) */
-				epfree(ep2);
+				epfree(ep2,1);
 				ep2 = ep3;
 			}
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
-			epfree(ep3);		/* (0 * E3) or (0 / E3) */
+			epfree(ep3,1);		/* (0 * E3) or (0 / E3) */
 			ep1->sibling = NULL;
 			efree(ep2);
 			ep2 = ep1;
@@ -664,13 +692,13 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 		if ((ep1->type == NUM) & (ep3->type == NUM)) {
 			ep2 = rconst(ep2);
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
-			epfree(ep3);		/* (0 ^ E3) */
+			epfree(ep3,1);		/* (0 ^ E3) */
 			ep1->sibling = NULL;
 			efree(ep2);
 			ep2 = ep1;
 		} else if ((ep3->type == NUM && ep3->v.num == 0) |
 				(ep1->type == NUM && ep1->v.num == 1)) {
-			epfree(ep2);		/* (E4 ^ 0) or (1 ^ E3) */
+			epfree(ep2,1);		/* (E4 ^ 0) or (1 ^ E3) */
 			ep2 = newnode();
 			ep2->type = NUM;
 			ep2->v.num = 1;
@@ -805,7 +833,7 @@ rconst(			/* reduce a constant expression */
     ep->v.num = evalue(epar);
     if ((errno == EDOM) | (errno == ERANGE))
 	syntax("bad constant expression");
-    epfree(epar);
+    epfree(epar,1);
  
     return(ep);
 }

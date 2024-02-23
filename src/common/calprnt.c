@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calprnt.c,v 2.7 2021/07/30 00:22:32 greg Exp $";
+static const char	RCSid[] = "$Id: calprnt.c,v 2.8 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  *  calprint.c - routines for printing calcomp expressions.
@@ -16,21 +16,21 @@ static const char	RCSid[] = "$Id: calprnt.c,v 2.7 2021/07/30 00:22:32 greg Exp $
 
 /* is child binary operation lower precedence than parent? */
 static int
-lower_precedent_binop(int typ, EPNODE *ekid)
+lower_precedent_binop(int typ, EPNODE *ek)
 {
-    if (ekid == NULL)
+    if (ek == NULL)
 	return(0);
     switch (typ) {
 	case '+':
 		return(0);
 	case '-':
-		return(ekid->type == '+');
+		return(ek->type == '+');
 	case '*':
-		return(strchr("+-", ekid->type) != NULL);
+		return(strchr("+-", ek->type) != NULL);
 	case '/':
-		return(strchr("+-*", ekid->type) != NULL);
+		return(strchr("+-*", ek->type) != NULL);
 	case '^':
-		return(strchr("+-*/^", ekid->type) != NULL);
+		return(strchr("+-*/^", ek->type) != NULL);
 	}
     return(0);			/* child not binary op */
 }

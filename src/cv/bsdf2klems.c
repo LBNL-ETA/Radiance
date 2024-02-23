@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.35 2023/07/26 15:50:03 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.36 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -700,6 +700,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, "\tor 3 arguments using Dx,Dy,Dz: bsdf(ix,iy,iz)\n");
 			goto userr;
 		}
+		doptimize(1);			/* optimize definitions */
 		++eclock;
 		if (dofwd) {
 			input_orient = -1;

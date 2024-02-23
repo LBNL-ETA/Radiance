@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.37 2023/10/01 18:02:23 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.38 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -57,6 +57,8 @@ static int  htndx;			/* index for */
 static VARDEF  *htpos;			/* ...dfirst() and */
 static EPNODE  *ochpos;			/* ...dnext */
 static EPNODE  *outchan;
+
+static int  optimized = 0;		/* are we optimized? */
 
 EPNODE	*curfunc = NULL;
 
@@ -181,7 +183,7 @@ dclear(			/* delete variable definitions of name */
     while ((vp = varlookup(name)) != NULL &&
     		(dp = vp->def) != NULL && dp->type == '=') {
 	vp->def = dp->sibling;
-	epfree(dp);
+	epfree(dp,1);
 	varfree(vp);
     }
 }
@@ -195,7 +197,7 @@ dremove(			/* delete all definitions of name */
     EPNODE  *ep;
 
     while ((ep = dpop(name)) != NULL)
-	epfree(ep);
+	epfree(ep,1);
 }
 
 
@@ -356,6 +358,22 @@ chanout(			/* set output channels */
 
 
 void
+doptimize(int activate)		/* optimize current and future definitions? */
+{
+    EPNODE	*ep;
+
+    if (activate && optimized)
+    	return;			/* already going */
+
+    if (!(optimized = activate))
+    	return;			/* switching off */
+
+    for (ep = dfirst(); ep != NULL; ep = dnext())
+    	epoptimize(ep);
+}
+
+
+void
 dcleanup(		/* clear definitions (0->vars,1->output,2->consts) */
 	int  lvl
 )
@@ -376,8 +394,7 @@ dcleanup(		/* clear definitions (0->vars,1->output,2->consts) */
     	while (outchan != NULL) {
     	    ep = outchan;
     	    outchan = ep->sibling;
-    	    ep->sibling = NULL;
-	    epfree(ep);
+	    epfree(ep,1);
 	}
 }
 
@@ -560,7 +577,7 @@ addchan(			/* add an output channel assignment */
 		sp->sibling = ep;
 	    else {
 		sp->sibling = ep->sibling;
-		epfree(ep);
+		epfree(ep,1);
 	    }
 	    return;
 	}
@@ -614,6 +631,8 @@ getstatement(void)			/* get next statement */
 	    syntax("';' expected");
 	scan();
     }
+    if (optimized)
+    	epoptimize(ep);			/* optimize new statement */
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.6 2024/02/09 19:58:56 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.7 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -870,6 +870,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: unsupported output format\n", argv[0]);
 		return(1);
 	}
+	doptimize(1);			/* optimize definitions */
 					/* process & write rows */
 	return(combine_input(&mop[nmats], stdout) ? 0 : 1);
 stdin_error:

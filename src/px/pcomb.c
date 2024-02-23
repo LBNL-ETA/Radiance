@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.58 2023/12/11 15:13:39 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.59 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -251,6 +251,7 @@ main(
 	if (!outfloat)
 		fprtresolu(xres, yres, stdout);
 
+	doptimize(1);				/* optimize definitions */
 	combine();				/* combine pictures */
 	quit(0);
 usage:

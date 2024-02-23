@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.24 2023/09/26 18:33:14 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.25 2024/02/23 03:47:57 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -44,10 +44,13 @@ typedef struct epnode {
 	}  *ln;			/* link */
     } v;		/* value */
     struct epnode  *sibling;	/* next child this level */
-    int	 type;			/* node type */
+    short  type;		/* node type */
+    short  nkids;		/* child count (neg if array) */
 }  EPNODE;	/* an expression node */
 
 typedef struct vardef  VARDEF;	/* a variable definition */
+
+#define  nekids(ep)	abs((ep)->nkids)
 
 #define	 RMAXWORD	127		/* maximum word/id length */
 #define	 CNTXMARK	'`'		/* context mark */
@@ -92,6 +95,7 @@ extern char	*popcontext(void);
 extern char	*qualname(char *nam, int lvl);
 extern int	incontext(char *qn);
 extern void	chanout(void (*cs)(int n, double v));
+extern void	doptimize(int activate);
 extern void	dcleanup(int lvl);
 extern EPNODE	*dlookup(char *name);
 extern VARDEF	*varlookup(char *name);
@@ -109,16 +113,16 @@ extern EPNODE	*getchan(void);
 extern EPNODE	*eparse(char *expr);
 extern double	eval(char *expr);
 extern int	epcmp(EPNODE *ep1, EPNODE *ep2);
-extern void	epfree(EPNODE *epar);
+extern void	epfree(EPNODE *epar, int frep);
+extern void	epoptimize(EPNODE *epar);
 extern EPNODE	*ekid(EPNODE *ep, int n);
-extern int	nekids(EPNODE *ep);
 extern void	initfile(FILE *fp, char *fn, int ln);
 extern void	initstr(char *s, char *fn, int ln);
 extern void	getscanpos(char **fnp, int *lnp, char **spp, FILE **fpp);
 extern int	scan(void);
 extern char	*long2ascii(long l);
 extern void	syntax(char *err);
-extern void	addekid(EPNODE *ep, EPNODE *ekid);
+extern void	addekid(EPNODE *ep, EPNODE *ek);
 extern char	*getname(void);
 extern int	getinum(void);
 extern double	getnum(void);

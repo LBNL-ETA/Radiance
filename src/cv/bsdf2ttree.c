@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.60 2023/09/12 16:40:57 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.61 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -878,6 +878,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, "\tor 3 arguments using Dx,Dy,Dz: bsdf(ix,iy,iz)\n");
 			goto userr;
 		}
+		doptimize(1);			/* optimize definitions */
 		++eclock;
 		add_wbsdf("-a", 1);
 		add_wbsdf(tfmt[single_plane_incident], 1);

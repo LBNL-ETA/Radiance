@@ -2683,3 +2683,6 @@ Added new hemisphere type to rfluxmtx, "h=cie" for CIE sky
 scanner positions.  These are 145 patches with identical
 row counts to Tregenza, but starting from a different
 azimuth and reversing row directions at adjacent altitudes.
+
+Added optimization for long argument lists and arrays in
+the calcomp routines used for rendering and in rcalc, etc.

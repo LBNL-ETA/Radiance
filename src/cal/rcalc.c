@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.38 2023/03/10 17:38:01 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.39 2024/02/23 03:47:57 greg Exp $";
 #endif
 /*
  * rcalc.c - record calculator program.
@@ -258,6 +258,8 @@ eputs(" [-b][-l][-n][-p|-P][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i in
 	}
 	if (blnkeq)	/* for efficiency */
 		nbsynch();
+
+	doptimize(1);	/* optimize definitions */
 
 	if (i == argc)	/* from stdin */
 		execute(NULL);
