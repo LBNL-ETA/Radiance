@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.43 2024/02/23 03:47:57 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.44 2024/02/24 19:00:23 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -34,6 +34,8 @@ static const char	RCSid[] = "$Id: calexpr.c,v 2.43 2024/02/23 03:47:57 greg Exp 
 #define	 newnode()	(EPNODE *)ecalloc(1, sizeof(EPNODE))
 
 #define	 isdecimal(c)	(isdigit(c) | ((c) == '.'))
+
+#define  envalue(ep)	((ep)->type==NUM ? (ep)->v.num : evalue(ep))
 
 static double  euminus(EPNODE *), eargument(EPNODE *), enumber(EPNODE *);
 static double  echannel(EPNODE *);
@@ -210,13 +212,44 @@ epfree(			/* free a parse tree */
 
 
 void
-epoptimize(			/* realloc lists as arrays if > length 3 */
+epflatten(			/* flatten hierarchies for '+', '*' */
+	EPNODE *epar
+)
+{
+    EPNODE	*ep;
+
+    if (epar->nkids < 0)	/* don't really handle this properly */
+    	epar->nkids *= -1;
+
+    for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
+    	while (ep->type == epar->type) {
+	    EPNODE	*ep1 = ep->v.kid;
+	    while (ep1->sibling != NULL)
+	    	ep1 = ep1->sibling;
+	    ep1->sibling = ep->sibling;
+	    epar->nkids += nekids(ep) - 1;
+	    ep1 = ep->v.kid;
+	    *ep = *ep1;
+	    efree(ep1);		/* not epfree()! */
+	}
+}
+
+
+void
+epoptimize(			/* flatten operations and lists -> arrays */
 	EPNODE	*epar
 )
 {
     EPNODE	*ep;
 
-    if (epar->nkids > 3) {	/* do this node if > 3 kids */
+   if ((epar->type == '+') | (epar->type == '*'))
+    	epflatten(epar);	/* commutative & associative */
+
+   if (epar->nkids)		/* do children if any */
+    	for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
+	    epoptimize(ep);
+
+    if (epar->nkids > 4) {	/* make list into array if > 4 kids */
         int	n = 1;
     	epar->v.kid = (EPNODE *)erealloc(epar->v.kid,
     					sizeof(EPNODE)*epar->nkids);
@@ -227,11 +260,8 @@ epoptimize(			/* realloc lists as arrays if > length 3 */
 	    epar->v.kid[n-1].sibling = epar->v.kid + n;
 	    n++;
 	}
-	epar->nkids = -epar->nkids;
+	epar->nkids = -n;
     }
-    if (epar->nkids)		/* do children if any */
-    	for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
-	    epoptimize(ep);
 }
 
 				/* the following used to be a switch */
@@ -274,9 +304,14 @@ eadd(
     EPNODE	*ep
 )
 {
+    double  sum = 0;
     EPNODE  *ep1 = ep->v.kid;
 
-    return(evalue(ep1) + evalue(ep1->sibling));
+    do
+    	sum += envalue(ep1);
+    while ((ep1 = ep1->sibling) != NULL);
+
+    return(sum);
 }
 
 static double
@@ -285,8 +320,9 @@ esubtr(
 )
 {
     EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep2 = ep1->sibling;
 
-    return(evalue(ep1) - evalue(ep1->sibling));
+    return(envalue(ep1) - envalue(ep2));
 }
 
 static double
@@ -294,9 +330,14 @@ emult(
     EPNODE	*ep
 )
 {
+    double  prod = 1;
     EPNODE  *ep1 = ep->v.kid;
 
-    return(evalue(ep1) * evalue(ep1->sibling));
+    do
+    	prod *= envalue(ep1);
+    while ((ep1 = ep1->sibling) != NULL);
+
+    return(prod);
 }
 
 static double
@@ -305,15 +346,16 @@ edivi(
 )
 {
     EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep2 = ep1->sibling;
     double  d;
 
-    d = evalue(ep1->sibling);
+    d = envalue(ep2);
     if (d == 0.0) {
 	wputs("Division by zero\n");
 	errno = ERANGE;
 	return(0.0);
     }
-    return(evalue(ep1) / d);
+    return(envalue(ep1) / d);
 }
 
 static double
@@ -520,10 +562,8 @@ addekid(			/* add a child to ep */
     EPNODE	*ek
 )
 {
-    if (ep->nkids < 0) {
-    	eputs("Cannot add child after optimization\n");
-    	quit(1);
-    }
+    if (ep->nkids < 0)		/* we don't really handle this properly */
+    	ep->nkids *= -1;
     ep->nkids++;
     if (ep->v.kid == NULL)
 	ep->v.kid = ek;
@@ -532,7 +572,7 @@ addekid(			/* add a child to ep */
 	    ;
 	ep->sibling = ek;
     }
-    ek->sibling = NULL;
+    ek->sibling = NULL;		/* shouldn't be necessary */
 }
 
 
@@ -762,7 +802,6 @@ getE5(void)			/* E5 -> (E1) */
 		scan();
 		return(ep1);
 	}
-
 	if (esupport&E_INCHAN && nextc == '$') {
 		scan();
 		ep1 = newnode();
@@ -770,7 +809,6 @@ getE5(void)			/* E5 -> (E1) */
 		ep1->v.chan = getinum();
 		return(ep1);
 	}
-
 	if (esupport&(E_VARIABLE|E_FUNCTION) &&
 			(isalpha(nextc) | (nextc == CNTXMARK))) {
 		nam = getname();
@@ -808,7 +846,6 @@ getE5(void)			/* E5 -> (E1) */
 			ep1 = rconst(ep1);
 		return(ep1);
 	}
-
 	if (isdecimal(nextc)) {
 		ep1 = newnode();
 		ep1->type = NUM;

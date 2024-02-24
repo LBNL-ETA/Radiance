@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calprnt.c,v 2.8 2024/02/23 03:47:57 greg Exp $";
+static const char	RCSid[] = "$Id: calprnt.c,v 2.9 2024/02/24 19:00:23 greg Exp $";
 #endif
 /*
  *  calprint.c - routines for printing calcomp expressions.
@@ -14,9 +14,9 @@ static const char	RCSid[] = "$Id: calprnt.c,v 2.8 2024/02/23 03:47:57 greg Exp $
 #include  "calcomp.h"
 
 
-/* is child binary operation lower precedence than parent? */
+/* is child operation lower precedence than parent? */
 static int
-lower_precedent_binop(int typ, EPNODE *ek)
+lower_precedent_op(int typ, EPNODE *ek)
 {
     if (ek == NULL)
 	return(0);
@@ -106,28 +106,30 @@ eprint(				/* print a parse tree */
 	    break;
 
 	case '+':
-	case '-':
 	case '*':
+	case '-':
 	case '/':
 	case '^':
-	    if (lower_precedent_binop(ep->type, ep->v.kid)) {
+	    if (lower_precedent_op(ep->type, ep->v.kid)) {
 		fputc('(', fp);
 		eprint(ep->v.kid, fp);
 		fputc(')', fp);
 	    } else
 		eprint(ep->v.kid, fp);
-	    if (ep->type != '^') {
-		fputc(' ', fp);
-		fputc(ep->type, fp);
-		fputc(' ', fp);
-	    } else
-		fputc(ep->type, fp);
-	    if (lower_precedent_binop(ep->type, ep->v.kid->sibling)) {
-		fputc('(', fp);
-		eprint(ep->v.kid->sibling, fp);
-		fputc(')', fp);
-	    } else
-		eprint(ep->v.kid->sibling, fp);
+	    for (ep1 = ep->v.kid->sibling; ep1 != NULL; ep1 = ep1->sibling) {
+	    	if (ep->type != '^') {
+		    fputc(' ', fp);
+		    fputc(ep->type, fp);
+		    fputc(' ', fp);
+	    	} else
+		    fputc(ep->type, fp);
+		if (lower_precedent_op(ep->type, ep1)) {
+		    fputc('(', fp);
+		    eprint(ep1, fp);
+		    fputc(')', fp);
+	    	} else
+		    eprint(ep1, fp);
+	    }
 	    break;
 
 	default:
