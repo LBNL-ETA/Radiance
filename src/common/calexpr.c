@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.45 2024/02/24 19:11:45 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.46 2024/02/24 19:26:44 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -349,7 +349,7 @@ edivi(
     EPNODE  *ep2 = ep1->sibling;
     double  d;
 
-    d = envalue(ep2);
+    d = evalue(ep2);
     if (d == 0.0) {
 	wputs("Division by zero\n");
 	errno = ERANGE;
