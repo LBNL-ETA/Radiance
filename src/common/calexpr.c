@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.44 2024/02/24 19:00:23 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.45 2024/02/24 19:11:45 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -211,14 +211,14 @@ epfree(			/* free a parse tree */
 }
 
 
-void
+static void
 epflatten(			/* flatten hierarchies for '+', '*' */
 	EPNODE *epar
 )
 {
     EPNODE	*ep;
 
-    if (epar->nkids < 0)	/* don't really handle this properly */
+    if (epar->nkids < 0)	/* we don't really handle this properly */
     	epar->nkids *= -1;
 
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
@@ -242,10 +242,10 @@ epoptimize(			/* flatten operations and lists -> arrays */
 {
     EPNODE	*ep;
 
-   if ((epar->type == '+') | (epar->type == '*'))
+    if ((epar->type == '+') | (epar->type == '*'))
     	epflatten(epar);	/* commutative & associative */
 
-   if (epar->nkids)		/* do children if any */
+    if (epar->nkids)		/* do children if any */
     	for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
 	    epoptimize(ep);
 
