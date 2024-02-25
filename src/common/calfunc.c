@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.28 2022/04/08 23:32:25 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.29 2024/02/25 18:36:27 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -22,7 +22,7 @@ static const char	RCSid[] = "$Id: calfunc.c,v 2.28 2022/04/08 23:32:25 greg Exp 
 
 				/* bits in argument flag (better be right!) */
 #define  AFLAGSIZ	(8*sizeof(unsigned long))
-#define  ALISTSIZ	8	/* maximum saved argument list */
+#define  ALISTSIZ	10	/* maximum saved argument list */
 
 typedef struct activation {
     char  *name;		/* function name */
@@ -202,9 +202,6 @@ argument(int n)			/* return nth argument for active function */
     ACTIVATION  *actp = curact;
     EPNODE  *ep = NULL;
     double  aval;
-
-    if (!n)					/* asking for # arguments? */
-	return((double)nargum());
 
     if (!actp | (--n < 0)) {
 	eputs("Bad call to argument!\n");
