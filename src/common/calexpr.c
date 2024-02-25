@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.46 2024/02/24 19:26:44 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.47 2024/02/25 04:11:10 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -218,9 +218,10 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 {
     EPNODE	*ep;
 
-    if (epar->nkids < 0)	/* we don't really handle this properly */
-    	epar->nkids *= -1;
-
+    if (epar->nkids < 0) {
+    	eputs("Cannot flatten EPNODE array\n");
+    	quit(1);
+    }
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
     	while (ep->type == epar->type) {
 	    EPNODE	*ep1 = ep->v.kid;
@@ -236,14 +237,14 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 
 
 void
-epoptimize(			/* flatten operations and lists -> arrays */
+epoptimize(			/* flatten operations, lists -> arrays */
 	EPNODE	*epar
 )
 {
     EPNODE	*ep;
 
     if ((epar->type == '+') | (epar->type == '*'))
-    	epflatten(epar);	/* commutative & associative */
+    	epflatten(epar);	/* flatten associative operations */
 
     if (epar->nkids)		/* do children if any */
     	for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
@@ -562,8 +563,10 @@ addekid(			/* add a child to ep */
     EPNODE	*ek
 )
 {
-    if (ep->nkids < 0)		/* we don't really handle this properly */
-    	ep->nkids *= -1;
+    if (ep->nkids < 0) {
+    	eputs("Cannot add kid to EPNODE array\n");
+    	quit(1);
+    }
     ep->nkids++;
     if (ep->v.kid == NULL)
 	ep->v.kid = ek;
