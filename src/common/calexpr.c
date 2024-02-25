@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.47 2024/02/25 04:11:10 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.48 2024/02/25 04:41:44 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -218,17 +218,16 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 {
     EPNODE	*ep;
 
-    if (epar->nkids < 0) {
-    	eputs("Cannot flatten EPNODE array\n");
-    	quit(1);
-    }
+    if (epar->nkids < 0)	/* can't handle array allocations */
+    	return;
+
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
-    	while (ep->type == epar->type) {
+    	while (ep->type == epar->type && ep->nkids > 0) {
 	    EPNODE	*ep1 = ep->v.kid;
 	    while (ep1->sibling != NULL)
 	    	ep1 = ep1->sibling;
 	    ep1->sibling = ep->sibling;
-	    epar->nkids += nekids(ep) - 1;
+	    epar->nkids += ep->nkids - 1;
 	    ep1 = ep->v.kid;
 	    *ep = *ep1;
 	    efree(ep1);		/* not epfree()! */
@@ -347,16 +346,14 @@ edivi(
 )
 {
     EPNODE  *ep1 = ep->v.kid;
-    EPNODE  *ep2 = ep1->sibling;
-    double  d;
+    double  den = evalue(ep1->sibling);
 
-    d = evalue(ep2);
-    if (d == 0.0) {
+    if (den == 0.0) {
 	wputs("Division by zero\n");
 	errno = ERANGE;
 	return(0.0);
     }
-    return(envalue(ep1) / d);
+    return(envalue(ep1) / den);
 }
 
 static double
