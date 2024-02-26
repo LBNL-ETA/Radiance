@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.25 2024/02/23 03:47:57 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.26 2024/02/26 18:16:35 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -144,6 +144,7 @@ extern double	argument(int n);
 extern VARDEF	*argf(int n);
 extern char	*argfun(int n);
 extern double	efunc(EPNODE *ep);
+extern double	eargument(EPNODE *ep);
 extern LIBR	*liblookup(char *fname);
 extern void	libupdate(char *fn);
 					/* defined in calprnt.c */

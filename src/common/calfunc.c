@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.29 2024/02/25 18:36:27 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.30 2024/02/26 18:16:35 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -15,6 +15,7 @@ static const char	RCSid[] = "$Id: calfunc.c,v 2.29 2024/02/25 18:36:27 greg Exp 
 #include  <stdio.h>
 #include  <string.h>
 #include  <errno.h>
+#include  <stdlib.h>
 #include  <math.h>
 
 #include  "rterror.h"
@@ -200,7 +201,7 @@ double
 argument(int n)			/* return nth argument for active function */
 {
     ACTIVATION  *actp = curact;
-    EPNODE  *ep = NULL;
+    EPNODE  *ep;
     double  aval;
 
     if (!actp | (--n < 0)) {
@@ -294,6 +295,18 @@ efunc(EPNODE *ep)			/* evaluate a function */
     
     curact = act.prev;			/* pop environment */
     return(rval);
+}
+
+
+double
+eargument(				/* evaluate an argument */
+    EPNODE	*ep
+)
+{
+    if ((ep->v.chan < AFLAGSIZ) & curact->an >> ep->v.chan)
+	return(curact->ap[ep->v.chan]);
+
+    return(argument(ep->v.chan));
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.48 2024/02/25 04:41:44 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.49 2024/02/26 18:16:35 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -37,7 +37,7 @@ static const char	RCSid[] = "$Id: calexpr.c,v 2.48 2024/02/25 04:41:44 greg Exp 
 
 #define  envalue(ep)	((ep)->type==NUM ? (ep)->v.num : evalue(ep))
 
-static double  euminus(EPNODE *), eargument(EPNODE *), enumber(EPNODE *);
+static double  euminus(EPNODE *), enumber(EPNODE *);
 static double  echannel(EPNODE *);
 static double  eadd(EPNODE *), esubtr(EPNODE *),
                emult(EPNODE *), edivi(EPNODE *),
@@ -265,14 +265,6 @@ epoptimize(			/* flatten operations, lists -> arrays */
 }
 
 				/* the following used to be a switch */
-static double
-eargument(
-    EPNODE	*ep
-)
-{
-    return(argument(ep->v.chan));
-}
-
 static double
 enumber(
     EPNODE	*ep
