@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.58 2022/03/08 19:04:56 greg Exp $
+# RCSid $Id: Rmakefile,v 2.59 2024/02/26 23:43:35 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -169,7 +169,7 @@ pabopto2bsdf.o:	../common/resolu.h
 
 bsdf2rad.o bsdf2ttree.o:	../common/rtprocess.h
 
-bsdf2klems.o bsdf2ttree.o mgf2meta.o:	../common/random.h
+bsdf2klems.o bsdf2ttree.o mgf2meta.o:	../common/random.h ../common/calcomp.h
 
 bsdftrans.o:	transportSimplex.h
 
