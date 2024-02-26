@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.30 2024/02/26 18:16:35 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.31 2024/02/26 20:55:00 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -303,8 +303,8 @@ eargument(				/* evaluate an argument */
     EPNODE	*ep
 )
 {
-    if ((ep->v.chan < AFLAGSIZ) & curact->an >> ep->v.chan)
-	return(curact->ap[ep->v.chan]);
+    if ((ep->v.chan <= AFLAGSIZ) & curact->an >> (ep->v.chan-1))
+	return(curact->ap[ep->v.chan-1]);
 
     return(argument(ep->v.chan));
 }
