@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.105 2024/02/08 02:26:01 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.106 2024/02/26 18:22:16 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -171,6 +171,9 @@ dcglare:	dcglare.o cmbsdf.o cmatrix.o cmglare.o
 	$(CC) $(CFLAGS) -o dcglare dcglare.o cmbsdf.o cmatrix.o cmglare.o \
 -lrtrad $(MLIB)
 
+rcomb.o:	../common/calcomp.h ../common/rtio.h \
+../common/paths.h
+
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
 ../common/paths.h ../common/rtio.h ../common/random.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h
@@ -207,7 +210,7 @@ rfluxmtx.o:	../common/rtio.h ../common/random.h ../common/triangulate.h \
 ../common/platform.h ../common/bsdf.h ../common/bsdf_m.h \
 ../common/paths.h ../common/rtprocess.h
 
-rmtxop.o dctimestep.o cmatrix.o:	../common/platform.h
+rcomb.o rmtxop.o dctimestep.o cmatrix.o:	../common/platform.h
 
 dcglare.o rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
@@ -270,7 +273,7 @@ rttree_reduce.o:	../common/rtio.h ../common/rterror.h
 
 rmatrix.o:	rmatrix.h cmatrix.h ../common/resolu.h
 
-rmtxop.o:	rmatrix.h cmatrix.h ../common/rtio.h ../common/resolu.h
+rcomb.o rmtxop.o:	rmatrix.h cmatrix.h ../common/rtio.h ../common/resolu.h
 
 wrapBSDF.o:	../common/rtio.h ../common/rtprocess.h ../common/ezxml.h \
 ../common/bsdf.h ../common/bsdf_m.h ../common/fvect.h ../common/ccolor.h
