@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.49 2024/02/26 18:16:35 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.50 2024/02/27 01:24:10 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -208,6 +208,8 @@ epfree(			/* free a parse tree */
     }
     if (frep)
     	efree(epar);
+    else
+    	memset(epar, 0, sizeof(EPNODE));
 }
 
 
@@ -730,8 +732,7 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 			ep2 = ep1;
 		} else if ((ep3->type == NUM && ep3->v.num == 0) |
 				(ep1->type == NUM && ep1->v.num == 1)) {
-			epfree(ep2,1);		/* (E4 ^ 0) or (1 ^ E3) */
-			ep2 = newnode();
+			epfree(ep2,0);		/* (E4 ^ 0) or (1 ^ E3) */
 			ep2->type = NUM;
 			ep2->v.num = 1;
 		} else if (ep3->type == NUM && ep3->v.num == 1) {
