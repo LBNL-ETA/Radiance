@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.10 2021/03/18 03:09:34 greg Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.11 2024/02/28 03:17:23 greg Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -106,7 +106,7 @@ FILE	*fp
 				goto fatal;
 			}
 			ordinate[i][tabsize] = atof(cp);
-			if ((cp = fskip(cp)) == NULL) {
+			if ((cp = fskip(cp)) == NULL || !isdelim(*cp)) {
 				err = "bad floating-point format";
 				goto fatal;
 			}
