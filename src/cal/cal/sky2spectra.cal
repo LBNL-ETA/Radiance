@@ -1,9 +1,10 @@
-{ RCSid $Id: sky2spectra.cal,v 1.1 2024/02/29 03:14:30 greg Exp $ }
+{ RCSid $Id: sky2spectra.cal,v 1.2 2024/02/29 15:40:56 greg Exp $ }
 {
 	Convert RGB sky to spectral sky using for example:
 
 		rcomb -fc -c XYZ input_sky.hdr -f skyfact.cal -f sky2spectra.cal \
-			-c `cnt 20 3 | rcalc -f skyfact.cal -e 'wl=780-20*($1+.5)' -e '$1=select($2+1,S0(wl),S1(wl),S2(wl))/179'` \
+			-c `cnt 20 | rcalc -f skyfact.cal -e 'wl=780-20*($1+.5)' \
+				-e '$1=S0(wl);$2=S1(wl);$3=S2(wl)'` -s 5.59e-3 \
 			| getinfo -r 'WAVELENGTH_SPLITS= 780 588 480 380' \
 			> output_sky.hsr
 
