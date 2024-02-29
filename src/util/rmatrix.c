@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.77 2023/12/21 23:58:05 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.78 2024/02/29 03:11:13 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -501,7 +501,7 @@ rmx_write_spec(const double *dp, int nc, int len, FILE *fp)
 	if (nc < 3) return(0);
 	scan = (uby8 *)tempbuffer((nc+1)*len);
 	if (!scan) return(0);
-	for (j = len; j--; dp += nc) {
+	for (j = 0; j < len; j++, dp += nc) {
 	    	for (k = nc; k--; )
 	    		scol[k] = dp[k];
 		scolor2scolr(scan+j*(nc+1), scol, nc);
