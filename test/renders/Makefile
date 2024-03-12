@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.39 2024/01/17 18:57:54 greg Exp $
+# RCSid $Id: Makefile,v 1.40 2024/03/12 15:49:18 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -79,7 +79,7 @@ test-obj2mesh:	cab.obj
 
 ### Special test of rtrace ###
 
-test-rtrace:	ref/mirror_fish.hdr rtmirror_fish.hdr
+test-rtrace:	rtmirror_fish.hdr
 	$(RDU_PFILT) rtmirror_fish.hdr | $(IMG_CMP) -h ref/mirror_fish.hdr -
 
 rtmirror_fish.hdr:	mirror.oct
@@ -91,7 +91,7 @@ rtmirror_fish.hdr:	mirror.oct
 
 ### Special test for rfluxmtx (and rcontrib) ###
 
-test-rfluxmtx:	ref/rfmirror.mtx rfmirror.mtx
+test-rfluxmtx:	rfmirror.mtx
 	radcompare -max .4 -rms .05 -rel 1e-4 ref/rfmirror.mtx rfmirror.mtx
 
 rfmirror.mtx:	mirror.rad dummysky.rad basic.mat diorama_walls.rad \
@@ -107,7 +107,7 @@ dielectric.oct:	dielectric.rif
 
 ### Reference and test for dielectric view   def ###
 
-test-dielectric-def:	ref/dielectric_def.hdr dielectric_def.hdr
+test-dielectric-def:	dielectric_def.hdr
 	$(RDU_PFILT) dielectric_def.hdr | $(IMG_CMP) ref/dielectric_def.hdr -
 
 ref/dielectric_def.hdr:	dielectric_def.hdr
@@ -120,7 +120,7 @@ dielectric_def.hdr:	dielectric.oct
 
 ### Reference and test for dielectric view  fish ###
 
-test-dielectric-fish:	ref/dielectric_fish.hdr dielectric_fish.hdr
+test-dielectric-fish:	dielectric_fish.hdr
 	$(RDU_PFILT) dielectric_fish.hdr | $(IMG_CMP) ref/dielectric_fish.hdr -
 
 ref/dielectric_fish.hdr:	dielectric_fish.hdr
@@ -138,7 +138,7 @@ glass.oct:	glass.rif
 
 ### Reference and test for   glass view   def ###
 
-test-glass-def:	ref/glass_def.hdr   glass_def.hdr
+test-glass-def:		glass_def.hdr
 	$(RDU_PFILT)   glass_def.hdr | $(IMG_CMP) ref/glass_def.hdr -
 
 ref/glass_def.hdr:	glass_def.hdr
@@ -151,7 +151,7 @@ glass_def.hdr:	glass.oct
 
 ### Reference and test for   glass view  fish ###
 
-test-glass-fish:	ref/glass_fish.hdr   glass_fish.hdr
+test-glass-fish:	glass_fish.hdr
 	$(RDU_PFILT)   glass_fish.hdr | $(IMG_CMP) ref/glass_fish.hdr -
 
 ref/glass_fish.hdr:	glass_fish.hdr
@@ -164,7 +164,7 @@ glass_fish.hdr:	glass.oct
 
 ### Reference and test for   glass view    up ###
 
-test-glass-up:	ref/glass_up.hdr   glass_up.hdr
+test-glass-up:	glass_up.hdr
 	$(RDU_PFILT)   glass_up.hdr | $(IMG_CMP) ref/glass_up.hdr -
 
 ref/glass_up.hdr:	glass_up.hdr
@@ -182,7 +182,7 @@ inst.oct:	inst.rif
 
 ### Reference and test for    inst view   def ###
 
-test-inst-def:	ref/inst_def.hdr    inst_def.hdr
+test-inst-def:	inst_def.hdr
 	$(RDU_PFILT)    inst_def.hdr | $(IMG_CMP) ref/inst_def.hdr -
 
 ref/inst_def.hdr:	inst_def.hdr
@@ -195,7 +195,7 @@ inst_def.hdr:	inst.oct
 
 ### Reference and test for    inst view  fish ###
 
-test-inst-fish:	ref/inst_fish.hdr    inst_fish.hdr
+test-inst-fish:	inst_fish.hdr
 	$(RDU_PFILT)    inst_fish.hdr | $(IMG_CMP) ref/inst_fish.hdr -
 
 ref/inst_fish.hdr:	inst_fish.hdr
@@ -213,7 +213,7 @@ mesh.oct:	mesh.rif
 
 ### Reference and test for    mesh view   def ###
 
-test-mesh-def:	ref/mesh_def.hdr    mesh_def.hdr
+test-mesh-def:	mesh_def.hdr
 	$(RDU_PFILT)    mesh_def.hdr | $(IMG_CMP) ref/mesh_def.hdr -
 
 ref/mesh_def.hdr:	mesh_def.hdr
@@ -226,7 +226,7 @@ mesh_def.hdr:	mesh.oct
 
 ### Reference and test for    mesh view   cyl ###
 
-test-mesh-cyl:	ref/mesh_cyl.hdr    mesh_cyl.hdr
+test-mesh-cyl:	mesh_cyl.hdr
 	$(RDU_PFILT)    mesh_cyl.hdr | $(IMG_CMP) ref/mesh_cyl.hdr -
 
 ref/mesh_cyl.hdr:	mesh_cyl.hdr
@@ -239,7 +239,7 @@ mesh_cyl.hdr:	mesh.oct
 
 ### Reference and test for    mesh view  cyl2 ###
 
-test-mesh-cyl2:	ref/mesh_cyl2.hdr    mesh_cyl2.hdr
+test-mesh-cyl2:		mesh_cyl2.hdr
 	$(RDU_PFILT)    mesh_cyl2.hdr | $(IMG_CMP) ref/mesh_cyl2.hdr -
 
 ref/mesh_cyl2.hdr:	mesh_cyl2.hdr
@@ -257,7 +257,7 @@ mirror.oct:	mirror.rif
 
 ### Reference and test for  mirror view  fish ###
 
-test-mirror-fish:	ref/mirror_fish.hdr  mirror_fish.hdr
+test-mirror-fish:	mirror_fish.hdr
 	$(RDU_PFILT)  mirror_fish.hdr | $(IMG_CMP) ref/mirror_fish.hdr -
 
 ref/mirror_fish.hdr:	mirror_fish.hdr
@@ -270,7 +270,7 @@ mirror_fish.hdr:	mirror.oct
 
 ### Reference and test for    mist view   def ###
 
-test-mist-def:	ref/mist_def.hdr    mist_def.hdr
+test-mist-def:	mist_def.hdr
 	$(RDU_PFILT)    mist_def.hdr | $(IMG_CMP) ref/mist_def.hdr -
 
 ref/mist_def.hdr:	mist_def.hdr
@@ -288,7 +288,7 @@ prism1.oct:	prism1.rif
 
 ### Reference and test for  prism1 view  fish ###
 
-test-prism1-fish:	ref/prism1_fish.hdr  prism1_fish.hdr
+test-prism1-fish:	prism1_fish.hdr
 	$(RDU_PFILT)  prism1_fish.hdr | $(IMG_CMP) ref/prism1_fish.hdr -
 
 ref/prism1_fish.hdr:	prism1_fish.hdr
@@ -306,7 +306,7 @@ prism2.oct:	prism2.rif
 
 ### Reference and test for  prism2 view  fish ###
 
-test-prism2-fish:	ref/prism2_fish.hdr  prism2_fish.hdr
+test-prism2-fish:	prism2_fish.hdr
 	$(RDU_PFILT)  prism2_fish.hdr | $(IMG_CMP) ref/prism2_fish.hdr -
 
 ref/prism2_fish.hdr:	prism2_fish.hdr
@@ -324,7 +324,7 @@ tfunc1.oct:	tfunc.rif
 
 ### Reference and test for   tfunc view   def ###
 
-test-tfunc-def:	ref/tfunc_def.hdr   tfunc_def.hdr
+test-tfunc-def:		tfunc_def.hdr
 	$(RDU_PFILT)   tfunc_def.hdr | $(IMG_CMP) ref/tfunc_def.hdr -
 
 ref/tfunc_def.hdr:	tfunc_def.hdr
@@ -337,7 +337,7 @@ tfunc_def.hdr:	tfunc1.oct
 
 ### Reference and test for   tfunc view  fish ###
 
-test-tfunc-fish:	ref/tfunc_fish.hdr   tfunc_fish.hdr
+test-tfunc-fish:	tfunc_fish.hdr
 	$(RDU_PFILT)   tfunc_fish.hdr | $(IMG_CMP) ref/tfunc_fish.hdr -
 
 ref/tfunc_fish.hdr:	tfunc_fish.hdr
@@ -355,7 +355,7 @@ trans.oct:	trans.rif
 
 ### Reference and test for   trans view   def ###
 
-test-trans-def:	ref/trans_def.hdr   trans_def.hdr
+test-trans-def:		trans_def.hdr
 	$(RDU_PFILT)   trans_def.hdr | $(IMG_CMP) ref/trans_def.hdr -
 
 ref/trans_def.hdr:	 trans_def.hdr
@@ -368,7 +368,7 @@ trans_def.hdr:	trans.oct
 
 ### Reference and test for   trans view  fish ###
 
-test-trans-fish:	ref/trans_fish.hdr   trans_fish.hdr
+test-trans-fish:	trans_fish.hdr
 	$(RDU_PFILT)   trans_fish.hdr | $(IMG_CMP) ref/trans_fish.hdr -
 
 ref/trans_fish.hdr:	trans_fish.hdr
@@ -386,7 +386,7 @@ trans21.oct:	trans2.rif
 
 ### Reference and test for  trans2 view   def ###
 
-test-trans2-def:	ref/trans2_def.hdr  trans2_def.hdr
+test-trans2-def:	trans2_def.hdr
 	$(RDU_PFILT)  trans2_def.hdr | $(IMG_CMP) ref/trans2_def.hdr -
 
 ref/trans2_def.hdr:	trans2_def.hdr
@@ -399,7 +399,7 @@ trans2_def.hdr:	trans21.oct
 
 ### Reference and test for  trans2 view  fish ###
 
-test-trans2-fish:	ref/trans2_fish.hdr  trans2_fish.hdr
+test-trans2-fish:	trans2_fish.hdr
 	$(RDU_PFILT)  trans2_fish.hdr | $(IMG_CMP) ref/trans2_fish.hdr -
 
 ref/trans2_fish.hdr:	trans2_fish.hdr
@@ -412,7 +412,7 @@ trans2_fish.hdr:	trans21.oct
 
 ### Reference and test for  trans2 view   win ###
 
-test-trans2-win:	ref/trans2_win.hdr  trans2_win.hdr
+test-trans2-win:	trans2_win.hdr
 	$(RDU_PFILT)  trans2_win.hdr | $(IMG_CMP) ref/trans2_win.hdr -
 
 ref/trans2_win.hdr:	trans2_win.hdr
@@ -430,7 +430,7 @@ patterns.oct:	patterns.rif
 
 ### Reference and test for patterns view   def ###
 
-test-patterns-def:	ref/patterns_def.hdr patterns_def.hdr
+test-patterns-def:	patterns_def.hdr
 	$(RDU_PFILT) patterns_def.hdr | $(IMG_CMP) ref/patterns_def.hdr -
 
 ref/patterns_def.hdr:	patterns_def.hdr
@@ -443,7 +443,7 @@ patterns_def.hdr:	patterns.oct
 
 ### Reference and test for patterns view   plan ###
 
-test-patterns-plan:	ref/patterns_plan.hdr patterns_plan.hdr
+test-patterns-plan:	patterns_plan.hdr
 	$(RDU_PFILT) patterns_plan.hdr | $(IMG_CMP) ref/patterns_plan.hdr -
 
 ref/patterns_plan.hdr:	patterns_plan.hdr
@@ -461,7 +461,7 @@ mixtex.oct:	mixtex.rif
 
 ### Reference and test for  mixtex view   def ###
 
-test-mixtex-def:	ref/mixtex_def.hdr  mixtex_def.hdr
+test-mixtex-def:	mixtex_def.hdr
 	$(RDU_PFILT)  mixtex_def.hdr | $(IMG_CMP) ref/mixtex_def.hdr -
 
 ref/mixtex_def.hdr:	mixtex_def.hdr
@@ -474,7 +474,7 @@ mixtex_def.hdr:	mixtex.oct
 
 ### Reference and test for  mixtex view  fish ###
 
-test-mixtex-fish:	ref/mixtex_fish.hdr  mixtex_fish.hdr
+test-mixtex-fish:	mixtex_fish.hdr
 	$(RDU_PFILT)  mixtex_fish.hdr | $(IMG_CMP) ref/mixtex_fish.hdr -
 
 ref/mixtex_fish.hdr:	mixtex_fish.hdr
@@ -487,7 +487,7 @@ mixtex_fish.hdr:	mixtex.oct
 
 ### Reference and test for  mixtex view  plan ###
 
-test-mixtex-plan:	ref/mixtex_plan.hdr  mixtex_plan.hdr
+test-mixtex-plan:	mixtex_plan.hdr
 	$(RDU_PFILT)  mixtex_plan.hdr | $(IMG_CMP) ref/mixtex_plan.hdr -
 
 ref/mixtex_plan.hdr:	mixtex_plan.hdr
@@ -500,7 +500,7 @@ mixtex_plan.hdr:	mixtex.oct
 
 ### Reference and test for  mixtex view rplan ###
 
-test-mixtex-rplan:	ref/mixtex_rplan.hdr  mixtex_rplan.hdr
+test-mixtex-rplan:	mixtex_rplan.hdr
 	$(RDU_PFILT)  mixtex_rplan.hdr | $(IMG_CMP) ref/mixtex_rplan.hdr -
 
 ref/mixtex_rplan.hdr:	mixtex_rplan.hdr
@@ -518,7 +518,7 @@ spectra.oct:	spectra.rif
 
 ### Reference and test for spectra fish ###
 
-test-spectra-fish:	ref/spectra_fish.hdr spectra_fish.hdr
+test-spectra-fish:	spectra_fish.hdr
 	$(RDU_PFILT) spectra_fish.hdr | $(IMG_CMP) ref/spectra_fish.hdr -
 
 ref/spectra_fish.hdr:	spectra_fish.hdr
