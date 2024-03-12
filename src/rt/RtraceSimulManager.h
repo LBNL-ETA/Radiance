@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.4 2023/08/02 00:04:31 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.5 2024/03/12 16:54:51 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -35,7 +35,7 @@ public:
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn);
-				/// How many cores are there?
+				/// How many cores are available?
 	static int		GetNCores();
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0);

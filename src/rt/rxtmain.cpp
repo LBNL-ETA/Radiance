@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.1 2023/08/21 22:39:05 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.2 2024/03/12 16:54:51 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -107,8 +107,6 @@ main(int  argc, char  *argv[])
 		case 'n':				/* number of cores */
 			check(2,"i");
 			nproc = atoi(argv[++i]);
-			if (nproc < 0)
-				error(USER, "bad number of processes");
 			break;
 		case 'x':				/* x resolution */
 			check(2,"i");

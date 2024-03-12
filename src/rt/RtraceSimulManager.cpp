@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.4 2023/08/02 00:04:31 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.5 2024/03/12 16:54:51 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.4 2023/08/02 00:04:
  *  Created by Greg Ward on 2/2/2023.
  */
 
+#include <unistd.h>
 #include "RtraceSimulManager.h"
 #include "source.h"
 
@@ -30,18 +31,20 @@ RadSimulManager::LoadOctree(const char *octn)
 	return true;
 }
 
-// How many processors are there?
+// How many processors are available?
 int
 RadSimulManager::GetNCores()
 {
-	return 1;		// XXX temporary
+	return sysconf(_NPROCESSORS_ONLN);
 }
 
 // Set number of computation threads (0 => #cores)
 int
 RadSimulManager::SetThreadCount(int nt)
 {
-	return nThreads = 1;	// XXX temporary
+	if (nt <= 0) nt = GetNCores();
+
+	return nThreads = nt;
 }
 
 // Assign ray to subthread (fails if NThreads()<2)
@@ -51,7 +54,10 @@ RadSimulManager::SplitRay(RAY *r)
 	if (NThreads() < 2 || ThreadsAvailable() < 1)
 		return false;
 
-	return false;	// UNIMPLEMENTED
+	int	rv = ray_psend(r);
+	if (rv < 0)
+		nThreads = 1;	// someone died
+	return (rv > 0);
 }
 
 // Process a ray (in subthread), optional result
@@ -71,22 +77,28 @@ RadSimulManager::ProcessRay(RAY *r)
 	RAY	toDo = *r;
 	if (!WaitResult(r))	// need a free thread
 		return false;
-	SplitRay(&toDo);	// queue up new ray
-	return true;		// return older result
+
+	return SplitRay(&toDo);	// queue up new ray & return old
 }
 
 // Wait for next result (or fail)
 bool
 RadSimulManager::WaitResult(RAY *r)
 {
-	return false;	// UNIMPLEMENTED
+	int	rv = ray_presult(r, 0);
+	if (rv < 0)
+		nThreads = 1;	// someone died
+	return (rv > 0);
 }
 
 // Close octree, free data, return status
 int
 RadSimulManager::Cleanup(bool everything)
 {
-	ray_done(everything);
+	if (NThreads() > 1)
+		ray_pdone(everything);
+	else
+		ray_done(everything);
 	return 0;
 }
 
@@ -94,7 +106,8 @@ RadSimulManager::Cleanup(bool everything)
 int
 RadSimulManager::ThreadsAvailable() const
 {
-	return 1;	// XXX temporary
+	if (NThreads() == 1) return 1;
+	return ray_pnidle;
 }
 
 // Global pointer to simulation manager for trace call-back (only one)
@@ -223,6 +236,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 		} else if (ThreadsAvailable() < NThreads() &&
 				FlushQueue() < 0)
 			return -1;
+
 		if (sendRes)		// may be dummy ray
 			(*cookedCall)(&res, ccData);
 		nqueued++;

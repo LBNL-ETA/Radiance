@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.36 2023/12/13 23:26:16 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.37 2024/03/12 16:54:51 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -374,6 +374,10 @@ freedata(			/* release data array reference */
 		hval = 0; nents = TABSIZ;
 	} else {
 		hval = hash(dta->name); nents = 1;
+		if (!*dta->name) {		/* not a data file? */
+			dta->next = dtab[hval];
+			dtab[hval] = dta;	/* ...fake position */
+		}
 	}
 	while (nents--) {
 		head.next = dtab[hval];
@@ -394,6 +398,179 @@ freedata(			/* release data array reference */
 }
 
 
+/* internal call to interpolate data value or vector */
+static double
+data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
+{
+	DATARRAY	sd;
+	int		stride, i;
+	double		x, c0, c1, y0, y1;
+					/* set up dimensions for recursion */
+	if (dp->nd > 1) {
+		sd.name = dp->name;
+		sd.type = dp->type;
+		sd.nd = dp->nd - 1;
+		memcpy(sd.dim, dp->dim+1, sd.nd*sizeof(struct dadim));
+		stride = sd.dim[i = sd.nd-1].ne + (sd.type==SPECTY);
+		while (i-- > 0)
+			stride *= sd.dim[i].ne;
+	}
+					/* get independent variable */
+	if (dp->dim[0].p == NULL) {		/* evenly spaced points */
+		x = (pt[0] - dp->dim[0].org)/dp->dim[0].siz;
+		x *= (double)(dp->dim[0].ne - 1);
+		i = x;
+		if (i < 0)
+			i = 0;
+		else if (i > dp->dim[0].ne - 2)
+			i = dp->dim[0].ne - 2;
+	} else {				/* unevenly spaced points */
+		int	lower, upper;
+		if (dp->dim[0].siz > 0.0) {
+			lower = 0;
+			upper = dp->dim[0].ne;
+		} else {
+			lower = dp->dim[0].ne;
+			upper = 0;
+		}
+		do {
+			i = (lower + upper) >> 1;
+			if (pt[0] >= dp->dim[0].p[i])
+				lower = i;
+			else
+				upper = i;
+		} while (i != (lower + upper) >> 1);
+
+		if (i > dp->dim[0].ne - 2)
+			i = dp->dim[0].ne - 2;
+
+		x = i + (pt[0] - dp->dim[0].p[i]) /
+				(dp->dim[0].p[i+1] - dp->dim[0].p[i]);
+	}
+	/*
+	 * Compute interpolation coefficients:
+	 * extrapolate as far as one division, then
+	 * taper off harmonically to zero.
+	 */
+	if (x > i+2) {
+		c0 = 1./(i-1 - x);
+		c1 = -2.*c0;
+	} else if (x < i-1) {
+		c1 = 1./(i - x);
+		c0 = -2.*c1;
+	} else {
+		c0 = i+1 - x;
+		c1 = x - i;
+	}
+	c0 *= coef;
+	c1 *= coef;
+					/* check if vector interp */
+	if ((dp->nd == 2) & (rvec != NULL)) {
+		if (dp->type == DATATY) {
+			sd.arr.d = dp->arr.d + i*stride;
+			for (i = sd.dim[0].ne; i--; )
+				rvec[i] += c0*sd.arr.d[i]
+					+ c1*sd.arr.d[i+stride];
+			return(0.);
+		}
+		if (dp->type == SPECTY) {
+			double	f;
+			sd.arr.s = dp->arr.s + i*stride;
+			f = ldexp(1.0, (int)sd.arr.s[sd.dim[0].ne]
+					- (COLXS+8));
+			for (i = sd.dim[0].ne; i--; )
+				rvec[i] += c0*f*(sd.arr.s[i] + 0.5);
+			sd.arr.s += stride;
+			f = ldexp(1.0, (int)sd.arr.s[sd.dim[0].ne]
+					- (COLXS+8));
+			for (i = sd.dim[0].ne; i--; )
+				rvec[i] += c1*f*(sd.arr.s[i] + 0.5);
+			return(0.);
+		}
+		sd.arr.c = dp->arr.c + i*stride;
+		for (i = sd.dim[0].ne; i--; )
+			rvec[i] += c0*colrval(sd.arr.c[i],sd.type)
+				+ c1*colrval(sd.arr.c[i+stride],sd.type);
+		return(0.);
+	}
+					/* get dependent variable */
+	if (dp->nd > 1) {
+		if (dp->type == DATATY) {
+			sd.arr.d = dp->arr.d + i*stride;
+			y0 = data_interp(&sd, pt+1, c0, rvec);
+			sd.arr.d += stride;
+		} else if (dp->type == SPECTY) {
+			sd.arr.s = dp->arr.s + i*stride;
+			y0 = data_interp(&sd, pt+1, c0, rvec);
+			sd.arr.s += stride;
+		} else {
+			sd.arr.c = dp->arr.c + i*stride;
+			y0 = data_interp(&sd, pt+1, c0, rvec);
+			sd.arr.c += stride;
+		}
+		y1 = data_interp(&sd, pt+1, c1, rvec);
+	} else {			/* end of recursion */
+		if (dp->type == DATATY) {
+			y0 = dp->arr.d[i];
+			y1 = dp->arr.d[i+1];
+		} else if (dp->type == SPECTY) {
+			if (dp->arr.s[dp->dim[0].ne]) {
+				double	f = ldexp(1.0, -(COLXS+8) +
+						(int)dp->arr.s[dp->dim[0].ne]);
+				y0 = (dp->arr.s[i] + 0.5)*f;
+				y1 = (dp->arr.s[i+1] + 0.5)*f;
+			} else
+				y0 = y1 = 0.0;
+		} else {
+			y0 = colrval(dp->arr.c[i],dp->type);
+			y1 = colrval(dp->arr.c[i+1],dp->type);
+		}
+		y0 *= c0;
+		y1 *= c1;
+	}
+	return(y0 + y1);	/* coefficients already applied */
+}
+
+
+double
+datavalue(		/* interpolate data value at a point */
+	DATARRAY  *dp,
+	double	*pt
+)
+{
+	return(data_interp(dp, pt, 1., NULL));
+}
+
+
+/* Interpolate final vector corresponding to last dimension in data array */
+DATARRAY *
+datavector(DATARRAY *dp, double *pt)
+{
+	DATARRAY	*newdp;
+
+	if (dp->nd < 2)
+		error(INTERNAL, "datavector() called with 1-D array");
+					/* create vector array */
+	newdp = (DATARRAY *)malloc(sizeof(DATARRAY) -
+				(MAXDDIM-1)*sizeof(struct dadim) +
+				sizeof(DATATYPE)*dp->dim[dp->nd-1].ne);
+	if (newdp == NULL)
+		error(SYSTEM, "out of memory in datavector");
+	newdp->next = NULL;
+	newdp->name = dp->name;
+	newdp->type = DATATY;
+	newdp->nd = 1;			/* vector data goes here */
+	newdp->dim[0] = dp->dim[dp->nd-1];
+	newdp->arr.d = (DATATYPE *)(newdp->dim + 1);
+	memset(newdp->arr.d, 0, sizeof(DATATYPE)*newdp->dim[0].ne);
+
+	(void)data_interp(dp, pt, 1., newdp->arr.d);
+
+	return(newdp);			/* will be free'd using free() */
+}
+
+
+#if 0
 double
 datavalue(		/* interpolate data value at a point */
 	DATARRAY  *dp,
@@ -497,3 +674,4 @@ datavalue(		/* interpolate data value at a point */
 
 	return( y0*((i+1)-x) + y1*(x-i) );
 }
+#endif

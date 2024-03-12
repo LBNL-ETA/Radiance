@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.14 2024/02/22 20:11:54 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.15 2024/03/12 16:54:51 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -307,24 +307,24 @@ p_specdata(			/* varied spectrum from (N+1)-D file */
 		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
-	step = dp->dim[dp->nd-1].siz / (dp->dim[dp->nd-1].ne - 1.0);
-	scdat = (COLORV *)malloc(sizeof(COLORV)*dp->dim[dp->nd-1].ne);
+	dp = datavector(dp, pt);	/* interpolate spectrum */
+	step = dp->dim[0].siz / (dp->dim[0].ne - 1.0);
+	scdat = (COLORV *)malloc(sizeof(COLORV)*dp->dim[0].ne);
 	if (scdat == NULL)
 		objerror(m, SYSTEM, "out of memory");
-	for (i = dp->dim[dp->nd-1].ne; i-- > 0; ) {
-		double	bval[2];
-		pt[dp->nd-1] = dp->dim[dp->nd-1].org + i*step;
-		bval[0] = datavalue(dp, pt);
-		bval[1] = pt[dp->nd-1];
+	for (i = dp->dim[0].ne; i-- > 0; ) {
+		pt[1] = dp->dim[0].org + i*step;
+		pt[0] = datavalue(dp, pt+1);
 		errno = 0;
-		scdat[i] = funvalue(m->oargs.sarg[0], 2, bval);
+		scdat[i] = funvalue(m->oargs.sarg[0], 2, pt);
 		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
-	convertscolorcol(scval, scdat, dp->dim[dp->nd-1].ne,
-			dp->dim[dp->nd-1].org-.5*step,
-			dp->dim[dp->nd-1].org+dp->dim[dp->nd-1].siz+.5*step);
+	convertscolorcol(scval, scdat, dp->dim[0].ne,
+			dp->dim[0].org-.5*step,
+			dp->dim[0].org+dp->dim[0].siz+.5*step);
 	free(scdat);
+	free(dp);
 	smultscolor(r->pcol, scval);
 	return(0);
 computerr:
@@ -340,7 +340,7 @@ p_specpict(			/* interpolate hyperspectral image data */
 )
 {
 	SCOLOR		scdat, scval;
-	double		pt[3];
+	double		pt[2];
 	DATARRAY	*dp;
 	MFUNC		*mf;
 	double		step;
@@ -355,21 +355,21 @@ p_specpict(			/* interpolate hyperspectral image data */
 	pt[0] = evalue(mf->ep[1]);
 	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	dp = getspec(m->oargs.sarg[1]);
-	step = dp->dim[2].siz / (dp->dim[2].ne - 1.0);
-	for (i = dp->dim[2].ne; i-- > 0; ) {
-		double	bval[2];
-		pt[2] = dp->dim[2].org + i*step;
-		bval[0] = datavalue(dp, pt);
-		bval[1] = pt[2];
+					/* interpolate spectrum */
+	dp = datavector(getspec(m->oargs.sarg[1]), pt);
+	step = dp->dim[0].siz / (dp->dim[0].ne - 1.0);
+	for (i = dp->dim[0].ne; i-- > 0; ) {
+		pt[1] = dp->dim[0].org + i*step;
+		pt[0] = dp->arr.d[i];	/* datavalue(dp, pt+1); */
 		errno = 0;
-		scdat[i] = funvalue(m->oargs.sarg[0], 2, bval);
+		scdat[i] = funvalue(m->oargs.sarg[0], 2, pt);
 		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
-	convertscolorcol(scval, scdat, dp->dim[2].ne,
-			dp->dim[2].org-.5*step,
-			dp->dim[2].org+dp->dim[2].siz+.5*step);
+	convertscolorcol(scval, scdat, dp->dim[0].ne,
+			dp->dim[0].org-.5*step,
+			dp->dim[0].org+dp->dim[0].siz+.5*step);
+	free(dp);
 	smultscolor(r->pcol, scval);
 	return(0);
 computerr:

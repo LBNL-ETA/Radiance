@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.1 2023/08/21 22:39:05 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.2 2024/03/12 16:54:51 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -187,10 +187,12 @@ rtrace(				/* trace rays from stdin or file */
 	if (inform != 'a')
 		SET_FILE_BINARY(inpfp);
 					/* set up output */
-	if (castonly || every_out[0] != NULL)
+	if (castonly || every_out[0] != NULL) {
 		nproc = 1;		/* don't bother multiprocessing */
-	else if (nproc <= 0)		// need to get default for system?
-		nproc = myRTmanager.GetNCores();
+	} else if (nproc <= 0) {	// need to get default for system?
+		nproc = myRTmanager.GetNCores() + nproc;
+		if (nproc <= 0) nproc = 1;
+	}
 	if ((flushIntvl > 0) & (nproc > flushIntvl)) {
 		error(WARNING, "reducing number of processes to match flush interval");
 		nproc = flushIntvl;
