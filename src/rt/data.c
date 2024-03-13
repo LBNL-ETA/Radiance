@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.39 2024/03/13 06:36:03 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.40 2024/03/13 07:24:53 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -409,6 +409,9 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 	DATARRAY	sd;
 	int		stride, i;
 	double		x, c0, c1, y0, y1;
+					/* unlikely, but may as well check */
+	if ((-FTINY <= coef) & (coef <= FTINY))
+		return(0.);
 					/* set up dimensions for recursion */
 	if (dp->nd > 1) {
 		sd.name = dp->name;
@@ -478,15 +481,17 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 		} else if (dp->type == SPECTY) {
 			double	f;
 			sd.arr.s = dp->arr.s + i*stride;
-			f = ldexp(1.0, (int)sd.arr.s[sd.dim[0].ne]
-					- (COLXS+8));
-			for (i = sd.dim[0].ne; i--; )
-				rvec[i] += c0*f*(sd.arr.s[i] + 0.5);
+			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c0)|(c0>FTINY))) {
+				f = c0*ldexp(1., (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				for (i = sd.dim[0].ne; i--; )
+					rvec[i] += f*(sd.arr.s[i] + 0.5);
+			}
 			sd.arr.s += stride;
-			f = ldexp(1.0, (int)sd.arr.s[sd.dim[0].ne]
-					- (COLXS+8));
-			for (i = sd.dim[0].ne; i--; )
-				rvec[i] += c1*f*(sd.arr.s[i] + 0.5);
+			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c1)|(c1>FTINY))) {
+				f = c1*ldexp(1., (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				for (i = sd.dim[0].ne; i--; )
+					rvec[i] += f*(sd.arr.s[i] + 0.5);
+			}
 		} else {
 			sd.arr.c = dp->arr.c + i*stride;
 			for (i = sd.dim[0].ne; i--; )
@@ -517,10 +522,12 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			y1 = dp->arr.d[i+1];
 		} else if (dp->type == SPECTY) {
 			if (dp->arr.s[dp->dim[0].ne]) {
-				double	f = ldexp(1.0, -(COLXS+8) +
-						(int)dp->arr.s[dp->dim[0].ne]);
-				y0 = (dp->arr.s[i] + 0.5)*f;
-				y1 = (dp->arr.s[i+1] + 0.5)*f;
+				double	f = dp->arr.s[dp->dim[0].ne]
+					? ldexp(1., -(COLXS+8) +
+						(int)dp->arr.s[dp->dim[0].ne])
+					: 0.;
+				y0 = f*(dp->arr.s[i] + 0.5);
+				y1 = f*(dp->arr.s[i+1] + 0.5);
 			} else
 				y0 = y1 = 0.0;
 		} else {
