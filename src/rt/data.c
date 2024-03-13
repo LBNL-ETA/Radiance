@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.38 2024/03/12 18:45:48 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.39 2024/03/13 06:36:03 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -475,9 +475,7 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			for (i = sd.dim[0].ne; i--; )
 				rvec[i] += c0*sd.arr.d[i]
 					+ c1*sd.arr.d[i+stride];
-			return(0.);
-		}
-		if (dp->type == SPECTY) {
+		} else if (dp->type == SPECTY) {
 			double	f;
 			sd.arr.s = dp->arr.s + i*stride;
 			f = ldexp(1.0, (int)sd.arr.s[sd.dim[0].ne]
@@ -489,13 +487,13 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 					- (COLXS+8));
 			for (i = sd.dim[0].ne; i--; )
 				rvec[i] += c1*f*(sd.arr.s[i] + 0.5);
-			return(0.);
+		} else {
+			sd.arr.c = dp->arr.c + i*stride;
+			for (i = sd.dim[0].ne; i--; )
+				rvec[i] += c0*colrval(sd.arr.c[i],sd.type)
+					+ c1*colrval(sd.arr.c[i+stride],sd.type);
 		}
-		sd.arr.c = dp->arr.c + i*stride;
-		for (i = sd.dim[0].ne; i--; )
-			rvec[i] += c0*colrval(sd.arr.c[i],sd.type)
-				+ c1*colrval(sd.arr.c[i+stride],sd.type);
-		return(0.);
+		return(0.);		/* return value ignored */
 	}
 					/* get dependent variable */
 	if (dp->nd > 1) {
