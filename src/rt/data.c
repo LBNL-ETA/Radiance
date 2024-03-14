@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.40 2024/03/13 07:24:53 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.41 2024/03/14 06:30:53 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -433,7 +433,7 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			i = dp->dim[0].ne - 2;
 	} else {				/* unevenly spaced points */
 		int	lower, upper;
-		if (dp->dim[0].siz > 0.0) {
+		if (dp->dim[0].siz > 0.) {
 			lower = 0;
 			upper = dp->dim[0].ne;
 		} else {
@@ -482,15 +482,15 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			double	f;
 			sd.arr.s = dp->arr.s + i*stride;
 			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c0)|(c0>FTINY))) {
-				f = c0*ldexp(1., (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				f = ldexp(c0, (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
 				for (i = sd.dim[0].ne; i--; )
-					rvec[i] += f*(sd.arr.s[i] + 0.5);
+					rvec[i] += f*(sd.arr.s[i] + .5);
 			}
 			sd.arr.s += stride;
 			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c1)|(c1>FTINY))) {
-				f = c1*ldexp(1., (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				f = ldexp(c1, (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
 				for (i = sd.dim[0].ne; i--; )
-					rvec[i] += f*(sd.arr.s[i] + 0.5);
+					rvec[i] += f*(sd.arr.s[i] + .5);
 			}
 		} else {
 			sd.arr.c = dp->arr.c + i*stride;
@@ -529,7 +529,7 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 				y0 = f*(dp->arr.s[i] + 0.5);
 				y1 = f*(dp->arr.s[i+1] + 0.5);
 			} else
-				y0 = y1 = 0.0;
+				y0 = y1 = 0.;
 		} else {
 			y0 = colrval(dp->arr.c[i],dp->type);
 			y1 = colrval(dp->arr.c[i+1],dp->type);
