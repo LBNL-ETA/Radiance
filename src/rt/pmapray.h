@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapray.h,v 2.6 2016/11/02 22:09:14 greg Exp $ */
+/* RCSid $Id: pmapray.h,v 2.7 2024/03/22 16:54:16 greg Exp $ */
 
 /* 
    ==================================================================
@@ -10,12 +10,10 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapray.h,v 2.6 2016/11/02 22:09:14 greg Exp $
+   $Id: pmapray.h,v 2.7 2024/03/22 16:54:16 greg Exp $
 */
 
-
-#include "ray.h"
-
+/* Include after ray.h */
 
 void ray_init_pmap ();
 /* Interface to ray_init() and rtmain/rpmain/rvmain; init & load pmaps */

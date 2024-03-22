@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapray.c,v 2.7 2016/11/02 22:09:14 greg Exp $";
+static const char RCSid[] = "$Id: pmapray.c,v 2.8 2024/03/22 16:54:16 greg Exp $";
 #endif
 
 /* 
@@ -12,10 +12,11 @@ static const char RCSid[] = "$Id: pmapray.c,v 2.7 2016/11/02 22:09:14 greg Exp $
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapray.c,v 2.7 2016/11/02 22:09:14 greg Exp $
+   $Id: pmapray.c,v 2.8 2024/03/22 16:54:16 greg Exp $
 */
 
 
+#include "ray.h"
 #include "pmapray.h"
 #include "pmap.h"
 
@@ -23,6 +24,9 @@ static const char RCSid[] = "$Id: pmapray.c,v 2.7 2016/11/02 22:09:14 greg Exp $
 void ray_init_pmap ()
 /* Interface to ray_init(); init & load photon maps */
 {
+   if (NCSAMP > 3 && photonMapping)
+	error(USER, "photon-mapping not currently supported for > 3 spectral samples");
+
    loadPmaps(photonMaps, pmapParams);
 }
 
