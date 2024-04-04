@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.16 2018/06/26 14:42:18 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.17 2024/04/04 18:51:18 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -57,6 +57,8 @@ load_os(			/* load associated data for object */
 		getfunc(op, 4, 0x3<<5, 0);
 		return(1);
 	case PAT_CDATA:		/* color data */
+		if (op->oargs.nsargs < 4)
+			goto sargerr;
 		dp = getdata(op->oargs.sarg[3]);
 		getdata(op->oargs.sarg[4]);
 		getdata(op->oargs.sarg[5]);
@@ -73,6 +75,26 @@ load_os(			/* load associated data for object */
 		return(1);
 	case PAT_CFUNC:		/* color function */
 		getfunc(op, 3, 0x7, 0);
+		return(1);
+	case PAT_SPECFUNC:	/* spectral function */
+		getfunc(op, 1, 0, 0);
+		return(1);
+	case PAT_SPECFILE:	/* spectrum file */
+		if (op->oargs.nsargs < 1)
+			goto sargerr;
+		getdata(op->oargs.sarg[0]);
+		return(1);
+	case PAT_SPECDATA:	/* spectral data file */
+		if (op->oargs.nsargs < 2)
+			goto sargerr;
+		dp = getdata(op->oargs.sarg[1]);
+		getfunc(op, 2, ((1<<(dp->nd-1)) - 1)<<3, 0);
+		return(1);
+	case PAT_SPECPICT:	/* spectral picture */
+		if (op->oargs.nsargs < 2)
+			goto sargerr;
+		getspec(op->oargs.sarg[1]);
+		getfunc(op, 2, 0x3<<3, 0);
 		return(1);
 	case TEX_DATA:		/* texture data */
 		if (op->oargs.nsargs < 6)
