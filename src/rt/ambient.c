@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.122 2024/01/31 04:03:03 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.123 2024/04/05 01:10:26 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -269,15 +269,17 @@ multambient(		/* compute ambient component & multiply by coef. */
 			ambincl != inset(ambset, r->ro->omod))
 		goto dumbamb;
 
-	if (ambacc <= FTINY) {			/* no ambient storage */
-		FVECT	uvd[2];
+	if (ambacc <= FTINY) {			/* no ambient storage? */
+		double	rdot = DOT(nrm,r->ron);
+		int	sgn = 1 - 2*(rdot < 0);
 		float	dgrad[2], *dgp = NULL;
+		FVECT	uvd[2];
 
-		if (nrm != r->ron && DOT(nrm,r->ron) < 0.9999)
+		if (sgn*rdot < 0.9999)
 			dgp = dgrad;		/* compute rotational grad. */
 		copyscolor(acol, aval);
 		rdepth++;
-		ok = doambient(acol, r, r->rweight,
+		ok = doambient(acol, r, r->rweight*sgn,
 				uvd, NULL, NULL, dgp, NULL);
 		rdepth--;
 		if (!ok)
@@ -287,7 +289,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 			VCROSS(v1, r->ron, nrm);
 			d = 1.0;
 			for (i = 3; i--; )
-				d += v1[i] * (dgp[0]*uvd[0][i] + dgp[1]*uvd[1][i]);
+				d += sgn*v1[i] * (dgp[0]*uvd[0][i] + dgp[1]*uvd[1][i]);
 			if (d >= 0.05)
 				scalescolor(acol, d);
 		}
@@ -404,6 +406,7 @@ sumambient(		/* get interpolated ambient value */
 )
 {			/* initial limit is 10 degrees plus ambacc radians */
 	const double	minangle = 10.0 * PI/180.;
+	const int	sgn = 1 - 2*(DOT(r->ron,rn) < 0);
 	double		maxangle = minangle + ambacc;
 	double		wsum = 0.0;
 	FVECT		ck0;
@@ -448,7 +451,7 @@ sumambient(		/* get interpolated ambient value */
 		 *  Direction test using unperturbed normal
 		 */
 		decodedir(uvw[2], av->ndir);
-		d = DOT(uvw[2], r->ron);
+		d = sgn * DOT(uvw[2], r->ron);
 		if (d <= 0.0)		/* >= 90 degrees */
 			continue;
 		delta_r2 = 2.0 - 2.0*d;	/* approx. radians^2 */
@@ -504,6 +507,7 @@ makeambient(		/* make a new ambient value for storage */
 	int  al
 )
 {
+	int	sgn = 1 - 2*(DOT(r->ron,rn) < 0);
 	AMBVAL	amb;
 	FVECT	uvw[3];
 	int	i;
@@ -515,23 +519,23 @@ makeambient(		/* make a new ambient value for storage */
 		amb.weight = 1.25*r->rweight;
 	setscolor(acol, AVGREFL, AVGREFL, AVGREFL);
 						/* compute ambient */
-	i = doambient(acol, r, amb.weight,
+	i = doambient(acol, r, amb.weight*sgn,
 			uvw, amb.rad, amb.gpos, amb.gdir, &amb.corral);
 	scalescolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
 	if (i <= 0 || amb.rad[0] <= FTINY)	/* no Hessian or zero radius */
 		return(i);
+	uvw[2][0] = sgn*r->ron[0];		/* orient unperturbed normal */
+	uvw[2][1] = sgn*r->ron[1];
+	uvw[2][2] = sgn*r->ron[2];
 						/* store value */
 	VCOPY(amb.pos, r->rop);
-	amb.ndir = encodedir(r->ron);
+	amb.ndir = encodedir(uvw[2]);
 	amb.udir = encodedir(uvw[0]);
 	amb.lvl = al;
 	copyscolor(amb.val, acol);
-						/* insert into tree */
-	avsave(&amb);				/* and save to file */
-	if (rn != r->ron) {			/* texture */
-		VCOPY(uvw[2], r->ron);
+	avsave(&amb);				/* insert and save to file */
+	if (DOT(uvw[2],rn) < 0.9999)		/* texture? */
 		extambient(acol, &amb, r->rop, rn, uvw);
-	}
 	return(1);
 }
 

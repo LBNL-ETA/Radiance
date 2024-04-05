@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.71 2023/11/15 18:02:52 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.72 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -531,7 +531,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int xmit)
 		cvt_sdcolor(sr.rcoef, &bsv);	/* use sample color */
 		if (xmit)			/* apply pattern on transmit */
 			smultscolor(sr.rcoef, ndp->pr->pcol);
-		if (rayorigin(&sr, SPECULAR, ndp->pr, sr.rcoef) < 0) {
+		if (rayorigin(&sr, xmit ? TSPECULAR : RSPECULAR, ndp->pr, sr.rcoef) < 0) {
 			if (!n & (nstarget > 1)) {
 				n = nstarget;	/* avoid infinitue loop */
 				nstarget = nstarget*sr.rweight/minweight;
@@ -766,19 +766,13 @@ m_bsdf(OBJREC *m, RAY *r)
 	copyscolor(sctmp, nd.rdiff);
 	saddscolor(sctmp, nd.runsamp);
 	if (sintens(sctmp) > FTINY) {		/* ambient from reflection */
-		if (!hitfront)
-			flipsurface(r);
 		multambient(sctmp, r, nd.pnorm);
 		saddscolor(r->rcol, sctmp);
-		if (!hitfront)
-			flipsurface(r);
 	}
 	copyscolor(sctmp, nd.tdiff);
 	saddscolor(sctmp, nd.tunsamp);
 	if (sintens(sctmp) > FTINY) {		/* ambient from other side */
 		FVECT  bnorm;
-		if (hitfront)
-			flipsurface(r);
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
@@ -790,8 +784,6 @@ m_bsdf(OBJREC *m, RAY *r)
 		} else
 			multambient(sctmp, r, bnorm);
 		saddscolor(r->rcol, sctmp);
-		if (hitfront)
-			flipsurface(r);
 	}
 						/* add direct component */
 	if ((nd.sd->tf == NULL) & (nd.sd->tb == NULL) &&

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.91 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.92 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -35,8 +35,10 @@ typedef struct {
 	RAY	*rp;		/* originating ray sample */
 	int	ns;		/* number of samples per axis */
 	int	sampOK;		/* acquired full sample set? */
+	int	atyp;		/* RAMBIENT or TAMBIENT */
 	SCOLOR	acoef;		/* division contribution coefficient */
 	SCOLOR  acol;		/* accumulated color */
+	FVECT	onrm;		/* oriented unperturbed surface normal */
 	FVECT	ux, uy;		/* tangent axis unit vectors */
 	AMBSAMP	sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
@@ -106,7 +108,7 @@ ambsample(				/* initial ambient division sample */
 		setscolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
 	else
 		copyscolor(ar.rcoef, hp->acoef);
-	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0)
+	if (rayorigin(&ar, hp->atyp, hp->rp, ar.rcoef) < 0)
 		return(0);
 	if (ambacc > FTINY) {
 		smultscolor(ar.rcoef, hp->acoef);
@@ -122,7 +124,7 @@ resample:
 	for (ii = 3; ii--; )
 		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
 				spt[1]*hp->uy[ii] +
-				zd*hp->rp->ron[ii];
+				zd*hp->onrm[ii];
 	checknorm(ar.rdir);
 					/* avoid coincident samples */
 	if (!n && ambcollision(hp, i, j, ar.rdir)) {
@@ -248,6 +250,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	double	wt
 )
 {
+	int	backside = (wt < 0);
 	AMBHEMI	*hp;
 	double	d;
 	int	n, i, j;
@@ -256,6 +259,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	if (d <= FTINY)
 		return(NULL);
 					/* set number of divisions */
+	if (backside) wt = -wt;
 	if (ambacc <= FTINY &&
 			wt > (d *= 0.8*r->rweight/(ambdiv*minweight)))
 		wt = d;			/* avoid ray termination */
@@ -267,6 +271,16 @@ samp_hemi(				/* sample indirect hemisphere */
 	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) + sizeof(AMBSAMP)*(n*n - 1));
 	if (hp == NULL)
 		error(SYSTEM, "out of memory in samp_hemi");
+
+	if (backside) {
+		hp->atyp = TAMBIENT;
+		hp->onrm[0] = -r->ron[0];
+		hp->onrm[1] = -r->ron[1];
+		hp->onrm[2] = -r->ron[2];
+	} else {
+		hp->atyp = RAMBIENT;
+		VCOPY(hp->onrm, r->ron);
+	}
 	hp->rp = r;
 	hp->ns = n;
 	scolorblack(hp->acol);
@@ -277,9 +291,9 @@ samp_hemi(				/* sample indirect hemisphere */
 	d = 1.0/(n*n);
 	scalescolor(hp->acoef, d);
 					/* make tangent plane axes */
-	if (!getperpendicular(hp->ux, r->ron, 1))
+	if (!getperpendicular(hp->ux, hp->onrm, 1))
 		error(CONSISTENCY, "bad ray direction in samp_hemi");
-	VCROSS(hp->uy, r->ron, hp->ux);
+	VCROSS(hp->uy, hp->onrm, hp->ux);
 					/* sample divisions */
 	for (i = hp->ns; i--; )
 	    for (j = hp->ns; j--; )
@@ -544,9 +558,9 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	for (j = 0; j < hp->ns-1; j++) {
 		comp_fftri(&fftr, hp, AI(hp,0,j), AI(hp,0,j+1));
 		if (hessrow != NULL)
-			comp_hessian(hessrow[j], &fftr, hp->rp->ron);
+			comp_hessian(hessrow[j], &fftr, hp->onrm);
 		if (gradrow != NULL)
-			comp_gradient(gradrow[j], &fftr, hp->rp->ron);
+			comp_gradient(gradrow[j], &fftr, hp->onrm);
 	}
 					/* sum each row of triangles */
 	for (i = 0; i < hp->ns-1; i++) {
@@ -554,9 +568,9 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	    FVECT	gradcol;
 	    comp_fftri(&fftr, hp, AI(hp,i,0), AI(hp,i+1,0));
 	    if (hessrow != NULL)
-		comp_hessian(hesscol, &fftr, hp->rp->ron);
+		comp_hessian(hesscol, &fftr, hp->onrm);
 	    if (gradrow != NULL)
-		comp_gradient(gradcol, &fftr, hp->rp->ron);
+		comp_gradient(gradcol, &fftr, hp->onrm);
 	    for (j = 0; j < hp->ns-1; j++) {
 		FVECT	hessdia[3];	/* compute triangle contributions */
 		FVECT	graddia;
@@ -566,34 +580,34 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 					/* diagonal (inner) edge */
 		comp_fftri(&fftr, hp, AI(hp,i,j+1), AI(hp,i+1,j));
 		if (hessrow != NULL) {
-		    comp_hessian(hessdia, &fftr, hp->rp->ron);
+		    comp_hessian(hessdia, &fftr, hp->onrm);
 		    rev_hessian(hesscol);
 		    add2hessian(hessian, hessrow[j], hessdia, hesscol, backg);
 		}
 		if (gradrow != NULL) {
-		    comp_gradient(graddia, &fftr, hp->rp->ron);
+		    comp_gradient(graddia, &fftr, hp->onrm);
 		    rev_gradient(gradcol);
 		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
 		}
 					/* initialize edge in next row */
 		comp_fftri(&fftr, hp, AI(hp,i+1,j+1), AI(hp,i+1,j));
 		if (hessrow != NULL)
-		    comp_hessian(hessrow[j], &fftr, hp->rp->ron);
+		    comp_hessian(hessrow[j], &fftr, hp->onrm);
 		if (gradrow != NULL)
-		    comp_gradient(gradrow[j], &fftr, hp->rp->ron);
+		    comp_gradient(gradrow[j], &fftr, hp->onrm);
 					/* new column edge & paired triangle */
 		backg = back_ambval(hp, AI(hp,i+1,j+1),
 					AI(hp,i+1,j), AI(hp,i,j+1));
 		comp_fftri(&fftr, hp, AI(hp,i,j+1), AI(hp,i+1,j+1));
 		if (hessrow != NULL) {
-		    comp_hessian(hesscol, &fftr, hp->rp->ron);
+		    comp_hessian(hesscol, &fftr, hp->onrm);
 		    rev_hessian(hessdia);
 		    add2hessian(hessian, hessrow[j], hessdia, hesscol, backg);
 		    if (i < hp->ns-2)
 			rev_hessian(hessrow[j]);
 		}
 		if (gradrow != NULL) {
-		    comp_gradient(gradcol, &fftr, hp->rp->ron);
+		    comp_gradient(gradcol, &fftr, hp->onrm);
 		    rev_gradient(graddia);
 		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
 		    if (i < hp->ns-2)
@@ -629,7 +643,7 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 					/* use vector for azimuth + 90deg */
 		VSUB(vd, ap->p, hp->rp->rop);
 					/* brightness over cosine factor */
-		gfact = ap->v[0] / DOT(hp->rp->ron, vd);
+		gfact = ap->v[0] / DOT(hp->onrm, vd);
 					/* sine = proj_radius/vd_length */
 		dgsum[0] -= DOT(uv[1], vd) * gfact;
 		dgsum[1] += DOT(uv[0], vd) * gfact;
@@ -687,7 +701,7 @@ int
 doambient(				/* compute ambient component */
 	SCOLOR	rcol,			/* input/output color */
 	RAY	*r,
-	double	wt,
+	double	wt,			/* negative for back side */
 	FVECT	uv[2],			/* returned (optional) */
 	float	ra[2],			/* returned (optional) */
 	float	pg[2],			/* returned (optional) */
@@ -754,7 +768,7 @@ doambient(				/* compute ambient component */
 			if (ra[1] < minarad)
 				ra[1] = minarad;
 		}
-		ra[0] *= d = 1.0/sqrt(wt);
+		ra[0] *= d = 1.0/sqrt(fabs(wt));
 		if ((ra[1] *= d) > 2.0*ra[0])
 			ra[1] = 2.0*ra[0];
 		if (ra[1] > maxarad) {

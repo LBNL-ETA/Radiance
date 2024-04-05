@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.19 2017/02/22 03:16:20 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.20 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -39,7 +39,7 @@ castshadow(int sn, FVECT rorg, FVECT rdir)
 					/* check for intersection */
 	while (localhit(&rt, &thescene)) {
 		RAY	rt1 = rt;	/* pretend we were aimed at source */
-		rt1.crtype |= rt1.rtype = SHADOW;
+		rt1.crtype |= rt1.rtype = RSHADOW;
 		rt1.rdir[0] = -rt.rdir[0];
 		rt1.rdir[1] = -rt.rdir[1];
 		rt1.rdir[2] = -rt.rdir[2];

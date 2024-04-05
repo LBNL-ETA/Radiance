@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.83 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.84 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -338,27 +338,22 @@ m_normal(			/* color a ray that hit something normal */
 		scalescolor(sctmp, nd.rdiff);
 		if (nd.specfl & SP_RBLT)	/* add in specular as well? */
 			saddscolor(sctmp, nd.scolor);
-		multambient(sctmp, r, hastexture ? nd.pnorm : r->ron);
+		multambient(sctmp, r, nd.pnorm);
 		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
+		FVECT  bnorm;
 		copyscolor(sctmp, nd.mcolor);	/* modified by color */
 		if (nd.specfl & SP_TBLT) {
 			scalescolor(sctmp, nd.trans);
 		} else {
 			scalescolor(sctmp, nd.tdiff);
 		}
-		flipsurface(r);
-		if (hastexture) {
-			FVECT  bnorm;
-			bnorm[0] = -nd.pnorm[0];
-			bnorm[1] = -nd.pnorm[1];
-			bnorm[2] = -nd.pnorm[2];
-			multambient(sctmp, r, bnorm);
-		} else
-			multambient(sctmp, r, r->ron);
+		bnorm[0] = -nd.pnorm[0];
+		bnorm[1] = -nd.pnorm[1];
+		bnorm[2] = -nd.pnorm[2];
+		multambient(sctmp, r, bnorm);
 		saddscolor(r->rcol, sctmp);
-		flipsurface(r);
 	}
 					/* add direct component */
 	direct(r, dirnorm, &nd);
@@ -388,7 +383,7 @@ gaussamp(			/* sample Gaussian specular */
 	fcross(v, np->pnorm, u);
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, SPECULAR, np->rp, np->scolor) == 0) {
+			rayorigin(&sr, RSPECULAR, np->rp, np->scolor) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
 			nstarget = specjitter*np->rp->rweight + .5;
@@ -453,7 +448,7 @@ gaussamp(			/* sample Gaussian specular */
 	copyscolor(sr.rcoef, np->mcolor);	/* modified by color */
 	scalescolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
+			rayorigin(&sr, TSPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
 			nstarget = specjitter*np->rp->rweight + .5;

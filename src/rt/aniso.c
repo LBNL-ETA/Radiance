@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.63 2023/11/17 20:02:07 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.64 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -288,8 +288,6 @@ m_aniso(			/* shade ray that hit something anisotropic */
 	
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
 		FVECT  bnorm;
-
-		flipsurface(r);
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
@@ -301,7 +299,6 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		}
 		multambient(sctmp, r, bnorm);
 		saddscolor(r->rcol, sctmp);
-		flipsurface(r);
 	}
 					/* add direct component */
 	direct(r, diraniso, &nd);
@@ -353,7 +350,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, SPECULAR, np->rp, np->scolor) == 0) {
+			rayorigin(&sr, RSPECULAR, np->rp, np->scolor) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
 			nstarget = specjitter*np->rp->rweight + .5;
@@ -424,7 +421,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	copyscolor(sr.rcoef, np->mcolor);		/* modify by material color */
 	scalescolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
+			rayorigin(&sr, TSPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
 			nstarget = specjitter*np->rp->rweight + .5;

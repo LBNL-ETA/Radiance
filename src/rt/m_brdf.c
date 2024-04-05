@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.40 2023/11/15 18:02:52 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.41 2024/04/05 01:10:26 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -315,25 +315,17 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	}
 						/* compute ambient */
 	if (hasrefl) {
-		if (!hitfront)
-			flipsurface(r);
 		copyscolor(sctmp, nd.rdiff);
 		multambient(sctmp, r, nd.pnorm);
 		saddscolor(r->rcol, sctmp);	/* add to returned color */
-		if (!hitfront)
-			flipsurface(r);
 	}
 	if (hastrans) {				/* from other side */
-		if (hitfront)
-			flipsurface(r);
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
 		copyscolor(sctmp, nd.tdiff);
 		multambient(sctmp, r, vtmp);
 		saddscolor(r->rcol, sctmp);
-		if (hitfront)
-			flipsurface(r);
 	}
 	if (hasrefl | hastrans || m->oargs.sarg[6][0] != '0')
 		direct(r, dirbrdf, &nd);	/* add direct component */
@@ -412,7 +404,6 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		saddscolor(r->rcol, sctmp);	/* add to returned color */
 	}
 	if (nd.trans > FTINY) {			/* from other side */
-		flipsurface(r);
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
@@ -420,7 +411,6 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		scalescolor(sctmp, nd.trans);
 		multambient(sctmp, r, vtmp);
 		saddscolor(r->rcol, sctmp);
-		flipsurface(r);
 	}
 						/* add direct component */
 	direct(r, dirbrdf, &nd);

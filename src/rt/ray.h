@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.51 2023/11/15 18:02:53 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.52 2024/04/05 01:10:26 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -23,15 +23,21 @@ extern "C" {
 
 				/* ray type flags */
 #define  PRIMARY	01		/* original ray */
-#define  SHADOW		02		/* ray to light source */
+#define  RSHADOW	02		/* reflected ray to light source */
 #define  REFLECTED	04		/* reflected ray */
 #define  REFRACTED	010		/* refracted (bent) ray */
 #define  TRANS		020		/* transmitted/transferred ray */
-#define  AMBIENT	040		/* ray scattered for interreflection */
-#define  SPECULAR	0100		/* ray scattered for specular */
+#define  RAMBIENT	040		/* reflected diffuse interreflection */
+#define  RSPECULAR	0100		/* reflected specular */
+#define  TSHADOW	0200		/* transmitted shadow */
+#define  TAMBIENT	0400		/* transmitted ambient */
+#define  TSPECULAR	01000		/* transmitted specular */
+#define  SHADOW		(RSHADOW|TSHADOW)
+#define  AMBIENT	(RAMBIENT|TAMBIENT)
+#define  SPECULAR	(RSPECULAR|TSPECULAR)
 
 				/* reflected ray types */
-#define  RAYREFL	(SHADOW|REFLECTED|AMBIENT|SPECULAR)
+#define  RAYREFL	(RSHADOW|REFLECTED|RAMBIENT|RSPECULAR)
 
 /* Arrange so double's come first for optimal alignment */
 /* Pointers and long's come second for 64-bit mode */
@@ -74,6 +80,8 @@ typedef struct ray {
 }  RAY;
 
 #define  rayvalue(r)	(*(r)->revf)(r)
+
+#define  thrudir(r,v)	((r)->rod > 0 ^ DOT((r)->ron,v) > 0)
 
 #define  raydistance(r)	(pbright((r)->mcol) > 0.5*pbright((r)->rcol) ? \
 				(r)->rmt : (r)->rxt)
