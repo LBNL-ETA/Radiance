@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.35 2023/02/02 20:32:59 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.36 2024/04/06 00:00:22 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -520,9 +520,13 @@ ray_pclose(		/* close one or more child processes */
 					/* check argument */
 	if ((nsub <= 0) | (nsub > ray_pnprocs))
 		nsub = ray_pnprocs;
-					/* clear our ray queue */
+	i = 0;				/* clear our ray queue */
 	while (ray_presult(&res,0) > 0)
-		;
+		++i;
+	if (i) {
+		sprintf(errmsg, "dropped %d ray results in ray_pclose()", i);
+		error(WARNING, errmsg);
+	}
 	r_send_next = 0;		/* hard reset in case of error */
 	r_recv_first = r_recv_next = RAYQLEN;
 					/* close send pipes */
