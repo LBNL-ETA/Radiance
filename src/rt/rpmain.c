@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.32 2024/04/05 16:41:17 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.33 2024/04/08 17:08:15 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -67,7 +67,7 @@ static void printdefaults(void);
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
 		"AdaptiveShadowTesting\nOutputs=v,l\n" \
-		"OutputCS=RGB,XYZ,Y,S,M,prims\n"
+		"OutputCS=RGB,XYZ,prims\n"
 #else
 #define RPICT_FEATURES	"Recovery\nIrradianceCalc\nViewTypes=v,l,a,h,s,c\n" \
 		"ParticipatingMedia=Mist\n" \
@@ -75,7 +75,7 @@ static void printdefaults(void);
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
 		"AdaptiveShadowTesting\nOutputs=v,l\n" \
-		"OutputCS=RGB,XYZ,Y,S,M,prims\n"
+		"OutputCS=RGB,XYZ,prims\n"
 #endif
 
 
