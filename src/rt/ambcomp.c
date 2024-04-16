@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.92 2024/04/05 01:10:26 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.93 2024/04/16 23:32:20 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -162,9 +162,9 @@ resample:
 static float *
 getambdiffs(AMBHEMI *hp)
 {
-	const double	normf = 1./bright(hp->acoef);
+	const double	normf = 1./(pbright(hp->acoef) + FTINY);
 	float	*earr = (float *)calloc(hp->ns*hp->ns, sizeof(float));
-	float	*ep;
+	float	*ep, *earr2;
 	AMBSAMP	*ap;
 	double	b, b1, d2;
 	int	i, j;
@@ -198,18 +198,44 @@ getambdiffs(AMBHEMI *hp)
 		ep[-hp->ns-1] += d2;
 	    }
 					/* correct for number of neighbors */
-	earr[0] *= 8./3.;
-	earr[hp->ns-1] *= 8./3.;
-	earr[(hp->ns-1)*hp->ns] *= 8./3.;
-	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 8./3.;
+	earr[0] *= 6./3.;
+	earr[hp->ns-1] *= 6./3.;
+	earr[(hp->ns-1)*hp->ns] *= 6./3.;
+	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 6./3.;
 	for (i = 1; i < hp->ns-1; i++) {
-		earr[i*hp->ns] *= 8./5.;
-		earr[i*hp->ns + hp->ns-1] *= 8./5.;
+		earr[i*hp->ns] *= 6./5.;
+		earr[i*hp->ns + hp->ns-1] *= 6./5.;
 	}
 	for (j = 1; j < hp->ns-1; j++) {
-		earr[j] *= 8./5.;
-		earr[(hp->ns-1)*hp->ns + j] *= 8./5.;
+		earr[j] *= 6./5.;
+		earr[(hp->ns-1)*hp->ns + j] *= 6./5.;
 	}
+					/* preen map to avoid cliffs */
+	earr2 = (float *)malloc(hp->ns*hp->ns*sizeof(float));
+	if (earr2 == NULL)
+		return(earr);
+	memcpy(earr2, earr, hp->ns*hp->ns*sizeof(float));
+	for (i = 0; i < hp->ns-1; i++) {
+	    float  *ep2 = earr2 + i*hp->ns;
+	    ep = earr + i*hp->ns;
+	    for (j = 0; j < hp->ns-1; j++, ep2++, ep++) {
+		if (ep2[1] < .5*ep2[0]) {
+			ep[0] -= .125*ep2[0];
+			ep[1] += .125*ep2[0];
+		} else if (ep2[1] > 2.*ep2[0]) {
+			ep[1] -= .125*ep2[1];
+			ep[0] += .125*ep2[1];
+		}
+		if (ep2[hp->ns] < .5*ep2[0]) {
+			ep[0] -= .125*ep2[0];
+			ep[hp->ns] += .125*ep2[0];
+		} else if (ep2[hp->ns] > 2.*ep2[0]) {
+			ep[hp->ns] -= .125*ep2[hp->ns];
+			ep[0] += .125*ep2[hp->ns];
+		}
+	    }
+	}
+	free(earr2);
 	return(earr);
 }
 
