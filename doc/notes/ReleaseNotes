@@ -2686,3 +2686,7 @@ azimuth and reversing row directions at adjacent altitudes.
 
 Added optimization for long argument lists and arrays in
 the calcomp routines used for rendering and in rcalc, etc.
+
+Added error estimate spreading to ambient super-sampling
+algorithm (-as) to improve performance especially in
+scenes with sharp cut-offs.
