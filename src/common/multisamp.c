@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: multisamp.c,v 2.5 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: multisamp.c,v 2.6 2024/04/17 15:07:29 greg Exp $";
 #endif
 /*
  * Binary space partitioning curve for multidimensional sampling.
@@ -13,14 +13,13 @@ static const char	RCSid[] = "$Id: multisamp.c,v 2.5 2003/06/07 12:50:20 schorsch
 
 #include "random.h"
 
+
+/* Convert 1-dimensional sample to N dimensions */
 void
-multisamp(t, n, r)	/* convert 1-dimensional sample to N dimensions */
-double	t[];			/* returned N-dimensional vector */
-register int	n;		/* number of dimensions */
-double	r;			/* 1-dimensional sample [0,1) */
+multisamp(double t[], int n, double r)
 {
 	int	j;
-	register int	i, k;
+	int	i, k;
 	int	ti[8];
 	double	s;
 
@@ -37,5 +36,5 @@ double	r;			/* 1-dimensional sample [0,1) */
 	}
 	i = n;
 	while (i-- > 0)
-		t[i] = 1./256. * (ti[i] + frandom());
+		t[i] = (1./256.) * (ti[i] + frandom());
 }
