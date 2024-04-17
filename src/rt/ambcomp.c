@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.93 2024/04/16 23:32:20 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.94 2024/04/17 17:34:11 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -100,6 +100,7 @@ ambsample(				/* initial ambient division sample */
 	AMBSAMP	*ap = &ambsam(hp,i,j);
 	RAY	ar;
 	int	hlist[3], ii;
+	double	ss[2];
 	RREAL	spt[2];
 	double	zd;
 					/* generate hemispherical sample */
@@ -115,11 +116,11 @@ ambsample(				/* initial ambient division sample */
 		scalescolor(ar.rcoef, 1./AVGREFL);
 	}
 	hlist[0] = hp->rp->rno;
-	hlist[1] = j;
-	hlist[2] = i;
-	multisamp(spt, 2, urand(ilhash(hlist,3)+n));
+	hlist[1] = AI(hp,i,j);
+	hlist[2] = samplendx;
+	multisamp(ss, 2, urand(ilhash(hlist,3)+n));
 resample:
-	square2disk(spt, (j+spt[1])/hp->ns, (i+spt[0])/hp->ns);
+	square2disk(spt, (j+ss[1])/hp->ns, (i+ss[0])/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
 		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
@@ -127,8 +128,8 @@ resample:
 				zd*hp->onrm[ii];
 	checknorm(ar.rdir);
 					/* avoid coincident samples */
-	if (!n && ambcollision(hp, i, j, ar.rdir)) {
-		spt[0] = frandom(); spt[1] = frandom();
+	if (!n && hp->ns >= 4 && ambcollision(hp, i, j, ar.rdir)) {
+		ss[0] = frandom(); ss[1] = frandom();
 		goto resample;		/* reject this sample */
 	}
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
@@ -163,8 +164,8 @@ static float *
 getambdiffs(AMBHEMI *hp)
 {
 	const double	normf = 1./(pbright(hp->acoef) + FTINY);
-	float	*earr = (float *)calloc(hp->ns*hp->ns, sizeof(float));
-	float	*ep, *earr2;
+	float	*earr = (float *)calloc(2*hp->ns*hp->ns, sizeof(float));
+	float	*ep;
 	AMBSAMP	*ap;
 	double	b, b1, d2;
 	int	i, j;
@@ -210,32 +211,18 @@ getambdiffs(AMBHEMI *hp)
 		earr[j] *= 6./5.;
 		earr[(hp->ns-1)*hp->ns + j] *= 6./5.;
 	}
-					/* preen map to avoid cliffs */
-	earr2 = (float *)malloc(hp->ns*hp->ns*sizeof(float));
-	if (earr2 == NULL)
-		return(earr);
-	memcpy(earr2, earr, hp->ns*hp->ns*sizeof(float));
+					/* blur map to reduce bias */
+	memcpy(earr+hp->ns*hp->ns, earr, hp->ns*hp->ns*sizeof(float));
 	for (i = 0; i < hp->ns-1; i++) {
-	    float  *ep2 = earr2 + i*hp->ns;
+	    float  *ep2;
 	    ep = earr + i*hp->ns;
-	    for (j = 0; j < hp->ns-1; j++, ep2++, ep++) {
-		if (ep2[1] < .5*ep2[0]) {
-			ep[0] -= .125*ep2[0];
-			ep[1] += .125*ep2[0];
-		} else if (ep2[1] > 2.*ep2[0]) {
-			ep[1] -= .125*ep2[1];
-			ep[0] += .125*ep2[1];
-		}
-		if (ep2[hp->ns] < .5*ep2[0]) {
-			ep[0] -= .125*ep2[0];
-			ep[hp->ns] += .125*ep2[0];
-		} else if (ep2[hp->ns] > 2.*ep2[0]) {
-			ep[hp->ns] -= .125*ep2[hp->ns];
-			ep[0] += .125*ep2[hp->ns];
-		}
+	    ep2 = ep + hp->ns*hp->ns;
+	    for (j = 0; j < hp->ns-1; j++, ep++, ep2++) {
+	    	ep[0] += .125*(ep2[1] + ep2[hp->ns]) - .5*ep2[0];
+		ep[1] += .125*ep2[0];
+		ep[hp->ns] += .125*ep2[0];
 	    }
 	}
-	free(earr2);
 	return(earr);
 }
 
@@ -287,7 +274,7 @@ samp_hemi(				/* sample indirect hemisphere */
 					/* set number of divisions */
 	if (backside) wt = -wt;
 	if (ambacc <= FTINY &&
-			wt > (d *= 0.8*r->rweight/(ambdiv*minweight)))
+			wt > (d *= 0.8*r->rweight/(ambdiv*minweight + 1e-20)))
 		wt = d;			/* avoid ray termination */
 	n = sqrt(ambdiv * wt) + 0.5;
 	i = 1 + (MINADIV-1)*(ambacc > FTINY);
@@ -336,7 +323,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	if (hp->sampOK <= MINADIV*MINADIV)
 		return(hp);		/* don't bother super-sampling */
 	n = ambssamp*wt + 0.5;
-	if (n > 8) {			/* perform super-sampling? */
+	if (n >= 4*hp->ns) {		/* perform super-sampling? */
 		ambsupersamp(hp, n);
 		copyscolor(rcol, hp->acol);
 	}
