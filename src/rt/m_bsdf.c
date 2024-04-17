@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.72 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.73 2024/04/17 16:46:00 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -534,7 +534,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int xmit)
 		if (rayorigin(&sr, xmit ? TSPECULAR : RSPECULAR, ndp->pr, sr.rcoef) < 0) {
 			if (!n & (nstarget > 1)) {
 				n = nstarget;	/* avoid infinitue loop */
-				nstarget = nstarget*sr.rweight/minweight;
+				nstarget = nstarget*sr.rweight/(minweight + 1e-20);
 				if (n == nstarget) break;
 				n = -1;		/* moved target */
 			}
