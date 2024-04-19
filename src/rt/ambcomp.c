@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.94 2024/04/17 17:34:11 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.95 2024/04/19 01:52:50 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -173,7 +173,9 @@ getambdiffs(AMBHEMI *hp)
 	if (earr == NULL)		/* out of memory? */
 		return(NULL);
 					/* sum squared neighbor diffs */
-	for (ap = hp->sa, ep = earr, i = 0; i < hp->ns; i++)
+	ap = hp->sa;
+	ep = earr + hp->ns*hp->ns;	/* original estimates to scratch */
+	for (i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++, ep++) {
 		b = pbright(ap[0].v);
 		if (i) {		/* from above */
@@ -199,26 +201,26 @@ getambdiffs(AMBHEMI *hp)
 		ep[-hp->ns-1] += d2;
 	    }
 					/* correct for number of neighbors */
-	earr[0] *= 6./3.;
-	earr[hp->ns-1] *= 6./3.;
-	earr[(hp->ns-1)*hp->ns] *= 6./3.;
-	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 6./3.;
+	ep = earr + hp->ns*hp->ns;
+	ep[0] *= 6./3.;
+	ep[hp->ns-1] *= 6./3.;
+	ep[(hp->ns-1)*hp->ns] *= 6./3.;
+	ep[(hp->ns-1)*hp->ns + hp->ns-1] *= 6./3.;
 	for (i = 1; i < hp->ns-1; i++) {
-		earr[i*hp->ns] *= 6./5.;
-		earr[i*hp->ns + hp->ns-1] *= 6./5.;
+		ep[i*hp->ns] *= 6./5.;
+		ep[i*hp->ns + hp->ns-1] *= 6./5.;
 	}
 	for (j = 1; j < hp->ns-1; j++) {
-		earr[j] *= 6./5.;
-		earr[(hp->ns-1)*hp->ns + j] *= 6./5.;
+		ep[j] *= 6./5.;
+		ep[(hp->ns-1)*hp->ns + j] *= 6./5.;
 	}
-					/* blur map to reduce bias */
-	memcpy(earr+hp->ns*hp->ns, earr, hp->ns*hp->ns*sizeof(float));
+					/* blur final map to reduce bias */
 	for (i = 0; i < hp->ns-1; i++) {
 	    float  *ep2;
 	    ep = earr + i*hp->ns;
 	    ep2 = ep + hp->ns*hp->ns;
 	    for (j = 0; j < hp->ns-1; j++, ep++, ep2++) {
-	    	ep[0] += .125*(ep2[1] + ep2[hp->ns]) - .5*ep2[0];
+	    	ep[0] += .5*ep2[0] + .125*(ep2[1] + ep2[hp->ns]);
 		ep[1] += .125*ep2[0];
 		ep[hp->ns] += .125*ep2[0];
 	    }
