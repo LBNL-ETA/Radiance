@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.39 2022/03/11 18:04:39 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.40 2024/04/26 23:10:59 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -127,6 +127,10 @@ extern int GetCategoryIndex();
 extern void CalcPerezParam( double, double, double, int );
 extern void CalcSkyPatchLumin( float *parr );
 extern void ComputeSky( float *parr );
+
+
+extern double  solar_sunset(int month, int day);
+extern double  solar_sunrise(int month, int day);
 
 /* Degrees into radians */
 #define DegToRad(deg)	((deg)*(PI/180.))
@@ -325,6 +329,7 @@ main(int argc, char *argv[])
 	double	dir, dif;		/* direct and diffuse values */
 	int	mtx_offset;
 	int	i, j;
+	double	timeinterval = 0;
 
 	progname = argv[0];
 					/* get options */
@@ -426,6 +431,9 @@ main(int argc, char *argv[])
 		case 'A':			/* compute average sky */
 			avgSky = 1;
 			break;
+		case 'i':
+			timeinterval = atof(argv[++i]);
+			break;
 		default:
 			goto userr;
 		}
@@ -499,7 +507,7 @@ main(int argc, char *argv[])
 	mtx_data = resize_dmatrix(mtx_data, tstorage=2, nskypatch);
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
-		double		sda, sta;
+		double		sda, sta, st;
 		int		sun_in_sky;
 					/* compute solar position */
 		if ((mo == 2) & (da == 29)) {
@@ -509,11 +517,19 @@ main(int argc, char *argv[])
 			julian_date = jdate(mo, da) + leap_day;
 		sda = sdec(julian_date);
 		sta = stadj(julian_date);
-		altitude = salt(sda, hr+sta);
+		st = hr + sta;
+		
+		if (timeinterval > 0) {
+			if (fabs(solar_sunrise(mo, da) - st) <= timeinterval/120)
+				st = (st + timeinterval/120 + solar_sunrise(mo, da))/2;
+			else if (fabs(solar_sunset(mo, da) - st) < timeinterval/120)
+				st = (st - timeinterval/120 + solar_sunset(mo, da))/2;
+		}
+		altitude = salt(sda, st);
 		sun_in_sky = (altitude > -DegToRad(SUN_ANG_DEG/2.));
 		if (sun_hours_only && !sun_in_sky)
 			continue;	/* skipping nighttime points */
-		azimuth = sazi(sda, hr+sta) + PI - DegToRad(rotation);
+		azimuth = sazi(sda, st) + PI - DegToRad(rotation);
 
 		mtx_offset = 3*nskypatch*nstored;
 		nstored += !avgSky | !nstored;
@@ -664,6 +680,7 @@ writerr:
 	exit(1);
 }
 
+
 /* Return maximum of two doubles */
 double dmax( double a, double b )
 { return (a > b) ? a : b; }
@@ -709,10 +726,14 @@ ComputeSky(float *parr)
 		/* Limit sky clearness */
 		if (sky_clearness > 11.9)
 			sky_clearness = 11.9;
+		else if (sky_clearness < 1.0)
+			sky_clearness = 1.0;
 
 		/* Limit sky brightness */
 		if (sky_brightness < 0.01)
 			sky_brightness = 0.01;
+		else if (sky_brightness > 0.6)
+			sky_brightness = 0.6;
 
 		/* Calculate illuminance */
 		index = GetCategoryIndex();
@@ -764,6 +785,25 @@ ComputeSky(float *parr)
 		multcolor(parr+3*i, skycolor);
 	}
 }
+
+
+double
+solar_sunset(int month, int day)
+{
+	float W;
+	W = -1 * (tan(s_latitude) * tan(sdec(jdate(month, day))));
+	return(12 + (M_PI / 2 - atan2(W, sqrt(1 - W * W))) * 180 / (M_PI * 15));
+}
+
+
+double
+solar_sunrise(int month, int day)
+{
+	float W;
+	W = -1 * (tan(s_latitude) * tan(sdec(jdate(month, day))));
+	return(12 - (M_PI / 2 - atan2(W, sqrt(1 - W * W))) * 180 / (M_PI * 15));
+}
+
 
 /* Add in solar direct to nearest sky patches (GW) */
 void
@@ -1034,6 +1074,16 @@ int CalcSkyParamFromIllum()
 	if (sky_brightness < 0.01)
 			sky_brightness = 0.01; 
 
+	if (sky_clearness < 1.0000)
+	{
+		sky_clearness = 1.0000;
+	}
+
+	if (sky_brightness > 0.6)
+	{
+		sky_brightness = 0.6;
+	}
+
 	while (((fabs(diff_irrad - test1) > 10.0) ||
 			(fabs(dir_irrad - test2) > 10.0)) && !(counter == 5))
 	{
@@ -1059,6 +1109,16 @@ int CalcSkyParamFromIllum()
 		/* Limit sky brightness */
 		if (sky_brightness < 0.01)
 			sky_brightness = 0.01; 
+
+		if (sky_clearness < 1.0000)
+		{
+			sky_clearness = 1.0000;
+		}
+
+		if (sky_brightness > 0.6)
+		{
+			sky_brightness = 0.6;
+		}
 	}
 
 	return GetCategoryIndex();

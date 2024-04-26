@@ -2690,3 +2690,6 @@ the calcomp routines used for rendering and in rcalc, etc.
 Added error estimate spreading to ambient super-sampling
 algorithm (-as) to improve performance especially in
 scenes with sharp cut-offs.
+
+Added -i option to gendaymtx to match -i option of gendaylit.
+Thanks to Yongqing for initial implementation.

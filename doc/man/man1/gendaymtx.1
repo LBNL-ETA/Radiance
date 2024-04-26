@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.16 2022/08/13 17:24:56 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.17 2024/04/26 23:10:59 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -29,7 +29,9 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 ][
 .B "-o{f|d}"
 ][
-.B "-O{0|1}"
+.B "\-O{0|1}"
+][
+.B "\-i intvl"
 ]
 [
 .B "tape.wea"
@@ -153,6 +155,15 @@ or
 through
 .I xform(1)
 using a similar transform.
+.PP
+The
+.I \-i
+option specifies the actual capture interval in minutes of the original
+weather data.
+Please see the man page for
+.I gendaylit
+to understand this correction, which is applied only near sunrise and
+sunset.
 .PP
 The
 .I \-of
