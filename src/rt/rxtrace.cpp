@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.2 2024/03/12 16:54:51 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.3 2024/04/30 23:16:23 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -39,6 +39,10 @@ extern int  vresolu;			/* vertical resolution */
 
 extern int  castonly;			/* only doing ray-casting? */
 
+extern double  (*sens_curve)(SCOLOR scol);	/* spectral conversion for 1-channel */
+extern double  out_scalefactor;		/* output calibration scale factor */
+extern RGBPRIMP  out_prims;		/* output color primitives (NULL if spectral) */
+
 #ifndef  MAXTSET
 #define	 MAXTSET	8191		/* maximum number in trace set */
 #endif
@@ -66,6 +70,8 @@ static void tabin(RAY *r);
 static RayReportCall ourtrace;
 static RayReportCall printvals;
 
+static void  putscolor(COLORV *scol);
+
 static oputf_t *ray_out[32], *every_out[32];
 static putf_t *putreal;
 
@@ -74,6 +80,9 @@ quit(			/* quit program */
 	int  code
 )
 {
+	if (ray_pnprocs < 0)
+		_exit(code);		/* avoid flush in child */
+
 	int	ec = myRTmanager.Cleanup();
 
 	if (ec) code = ec;
@@ -90,7 +99,12 @@ formstr(				/* return format identifier */
 	case 'a': return("ascii");
 	case 'f': return("float");
 	case 'd': return("double");
-	case 'c': return(COLRFMT);
+	case 'c':
+		if (out_prims == NULL)
+			return(SPECFMT);
+		if (out_prims == xyzprims)
+			return(CIEFMT);
+		return(COLRFMT);
 	}
 	return("unknown");
 }
@@ -181,9 +195,6 @@ rtrace(				/* trace rays from stdin or file */
 		sprintf(errmsg, "cannot open input file \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}
-#ifdef getc_unlocked
-	flockfile(inpfp);		/* avoid lock/unlock overhead */
-#endif
 	if (inform != 'a')
 		SET_FILE_BINARY(inpfp);
 					/* set up output */
@@ -203,6 +214,10 @@ rtrace(				/* trace rays from stdin or file */
 	if (every_out[0])
 		myRTmanager.SetTraceCall(ourtrace);
 	myRTmanager.rtFlags |= RTdoFIFO;
+#ifdef getc_unlocked
+	flockfile(inpfp);		/* avoid lock/unlock overhead */
+	flockfile(stdout);
+#endif
 	if (hresolu > 0) {		// print resolution string if appropriate
 		if (vresolu > 0)
 			fprtresolu(hresolu, vresolu, stdout);
@@ -249,6 +264,8 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 {
 	const char  *vs = outvals;
 	oputf_t **table = ray_out;
+	const int	nco = (sens_curve != NULL) ? 1 :
+				(out_prims != NULL) ? 3 : NCSAMP;
 	int  ncomp = 0;
 
 	if (!*vs)
@@ -287,7 +304,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 			break;
 		case 'r':				/* reflected contrib. */
 			*table++ = oputr;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'R':				/* reflected distance */
@@ -297,7 +314,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 			break;
 		case 'x':				/* xmit contrib. */
 			*table++ = oputx;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'X':				/* xmit distance */
@@ -307,12 +324,12 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 			break;
 		case 'v':				/* value */
 			*table++ = oputv;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			break;
 		case 'V':				/* contribution */
 			*table++ = oputV;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
@@ -354,7 +371,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 			break;
 		case 'W':				/* coefficient */
 			*table++ = oputW;
-			ncomp += 3;
+			ncomp += nco;
 			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY) | (ambssamp > 0))
 				error(WARNING,
@@ -394,7 +411,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 	return(ncomp);
 }
 
-static void
+static int
 printvals(			/* print requested ray values */
 	RAY  *r, void *cd
 )
@@ -402,17 +419,12 @@ printvals(			/* print requested ray values */
 	oputf_t **tp;
 
 	if (ray_out[0] == NULL)
-		return;
-#ifdef getc_unlocked
-	flockfile(stdout);
-#endif
+		return 0;
 	for (tp = ray_out; *tp != NULL; tp++)
 		(**tp)(r);
 	if (outform == 'a')
 		putchar('\n');
-#ifdef getc_unlocked
-	funlockfile(stdout);
-#endif
+	return 1;
 }
 
 void
@@ -443,7 +455,7 @@ tranotify(			/* record new modifier */
 		}
 }
 
-static void
+static int
 ourtrace(				/* print ray values */
 	RAY  *r, void *cd
 )
@@ -451,23 +463,18 @@ ourtrace(				/* print ray values */
 	oputf_t **tp;
 
 	if (every_out[0] == NULL)
-		return;
+		return 0;
 	if (r->ro == NULL) {
 		if (traincl == 1)
-			return;
+			return 0;
 	} else if (traincl != -1 && traincl != inset(traset, r->ro->omod))
-		return;
-#ifdef getc_unlocked
-	flockfile(stdout);
-#endif
+		return 0;
 	tabin(r);
 	for (tp = every_out; *tp != NULL; tp++)
 		(**tp)(r);
 	if (outform == 'a')
 		putchar('\n');
-#ifdef getc_unlocked
-	funlockfile(stdout);
-#endif
+	return 1;
 }
 
 static void
@@ -502,12 +509,7 @@ oputr(				/* print mirrored contribution */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
-
-	cval[0] = colval(r->mcol,RED);
-	cval[1] = colval(r->mcol,GRN);
-	cval[2] = colval(r->mcol,BLU);
-	(*putreal)(cval, 3);
+	putscolor(r->mcol);
 }
 
 static void
@@ -523,12 +525,12 @@ oputx(				/* print unmirrored contribution */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
+	SCOLOR	cdiff;
 
-	cval[0] = colval(r->rcol,RED) - colval(r->mcol,RED);
-	cval[1] = colval(r->rcol,GRN) - colval(r->mcol,GRN);
-	cval[2] = colval(r->rcol,BLU) - colval(r->mcol,BLU);
-	(*putreal)(cval, 3);
+	copyscolor(cdiff, r->rcol);
+	sopscolor(cdiff, -=, r->mcol);
+
+	putscolor(cdiff);
 }
 
 static void
@@ -544,12 +546,7 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	RREAL	cval[3];
-
-	cval[0] = colval(r->rcol,RED);
-	cval[1] = colval(r->rcol,GRN);
-	cval[2] = colval(r->rcol,BLU);
-	(*putreal)(cval, 3);
+	putscolor(r->rcol);
 }
 
 static void
@@ -557,11 +554,11 @@ oputV(				/* print value contribution */
 	RAY *r
 )
 {
-	RREAL	contr[3];
+	SCOLOR	contr;
 
 	raycontrib(contr, r, PRIMARY);
-	multcolor(contr, r->rcol);
-	(*putreal)(contr, 3);
+	smultscolor(contr, r->rcol);
+	putscolor(contr);
 }
 
 static void
@@ -661,14 +658,14 @@ oputW(				/* print coefficient */
 	RAY  *r
 )
 {
-	RREAL	contr[3];
+	SCOLOR	contr;
 				/* shadow ray not on source? */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
-		setcolor(contr, 0.0, 0.0, 0.0);
+		scolorblack(contr);
 	else
 		raycontrib(contr, r, PRIMARY);
 
-	(*putreal)(contr, 3);
+	putscolor(contr);
 }
 
 static void
@@ -767,4 +764,59 @@ putrgbe(RREAL *v, int n)	/* output RGBE color */
 		error(INTERNAL, "putrgbe() not called with 3 components");
 	setcolr(cout, v[0], v[1], v[2]);
 	putbinary(cout, sizeof(cout), 1, stdout);
+}
+
+static void
+putscolor(COLORV *scol)		/* output (spectral) color */
+{
+	static COLORMAT	xyz2myrgbmat;
+	SCOLOR		my_scol;
+	COLOR		col;
+					/* single channel output? */
+	if (sens_curve != NULL) {
+		RREAL	v = (*sens_curve)(scol) * out_scalefactor;
+		(*putreal)(&v, 1);
+		return;
+	}
+	if (out_scalefactor != 1.) {	/* apply scalefactor if any */
+		copyscolor(my_scol, scol);
+		scalescolor(my_scol, out_scalefactor);
+		scol = my_scol;
+	}
+	if (out_prims == NULL) {	/* full spectral reporting */
+		if (outform == 'c') {
+			SCOLR	sclr;
+			scolor_scolr(sclr, scol);
+			putbinary(sclr, LSCOLR, 1, stdout);
+		} else if (sizeof(RREAL) != sizeof(COLORV)) {
+			RREAL	sreal[MAXCSAMP];
+			int	i = NCSAMP;
+			while (i--) sreal[i] = scol[i];
+			(*putreal)(sreal, NCSAMP);
+		} else
+			(*putreal)((RREAL *)scol, NCSAMP);
+		return;
+	}
+	if (out_prims == xyzprims) {
+		scolor_cie(col, scol);
+	} else if (out_prims == stdprims) {
+		scolor_rgb(col, scol);
+	} else {
+		COLOR	xyz;
+		if (xyz2myrgbmat[0][0] == 0)
+			compxyz2rgbWBmat(xyz2myrgbmat, out_prims);
+		scolor_cie(xyz, scol);
+		colortrans(col, xyz2myrgbmat, xyz);
+		clipgamut(col, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
+	}
+	if (outform == 'c') {
+		COLR	clr;
+		setcolr(clr, colval(col,RED), colval(col,GRN), colval(col,BLU));
+		putbinary(clr, sizeof(COLR), 1, stdout);
+	} else if (sizeof(RREAL) != sizeof(COLORV)) {
+		RREAL	creal[3];
+		copycolor(creal, col);
+		(*putreal)(creal, 3);
+	} else
+		(*putreal)((RREAL *)col, 3);
 }

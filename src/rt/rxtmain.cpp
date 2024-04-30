@@ -1,8 +1,8 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.2 2024/03/12 16:54:51 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.3 2024/04/30 23:16:23 greg Exp $";
 #endif
 /*
- *  rtmain.c - main for rtrace per-ray calculation program
+ *  rxtmain.c - main for per-ray calculation program
  */
 
 #include "copyright.h"
@@ -43,14 +43,20 @@ extern void  tranotify(OBJECT obj);
 char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 
+double  (*sens_curve)(SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
+double  out_scalefactor = 1;		/* output calibration scale factor */
+RGBPRIMP  out_prims = stdprims;		/* output color primitives (NULL if spectral) */
+static RGBPRIMS  our_prims;		/* private output color primitives */
+
 static void onsig(int  signo);
 static void sigdie(int  signo, const char  *msg);
 static void printdefaults(void);
 
-#define RATRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
-			"HessianAmbientCache\nAmbientAveraging\n" \
-			"AmbientValueSharing\nAdaptiveShadowTesting\n" \
-			"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n"
+#define RXTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
+				"HessianAmbientCache\nAmbientAveraging\n" \
+				"AmbientValueSharing\nAdaptiveShadowTesting\n" \
+				"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n" \
+				"OutputCS=RGB,XYZ,Y,S,M,prims,spec\n"
 
 int
 main(int  argc, char  *argv[])
@@ -69,9 +75,9 @@ main(int  argc, char  *argv[])
 	int  rval;
 	int  i;
 					/* global program name */
-	progname = argv[0] = fixargv0(argv[0]);
+	progname = argv[0];
 					/* feature check only? */
-	strcat(RFeatureList, RATRACE_FEATURES);
+	strcat(RFeatureList, RXTRACE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
 					/* add trace notify function */
@@ -221,6 +227,74 @@ main(int  argc, char  *argv[])
 				goto badopt;
 			}
 			break;
+		case 'p':				/* value output */
+			switch (argv[i][2]) {
+			case 'R':			/* standard RGB output */
+				if (strcmp(argv[i]+2, "RGB"))
+					goto badopt;
+				out_prims = stdprims;
+				out_scalefactor = 1;
+				sens_curve = NULL;
+				break;
+			case 'X':			/* XYZ output */
+				if (strcmp(argv[i]+2, "XYZ"))
+					goto badopt;
+				out_prims = xyzprims;
+				out_scalefactor = WHTEFFICACY;
+				sens_curve = NULL;
+				break;
+			case 'c': {
+				int	j;
+				check(3,"ffffffff");
+				rval = 0;
+				for (j = 0; j < 8; j++) {
+					our_prims[0][j] = atof(argv[++i]);
+					rval |= fabs(our_prims[0][j]-stdprims[0][j]) > .001;
+				}
+				if (rval) {
+					if (!colorprimsOK(our_prims))
+						error(USER, "illegal primary chromaticities");
+					out_prims = our_prims;
+				} else
+					out_prims = stdprims;
+				out_scalefactor = 1;
+				sens_curve = NULL;
+				} break;
+			case 'Y':			/* photopic response */
+				if (argv[i][3])
+					goto badopt;
+				sens_curve = scolor_photopic;
+				out_scalefactor = WHTEFFICACY;
+				break;
+			case 'S':			/* scotopic response */
+				if (argv[i][3])
+					goto badopt;
+				sens_curve = scolor_scotopic;
+				out_scalefactor = WHTSCOTOPIC;
+				break;
+			case 'M':			/* melanopic response */
+				if (argv[i][3])
+					goto badopt;
+				sens_curve = scolor_melanopic;
+				out_scalefactor = WHTMELANOPIC;
+				break;
+			default:
+				goto badopt;
+			}
+			break;
+#if MAXCSAMP>3
+		case 'c':				/* output spectral results */
+			if (argv[i][2] != 'o')
+				goto badopt;
+			rval = (out_prims == NULL) & (sens_curve == NULL);
+			check_bool(3,rval);
+			if (rval) {
+				out_prims = NULL;
+				sens_curve = NULL;
+			} else if (out_prims == NULL)
+				out_prims = stdprims;
+			break;
+#endif
 		default:
 			goto badopt;
 		}
@@ -398,6 +472,25 @@ printdefaults(void)			/* print default values to stdout */
 		case '~': printf(" tilde"); break;
 		}
 	putchar('\n');
+	if (sens_curve == scolor_photopic)
+		printf("-pY\t\t\t\t# photopic output\n");
+	else if (sens_curve == scolor_scotopic)
+		printf("-pS\t\t\t\t# scotopic output\n");
+	else if (sens_curve == scolor_melanopic)
+		printf("-pM\t\t\t\t# melanopic output\n");
+	else if (out_prims == stdprims)
+		printf("-pRGB\t\t\t\t# standard RGB color output\n");
+	else if (out_prims == xyzprims)
+		printf("-pXYZ\t\t\t\t# CIE XYZ color output\n");
+	else if (out_prims != NULL)
+		printf("-pc %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\t# output color primaries and white point\n",
+				out_prims[RED][0], out_prims[RED][1],
+				out_prims[GRN][0], out_prims[GRN][1],
+				out_prims[BLU][0], out_prims[BLU][1],
+				out_prims[WHT][0], out_prims[WHT][1]);
+	if ((sens_curve == NULL) & (NCSAMP > 3))
+		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
+				"-co+\t\t\t\t# output spectral values\n");
 	printf(erract[WARNING].pf != NULL ?
 			"-w+\t\t\t\t# warning messages on\n" :
 			"-w-\t\t\t\t# warning messages off\n");

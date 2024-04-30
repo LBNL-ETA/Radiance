@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.5 2024/03/12 16:54:51 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.6 2024/04/30 23:16:23 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -16,19 +16,19 @@
 
 extern char *	octname;	// global octree name
 
-/// Ray reporting callback method
-typedef void	RayReportCall(RAY *r, void *cd);
+extern int	castonly;	// doing ray-casting only?
+
+/// Ray reporting callback method -- returns # successfully reported, -1 to abort
+typedef int	RayReportCall(RAY *r, void *cd);
 
 /// Multi-threaded simulation manager base class
 class RadSimulManager {
-	int			nThreads;	// number of active threads
 protected:
 				// Assign ray to subthread (fails if NThreads()<2)
 	bool			SplitRay(RAY *r);
 public:
 				RadSimulManager(const char *octn = NULL) {
 					LoadOctree(octn);
-					nThreads = 1;
 				}
 				~RadSimulManager() {
 					Cleanup();
@@ -41,13 +41,13 @@ public:
 	int			SetThreadCount(int nt = 0);
 				/// Check thread count (1 means no multi-threading)
 	int			NThreads() const {
-					return nThreads;
+					return ray_pnprocs + !ray_pnprocs;
 				}
 				/// How many threads are currently unoccupied?
 	int			ThreadsAvailable() const;
 				/// Are we ready?
 	bool			Ready() const {
-					return (octname && nsceneobjs > 0);
+					return (octname && nobjects > 0);
 				}
 				/// Process a ray (in subthread), optional result
 	bool			ProcessRay(RAY *r);
@@ -69,11 +69,11 @@ class RtraceSimulManager : public RadSimulManager {
 	int			curFlags;	// current operating flags
 				// Call-back for global ray-tracing context
 	static void		RTracer(RAY *r);
+				// Call-back for FIFO
+	static int		Rfifout(RAY *r);
 				// Check for changes to render flags, etc.
 	bool			UpdateMode();
 protected:
-				// Add a ray result to FIFO, flushing what we can
-	int			QueueResult(const RAY &ra);
 	RNUMBER			lastRayID;	// last ray ID assigned
 public:
 	int			rtFlags;	// operation (RT*) flags
@@ -89,9 +89,9 @@ public:
 				}
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0) {
-					if (nt <= 0) nt = GetNCores();
+					if (nt <= 0) nt = castonly ? 1 : GetNCores();
 					if (nt == NThreads()) return nt;
-					FlushQueue();
+					if (FlushQueue() < 0) return 0;
 					return RadSimulManager::SetThreadCount(nt);
 				}
 				/// Add ray bundle to queue w/ optional 1st ray ID
@@ -106,17 +106,17 @@ public:
 					VCOPY(orgdir[0], org); VCOPY(orgdir[1], dir);
 					return(EnqueueBundle(orgdir, 1, rID) > 0);
 				}
-				/// Set/change cooked ray callback & FIFO flag
+				/// Set/change cooked ray callback
 	void			SetCookedCall(RayReportCall *cb, void *cd = NULL) {
 					if (cookedCall && (cookedCall != cb) | (ccData != cd))
 						FlushQueue();
 					cookedCall = cb;
-					ccData = cd;
+					ccData = cb ? cd : NULL;
 				}
 				/// Set/change trace callback
 	void			SetTraceCall(RayReportCall *cb, void *cd = NULL) {
 					traceCall = cb;
-					tcData = cd;
+					tcData = cb ? cd : NULL;
 				}
 				/// Are we ready?
 	bool			Ready() const {

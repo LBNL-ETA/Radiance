@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.5 2024/03/12 16:54:51 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.6 2024/04/30 23:16:23 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -13,8 +13,6 @@ static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.5 2024/03/12 16:54:
 #include "RtraceSimulManager.h"
 #include "source.h"
 
-extern int	castonly;	// doing ray-casting only?
-
 // Load octree and prepare renderer
 bool
 RadSimulManager::LoadOctree(const char *octn)
@@ -22,7 +20,7 @@ RadSimulManager::LoadOctree(const char *octn)
 	if (octname) {		// already running?
 		if (octn && !strcmp(octn, octname))
 			return true;
-		Cleanup(false);
+		Cleanup();
 	}
 	if (!octn)
 		return false;
@@ -35,67 +33,72 @@ RadSimulManager::LoadOctree(const char *octn)
 int
 RadSimulManager::GetNCores()
 {
-	return sysconf(_NPROCESSORS_ONLN);
+	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 // Set number of computation threads (0 => #cores)
 int
 RadSimulManager::SetThreadCount(int nt)
 {
-	if (nt <= 0) nt = GetNCores();
+	if (!Ready())
+		return 0;
 
-	return nThreads = nt;
+	if (nt <= 0) nt = castonly ? 1 : GetNCores();
+
+	if (nt == 1)
+		ray_pclose(ray_pnprocs);
+	else if (nt < ray_pnprocs)
+		ray_pclose(ray_pnprocs - nt);
+	else if (nt > ray_pnprocs)
+		ray_popen(nt - ray_pnprocs);
+
+	return NThreads();
 }
 
 // Assign ray to subthread (fails if NThreads()<2)
 bool
 RadSimulManager::SplitRay(RAY *r)
 {
-	if (NThreads() < 2 || ThreadsAvailable() < 1)
+	if (!ray_pnprocs || ThreadsAvailable() < 1)
 		return false;
 
-	int	rv = ray_psend(r);
-	if (rv < 0)
-		nThreads = 1;	// someone died
-	return (rv > 0);
+	return (ray_psend(r) > 0);
 }
 
 // Process a ray (in subthread), optional result
 bool
 RadSimulManager::ProcessRay(RAY *r)
 {
-	if (!r || !Ready()) return false;
-	if (NThreads() < 2) {	// single-threaded mode?
+	if (!Ready()) return false;
+
+	if (!ray_pnprocs) {	// single-threaded mode?
 		samplendx++;
 		rayvalue(r);
 		return true;
 	}
-	if (ThreadsAvailable() >= 1) {
-		SplitRay(r);	// queue not yet full
+	int	rv = ray_pqueue(r);
+	if (rv < 0) {
+		error(WARNING, "ray tracing process(es) died");
 		return false;
 	}
-	RAY	toDo = *r;
-	if (!WaitResult(r))	// need a free thread
-		return false;
-
-	return SplitRay(&toDo);	// queue up new ray & return old
+	return (rv > 0);
 }
 
 // Wait for next result (or fail)
 bool
 RadSimulManager::WaitResult(RAY *r)
 {
-	int	rv = ray_presult(r, 0);
-	if (rv < 0)
-		nThreads = 1;	// someone died
-	return (rv > 0);
+	if (!ray_pnprocs)
+		return false;
+
+	return (ray_presult(r, 0) > 0);
 }
 
 // Close octree, free data, return status
 int
 RadSimulManager::Cleanup(bool everything)
 {
-	if (NThreads() > 1)
+	if (!ray_pnprocs)
 		ray_pdone(everything);
 	else
 		ray_done(everything);
@@ -106,7 +109,8 @@ RadSimulManager::Cleanup(bool everything)
 int
 RadSimulManager::ThreadsAvailable() const
 {
-	if (NThreads() == 1) return 1;
+	if (!ray_pnprocs) return 1;
+
 	return ray_pnidle;
 }
 
@@ -117,6 +121,13 @@ void	// static call-back
 RtraceSimulManager::RTracer(RAY *r)
 {
 	(*ourRTsimMan->traceCall)(r, ourRTsimMan->tcData);
+}
+
+// Call-back for FIFO output
+int
+RtraceSimulManager::Rfifout(RAY *r)
+{
+	return (*ourRTsimMan->cookedCall)(r, ourRTsimMan->ccData);
 }
 
 // Check for changes to render flags & adjust accordingly
@@ -143,22 +154,28 @@ RtraceSimulManager::UpdateMode()
 	if (misMatch & RTdoFIFO && FlushQueue() < 0)
 		return false;
 	curFlags = rtFlags;
-				// update trace callback
-	if (traceCall) {
-		if (ourRTsimMan && ourRTsimMan != this)
+				// update callbacks
+	if (traceCall)
+		trace = RTracer;
+	else if (trace == RTracer)
+		trace = NULL;
+	if (rtFlags & RTdoFIFO)
+		ray_fifo_out = Rfifout;
+	else if (ray_fifo_out == Rfifout)
+		ray_fifo_out = NULL;
+	if ((trace != RTracer) & (ray_fifo_out != Rfifout)) {
+		ourRTsimMan = NULL;
+	} else if (ourRTsimMan != this) {
+		if (ourRTsimMan)
 			error(WARNING, "Competing top-level simulation managers?");
 		ourRTsimMan = this;
-		trace = RTracer;
-	} else if (ourRTsimMan == this) {
-		trace = NULL;
-		ourRTsimMan = NULL;
 	}
 	return true;
 }
 
 extern "C" int	m_normal(OBJREC *m, RAY *r);
 
-/* compute irradiance rather than radiance */
+// compute irradiance rather than radiance
 static void
 rayirrad(RAY *r)
 {
@@ -175,7 +192,7 @@ rayirrad(RAY *r)
 	r->revf = rayirrad;
 }
 
-/* compute first ray intersection only */
+// compute first ray intersection only
 static void
 raycast(RAY *r)
 {
@@ -186,13 +203,6 @@ raycast(RAY *r)
 		} else
 			sourcehit(r);
 	}
-}
-
-// Add a ray result to FIFO, flushing what we can
-int
-RtraceSimulManager::QueueResult(const RAY &ra)
-{
-	return 0;	// UNIMPLEMENTED
 }
 
 // Add ray bundle to queue w/ optional 1st ray ID
@@ -227,18 +237,17 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 		if (d > 0) {		// direction vector is valid?
 			if (curFlags & RTlimDist)
 				res.rmax = d;
-			if ((sendRes &= ProcessRay(&res)) &&
-					rtFlags & RTdoFIFO && NThreads() > 1) {
-				if (QueueResult(res) < 0)
-					return -1;
+			if (curFlags & RTdoFIFO) {
+				ray_fifo_in(&res);
 				sendRes = false;
-			}
+			} else
+				sendRes &= ProcessRay(&res);
 		} else if (ThreadsAvailable() < NThreads() &&
 				FlushQueue() < 0)
 			return -1;
-
-		if (sendRes)		// may be dummy ray
-			(*cookedCall)(&res, ccData);
+					// may be dummy ray
+		if (sendRes && (*cookedCall)(&res, ccData) < 0)
+			return -1;
 		nqueued++;
 	}
 	return nqueued;
@@ -248,19 +257,17 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 int
 RtraceSimulManager::FlushQueue()
 {
+	if (curFlags & RTdoFIFO)
+		return ray_fifo_flush();
+
 	int	nsent = 0;
 	RAY	res;
 
 	while (WaitResult(&res)) {
 		if (!cookedCall) continue;
-		if (rtFlags & RTdoFIFO) {
-			int	ns = QueueResult(res);
-			if (ns < 0) return ns;
-			nsent += ns;
-		} else {
-			(*cookedCall)(&res, ccData);
-			nsent++;
-		}
+		int	rv = (*cookedCall)(&res, ccData);
+		if (rv < 0) return -1;
+		nsent += rv;
 	}
 	return nsent;
 }
