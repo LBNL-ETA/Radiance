@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.52 2024/04/05 16:43:33 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.53 2024/04/30 22:25:46 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -632,7 +632,7 @@ printdefaults(void)			/* print default values to stdout */
 				out_prims[GRN][0], out_prims[GRN][1],
 				out_prims[BLU][0], out_prims[BLU][1],
 				out_prims[WHT][0], out_prims[WHT][1]);
-	if (NCSAMP > 3)
+	if ((sens_curve == NULL) & (NCSAMP > 3))
 		printf(out_prims != NULL ? "-co-\t\t\t\t# output tristimulus colors\n" :
 				"-co+\t\t\t\t# output spectral values\n");
 	print_rdefaults();

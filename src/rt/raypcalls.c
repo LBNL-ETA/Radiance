@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.37 2024/04/06 00:30:30 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.38 2024/04/30 22:25:46 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -456,6 +456,8 @@ ray_popen(			/* open the specified # processes */
 		nadd = MAX_NPROCS - ray_pnprocs;
 	if (nadd <= 0)
 		return;
+	if (nobjects <= 0)
+		error(CONSISTENCY, "ray_popen() called before scene loaded");
 	ambsync();			/* load any new ambient values */
 	if (shm_boundary == NULL) {	/* first child process? */
 		preload_objs();		/* preload auxiliary data */
