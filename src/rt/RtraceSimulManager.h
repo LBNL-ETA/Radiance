@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.6 2024/04/30 23:16:23 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.7 2024/05/01 22:06:09 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -127,6 +127,7 @@ public:
 	int			FlushQueue();
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {
+					FlushQueue();
 					SetCookedCall(NULL);
 					SetTraceCall(NULL);
 					rtFlags = 0;

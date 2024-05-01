@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.3 2024/04/30 23:16:23 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.4 2024/05/01 22:06:09 greg Exp $";
 #endif
 /*
  *  rxtmain.c - main for per-ray calculation program
@@ -299,6 +299,15 @@ main(int  argc, char  *argv[])
 			goto badopt;
 		}
 	}
+					/* set/check spectral sampling */
+	rval = setspectrsamp(CNDX, WLPART);
+	if (rval < 0)
+		error(USER, "unsupported spectral sampling");
+	if (out_prims != NULL) {
+		if (!rval)
+			error(WARNING, "spectral range incompatible with color output");
+	} else if (NCSAMP == 3)
+		out_prims = stdprims;	/* 3 samples do not a spectrum make */
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP
@@ -355,7 +364,7 @@ main(int  argc, char  *argv[])
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
 		fputformat(formstr(outform), stdout);
-		putchar('\n');
+		fputc('\n', stdout);	/* end of header */
 	}
 	rtrace(NULL, nproc);		/* trace rays */
 	quit(0);			/* clean up & exit */

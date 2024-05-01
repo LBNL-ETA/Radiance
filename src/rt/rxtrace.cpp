@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.3 2024/04/30 23:16:23 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.4 2024/05/01 22:06:09 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -250,8 +250,8 @@ rtrace(				/* trace rays from stdin or file */
 	if (vcount)
 		error(WARNING, feof(inpfp) ? "unexpected EOF on input" :
 				"input read error");
-	if (fflush(stdout) < 0)
-		error(SYSTEM, "write error");
+	if (myRTmanager.FlushQueue() < 0 || fflush(stdout) < 0)
+		error(SYSTEM, "final flush error");
 	if (fname != NULL) {
 		fclose(inpfp);
 		inpfp = NULL;
