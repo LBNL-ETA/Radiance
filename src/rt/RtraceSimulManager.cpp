@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.6 2024/04/30 23:16:23 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.7 2024/05/01 20:28:53 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -117,7 +117,8 @@ RadSimulManager::ThreadsAvailable() const
 // Global pointer to simulation manager for trace call-back (only one)
 static const RtraceSimulManager *	ourRTsimMan = NULL;
 
-void	// static call-back
+// Call-back for trace output
+void
 RtraceSimulManager::RTracer(RAY *r)
 {
 	(*ourRTsimMan->traceCall)(r, ourRTsimMan->tcData);
@@ -237,8 +238,9 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 		if (d > 0) {		// direction vector is valid?
 			if (curFlags & RTlimDist)
 				res.rmax = d;
-			if (curFlags & RTdoFIFO) {
-				ray_fifo_in(&res);
+			if (((curFlags&RTdoFIFO) != 0) & (ray_pnprocs > 0)) {
+				if (ray_fifo_in(&res) < 0)
+					return -1;
 				sendRes = false;
 			} else
 				sendRes &= ProcessRay(&res);
@@ -257,9 +259,11 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 int
 RtraceSimulManager::FlushQueue()
 {
-	if (curFlags & RTdoFIFO)
-		return ray_fifo_flush();
-
+	if (curFlags & RTdoFIFO) {
+		if (ray_pnprocs)
+			return ray_fifo_flush();
+		return 0;
+	}
 	int	nsent = 0;
 	RAY	res;
 
