@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.29 2023/02/02 19:13:13 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.30 2024/05/02 15:02:08 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -183,6 +183,9 @@ ray_init(			/* initialize ray-tracing calculation */
 		initotypes();
 					/* initialize urand */
 	reset_random();
+					/* initialize spectral sampling */
+	if (setspectrsamp(CNDX, WLPART) < 0)
+		error(USER, "unsupported spectral sampling");
 
 	octname = savqstr(otnm);	/* read scene octree */
 	readoct(octname, ~(IO_FILES|IO_INFO), &thescene, NULL);
