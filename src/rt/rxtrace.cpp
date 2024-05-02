@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.4 2024/05/01 22:06:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.5 2024/05/02 22:10:43 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -236,7 +236,7 @@ rtrace(				/* trace rays from stdin or file */
 		pending |= (n > 1);	// time to flush output?
 		bool	atZero = IsZeroVec(ivbuf[2*n-1]);
 		if (pending & (atZero | (n == flushIntvl))) {
-			if (!myRTmanager.FlushQueue())
+			if (myRTmanager.FlushQueue() <= 0)
 				error(USER, "ray flush error");
 			fflush(stdout);
 			pending = false;
