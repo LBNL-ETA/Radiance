@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.8 2024/05/02 22:10:43 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.9 2024/05/03 18:01:20 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -222,17 +222,15 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 	if (!UpdateMode())		// update rendering mode if requested
 		return -1;
 
+	if (rID0 && curFlags&RTdoFIFO)
+		error(INTERNAL, "Ray number assignment unsupported with FIFO");
+
 	while (n-- > 0) {		// queue each ray
 		VCOPY(res.rorg, orig_direc[0]);
 		VCOPY(res.rdir, orig_direc[1]);
 		orig_direc += 2;
 		rayorigin(&res, PRIMARY, NULL, NULL);
-		if (!rID0)
-			res.rno = ++lastRayID;
-		else if (curFlags & RTdoFIFO)
-			error(INTERNAL, "Ray number assignment unsupported with FIFO");
-		else
-			res.rno = lastRayID = rID0++;
+		res.rno = rID0 ? (lastRayID = rID0++) : ++lastRayID;
 		if (curFlags & RTimmIrrad)
 			res.revf = rayirrad;
 		else if (castonly)
