@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.33 2023/12/25 16:29:56 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.34 2024/05/07 17:15:31 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -38,7 +38,7 @@ FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze|Radiance_spectra}
 .fi
 .sp
 The number of components indicates that each matrix element is actually
-composed of multiple elements, most commonly an RGB triple.
+composed of multiple channels, most commonly an RGB triple.
 This is essentially dividing the matrix into planes, where each component
 participates in a separate calculation.
 If an appropriate header is not present, it may be added with a call to

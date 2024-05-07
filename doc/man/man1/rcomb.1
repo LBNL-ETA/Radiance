@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.6 2024/02/10 19:32:32 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.7 2024/05/07 17:15:31 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -53,7 +53,7 @@ or
 .I \-s
 options follow the last input matrix, output results will be transformed
 and/or scaled accordingly.
-These operations are discussed in greater detail further on.
+These operations are discussed in greater detail below.
 A single concatenation matrix may be applied after element operations
 using the
 .I \-m
@@ -71,7 +71,7 @@ FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze|Radiance_spectra}
 .fi
 .sp
 The number of components indicates that each matrix element is actually
-composed of multiple elements, most commonly an RGB triple.
+composed of multiple channels, most commonly an RGB triple.
 This is essentially dividing the matrix into planes, where each component
 participates in a separate calculation.
 If an appropriate header is not present, it may be added with a call to
@@ -188,8 +188,8 @@ If the
 or
 .I \-f
 options are used to define a "co" variable or "co(p)" function,
-this will be evaluated at each output
-component for the current element.
+which will be evaluated for each output
+component from the current element.
 The "co" variable defines identical operations for all components,
 whereas "co(p)" may specify different operations for each component.
 The element position is defined
@@ -281,7 +281,7 @@ and
 .I pcomb,
 whose capabilities somewhat overlap.
 The former loads each matrix into memory before operations,
-and element components take 8 bytes apiece, adding up quickly.
+and element components are stored as double-precision.
 Very large matrices therefore present a problem with that tool.
 Furthermore, 
 .I rmtxop
@@ -314,18 +314,18 @@ Generally speaking,
 .I rcomb
 should be preferred over
 .I rmtxop
-for any operations in can handle, which is everything except
+for any operations it can handle, which is everything except
 multiple matrix concatenations and transpose
-operations, which are handled more efficiently by
-.I rcollate(1)
-in any case.
+operations.
+The latter may be handled more efficiently by
+.I rcollate(1).
 That said, there is no significant difference for
-simple operations on smallish matrices, and note that only
+simple operations on small matrices, and only
 .I rmtxop
 and
 .I dctimestep(1)
-currently accept XML files as inputs.
-Also, the resizing function of
+accept XML files as inputs.
+Also note that the resizing function of
 .I pcomb
 is not supported in
 .I rcomb,
