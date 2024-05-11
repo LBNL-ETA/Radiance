@@ -733,7 +733,7 @@ jobs:
           export PATH=$PATH:${{ github.workspace }}/radiance/bin
           rtrace -version
           cd ./test/px/
-          brew link libtiff
+          uname -m
           
           make clean
           make
