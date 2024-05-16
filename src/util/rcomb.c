@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.7 2024/02/23 03:47:57 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.8 2024/05/16 18:59:19 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -9,7 +9,6 @@ static const char RCSid[] = "$Id: rcomb.c,v 2.7 2024/02/23 03:47:57 greg Exp $";
 #include <math.h>
 #include "platform.h"
 #include "rtio.h"
-#include "resolu.h"
 #include "rmatrix.h"
 #include "calcomp.h"
 #include "paths.h"

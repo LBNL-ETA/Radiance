@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.32 2023/12/19 16:09:20 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.33 2024/05/16 18:59:19 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -7,7 +7,6 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.32 2023/12/19 16:09:20 greg Exp $
 
 #include <errno.h>
 #include "rtio.h"
-#include "resolu.h"
 #include "rmatrix.h"
 #include "platform.h"
 

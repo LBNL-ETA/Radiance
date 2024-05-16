@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.14 2023/11/21 02:06:14 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.15 2024/05/16 18:59:19 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -97,7 +97,7 @@ binary_copyf(FILE *fp, int asize)
 	int		y;
 					/* check if fseek() useful */
 	if (skip_len > skip_thresh &&
-			fseek(fp, (rmin*width + cmin)*elsiz, SEEK_CUR) == 0) {
+			fseek(fp, ((long)rmin*width + cmin)*elsiz, SEEK_CUR) == 0) {
 		off_t	curpos;
 		buf = (char *)malloc(ncols*elsiz);
 		if (!buf)
@@ -134,7 +134,7 @@ binary_copyf(FILE *fp, int asize)
 		goto memerr;
 					/* skip rows as requested */
 	if (skip_len > skip_thresh ||
-			(rmin && fseek(fp, rmin*width*elsiz, SEEK_CUR) < 0))
+			(rmin && fseek(fp, (long)rmin*width*elsiz, SEEK_CUR) < 0))
 		for (y = 0; y < rmin; y++)
 			if (getbinary(buf, elsiz, width, fp) != width)
 				goto readerr;
@@ -163,7 +163,7 @@ memerr:
 
 /* Read (and copy) specified number of white-space-separated words */
 static int
-readwords(FILE *finp, int nwords, FILE *fout)
+readwords(FILE *finp, long nwords, FILE *fout)
 {
 	while (nwords-- > 0) {
 		int	c;
@@ -192,7 +192,7 @@ ascii_copyf(FILE *fp)
 	SET_FILE_TEXT(fp);		/* started as binary */
 	SET_FILE_TEXT(stdout);
 					/* skip rows as requested */
-	if (readwords(fp, rmin*width*ncomp, NULL) < 0)
+	if (readwords(fp, (long)rmin*width*ncomp, NULL) < 0)
 		goto io_err;
 	for (y = 0; y < nrows; y++) {	/* copy part */
 		if (readwords(fp, cmin*ncomp, NULL) < 0)
