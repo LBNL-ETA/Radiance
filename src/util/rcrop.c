@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.15 2024/05/16 18:59:19 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.16 2024/05/17 20:50:57 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -269,7 +269,7 @@ main(int argc, char *argv[])
 	cmin = atoi(argv[2]);
 	nrows = atoi(argv[3]);
 	ncols = atoi(argv[4]);
-	if ((rmin < 0) | (cmin < 0) | (nrows < 0) | (ncols < 0))
+	if ((rmin < 0) | (cmin < 0))
 		goto usage;
 	if (argc <= 5)
 		SET_FILE_BINARY(fp);
@@ -301,10 +301,10 @@ main(int argc, char *argv[])
 		fputs(": missing input dimensions\n", stderr);
 		return(1);
 	}
-	if (!nrows)
-		nrows = numscans(&res) - rmin;
-	if (!ncols)
-		ncols = scanlen(&res) - cmin;
+	if (nrows <= 0 )
+		nrows += numscans(&res) - rmin;
+	if (ncols <= 0)
+		ncols += scanlen(&res) - cmin;
 	if ((nrows <= 0) | (ncols <= 0) |
 			(rmin+nrows > numscans(&res)) |
 			(cmin+ncols > scanlen(&res))) {

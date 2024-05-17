@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcrop.1,v 1.8 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rcrop.1,v 1.9 2024/05/17 20:50:57 greg Exp $"
 .TH RCROP 1 3/14/2022 RADIANCE
 .SH NAME
 rcrop - crop RADIANCE matrix or picture
@@ -35,6 +35,8 @@ If a 0 value is specified for the number of rows to copy, then all rows
 will be copied, starting from row0.
 Similarly, a 0 value for the number of columns to copy implies all
 columns >= col0 will be copied.
+A negative count for the number of rows or columns cuts the
+corresponding amount off the end(s).
 .PP
 Using
 .I rcrop

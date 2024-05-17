@@ -2693,3 +2693,5 @@ scenes with sharp cut-offs.
 
 Added -i option to gendaymtx to match -i option of gendaylit.
 Thanks to Yongqing for initial implementation.
+
+Changed rcrop so negative #rows or #cols counts back from end.
