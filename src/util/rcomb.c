@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.8 2024/05/16 18:59:19 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.9 2024/05/19 15:32:24 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -390,8 +390,7 @@ apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 			return(0);
 		rmx_free(res);
 	} else if (dst != src)
-		memcpy(dst->mtx, src->mtx,
-				sizeof(double)*dst->ncomp*dst->ncols*dst->nrows);
+		memcpy(dst->mtx, src->mtx, rmx_array_size(dst));
 	if (ro->nsf == dst->ncomp)
 		rmx_scale(dst, ro->sca);
 	return(1);

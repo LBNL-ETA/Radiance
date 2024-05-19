@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.78 2024/02/29 03:11:13 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.79 2024/05/19 15:32:24 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -17,9 +17,6 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.78 2024/02/29 03:11:13 greg Exp 
 #endif
 
 static const char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
-
-#define array_size(rm)	(sizeof(double)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
-#define mapped_size(rm)	((char *)(rm)->mtx + array_size(rm) - (char *)(rm)->mapped)
 
 /* Initialize a RMATRIX struct but don't allocate array space */
 RMATRIX *
@@ -53,7 +50,8 @@ rmx_prepare(RMATRIX *rm)
 		return(1);
 	if ((rm->nrows <= 0) | (rm->ncols <= 0) | (rm->ncomp <= 0))
 		return(0);
-	rm->mtx = (double *)malloc(array_size(rm));
+	rm->mtx = (double *)malloc(rmx_array_size(rm));
+	rm->pflags |= RMF_OURMEM;
 	return(rm->mtx != NULL);
 }
 
@@ -79,16 +77,17 @@ rmx_reset(RMATRIX *rm)
 		free(rm->info);
 		rm->info = NULL;
 	}
-	if (rm->mtx) {
+	if (rm->mtx && rm->pflags & RMF_OURMEM) {
 #ifdef MAP_FILE
 		if (rm->mapped) {
-			munmap(rm->mapped, mapped_size(rm));
+			munmap(rm->mapped, rmx_mapped_size(rm));
 			rm->mapped = NULL;
 		} else
 #endif
 			free(rm->mtx);
-		rm->mtx = NULL;
+		rm->pflags &= ~RMF_OURMEM;
 	}
+	rm->mtx = NULL;
 }
 
 /* Free an RMATRIX struct and data */
@@ -157,7 +156,10 @@ get_dminfo(char *s, void *p)
 		return(0);
 	}
 	if ((i = isbigendian(s)) >= 0) {
-		ip->swapin = (nativebigendian() != i);
+		if (nativebigendian() != i)
+			ip->pflags |= RMF_SWAPIN;
+		else
+			ip->pflags &= ~RMF_SWAPIN;
 		return(0);
 	}
 	if (isexpos(s)) {
@@ -212,7 +214,7 @@ rmx_load_float(double *drp, const RMATRIX *rm, FILE *fp)
 	for (j = 0; j < rm->ncols; j++) {
 		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 			return(0);
-		if (rm->swapin)
+		if (rm->pflags & RMF_SWAPIN)
 			swap32((char *)val, rm->ncomp);
 	        for (k = 0; k < rm->ncomp; k++)
 			*drp++ = val[k];
@@ -225,7 +227,7 @@ rmx_load_double(double *drp, const RMATRIX *rm, FILE *fp)
 {
 	if (getbinary(drp, sizeof(*drp)*rm->ncomp, rm->ncols, fp) != rm->ncols)
 		return(0);
-	if (rm->swapin)
+	if (rm->pflags & RMF_SWAPIN)
 		swap64((char *)drp, rm->ncols*rm->ncomp);
 	return(1);
 }
@@ -287,7 +289,7 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 		rm->ncomp = 3;
 		setcolor(rm->cexp, 1.f, 1.f, 1.f);
 		memcpy(rm->wlpart, WLPART, sizeof(rm->wlpart));
-		rm->swapin = 0;
+		rm->pflags = 0;
 	}
 	rm->dtype = DTascii;			/* assumed w/o FORMAT */
 	if (getheader(fp, get_dminfo, rm) < 0) {
@@ -336,12 +338,14 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 	int	i;
 #ifdef MAP_FILE
 	long	pos;		/* map memory for file > 1MB if possible */
-	if ((rm->dtype == DTdouble) & !rm->swapin && array_size(rm) >= 1L<<20 &&
+	if ((rm->dtype == DTdouble) & !(rm->pflags & RMF_SWAPIN) &&
+			rmx_array_size(rm) >= 1L<<20 &&
 			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
-		rm->mapped = mmap(NULL, array_size(rm)+pos, PROT_READ|PROT_WRITE,
+		rm->mapped = mmap(NULL, rmx_array_size(rm)+pos, PROT_READ|PROT_WRITE,
 					MAP_PRIVATE, fileno(fp), 0);
 		if (rm->mapped != MAP_FAILED) {
 			rm->mtx = (double *)rm->mapped + pos/sizeof(double);
+			rm->pflags |= RMF_OURMEM;
 			return(1);
 		}		/* else fall back on reading into memory */
 		rm->mapped = NULL;
@@ -349,7 +353,7 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 #endif
 	if (!rmx_prepare(rm)) {	/* need in-core matrix array */
 		fprintf(stderr, "Cannot allocate %g MByte matrix array\n",
-				(1./(1L<<20))*(double)array_size(rm));
+				(1./(1L<<20))*(double)rmx_array_size(rm));
 		return(0);
 	}
 	for (i = 0; i < rm->nrows; i++)
@@ -638,7 +642,7 @@ rmx_identity(const int dim, const int n)
 
 	if (!rid)
 		return(NULL);
-	memset(rid->mtx, 0, array_size(rid));
+	memset(rid->mtx, 0, rmx_array_size(rid));
 	for (i = dim; i--; ) {
 	    double	*dp = rmx_lval(rid,i,i);
 	    for (k = n; k--; )
@@ -663,7 +667,7 @@ rmx_copy(const RMATRIX *rm)
 			rmx_free(dnew);
 			return(NULL);
 		}
-		memcpy(dnew->mtx, rm->mtx, array_size(dnew));
+		memcpy(dnew->mtx, rm->mtx, rmx_array_size(dnew));
 	}
 	rmx_addinfo(dnew, rm->info);
 	dnew->dtype = rm->dtype;
@@ -687,15 +691,21 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
 		return(1);
 	}
+	if (rdst->pflags & RMF_OURMEM) {
 #ifdef MAP_FILE			/* just matrix data -- leave metadata */
-	if (rdst->mapped)
-		munmap(rdst->mapped, mapped_size(rdst));
-	else
+		if (rdst->mapped)
+			munmap(rdst->mapped, rmx_mapped_size(rdst));
+		else
 #endif
-	if (rdst->mtx)
-		free(rdst->mtx);
+		if (rdst->mtx)
+			free(rdst->mtx);
+	}
 	rdst->mapped = rsrc->mapped;
 	rdst->mtx = rsrc->mtx;
+	if (rsrc->pflags & RMF_OURMEM)
+		rdst->pflags |= RMF_OURMEM;
+	else
+		rdst->pflags &= ~RMF_OURMEM;
 	rsrc->mapped = NULL; rsrc->mtx = NULL;
 	return(1);
 }

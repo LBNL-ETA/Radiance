@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.20 2023/12/06 17:57:34 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.21 2024/05/19 15:32:24 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -16,6 +16,11 @@ extern "C" {
 	none, transmission, reflection front (normal side), reflection back */
 typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
+/* Private flags:
+	need to swap input, need to free/unmap memory */
+#define	RMF_SWAPIN	1
+#define RMF_OURMEM	2
+
 /* General [row][col][cmp] component matrix */
 typedef struct {
 	char	*info;
@@ -26,11 +31,14 @@ typedef struct {
 	int	nrows, ncols;
 	short	ncomp;
 	uby8	dtype;
-	uby8	swapin;
+	uby8	pflags;
 } RMATRIX;
 
 #define rmx_lval(rm,r,c)	((rm)->mtx + (rm)->ncomp*((c)+(size_t)(rm)->ncols*(r)))
 #define rmx_val			rmx_lval
+
+#define rmx_array_size(rm)	(sizeof(double)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
+#define rmx_mapped_size(rm)	((char *)(rm)->mtx + rmx_array_size(rm) - (char *)(rm)->mapped)
 
 /* Initialize a RMATRIX struct but don't allocate array space */
 extern RMATRIX	*rmx_new(int nr, int nc, int n);
