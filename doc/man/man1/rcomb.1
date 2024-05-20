@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.7 2024/05/07 17:15:31 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.8 2024/05/20 23:21:28 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -10,6 +10,8 @@ rcomb - combine and convert matrices a row at a time
 .B \-w
 ][
 .B \-f[afdc]
+][
+.B "\-n nproc"
 ][
 .B "\-f file"
 ][
@@ -250,6 +252,13 @@ The
 .I \-w
 option turns off warnings about divide-by-zero and other non-fatal
 calculation errors.
+.PP
+The
+.I \-n
+option specifies how many execution processes to employ,
+which may improve performance on multi-core architectures,
+especially for matrix multiplication
+and complex operations on long input rows.
 .SH EXAMPLES
 To convert two hyperspectral inputs to RGB color space,
 average them together, and write them out as a RADIANCE picture:

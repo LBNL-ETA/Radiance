@@ -1,17 +1,16 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.9 2024/05/19 15:32:24 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.10 2024/05/20 23:21:29 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
  */
 
-#include <errno.h>
 #include <math.h>
 #include "platform.h"
+#include "rtprocess.h"
 #include "rtio.h"
 #include "rmatrix.h"
 #include "calcomp.h"
-#include "paths.h"
 
 #ifndef M_PI
 #define M_PI	3.14159265358979323846
@@ -53,6 +52,10 @@ extern int	nowarn;				/* turn off warnings? */
 int		cur_row;			/* current input/output row */
 int		cur_col;			/* current input/output column */
 int		cur_chan;			/* if we're looping channels */
+
+SUBPROC		*cproc = NULL;			/* child process array */
+int		nchildren = 0;			/* # of child processes */
+int		inchild = -1;			/* our child ID (-1: parent) */
 
 static int	checksymbolic(ROPMAT *rop);
 
@@ -538,15 +541,21 @@ output_headinfo(FILE *fp)
 }
 
 static int
-combine_input(ROPMAT *res, FILE *fout)
+spawned_children(int np)
 {
-	int	set_r, set_c;
-	RMATRIX	*tmp = NULL;
-	int	co_set;
-	int	i;
-					/* allocate input row buffers */
+	int	i, rv;
+
+#if defined(_WIN32) || defined(_WIN64)
+	if (np > 1) {
+		fputs("Warning: only one process under Windows\n", stderr);
+		np = 1;
+	} else
+#endif
+	if ((in_nrows > 0) & (np > in_nrows))
+		np = in_nrows;
+				/* we'll be doing a row at a time */
 	for (i = 0; i < nmats; i++) {
-		mop[i].imx.nrows = 1;	/* we'll be doing a row at a time */
+		mop[i].imx.nrows = 1;
 		if (!rmx_prepare(&mop[i].imx))
 			goto memerror;
 		if (mop[i].rmp != &mop[i].imx) {
@@ -555,21 +564,133 @@ combine_input(ROPMAT *res, FILE *fout)
 				goto memerror;
 		}
 	}
-					/* prep output row buffers */
-	if (mcat || res->preop.clen > 0) {
-		if (!split_input(res))	/* need separate buffer */
+				/* prep output row buffer */
+	if (mcat || mop[nmats].preop.clen > 0) {
+		if (!split_input(&mop[nmats]))	/* need separate buffer */
 			return(0);
-		if (res->preop.clen > 0)
-			res->rmp->ncomp = res->preop.clen / res->imx.ncomp;
-		res->rmp->nrows = 1;
-		if (!mcat | !mcat_last && !rmx_prepare(res->rmp))
+		if (mop[nmats].preop.clen > 0)
+			mop[nmats].rmp->ncomp = mop[nmats].preop.clen /
+						mop[nmats].imx.ncomp;
+		mop[nmats].rmp->nrows = 1;
+		if (!mcat | !mcat_last && !rmx_prepare(mop[nmats].rmp))
 			goto memerror;
 	}
+	mop[nmats].imx.nrows = 1;
+	if (!rmx_prepare(&mop[nmats].imx))
+		goto memerror;
+	if (np <= 1) {		/* single process return point */
+#ifdef getc_unlocked
+		for (i = 0; i < nmats; i++)
+			flockfile(mop[i].infp);
+		flockfile(stdout);
+#endif
+		return(0);
+	}
+	fflush(stdout);		/* flush header & spawn children */
+	cproc = (SUBPROC *)malloc(sizeof(SUBPROC)*np);
+	if (!cproc)
+		goto memerror;
+	nchildren = np;
+	for (i = 0; i < np; i++) {
+		cproc[i].flags = PF_FILT_OUT;
+		cproc[i].w = dup(1);
+		cproc[i].r = 0;
+		cproc[i].pid = -1;
+		rv = open_process(&cproc[i], NULL);
+		if (rv <= 0) break;
+	}
+	if (rv > 0)
+		return(1);	/* parent return value */
+	if (rv < 0) {
+		perror("fork");
+		exit(1);
+	}
+	inchild = i;		/* child index */
+	fpurge(stdin);		/* discard previous matrix input */
+#ifdef getc_unlocked
+	flockfile(stdin);
+#endif
+	for (i = 0; i < nmats; i++) {
+		if (mop[i].infp != stdin)
+			fclose(mop[i].infp);
+		mop[i].infp = stdin;
+		mop[i].imx.dtype = DTdouble;
+	}
+	return(0);		/* child return */
+memerror:
+	fputs("Out of memory in spawned_children()\n", stderr);
+	exit(1);
+}
+
+static int
+parent_loop()
+{
+	FILE	**outfp = (FILE **)malloc(nchildren*sizeof(FILE *));
+	int	i;
+
+	if (!outfp) goto memerror;
+	for (i = 0; i < nchildren; i++) {
+		outfp[i] = fdopen(cproc[i].w, "w");
+		if (!outfp[i]) goto memerror;
+#ifdef getc_unlocked
+		flockfile(outfp[i]);
+#endif
+	}
+#ifdef getc_unlocked
+	for (i = 0; i < nmats; i++)
+		flockfile(mop[i].infp);
+#endif
+	for (cur_row = 0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row++) {
+	    FILE	*ofp = outfp[cur_row % nchildren];
+	    for (i = 0; i < nmats; i++) {
+		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
+			if (cur_row > in_nrows)	/* unknown #input rows? */
+				break;
+			fprintf(stderr, "%s: read error at row %d\n",
+					mop[i].inspec, cur_row);
+			return(0);
+		}
+	    	if (!rmx_write_data(mop[i].imx.mtx, mop[i].imx.ncomp,
+	    			mop[i].imx.ncols, DTdouble, ofp))
+	    		return(0);
+	    }
+	    if (i < nmats)
+		break;
+	    if (fflush(ofp) == EOF)
+	    	return(0);
+	}
+	for (i = 0; i < nchildren; i++)
+		fclose(outfp[i]);
+	free(outfp);
+	i = close_processes(cproc, nchildren);
+	free(cproc); cproc = NULL;
+	if (i < 0) {
+		fputs("Warning: missing child in parent_loop()\n", stderr);
+		return(1);
+	}
+	if (i > 0) {
+		fprintf(stderr, "Child exited with status %d\n", i);
+		return(0);
+	}
+	return(1);
+memerror:
+	fputs("Out of memory in parent_loop()\n", stderr);
+	exit(1);
+}
+
+static int
+combine_input()
+{
+	const int	row0 = (inchild >= 0)*inchild;
+	const int	rstep = nchildren + !nchildren;
+	ROPMAT		*res = &mop[nmats];
+	int		set_r, set_c;
+	RMATRIX		*tmp = NULL;
+	int		co_set;
+	int		i;
+
 	if (mcat && mcat_last &&
 			!(tmp = rmx_alloc(1, res->imx.ncols, res->rmp->ncomp)))
-		goto memerror;
-	res->imx.nrows = 1;
-	if (!rmx_prepare(&res->imx))
 		goto memerror;
 					/* figure out what the user set */
 	co_set = fundefined("co");
@@ -586,19 +707,21 @@ combine_input(ROPMAT *res, FILE *fout)
 	} else				/* save a little time */
 		set_r = set_c = 0;
 					/* read/process row-by-row */
-	for (cur_row = 0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row++) {
+	for (cur_row = row0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row += rstep) {
 	    RMATRIX	*mres = NULL;
-	    for (i = 0; i < nmats; i++) {
+	    for (i = 0; i < nmats; i++)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
-				goto loop_exit;
+				break;
 			fprintf(stderr, "%s: read error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
 		}
+	    if (i < nmats)
+	    	break;
+	    for (i = 0; i < nmats; i++)
 		if (!apply_op(mop[i].rmp, &mop[i].imx, &mop[i].preop))
 			return(0);
-	    }
 	    if (set_r) varset("r", '=', cur_row);
 	    for (cur_col = 0; cur_col < in_ncols; cur_col++) {
 	    	if (set_c) varset("c", '=', cur_col);
@@ -635,26 +758,17 @@ combine_input(ROPMAT *res, FILE *fout)
 			return(0);
 	    }
 	    rmx_free(mres); mres = NULL;
+	    if (inchild >= 0) {
+	    	i = getc(stdin);	/* child waits for turn to output */
+	    	if (i != EOF) ungetc(i, stdin);
+	    }
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
-	    			res->rmp->ncols, res->rmp->dtype, fout))
+	    			res->rmp->ncols, res->rmp->dtype, stdout))
+	    	return(0);
+	    if (inchild >= 0 && fflush(stdout) == EOF)
 	    	return(0);
 	}
-loop_exit:
-#if 0		/* we're about to exit, so who cares? */
-	rmx_free(tmp);			/* clean up */
-	rmx_reset(res->rmp);
-	rmx_reset(&res->imx);
-	for (i = 0; i < nmats; i++) {
-		rmx_reset(mop[i].rmp);
-		rmx_reset(&mop[i].imx);
-		if (mop[i].inspec[0] == '!')
-			pclose(mop[i].infp);
-		else if (mop[i].inspec != stdin_name)
-			fclose(mop[i].infp);
-		mop[i].infp = NULL;
-	}
-#endif
-	return(fflush(fout) != EOF);
+	return(inchild >= 0 || fflush(stdout) != EOF);
 memerror:
 	fputs("Out of buffer space in combine_input()\n", stderr);
 	return(0);
@@ -704,6 +818,7 @@ main(int argc, char *argv[])
 	const char	*defCsym = NULL;
 	int		echoheader = 1;
 	int		stdin_used = 0;
+	int		nproc = 1;
 	const char	*mcat_spec = NULL;
 	int		n2comp = 0;
 	uby8		comp_ndx[128];
@@ -730,6 +845,11 @@ main(int argc, char *argv[])
 				break;
 			case 'h':
 				echoheader = !echoheader;
+				break;
+			case 'n':
+				nproc = atoi(argv[++i]);
+				if (nproc <= 0)
+					goto userr;
 				break;
 			case 'e':
 				if (!n) goto userr;
@@ -869,15 +989,17 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	doptimize(1);			/* optimize definitions */
+	if (spawned_children(nproc))	/* running in children? */
+		return(parent_loop() ? 0 : 1);
 					/* process & write rows */
-	return(combine_input(&mop[nmats], stdout) ? 0 : 1);
+	return(combine_input() ? 0 : 1);
 stdin_error:
 	fprintf(stderr, "%s: %s used for more than one input\n",
 			argv[0], stdin_name);
 	return(1);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-h][-f{adfc}][-e expr][-f file][-s sf .. | -c ce ..] m1 .. -m mcat > mres\n",
+	"Usage: %s [-h][-f{adfc}][-n nproc][-e expr][-f file][-s sf .. | -c ce ..] m1 .. -m mcat > mres\n",
 			argv[0]);
 	return(1);
 }
