@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.33 2024/01/17 16:06:56 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.34 2024/05/20 22:37:35 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -23,7 +23,7 @@ static const char	RCSid[] = "$Id: color.c,v 2.33 2024/01/17 16:06:56 greg Exp $"
 #define ferror	ferror_unlocked
 #endif
 
-#define  MINELEN	8	/* minimum scanline length for encoding */
+#define  MINELEN	17	/* minimum scanline length for encoding */
 #define  MAXELEN	0x7fff	/* maximum scanline length for encoding */
 #define  MINRUN		4	/* minimum run length */
 
