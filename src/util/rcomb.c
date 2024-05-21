@@ -1,10 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.11 2024/05/21 16:27:26 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.12 2024/05/21 17:39:17 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
  */
 
+#include <signal.h>
 #include <math.h>
 #include "platform.h"
 #include "rtprocess.h"
@@ -56,8 +57,17 @@ int		cur_chan;			/* if we're looping channels */
 SUBPROC		*cproc = NULL;			/* child process array */
 int		nchildren = 0;			/* # of child processes */
 int		inchild = -1;			/* our child ID (-1: parent) */
+int		gpid = -1;			/* group process ID (parent) */
+int		nr_out = 0;			/* # of rows output by kids */
 
 static int	checksymbolic(ROPMAT *rop);
+
+static void
+on_sigio(int dummy)
+{
+	nr_out++;			/* happens when child outputs row */
+	signal(SIGIO, on_sigio);	/* reset to maximize portability */
+}
 
 static int
 split_input(ROPMAT *rop)
@@ -586,6 +596,8 @@ spawned_children(int np)
 #endif
 		return(0);
 	}
+	gpid = setpgrp();	/* set group process ID */
+	signal(SIGIO, on_sigio);
 	fflush(stdout);		/* flush header & spawn children */
 	cproc = (SUBPROC *)malloc(sizeof(SUBPROC)*np);
 	if (!cproc)
@@ -656,7 +668,7 @@ parent_loop()
 		break;
 	    for (i = 0; i < nmats; i++)
 	    	if (!rmx_write_data(mop[i].imx.mtx, mop[i].imx.ncomp,
-	    			mop[i].imx.ncols, DTdouble, ofp))
+	    				mop[i].imx.ncols, DTdouble, ofp))
 	    		return(0);
 	    if (fflush(ofp) == EOF)
 	    	return(0);
@@ -760,15 +772,17 @@ combine_input()
 			return(0);
 	    }
 	    rmx_free(mres); mres = NULL;
-	    if (inchild >= 0) {
-	    	i = getc(stdin);	/* child waits for turn to output */
-	    	if (i != EOF) ungetc(i, stdin);
-	    }
+	    if (inchild >= 0)		/* children share stdout */
+	    	while (nr_out < cur_row)
+		    pause();		/* wait for our turn */
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
 	    			res->rmp->ncols, res->rmp->dtype, stdout))
 	    	return(0);
-	    if (inchild >= 0 && fflush(stdout) == EOF)
-	    	return(0);
+	    if (inchild >= 0) {		/* flush and notify group */
+	    	if (fflush(stdout) == EOF)
+		    return(0);
+		killpg(gpid, SIGIO);	/* increments everyone's nr_out */
+	    }
 	}
 	return(inchild >= 0 || fflush(stdout) != EOF);
 memerror:
