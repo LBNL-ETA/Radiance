@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.10 2024/05/20 23:21:29 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.11 2024/05/21 16:27:26 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -605,14 +605,16 @@ spawned_children(int np)
 		perror("fork");
 		exit(1);
 	}
-	inchild = i;		/* child index */
+	inchild = i;		/* our child index */
+	while (i-- > 0)		/* don't share siblings' pipes */
+		close(cproc[i].w);
 	fpurge(stdin);		/* discard previous matrix input */
 #ifdef getc_unlocked
 	flockfile(stdin);
 #endif
 	for (i = 0; i < nmats; i++) {
 		if (mop[i].infp != stdin)
-			fclose(mop[i].infp);
+			fclose(mop[i].infp);	/* ! pclose() */
 		mop[i].infp = stdin;
 		mop[i].imx.dtype = DTdouble;
 	}
@@ -642,7 +644,7 @@ parent_loop()
 #endif
 	for (cur_row = 0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row++) {
 	    FILE	*ofp = outfp[cur_row % nchildren];
-	    for (i = 0; i < nmats; i++) {
+	    for (i = 0; i < nmats; i++)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
@@ -650,12 +652,12 @@ parent_loop()
 					mop[i].inspec, cur_row);
 			return(0);
 		}
+	    if (i < nmats)
+		break;
+	    for (i = 0; i < nmats; i++)
 	    	if (!rmx_write_data(mop[i].imx.mtx, mop[i].imx.ncomp,
 	    			mop[i].imx.ncols, DTdouble, ofp))
 	    		return(0);
-	    }
-	    if (i < nmats)
-		break;
 	    if (fflush(ofp) == EOF)
 	    	return(0);
 	}
@@ -989,7 +991,7 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	doptimize(1);			/* optimize definitions */
-	if (spawned_children(nproc))	/* running in children? */
+	if (spawned_children(nproc))	/* running in parent process? */
 		return(parent_loop() ? 0 : 1);
 					/* process & write rows */
 	return(combine_input() ? 0 : 1);
