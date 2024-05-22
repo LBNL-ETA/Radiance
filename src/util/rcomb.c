@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.12 2024/05/21 17:39:17 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.13 2024/05/22 00:39:30 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -57,7 +57,7 @@ int		cur_chan;			/* if we're looping channels */
 SUBPROC		*cproc = NULL;			/* child process array */
 int		nchildren = 0;			/* # of child processes */
 int		inchild = -1;			/* our child ID (-1: parent) */
-int		gpid = -1;			/* group process ID (parent) */
+int		pgid = -1;			/* process group ID */
 int		nr_out = 0;			/* # of rows output by kids */
 
 static int	checksymbolic(ROPMAT *rop);
@@ -66,7 +66,6 @@ static void
 on_sigio(int dummy)
 {
 	nr_out++;			/* happens when child outputs row */
-	signal(SIGIO, on_sigio);	/* reset to maximize portability */
 }
 
 static int
@@ -596,7 +595,7 @@ spawned_children(int np)
 #endif
 		return(0);
 	}
-	gpid = setpgrp();	/* set group process ID */
+	pgid = setpgrp();	/* set process group ID */
 	signal(SIGIO, on_sigio);
 	fflush(stdout);		/* flush header & spawn children */
 	cproc = (SUBPROC *)malloc(sizeof(SUBPROC)*np);
@@ -701,6 +700,7 @@ combine_input()
 	int		set_r, set_c;
 	RMATRIX		*tmp = NULL;
 	int		co_set;
+	sigset_t	iomask;
 	int		i;
 
 	if (mcat && mcat_last &&
@@ -720,10 +720,13 @@ combine_input()
 		set_c = varlookup("c") != NULL && !vardefined("c");
 	} else				/* save a little time */
 		set_r = set_c = 0;
-					/* read/process row-by-row */
+
+	sigemptyset(&iomask);		/* read/process row-by-row */
+	sigaddset(&iomask, SIGIO);
 	for (cur_row = row0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row += rstep) {
 	    RMATRIX	*mres = NULL;
-	    for (i = 0; i < nmats; i++)
+	    for (i = 0; i < nmats; i++) {
+	    	if (inchild >= 0) sigprocmask(SIG_BLOCK, &iomask, NULL);
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
@@ -731,6 +734,8 @@ combine_input()
 					mop[i].inspec, cur_row);
 			return(0);
 		}
+		if (inchild >= 0) sigprocmask(SIG_UNBLOCK, &iomask, NULL);
+	    }
 	    if (i < nmats)
 	    	break;
 	    for (i = 0; i < nmats; i++)
@@ -772,16 +777,19 @@ combine_input()
 			return(0);
 	    }
 	    rmx_free(mres); mres = NULL;
-	    if (inchild >= 0)		/* children share stdout */
+	    if (inchild >= 0) {		/* children share stdout */
 	    	while (nr_out < cur_row)
 		    pause();		/* wait for our turn */
+		sigprocmask(SIG_BLOCK, &iomask, NULL);
+	    }
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
 	    			res->rmp->ncols, res->rmp->dtype, stdout))
 	    	return(0);
 	    if (inchild >= 0) {		/* flush and notify group */
 	    	if (fflush(stdout) == EOF)
 		    return(0);
-		killpg(gpid, SIGIO);	/* increments everyone's nr_out */
+		sigprocmask(SIG_UNBLOCK, &iomask, NULL);
+		killpg(pgid, SIGIO);	/* increments everyone's nr_out */
 	    }
 	}
 	return(inchild >= 0 || fflush(stdout) != EOF);
