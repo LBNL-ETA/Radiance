@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.13 2024/05/22 00:39:30 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.14 2024/05/22 15:38:04 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -725,8 +725,8 @@ combine_input()
 	sigaddset(&iomask, SIGIO);
 	for (cur_row = row0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row += rstep) {
 	    RMATRIX	*mres = NULL;
-	    for (i = 0; i < nmats; i++) {
-	    	if (inchild >= 0) sigprocmask(SIG_BLOCK, &iomask, NULL);
+	    if (inchild >= 0) sigprocmask(SIG_BLOCK, &iomask, NULL);
+	    for (i = 0; i < nmats; i++)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
@@ -734,8 +734,7 @@ combine_input()
 					mop[i].inspec, cur_row);
 			return(0);
 		}
-		if (inchild >= 0) sigprocmask(SIG_UNBLOCK, &iomask, NULL);
-	    }
+	    if (inchild >= 0) sigprocmask(SIG_UNBLOCK, &iomask, NULL);
 	    if (i < nmats)
 	    	break;
 	    for (i = 0; i < nmats; i++)
