@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.8 2024/05/20 23:21:28 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.9 2024/05/22 16:49:19 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -143,12 +143,11 @@ or
 is specified for an input picture or the
 .I "-fc"
 option is given, the output will be written as a RGBE or XYZE picture.
-Note that conversion from a float or RGBE color space applies a conversion
+Note that conversion from a float or RGBE color space applies an efficacy factor
 of 179 lumens/watt (for CIE or melanopic output) or 412 (for scotopic output),
-and the reverse happens for conversion from XYZE input to RGB or RGBE output.
+and the inverse happens for conversion from XYZE input to RGB or RGBE output.
 Lower case versions of all these components are also supported, the only
-difference is that the aforementioned efficacy factors
-will be left out of the conversion.
+difference being that the efficacy factors are ignored.
 .PP
 If a matrix or picture file path is given to the
 .I \-c
