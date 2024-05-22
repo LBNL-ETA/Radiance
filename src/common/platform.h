@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.16 2018/03/20 22:45:29 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.17 2024/05/22 15:37:31 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -39,6 +39,7 @@
   #define access _access
   #undef mktemp
   #define mktemp _mktemp
+  #define fpurge(s)
 
   #include <string.h>
   #undef strcasecmp
@@ -82,7 +83,7 @@
   #define SET_FD_TEXT(fd) _setmode(fd,_O_TEXT)
   #define putenv _putenv
 
-#else /* _WIN32 || _WIN64 */
+#else /* ! (_WIN32 || _WIN64) */
 
   #ifdef AMIGA
     #define NON_POSIX
@@ -93,6 +94,10 @@
     #define RHAS_FORK_EXEC
   #endif
 
+  #ifdef __linux__
+  	#include <stdio_ext.h>
+  	#define	fpurge	__fpurge
+  #endif
   /* everybody except Windows */
 
   /* NOPs */
