@@ -1,4 +1,4 @@
-/* RCSid $Id: driver.h,v 2.10 2011/05/20 02:06:39 greg Exp $ */
+/* RCSid $Id: driver.h,v 2.11 2024/05/23 22:45:04 greg Exp $ */
 /*
  *  driver.h - header file for interactive device drivers.
  */
@@ -19,7 +19,7 @@ typedef void dr_closef_t(void);
 typedef void dr_clearf_t(int, int);
 typedef void dr_paintrf_t(COLOR col, int xmin, int ymin, int xmax, int ymax);
 typedef int  dr_getcurf_t(int*,int*);
-typedef void dr_comoutf_t(char*);
+typedef void dr_comoutf_t(const char*);
 typedef void dr_cominf_t(char*,char*);
 typedef void dr_flushf_t(void);
 

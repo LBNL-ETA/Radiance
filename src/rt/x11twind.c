@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11twind.c,v 2.9 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: x11twind.c,v 2.10 2024/05/23 22:45:05 greg Exp $";
 #endif
 /*
  *  x11twind.c - routines for X11 text windows.
@@ -33,17 +33,18 @@ static void  togglecurs();
 
 
 TEXTWIND *
-xt_open(dpy, parent, x, y, width, height, bw, fore, back, fontname)
-Display  *dpy;
-Window  parent;
-int  x, y;
-int  width, height;
-int  bw;
-unsigned long  fore, back;
-char  *fontname;
+xt_open(
+Display  *dpy,
+Window  parent,
+int  x, int y,
+int  width, int height,
+int  bw,
+unsigned long  fore, unsigned long  back,
+char  *fontname
+)
 {
-	register int  i;
-	register TEXTWIND  *t;
+	int  i;
+	TEXTWIND  *t;
 
 	if ((t = (TEXTWIND *)malloc(sizeof(TEXTWIND))) == NULL)
 		return(NULL);
@@ -84,9 +85,10 @@ char  *fontname;
 
 
 void
-xt_putc(c, t)				/* output a character */
-int  c;
-register TEXTWIND  *t;
+xt_putc(				/* output a character */
+int  c,
+TEXTWIND  *t
+)
 {
 	char	ch[2];
 
@@ -121,9 +123,7 @@ register TEXTWIND  *t;
 
 
 void
-xt_puts(s, t)				/* output a string */
-register char  *s;
-TEXTWIND  *t;
+xt_puts(const char *s, TEXTWIND *t)				/* output a string */
 {
 	int	oldcurs;
 
@@ -135,12 +135,13 @@ TEXTWIND  *t;
 
 
 void
-xt_delete(t, r)				/* delete a line */
-register TEXTWIND  *t;
-int  r;
+xt_delete(				/* delete a line */
+TEXTWIND  *t,
+int  r
+)
 {
 	char  *cp;
-	register int  i;
+	int  i;
 
 	if (r < 0 || r >= t->nr)
 		return;
@@ -163,12 +164,13 @@ int  r;
 
 
 void
-xt_insert(t, r)				/* insert a line */
-register TEXTWIND  *t;
-int  r;
+xt_insert(			/* insert a line */
+TEXTWIND  *t,
+int  r
+)
 {
 	char  *cp;
-	register int  i;
+	int  i;
 
 	if (r < 0 || r >= t->nr)
 		return;
@@ -190,10 +192,9 @@ int  r;
 
 
 void
-xt_redraw(t)				/* redraw text window */
-register TEXTWIND  *t;
+xt_redraw(TEXTWIND  *t)				/* redraw text window */
 {
-	register int  i;
+	int  i;
 
 	XClearWindow(t->dpy, t->w);
 	for (i = 0; i < t->nr; i++)
@@ -206,10 +207,9 @@ register TEXTWIND  *t;
 
 
 void
-xt_clear(t)				/* clear text window */
-register TEXTWIND  *t;
+xt_clear(TEXTWIND  *t)				/* clear text window */
 {
-	register int  i;
+	int  i;
 
 	XClearWindow(t->dpy, t->w);
 	for (i = 0; i < t->nr; i++)
@@ -220,9 +220,10 @@ register TEXTWIND  *t;
 
 
 void
-xt_move(t, r, c)			/* move to new position */
-register TEXTWIND  *t;
-int  r, c;
+xt_move(			/* move to new position */
+TEXTWIND  *t,
+int  r, int c
+)
 {
 	if (r < 0 || c < 0 || r >= t->nr || c >= t->nc)
 		return;
@@ -234,11 +235,12 @@ int  r, c;
 
 
 int
-xt_cursor(t, curs)			/* change cursor */
-register TEXTWIND  *t;
-register int  curs;
+xt_cursor(			/* change cursor */
+TEXTWIND  *t,
+int  curs
+)
 {
-	register int	oldcurs;
+	int	oldcurs;
 
 	if (curs != TNOCURS && curs != TBLKCURS)
 		return(-1);
@@ -251,10 +253,9 @@ register int  curs;
 
 
 void
-xt_close(t)				/* close text window */
-register TEXTWIND  *t;
+xt_close(TEXTWIND  *t)				/* close text window */
 {
-	register int  i;
+	int  i;
 
 	XFreeFont(t->dpy, t->f);
 	XFreeGC(t->dpy,t->gc);
@@ -267,8 +268,7 @@ register TEXTWIND  *t;
 
 
 static void
-togglecurs(t)
-register TEXTWIND  *t;
+togglecurs(TEXTWIND  *t)
 {
 	XSetFunction(t->dpy, t->gc, GXinvert);
 	XSetPlaneMask(t->dpy, t->gc, 1L);

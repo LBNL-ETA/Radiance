@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.19 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.20 2024/05/23 22:45:04 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -28,7 +28,7 @@ int	devchild;
 
 static struct driver * final_connect(void);
 static void mygets(char	*s, FILE	*fp);
-static void myputs(char	*s, FILE	*fp);
+static void myputs(const char	*s, FILE	*fp);
 static void reply_error(char	*routine);
 static void getstate(void);
 
@@ -217,7 +217,7 @@ comm_getcur(			/* get and return cursor position */
 
 static void
 comm_comout(			/* print string to command line */
-	char	*str
+	const char	*str
 )
 {
 	putc(COM_COMOUT, devout);
@@ -265,7 +265,7 @@ mygets(				/* get string from file (with nul) */
 
 static void
 myputs(				/* put string to file (with nul) */
-	char	*s,
+	const char	*s,
 	FILE	*fp
 )
 {

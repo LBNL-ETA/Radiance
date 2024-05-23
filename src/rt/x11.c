@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.35 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.36 2024/05/23 22:45:05 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -372,7 +372,7 @@ x11_comin(		/* read in a command line */
 
 static void
 x11_comout(		/* output a string to command line */
-	char  *outp
+	const char  *outp
 )
 {
 	if (comline == NULL || outp == NULL || !outp[0])
@@ -426,7 +426,7 @@ std_comin(		/* read in command line from stdin */
 
 static void
 std_comout(		/* write out string to stdout */
-	char	*outp
+	const char	*outp
 )
 {
 	fputs(outp, stdout);
