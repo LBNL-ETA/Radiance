@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11twind.c,v 2.10 2024/05/23 22:45:05 greg Exp $";
+static const char	RCSid[] = "$Id: x11twind.c,v 2.11 2024/05/23 22:49:20 greg Exp $";
 #endif
 /*
  *  x11twind.c - routines for X11 text windows.
@@ -29,7 +29,7 @@ static const char	RCSid[] = "$Id: x11twind.c,v 2.10 2024/05/23 22:45:05 greg Exp
 #define	Height(f)		((f)->ascent + (f)->descent)
 #define YStart(f)		((f)->ascent)
 
-static void  togglecurs();
+static void  togglecurs(TEXTWIND  *t);
 
 
 TEXTWIND *
