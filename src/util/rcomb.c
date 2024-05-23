@@ -1,8 +1,19 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.17 2024/05/23 17:13:52 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.18 2024/05/23 19:29:41 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
+ *
+ * Multi-processing mode under Unix creates children that each work
+ * on one input row at a time, fed by the single parent.  Output to
+ * a shared stdout is assured because each child waits for parent
+ * to be ready with next input row before it outputs the previous result.
+ * The assumption (checked in spawn_children()) is that the parent
+ * will remain blocked until the child it is feeding has finished
+ * flushing the previous row to stdout.  The final output row is
+ * less guaranteed to be in order, so the parent sleeps for a few seconds
+ * between each child pipe closure, in hopes that this allows enough
+ * time for row output to finish in each process.
  */
 
 #include <math.h>
@@ -552,8 +563,8 @@ spawned_children(int np)
 		np = 1;
 	} else
 #endif
-	if ((in_nrows > 0) & (np > in_nrows))
-		np = in_nrows;
+	if ((in_nrows > 0) & (np*4 > in_nrows))
+		np = in_nrows/4;
 				/* we'll be doing a row at a time */
 	for (i = 0; i < nmats; i++) {
 		mop[i].imx.nrows = 1;
@@ -580,7 +591,7 @@ spawned_children(int np)
 	mop[nmats].imx.nrows = 1;
 	if (!rmx_prepare(&mop[nmats].imx))
 		goto memerror;
-	if (np <= 1) {		/* single process return point */
+	if (np <= 1) {		/* single process return */
 #ifdef getc_unlocked
 		for (i = 0; i < nmats; i++)
 			flockfile(mop[i].infp);
@@ -626,6 +637,7 @@ spawned_children(int np)
 			fclose(mop[i].infp);	/* ! pclose() */
 		mop[i].infp = stdin;
 		mop[i].imx.dtype = DTdouble;
+		mop[i].imx.pflags &= ~RMF_SWAPIN;
 	}
 	return(0);		/* child return */
 memerror:
@@ -670,8 +682,8 @@ parent_loop()
 	    if (fflush(ofp) == EOF)
 	    	return(0);
 	}
-	for (i = 0; i < nchildren; i++) {
-		sleep(2);			/* try to maintain order */
+	for (i = 0; i < nchildren; i++) {	/* maintain output order */
+		sleep(1+(mop[nmats].rmp->ncols*mop[nmats].rmp->ncomp >> 15));
 		fclose(outfp[i]);
 	}
 	free(outfp);
