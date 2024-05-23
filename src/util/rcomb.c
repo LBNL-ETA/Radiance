@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.16 2024/05/23 15:48:44 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.17 2024/05/23 17:13:52 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -543,7 +543,7 @@ output_headinfo(FILE *fp)
 static int
 spawned_children(int np)
 {
-	long	inpwidth = 0;
+	size_t	recsize = 0;
 	int	i, rv;
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -559,12 +559,11 @@ spawned_children(int np)
 		mop[i].imx.nrows = 1;
 		if (!rmx_prepare(&mop[i].imx))
 			goto memerror;
-		inpwidth += rmx_array_size(&mop[i].imx);
+		recsize += rmx_array_size(&mop[i].imx);
 		if (mop[i].rmp != &mop[i].imx) {
 			mop[i].rmp->nrows = 1;
 			if (!rmx_prepare(mop[i].rmp))
 				goto memerror;
-			inpwidth += rmx_array_size(mop[i].rmp);
 		}
 	}
 				/* prep output row buffer */
@@ -601,18 +600,20 @@ spawned_children(int np)
 		cproc[i].pid = -1;
 		rv = open_process(&cproc[i], NULL);
 		if (rv <= 0) break;
-		if (!i && 2*rv >= inpwidth) {
+		if (!i && 2*rv >= recsize) {
 			fputs("Problem too small for multi-processing\n",
 					stderr);
+			close_processes(cproc, 1);
 			exit(1);
 		}
 	}
-	if (rv > 0)
-		return(1);	/* parent return value */
 	if (rv < 0) {
 		perror("fork");
+		close_processes(cproc, i);
 		exit(1);
 	}
+	if (rv > 0)		/* parent return? */
+		return(1);
 	inchild = i;		/* our child index */
 	while (i-- > 0)		/* don't share siblings' pipes */
 		close(cproc[i].w);
