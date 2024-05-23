@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.14 2024/05/22 15:38:04 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.15 2024/05/23 01:28:07 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -922,6 +922,7 @@ main(int argc, char *argv[])
 				if (n && !isflt(argv[i+1])) {
 					mop[nmats].preop.csym = argv[++i];
 					mop[nmats].preop.clen = 0;
+					mcat_last = 0;
 					break;
 				}
 				if (n > MAXCOMP*MAXCOMP) n = MAXCOMP*MAXCOMP;
