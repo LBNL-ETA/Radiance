@@ -1,11 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.15 2024/05/23 01:28:07 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.16 2024/05/23 15:48:44 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
  */
 
-#include <signal.h>
 #include <math.h>
 #include "platform.h"
 #include "rtprocess.h"
@@ -57,16 +56,8 @@ int		cur_chan;			/* if we're looping channels */
 SUBPROC		*cproc = NULL;			/* child process array */
 int		nchildren = 0;			/* # of child processes */
 int		inchild = -1;			/* our child ID (-1: parent) */
-int		pgid = -1;			/* process group ID */
-int		nr_out = 0;			/* # of rows output by kids */
 
 static int	checksymbolic(ROPMAT *rop);
-
-static void
-on_sigio(int dummy)
-{
-	nr_out++;			/* happens when child outputs row */
-}
 
 static int
 split_input(ROPMAT *rop)
@@ -552,6 +543,7 @@ output_headinfo(FILE *fp)
 static int
 spawned_children(int np)
 {
+	long	inpwidth = 0;
 	int	i, rv;
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -567,10 +559,12 @@ spawned_children(int np)
 		mop[i].imx.nrows = 1;
 		if (!rmx_prepare(&mop[i].imx))
 			goto memerror;
+		inpwidth += rmx_array_size(&mop[i].imx);
 		if (mop[i].rmp != &mop[i].imx) {
 			mop[i].rmp->nrows = 1;
 			if (!rmx_prepare(mop[i].rmp))
 				goto memerror;
+			inpwidth += rmx_array_size(mop[i].rmp);
 		}
 	}
 				/* prep output row buffer */
@@ -595,8 +589,6 @@ spawned_children(int np)
 #endif
 		return(0);
 	}
-	pgid = setpgrp();	/* set process group ID */
-	signal(SIGIO, on_sigio);
 	fflush(stdout);		/* flush header & spawn children */
 	cproc = (SUBPROC *)malloc(sizeof(SUBPROC)*np);
 	if (!cproc)
@@ -609,6 +601,11 @@ spawned_children(int np)
 		cproc[i].pid = -1;
 		rv = open_process(&cproc[i], NULL);
 		if (rv <= 0) break;
+		if (!i && 2*rv >= inpwidth) {
+			fputs("Problem too small for multi-processing\n",
+					stderr);
+			exit(1);
+		}
 	}
 	if (rv > 0)
 		return(1);	/* parent return value */
@@ -672,8 +669,10 @@ parent_loop()
 	    if (fflush(ofp) == EOF)
 	    	return(0);
 	}
-	for (i = 0; i < nchildren; i++)
+	for (i = 0; i < nchildren; i++) {
+		sleep(2);			/* try to maintain order */
 		fclose(outfp[i]);
+	}
 	free(outfp);
 	i = close_processes(cproc, nchildren);
 	free(cproc); cproc = NULL;
@@ -700,7 +699,6 @@ combine_input()
 	int		set_r, set_c;
 	RMATRIX		*tmp = NULL;
 	int		co_set;
-	sigset_t	iomask;
 	int		i;
 
 	if (mcat && mcat_last &&
@@ -721,11 +719,9 @@ combine_input()
 	} else				/* save a little time */
 		set_r = set_c = 0;
 
-	sigemptyset(&iomask);		/* read/process row-by-row */
-	sigaddset(&iomask, SIGIO);
+					/* read/process row-by-row */
 	for (cur_row = row0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row += rstep) {
 	    RMATRIX	*mres = NULL;
-	    if (inchild >= 0) sigprocmask(SIG_BLOCK, &iomask, NULL);
 	    for (i = 0; i < nmats; i++)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
@@ -734,7 +730,6 @@ combine_input()
 					mop[i].inspec, cur_row);
 			return(0);
 		}
-	    if (inchild >= 0) sigprocmask(SIG_UNBLOCK, &iomask, NULL);
 	    if (i < nmats)
 	    	break;
 	    for (i = 0; i < nmats; i++)
@@ -777,19 +772,14 @@ combine_input()
 	    }
 	    rmx_free(mres); mres = NULL;
 	    if (inchild >= 0) {		/* children share stdout */
-	    	while (nr_out < cur_row)
-		    pause();		/* wait for our turn */
-		sigprocmask(SIG_BLOCK, &iomask, NULL);
+	    	i = getc(stdin);	/* signals it's our turn */
+	    	if (i != EOF) ungetc(i, stdin);
 	    }
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
 	    			res->rmp->ncols, res->rmp->dtype, stdout))
 	    	return(0);
-	    if (inchild >= 0) {		/* flush and notify group */
-	    	if (fflush(stdout) == EOF)
-		    return(0);
-		sigprocmask(SIG_UNBLOCK, &iomask, NULL);
-		killpg(pgid, SIGIO);	/* increments everyone's nr_out */
-	    }
+	    if (inchild >= 0 && fflush(stdout) == EOF)
+	    	return(0);
 	}
 	return(inchild >= 0 || fflush(stdout) != EOF);
 memerror:
