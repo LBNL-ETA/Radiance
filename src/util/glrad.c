@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.27 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.28 2024/06/03 18:55:51 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -749,7 +749,7 @@ getintersect(		/* intersect ray with scene geometry */
 	if (md <= FTINY) md = FHUGE;
 	fbuf[3] = dir[0]*md; fbuf[4] = dir[1]*md; fbuf[5] = dir[2]*md;
 				/* trace that ray */
-	if (process(&rtpd, (char *)fbuf, (char *)fbuf,
+	if (process(&rtpd, fbuf, fbuf,
 			4*sizeof(float), 6*sizeof(float)) != 4*sizeof(float))
 		error(INTERNAL, "error getting data back from rtrace process");
 	if (fbuf[3] >= .99*FHUGE)

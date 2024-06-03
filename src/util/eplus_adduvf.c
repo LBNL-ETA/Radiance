@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.22 2020/02/28 05:18:49 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.23 2024/06/03 18:55:51 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -534,7 +534,7 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 						dv[2]*ps->sdir[2][j] ;
 	}
 					/* send to our process */
-	writebuf(ps->wd, (char *)samp, sizeof(float)*6*ns);
+	writebuf(ps->wd, samp, sizeof(float)*6*ns);
 	free(samp);			/* that's it! */
 	return(1);
 }
@@ -605,7 +605,7 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 		else				/* comp. for subsurface area */
 			adj_factor /= adj_factor - zp->area_redu[n];
 						/* read results */
-		if (readbuf(pd->r, (char *)uvfa, sizeof(float)*3*zp->ntotal) !=
+		if (readbuf(pd->r, uvfa, sizeof(float)*3*zp->ntotal) !=
 				sizeof(float)*3*zp->ntotal) {
 			fputs(progname, stderr);
 			fputs(": read error from rcontrib process\n", stderr);

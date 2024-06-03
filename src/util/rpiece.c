@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.61 2023/11/17 20:36:50 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.62 2024/06/03 18:55:51 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -566,12 +566,12 @@ int	ypos
 	if (lseek(outfd, (off_t)fls.l_start, SEEK_SET) < 0)
 		filerr("seek");
 	if (hmult == 1) {
-		if (writebuf(outfd, (char *)pbuf,
+		if (writebuf(outfd, pbuf,
 				vr*hr*sizeof(COLR)) != vr*hr*sizeof(COLR))
 			filerr("write");
 	} else
 		for (y = 0; y < vr; y++) {
-			if (writebuf(outfd, (char *)(pbuf+y*hr),
+			if (writebuf(outfd, pbuf+y*hr,
 					hr*sizeof(COLR)) != hr*sizeof(COLR))
 				filerr("write");
 			if (y < vr-1 && lseek(outfd,

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.19 2022/11/29 20:45:21 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.20 2024/06/03 18:55:51 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -284,7 +284,7 @@ rt_compute(		/* process buffer through rtrace */
 				progname, np);
 #endif
 	memset(pb+6*np, '\0', 6*sizeof(float));
-	if (process(&rt_pd, (char *)pb, (char *)pb, 3*sizeof(float)*(np+1),
+	if (process(&rt_pd, pb, pb, 3*sizeof(float)*(np+1),
 			6*sizeof(float)*(np+1)) < 3*sizeof(float)*(np+1)) {
 		fprintf(stderr, "%s: rtrace communication error\n",
 				progname);

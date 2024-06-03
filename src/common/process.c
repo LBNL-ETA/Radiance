@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: process.c,v 2.11 2021/01/15 19:01:53 greg Exp $";
+static const char	RCSid[] = "$Id: process.c,v 2.12 2024/06/03 18:55:51 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -24,7 +24,7 @@ The functions open_process() and close_process() exist in
 int
 process(		/* process data through pd */
 	SUBPROC *pd,
-	char	*recvbuf, char *sendbuf,
+	void	*recvbuf, void *sendbuf,
 	int	nbr, int nbs
 )
 {
@@ -40,10 +40,11 @@ process(		/* process data through pd */
 ssize_t
 readbuf(		/* read all of requested buffer */
 	int	fd,
-	char	*bpos,
+	void	*buf,
 	ssize_t	siz
 )
 {
+	char	*bpos = (char *)buf;
 	ssize_t	cc = 0, nrem = siz;
 retry:
 	while (nrem > 0 && (cc = read(fd, bpos, nrem)) > 0) {
@@ -64,10 +65,11 @@ retry:
 ssize_t
 writebuf(		/* write all of requested buffer */
 int	fd,
-char	*bpos,
+void	*buf,
 ssize_t	siz
 )
 {
+	char	*bpos = (char *)buf;
 	ssize_t	cc = 0, nrem = siz;
 retry:
 	while (nrem > 0 && (cc = write(fd, bpos, nrem)) > 0) {

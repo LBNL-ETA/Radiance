@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.23 2021/04/07 01:15:53 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.24 2024/06/03 18:55:51 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -134,9 +134,9 @@ typedef struct {
 
 extern int open_process(SUBPROC *pd, char *av[]);
 extern int close_processes(SUBPROC pd[], int nproc);
-extern int process(SUBPROC *pd, char *recvbuf, char *sendbuf, int nbr, int nbs);
-extern ssize_t readbuf(int fd, char *bpos, ssize_t siz);
-extern ssize_t writebuf(int fd, char *bpos, ssize_t siz);
+extern int process(SUBPROC *pd, void *recvbuf, void *sendbuf, int nbr, int nbs);
+extern ssize_t readbuf(int fd, void *bpos, ssize_t siz);
+extern ssize_t writebuf(int fd, void *bpos, ssize_t siz);
 
 #if defined(_WIN32) || defined(_WIN64)
 /* any non-negative increment will send the process to IDLE_PRIORITY_CLASS. */
