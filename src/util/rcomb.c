@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.21 2024/06/04 21:47:55 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.22 2024/06/04 22:05:23 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -62,9 +62,9 @@ SUBPROC		*cproc = NULL;			/* child process array */
 int		nchildren = 0;			/* # of child processes */
 int		inchild = -1;			/* our child ID (-1: parent) */
 
-static int	checksymbolic(ROPMAT *rop);
+extern int	checksymbolic(ROPMAT *rop);
 
-static int
+int
 split_input(ROPMAT *rop)
 {
 	if (rop->rmp == &rop->imx && !(rop->rmp = rmx_copy(&rop->imx))) {
@@ -76,7 +76,7 @@ split_input(ROPMAT *rop)
 }
 
 /* Check/set transform based on a reference input file */
-static int
+int
 checkreffile(ROPMAT *rop)
 {
 	static const char	*curRF = NULL;
@@ -139,7 +139,7 @@ checkreffile(ROPMAT *rop)
 }
 
 /* Compute conversion row from spectrum to one channel of RGB */
-static void
+void
 rgbrow(ROPMAT *rop, int r, int p)
 {
 	const int	nc = rop->imx.ncomp;
@@ -156,7 +156,7 @@ rgbrow(ROPMAT *rop, int r, int p)
 }
 
 /* Compute conversion row from spectrum to one channel of XYZ */
-static void
+void
 xyzrow(ROPMAT *rop, int r, int p)
 {
 	const int	nc = rop->imx.ncomp;
@@ -173,7 +173,7 @@ xyzrow(ROPMAT *rop, int r, int p)
 }
 
 /* Use the spectral sensitivity function to compute matrix coefficients */
-static void
+void
 sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]))
 {
 	const int	nc = rop->imx.ncomp;
@@ -188,7 +188,7 @@ sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]
 }
 
 /* Check/set symbolic transform */
-static int
+int
 checksymbolic(ROPMAT *rop)
 {
 	const int	nc = rop->imx.ncomp;
@@ -302,7 +302,7 @@ checksymbolic(ROPMAT *rop)
 	return(1);
 }
 
-static int
+int
 get_component_xfm(ROPMAT *rop)
 {
 	int	i, j;
@@ -385,7 +385,7 @@ get_component_xfm(ROPMAT *rop)
 	return(1);
 }
 
-static int
+int
 apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 {
 	if (ro->clen > 0) {
@@ -404,7 +404,7 @@ apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 	return(1);
 }
 
-static int
+int
 open_input(ROPMAT *rop)
 {
 	int	outtype;
@@ -426,7 +426,7 @@ open_input(ROPMAT *rop)
 }
 
 /* Return nominal wavelength associated with input component (return nm) */
-static double
+double
 l_wavelength(char *nam)
 {
 	double	comp = argument(1);
@@ -450,7 +450,7 @@ l_wavelength(char *nam)
 }
 
 /* Return ith input with optional channel selector */
-static double
+double
 l_chanin(char *nam)
 {
 	double	inp = argument(1);
@@ -475,7 +475,7 @@ l_chanin(char *nam)
 	return(mop[mi].rmp->mtx[cur_col*in_ncomp + chan]);
 }
 
-static int
+int
 initialize(RMATRIX *imp)
 {
 	int	i;
@@ -522,7 +522,7 @@ initialize(RMATRIX *imp)
 	return(1);
 }
 
-static void
+void
 output_headinfo(FILE *fp)
 {
 	int	i;
@@ -545,48 +545,7 @@ output_headinfo(FILE *fp)
 	}
 }
 
-static int
-output_loop(void)
-{
-	const size_t	row_size = rmx_array_size(mop[nmats].rmp);
-	int		i = nmats;
-	int		cur_child = 0;
-
-	if (mop[nmats].rmp != &mop[nmats].imx)		/* output is split? */
-		rmx_reset(&mop[nmats].imx);
-	while (i-- > 0) {				/* close input matrices */
-		fclose(mop[i].infp);		/* ! pclose() */
-		mop[i].infp = NULL;
-		rmx_reset(&mop[i].imx);
-		if (mop[i].rmp != &mop[i].imx) {
-			rmx_free(mop[i].rmp);
-			mop[i].rmp = &mop[i].imx;
-		}
-	}
-#ifdef getc_unlocked
-	flockfile(stdout);				/* we own this, now */
-#endif
-	for ( ; ; ) {					/* loop until no more */
-		ssize_t		rv;
-		rv = readbuf(cproc[cur_child].r, mop[nmats].rmp->mtx, row_size);
-		if (!rv)				/* out of rows? */
-			break;
-		if (rv != row_size) {
-			fputs("Read error in output loop\n", stderr);
-			return(0);
-		}					/* do final conversion */
-		if (!rmx_write_data(mop[nmats].rmp->mtx, mop[nmats].rmp->ncomp,
-	    			mop[nmats].rmp->ncols, mop[nmats].rmp->dtype, stdout)) {
-			fputs("Conversion/write error in output loop\n", stderr);
-			return(0);
-		}
-		cur_child++;
-		cur_child *= (cur_child < inchild);
-	}
-	return(fflush(stdout) != EOF);
-}
-
-static int
+int
 spawned_children(int np)
 {
 	int	i, rv;
@@ -663,8 +622,8 @@ spawned_children(int np)
 	while (i-- > 0)		/* only parent writes siblings */
 		close(cproc[i].w);
 
-	if (inchild == nchildren-1)	/* last child sequences output */
-		exit(output_loop() ? 0 : 1);
+	if (inchild == nchildren-1)
+		return(-1);	/* output process return value */
 
 	i = inchild;		/* won't read from siblings */
 	while (i-- > 0)
@@ -688,7 +647,7 @@ memerror:
 	exit(1);
 }
 
-static int
+int
 parent_loop(void)
 {
 	int	i;
@@ -736,7 +695,7 @@ memerror:
 	exit(1);
 }
 
-static int
+int
 combine_input(void)
 {
 	const int	row0 = (inchild >= 0)*inchild;
@@ -831,7 +790,48 @@ multerror:
 	return(0);
 }
 
-static int
+int
+output_loop(void)
+{
+	const size_t	row_size = rmx_array_size(mop[nmats].rmp);
+	int		i = nmats;
+	int		cur_child = 0;
+
+	if (mop[nmats].rmp != &mop[nmats].imx)		/* output is split? */
+		rmx_reset(&mop[nmats].imx);
+	while (i-- > 0) {				/* close input matrices */
+		fclose(mop[i].infp);		/* ! pclose() */
+		mop[i].infp = NULL;
+		rmx_reset(&mop[i].imx);
+		if (mop[i].rmp != &mop[i].imx) {
+			rmx_free(mop[i].rmp);
+			mop[i].rmp = &mop[i].imx;
+		}
+	}
+#ifdef getc_unlocked
+	flockfile(stdout);				/* we own this, now */
+#endif
+	for ( ; ; ) {					/* loop until no more */
+		ssize_t		rv;
+		rv = readbuf(cproc[cur_child].r, mop[nmats].rmp->mtx, row_size);
+		if (!rv)				/* out of rows? */
+			break;
+		if (rv != row_size) {
+			fputs("Read error in output loop\n", stderr);
+			return(0);
+		}					/* do final conversion */
+		if (!rmx_write_data(mop[nmats].rmp->mtx, mop[nmats].rmp->ncomp,
+	    			mop[nmats].rmp->ncols, mop[nmats].rmp->dtype, stdout)) {
+			fputs("Conversion/write error in output loop\n", stderr);
+			return(0);
+		}
+		cur_child++;
+		cur_child *= (cur_child < inchild);
+	}
+	return(fflush(stdout) != EOF);
+}
+
+int
 get_factors(double da[], int n, char *av[])
 {
 	int	ac;
@@ -841,7 +841,7 @@ get_factors(double da[], int n, char *av[])
 	return(ac);
 }
 
-static void
+void
 resize_inparr(int n2alloc)
 {
 	int	i;
@@ -1044,9 +1044,12 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	doptimize(1);			/* optimize definitions */
-	if (spawned_children(nproc))	/* running in parent process? */
+	i = spawned_children(nproc);	/* create multiple processes if requested */
+	if (i > 0)			/* running in parent process? */
 		return(parent_loop() ? 0 : 1);
-					/* process & write rows */
+	if (i < 0)			/* running in output process? */
+		return(output_loop() ? 0 : 1);
+					/* else we are a worker process */
 	return(combine_input() ? 0 : 1);
 stdin_error:
 	fprintf(stderr, "%s: %s used for more than one input\n",
