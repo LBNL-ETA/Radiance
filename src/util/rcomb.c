@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.20 2024/06/04 21:23:11 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.21 2024/06/04 21:47:55 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -653,8 +653,10 @@ spawned_children(int np)
 	}
 	if (rv) {		/* are we the parent? */
 		i = nchildren-1;	/* last child is sole reader */
-		while (i-- > 0)
+		while (i-- > 0) {
 			close(cproc[i].r);
+			cproc[i].r = -1;
+		}
 		return(1);	/* parent return value */
 	}
 	inchild = i;		/* our child index */
@@ -667,7 +669,7 @@ spawned_children(int np)
 	i = inchild;		/* won't read from siblings */
 	while (i-- > 0)
 		close(cproc[i].r);
-	i = nmats;		/* close input matrix streams */
+	i = nmats;		/* redirect input matrix streams */
 	while (i-- > 0) {
 		if (mop[i].infp != stdin)
 			fclose(mop[i].infp);	/* ! pclose() */

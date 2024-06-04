@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.18 2023/05/16 20:58:07 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.19 2024/06/04 21:47:55 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -129,8 +129,8 @@ close_processes(	/* close pipes and wait for processes to finish */
 
 	for (i = 0; i < nproc; i++)		/* close pipes, first */
 		if (pd[i].flags & PF_RUNNING) {
-			close(pd[i].w);
-			close(pd[i].r);
+			if (pd[i].w >= 0) close(pd[i].w);
+			if (pd[i].r >= 0) close(pd[i].r);
 			pd[i].flags &= ~PF_RUNNING;
 		} else 
 			togo -= (pd[i].pid < 0);
