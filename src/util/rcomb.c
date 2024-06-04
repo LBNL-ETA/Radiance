@@ -1,12 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.19 2024/06/03 18:55:51 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.20 2024/06/04 21:23:11 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
  *
  * Multi-processing mode under Unix creates children that each work
  * on one input row at a time, fed by the original process.  Final conversion
- * and output to stdout is sorted by first child while its siblings send it
+ * and output to stdout is sorted by last child while its siblings send it
  * their record calculations.
  */
 
@@ -545,25 +545,50 @@ output_headinfo(FILE *fp)
 	}
 }
 
-static void
-reset_inputs(void)
+static int
+output_loop(void)
 {
-	int	i = nmats;
+	const size_t	row_size = rmx_array_size(mop[nmats].rmp);
+	int		i = nmats;
+	int		cur_child = 0;
 
-	fpurge(stdin);		/* discard previous matrix input */
-	while (i--) {
-		if (mop[i].infp != stdin)
-			fclose(mop[i].infp);	/* ! pclose() */
-		mop[i].infp = stdin;
-		mop[i].imx.dtype = DTdouble;
-		mop[i].imx.pflags &= ~RMF_SWAPIN;
+	if (mop[nmats].rmp != &mop[nmats].imx)		/* output is split? */
+		rmx_reset(&mop[nmats].imx);
+	while (i-- > 0) {				/* close input matrices */
+		fclose(mop[i].infp);		/* ! pclose() */
+		mop[i].infp = NULL;
+		rmx_reset(&mop[i].imx);
+		if (mop[i].rmp != &mop[i].imx) {
+			rmx_free(mop[i].rmp);
+			mop[i].rmp = &mop[i].imx;
+		}
 	}
+#ifdef getc_unlocked
+	flockfile(stdout);				/* we own this, now */
+#endif
+	for ( ; ; ) {					/* loop until no more */
+		ssize_t		rv;
+		rv = readbuf(cproc[cur_child].r, mop[nmats].rmp->mtx, row_size);
+		if (!rv)				/* out of rows? */
+			break;
+		if (rv != row_size) {
+			fputs("Read error in output loop\n", stderr);
+			return(0);
+		}					/* do final conversion */
+		if (!rmx_write_data(mop[nmats].rmp->mtx, mop[nmats].rmp->ncomp,
+	    			mop[nmats].rmp->ncols, mop[nmats].rmp->dtype, stdout)) {
+			fputs("Conversion/write error in output loop\n", stderr);
+			return(0);
+		}
+		cur_child++;
+		cur_child *= (cur_child < inchild);
+	}
+	return(fflush(stdout) != EOF);
 }
 
 static int
 spawned_children(int np)
 {
-	size_t	recsize = 0;
 	int	i, rv;
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -579,27 +604,28 @@ spawned_children(int np)
 		mop[i].imx.nrows = 1;
 		if (!rmx_prepare(&mop[i].imx))
 			goto memerror;
-		recsize += rmx_array_size(&mop[i].imx);
 		if (mop[i].rmp != &mop[i].imx) {
 			mop[i].rmp->nrows = 1;
 			if (!rmx_prepare(mop[i].rmp))
 				goto memerror;
 		}
 	}
-				/* prep output row buffer */
+				/* prep output row buffer(s) */
 	if (mcat || mop[nmats].preop.clen > 0) {
 		if (!split_input(&mop[nmats]))	/* need separate buffer */
 			return(0);
 		if (mop[nmats].preop.clen > 0)
 			mop[nmats].rmp->ncomp = mop[nmats].preop.clen /
 						mop[nmats].imx.ncomp;
-		mop[nmats].rmp->nrows = 1;
-		if (!mcat | !mcat_last && !rmx_prepare(mop[nmats].rmp))
-			goto memerror;
 	}
 	mop[nmats].imx.nrows = 1;
 	if (!rmx_prepare(&mop[nmats].imx))
 		goto memerror;
+	if (mop[nmats].rmp != &mop[nmats].imx) {
+		mop[nmats].rmp->nrows = 1;
+		if (!rmx_prepare(mop[nmats].rmp))
+			goto memerror;
+	}
 	if (np <= 1) {		/* single process return */
 #ifdef getc_unlocked
 		for (i = 0; i < nmats; i++)
@@ -609,49 +635,52 @@ spawned_children(int np)
 		return(0);
 	}
 	fflush(stdout);		/* flush header & spawn children */
-	nchildren = np+1;
+	nchildren = np + 1;	/* extra child to sequence output */
 	cproc = (SUBPROC *)malloc(sizeof(SUBPROC)*nchildren);
 	if (!cproc)
 		goto memerror;
-				/* first child becomes stdout filter */
-	cproc[0].flags = PF_FILT_OUT;
-	cproc[0].w = fileno(stdout);
-	cproc[0].r = 0;
-	cproc[0].pid = -1;
-	rv = open_process(&cproc[i], NULL);
-	if (rv < 0) {
-		perror("fork");
-		exit(1);
-	}
-	if (rv == 0) {		/* loop if first child */
-		inchild = 0;
-		reset_inputs();
-		output_loop();
-		_exit(0);
-	}
-				/* start other children */
-	for (i = 1; (i < nchildren) & (rv > 0); i++) {
-		cproc[i].flags = 0;
-		cproc[i].w = 1;
-		cproc[i].r = 0;
-		cproc[i].pid = -1;
+	for (i = nchildren; i--; ) cproc[i] = sp_inactive;
+	cproc[nchildren-1].flags |= PF_FILT_OUT;
+				/* start each child */
+	for (i = 0; i < nchildren; i++) {
 		rv = open_process(&cproc[i], NULL);
+		if (rv <= 0) break;
 	}
 	if (rv < 0) {
 		perror("fork");
 		close_processes(cproc, i);
 		exit(1);
 	}
-	if (rv > 0)		/* parent return? */
-		return(1);
+	if (rv) {		/* are we the parent? */
+		i = nchildren-1;	/* last child is sole reader */
+		while (i-- > 0)
+			close(cproc[i].r);
+		return(1);	/* parent return value */
+	}
 	inchild = i;		/* our child index */
-	while (--i > 0)		/* don't share siblings' pipes */
+	while (i-- > 0)		/* only parent writes siblings */
 		close(cproc[i].w);
-	reset_inputs();
+
+	if (inchild == nchildren-1)	/* last child sequences output */
+		exit(output_loop() ? 0 : 1);
+
+	i = inchild;		/* won't read from siblings */
+	while (i-- > 0)
+		close(cproc[i].r);
+	i = nmats;		/* close input matrix streams */
+	while (i-- > 0) {
+		if (mop[i].infp != stdin)
+			fclose(mop[i].infp);	/* ! pclose() */
+		mop[i].infp = stdin;
+		mop[i].imx.dtype = DTrmx_native;
+		mop[i].imx.pflags &= ~RMF_SWAPIN;
+	}
+	fpurge(stdin);		/* discard any previous matrix input */
 #ifdef getc_unlocked
 	flockfile(stdin);
 #endif
-	return(0);		/* child return */
+	mop[nmats].rmp->dtype = DTrmx_native;
+	return(0);		/* worker child return value */
 memerror:
 	fputs("Out of memory in spawned_children()\n", stderr);
 	exit(1);
@@ -662,21 +691,23 @@ parent_loop(void)
 {
 	int	i;
 
-	rmx_reset(&mop[nmats].imx);		/* not doing output side */
-	if (mop[nmats].rmp != &mop[nmats].imx)
-		rmx_reset(mop[nmats].rmp);
+	rmx_reset(&mop[nmats].imx);		/* not touching output side */
+	if (mop[nmats].rmp != &mop[nmats].imx) {
+		rmx_free(mop[nmats].rmp);
+		mop[nmats].rmp = &mop[nmats].imx;
+	}
 #ifdef getc_unlocked
-	for (i = 0; i < nmats; i++)
+	for (i = 0; i < nmats; i++)		/* we handle matrix inputs */
 		flockfile(mop[i].infp);
 #endif
 						/* load & send rows to kids */
 	for (cur_row = 0; (in_nrows <= 0) | (cur_row < in_nrows); cur_row++) {
-	    int	wfd = cproc[1 + cur_row%(nchildren-1)].w;
+	    int		wfd = cproc[cur_row % (nchildren-1)].w;
 	    for (i = 0; i < nmats; i++)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
-			fprintf(stderr, "%s: read error at row %d\n",
+			fprintf(stderr, "%s: parent read error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
 		}
@@ -688,16 +719,16 @@ parent_loop(void)
 			return(0);
 	}
 	i = close_processes(cproc, nchildren);
-	free(cproc); cproc = NULL;
+	free(cproc); cproc = NULL; nchildren = 0;
 	if (i < 0) {
-		fputs("Warning: missing child in parent_loop()\n", stderr);
+		fputs("Warning: lost child in parent_loop()\n", stderr);
 		return(1);
 	}
 	if (i > 0) {
 		fprintf(stderr, "Child exited with status %d\n", i);
 		return(0);
 	}
-	return(1);
+	return(1);				/* return success! */
 memerror:
 	fputs("Out of memory in parent_loop()\n", stderr);
 	exit(1);
@@ -706,8 +737,8 @@ memerror:
 static int
 combine_input(void)
 {
-	const int	row0 = (inchild > 0)*(inchild-1);
-	const int	rstep = nchildren + !nchildren;
+	const int	row0 = (inchild >= 0)*inchild;
+	const int	rstep = nchildren ? nchildren-1 : 1;
 	ROPMAT		*res = &mop[nmats];
 	int		set_r, set_c;
 	RMATRIX		*tmp = NULL;
@@ -783,17 +814,13 @@ combine_input(void)
 			return(0);
 	    }
 	    rmx_free(mres); mres = NULL;
-	    if (inchild > 0) {		/* children share stdout */
-	    	i = getc(stdin);	/* signals it's our turn */
-	    	if (i != EOF) ungetc(i, stdin);
-	    }
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
 	    			res->rmp->ncols, res->rmp->dtype, stdout))
 	    	return(0);
-	    if (inchild > 0 && fflush(stdout) == EOF)
+	    if (inchild >= 0 && fflush(stdout) == EOF)
 	    	return(0);
 	}
-	return(inchild > 0 || fflush(stdout) != EOF);
+	return(inchild >= 0 || fflush(stdout) != EOF);
 memerror:
 	fputs("Out of buffer space in combine_input()\n", stderr);
 	return(0);

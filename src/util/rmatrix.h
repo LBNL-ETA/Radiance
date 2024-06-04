@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.21 2024/05/19 15:32:24 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.22 2024/06/04 21:23:11 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -20,6 +20,8 @@ typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 	need to swap input, need to free/unmap memory */
 #define	RMF_SWAPIN	1
 #define RMF_OURMEM	2
+
+#define	DTrmx_native	DTdouble	/* in-core data type */
 
 /* General [row][col][cmp] component matrix */
 typedef struct {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.79 2024/05/19 15:32:24 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.80 2024/06/04 21:23:11 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -31,7 +31,7 @@ rmx_new(int nr, int nc, int n)
 	if (!dnew)
 		return(NULL);
 
-	dnew->dtype = DTdouble;
+	dnew->dtype = DTrmx_native;
 	dnew->nrows = nr;
 	dnew->ncols = nc;
 	dnew->ncomp = n;
@@ -225,6 +225,8 @@ rmx_load_float(double *drp, const RMATRIX *rm, FILE *fp)
 static int
 rmx_load_double(double *drp, const RMATRIX *rm, FILE *fp)
 {
+	if (DTrmx_native != DTdouble)
+		return(0);
 	if (getbinary(drp, sizeof(*drp)*rm->ncomp, rm->ncols, fp) != rm->ncols)
 		return(0);
 	if (rm->pflags & RMF_SWAPIN)
@@ -338,7 +340,7 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 	int	i;
 #ifdef MAP_FILE
 	long	pos;		/* map memory for file > 1MB if possible */
-	if ((rm->dtype == DTdouble) & !(rm->pflags & RMF_SWAPIN) &&
+	if ((rm->dtype == DTrmx_native) & !(rm->pflags & RMF_SWAPIN) &&
 			rmx_array_size(rm) >= 1L<<20 &&
 			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
 		rm->mapped = mmap(NULL, rmx_array_size(rm)+pos, PROT_READ|PROT_WRITE,
@@ -591,7 +593,7 @@ rmx_write_data(const double *dp, int nc, int len, int dtype, FILE *fp)
 		return(rmx_write_ascii(dp, nc, len, fp));
 	case DTfloat:
 		return(rmx_write_float(dp, nc*len, fp));
-	case DTdouble:
+	case DTrmx_native:
 		return(putbinary(dp, sizeof(*dp)*nc, len, fp) == len);
 	case DTrgbe:
 	case DTxyze:
@@ -615,7 +617,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 #ifdef getc_unlocked
 	flockfile(fp);
 #endif
-	if (dtype == DTdouble)			/* write all at once? */
+	if (dtype == DTrmx_native)		/* write all at once? */
 		ok = rmx_write_data(rm->mtx, rm->ncomp,
 				rm->nrows*rm->ncols, dtype, fp);
 	else					/* else row by row */
