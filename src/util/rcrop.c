@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.16 2024/05/17 20:50:57 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.17 2024/06/05 17:30:56 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -98,6 +98,7 @@ binary_copyf(FILE *fp, int asize)
 					/* check if fseek() useful */
 	if (skip_len > skip_thresh &&
 			fseek(fp, ((long)rmin*width + cmin)*elsiz, SEEK_CUR) == 0) {
+		int	fd;
 		off_t	curpos;
 		buf = (char *)malloc(ncols*elsiz);
 		if (!buf)
@@ -115,9 +116,10 @@ binary_copyf(FILE *fp, int asize)
 			}
 		}
 #else
+		fd = fileno(fp);
 		curpos = ftello(fp);
 		for (y = nrows; y-- > 0; curpos += width*elsiz) {
-			if (pread(fileno(fp), buf, ncols*elsiz,
+			if (pread(fd, buf, ncols*elsiz,
 						curpos) != ncols*elsiz)
 				goto readerr;
 			if (putbinary(buf, elsiz, ncols, stdout) != ncols)
