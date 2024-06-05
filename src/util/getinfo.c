@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.26 2023/03/16 17:16:05 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.27 2024/06/05 21:56:53 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -115,7 +115,7 @@ copycat(void)			/* copy input to output */
 
 	fflush(stdout);
 	while ((n = fread(buf, 1, sizeof(buf), stdin)) > 0)
-		if (writebuf(fileno(stdout), buf, n) != n)
+		if (writebuf(1, buf, n) != n)
 			break;
 }
 

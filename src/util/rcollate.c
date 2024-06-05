@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.45 2024/01/26 00:47:17 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.46 2024/06/05 21:56:53 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -280,7 +280,7 @@ output_stream(FILE *fp)
 		return(0);
 	fflush(stdout);
 	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
-		if (write(fileno(stdout), buf, n) != n)
+		if (write(1, buf, n) != n)
 			return(0);
 		ntot += n;
 	}
