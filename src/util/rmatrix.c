@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.81 2024/06/06 16:46:31 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.82 2024/06/06 17:01:05 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -50,7 +50,7 @@ rmx_prepare(RMATRIX *rm)
 		return(1);
 	if ((rm->nrows <= 0) | (rm->ncols <= 0) | (rm->ncomp <= 0))
 		return(0);
-	rm->mtx = (double *)malloc(rmx_array_size(rm));
+	rm->mtx = (rmx_dtype *)malloc(rmx_array_size(rm));
 	rm->pflags |= RMF_FREEMEM;
 	return(rm->mtx != NULL);
 }
@@ -190,7 +190,7 @@ get_dminfo(char *s, void *p)
 }
 
 static int
-rmx_load_ascii(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_ascii(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	int	j, k;
 
@@ -202,7 +202,7 @@ rmx_load_ascii(double *drp, const RMATRIX *rm, FILE *fp)
 }
 
 static int
-rmx_load_float(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_float(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	int	j, k;
 	float	val[100];
@@ -223,10 +223,8 @@ rmx_load_float(double *drp, const RMATRIX *rm, FILE *fp)
 }
 
 static int
-rmx_load_double(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_double(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
-	if (DTrmx_native != DTdouble)
-		return(0);
 	if (getbinary(drp, sizeof(*drp)*rm->ncomp, rm->ncols, fp) != rm->ncols)
 		return(0);
 	if (rm->pflags & RMF_SWAPIN)
@@ -235,7 +233,7 @@ rmx_load_double(double *drp, const RMATRIX *rm, FILE *fp)
 }
 
 static int
-rmx_load_rgbe(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_rgbe(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	COLR	*scan;
 	COLOR	col;
@@ -258,7 +256,7 @@ rmx_load_rgbe(double *drp, const RMATRIX *rm, FILE *fp)
 }
 
 static int
-rmx_load_spec(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_spec(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	uby8	*scan;
 	SCOLOR	scol;
@@ -311,9 +309,9 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
-/* Load next row as double (cannot be XML) */
+/* Load next row as rmx_dtype (cannot be XML) */
 int
-rmx_load_row(double *drp, const RMATRIX *rm, FILE *fp)
+rmx_load_row(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	switch (rm->dtype) {
 	case DTascii:
@@ -342,13 +340,13 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 	long	pos;		/* map memory for file > 1MB if possible */
 	if ((rm->dtype == DTrmx_native) & !(rm->pflags & RMF_SWAPIN) &
 			(rmx_array_size(rm) >= 1L<<20) &&
-			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
+			(pos = ftell(fp)) >= 0 && !(pos % sizeof(rmx_dtype))) {
 		rm->mapped = mmap(NULL, rmx_array_size(rm)+pos, PROT_READ|PROT_WRITE,
 					MAP_PRIVATE, fileno(fp), 0);
 		if (rm->mapped != MAP_FAILED) {
 			if (rm->pflags & RMF_FREEMEM)
 				free(rm->mtx);
-			rm->mtx = (double *)rm->mapped + pos/sizeof(double);
+			rm->mtx = (rmx_dtype *)rm->mapped + pos/sizeof(rmx_dtype);
 			rm->pflags &= ~RMF_FREEMEM;
 			return(1);
 		}		/* else fall back on reading into memory */
@@ -456,7 +454,7 @@ rmx_load(const char *inspec, RMPref rmp)
 }
 
 static int
-rmx_write_ascii(const double *dp, int nc, int len, FILE *fp)
+rmx_write_ascii(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
 	while (len-- > 0) {
 		int	k = nc;
@@ -468,7 +466,7 @@ rmx_write_ascii(const double *dp, int nc, int len, FILE *fp)
 }
 
 static int
-rmx_write_float(const double *dp, int len, FILE *fp)
+rmx_write_float(const rmx_dtype *dp, int len, FILE *fp)
 {
 	float	val;
 
@@ -481,7 +479,7 @@ rmx_write_float(const double *dp, int len, FILE *fp)
 }
 
 static int
-rmx_write_rgbe(const double *dp, int nc, int len, FILE *fp)
+rmx_write_rgbe(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
 	COLR	*scan;
 	int	j;
@@ -500,7 +498,7 @@ rmx_write_rgbe(const double *dp, int nc, int len, FILE *fp)
 }
 
 static int
-rmx_write_spec(const double *dp, int nc, int len, FILE *fp)
+rmx_write_spec(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
 	uby8	*scan;
 	SCOLOR	scol;
@@ -588,7 +586,7 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 
 /* Write out matrix data (usually by row) */
 int
-rmx_write_data(const double *dp, int nc, int len, int dtype, FILE *fp)
+rmx_write_data(const rmx_dtype *dp, int nc, int len, int dtype, FILE *fp)
 {
 	switch (dtype) {
 	case DTascii:
@@ -648,7 +646,7 @@ rmx_identity(const int dim, const int n)
 		return(NULL);
 	memset(rid->mtx, 0, rmx_array_size(rid));
 	for (i = dim; i--; ) {
-	    double	*dp = rmx_lval(rid,i,i);
+	    rmx_dtype	*dp = rmx_lval(rid,i,i);
 	    for (k = n; k--; )
 		dp[k] = 1.;
 	}
@@ -742,7 +740,7 @@ rmx_transpose(const RMATRIX *rm)
 	for (j = dnew->ncols; j--; )
 	    for (i = dnew->nrows; i--; )
 	    	memcpy(rmx_lval(dnew,i,j), rmx_val(rm,j,i),
-	    			sizeof(double)*dnew->ncomp);
+	    			sizeof(rmx_dtype)*dnew->ncomp);
 	return(dnew);
 }
 
@@ -767,7 +765,7 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	for (i = mres->nrows; i--; )
 	    for (j = mres->ncols; j--; )
 	        for (k = mres->ncomp; k--; ) {
-		    double	d = 0;
+		    rmx_dtype	d = 0;
 		    for (h = m1->ncols; h--; )
 			d += rmx_val(m1,i,h)[k] * rmx_val(m2,h,j)[k];
 		    rmx_lval(mres,i,j)[k] = d;
@@ -795,7 +793,7 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 	for (i = m1->nrows; i--; )
 	    for (j = m1->ncols; j--; )
 		if (divide) {
-		    double	d;
+		    rmx_dtype	d;
 		    if (m2->ncomp == 1) {
 			d = rmx_val(m2,i,j)[0];
 			if (d == 0) {
@@ -818,7 +816,7 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 			}
 		} else {
 		    if (m2->ncomp == 1) {
-			const double	d = rmx_val(m2,i,j)[0];
+			const rmx_dtype	d = rmx_val(m2,i,j)[0];
 		        for (k = m1->ncomp; k--; )
 			    rmx_lval(m1,i,j)[k] *= d;
 		    } else
@@ -859,8 +857,8 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 		rmx_addinfo(msum, rmx_mismatch_warn);
 	for (i = msum->nrows; i--; )
 	    for (j = msum->ncols; j--; ) {
-	    	const double	*da = rmx_val(madd,i,j);
-	    	double		*ds = rmx_lval(msum,i,j);
+	    	const rmx_dtype	*da = rmx_val(madd,i,j);
+	    	rmx_dtype	*ds = rmx_lval(msum,i,j);
 		for (k = msum->ncomp; k--; )
 		     ds[k] += sf[k] * da[k];
 	    }
@@ -879,7 +877,7 @@ rmx_scale(RMATRIX *rm, const double sf[])
 		return(0);
 	for (i = rm->nrows; i--; )
 	    for (j = rm->ncols; j--; ) {
-	    	double	*dp = rmx_lval(rm,i,j);
+	    	rmx_dtype	*dp = rmx_lval(rm,i,j);
 		for (k = rm->ncomp; k--; )
 		    dp[k] *= sf[k];
 	    }
@@ -911,9 +909,9 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	dnew->dtype = msrc->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; ) {
-		const double	*ds = rmx_val(msrc,i,j);
+		const rmx_dtype	*ds = rmx_val(msrc,i,j);
 	        for (kd = dnew->ncomp; kd--; ) {
-		    double	d = 0;
+		    rmx_dtype	d = 0;
 		    for (ks = msrc->ncomp; ks--; )
 		        d += cmat[kd*msrc->ncomp + ks] * ds[ks];
 		    rmx_lval(dnew,i,j)[kd] = d;
@@ -938,7 +936,7 @@ rmx_from_cmatrix(const CMATRIX *cm)
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; ) {
 		const COLORV	*cv = cm_lval(cm,i,j);
-		double		*dp = rmx_lval(dnew,i,j);
+		rmx_dtype	*dp = rmx_lval(dnew,i,j);
 		dp[0] = cv[0];
 		dp[1] = cv[1];
 		dp[2] = cv[2];
@@ -960,7 +958,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 		return(NULL);
 	for (i = cnew->nrows; i--; )
 	    for (j = cnew->ncols; j--; ) {
-		const double	*dp = rmx_val(rm,i,j);
+		const rmx_dtype	*dp = rmx_val(rm,i,j);
 		COLORV		*cv = cm_lval(cnew,i,j);
 		switch (rm->ncomp) {
 		case 3:

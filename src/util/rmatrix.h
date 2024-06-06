@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.23 2024/06/06 16:46:31 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.24 2024/06/06 17:01:05 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -22,24 +22,25 @@ typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 #define RMF_FREEMEM	2
 
 #define	DTrmx_native	DTdouble	/* in-core data type */
+#define	rmx_dtype	double
 
 /* General [row][col][cmp] component matrix */
 typedef struct {
-	char	*info;
-	void	*mapped;
-	double	*mtx;
-	COLOR	cexp;
-	float	wlpart[4];
-	int	nrows, ncols;
-	short	ncomp;
-	uby8	dtype;
-	uby8	pflags;
+	char		*info;
+	void		*mapped;
+	rmx_dtype	*mtx;
+	COLOR		cexp;
+	float		wlpart[4];
+	int		nrows, ncols;
+	short		ncomp;
+	uby8		dtype;
+	uby8		pflags;
 } RMATRIX;
 
 #define rmx_lval(rm,r,c)	((rm)->mtx + (rm)->ncomp*((c)+(size_t)(rm)->ncols*(r)))
 #define rmx_val			rmx_lval
 
-#define rmx_array_size(rm)	(sizeof(double)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
+#define rmx_array_size(rm)	(sizeof(rmx_dtype)*(rm)->nrows*(rm)->ncols*(rm)->ncomp)
 #define rmx_mapped_size(rm)	((char *)(rm)->mtx + rmx_array_size(rm) - (char *)(rm)->mapped)
 
 /* Initialize a RMATRIX struct but don't allocate array space */
@@ -63,8 +64,8 @@ extern int	rmx_newtype(int dtyp1, int dtyp2);
 /* Read matrix header from input stream (cannot be XML) */
 extern int	rmx_load_header(RMATRIX *rm, FILE *fp);
 
-/* Load next row as double (cannot be XML) */
-extern int	rmx_load_row(double *drp, const RMATRIX *rm, FILE *fp);
+/* Load next row as rmx_dtype (cannot be XML) */
+extern int	rmx_load_row(rmx_dtype *drp, const RMATRIX *rm, FILE *fp);
 
 /* Allocate & load post-header data from stream given type set in rm->dtype */
 extern int	rmx_load_data(RMATRIX *rm, FILE *fp);
@@ -79,7 +80,7 @@ extern int	rmx_addinfo(RMATRIX *rm, const char *info);
 extern int	rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp);
 
 /* Write out matrix data (usually by row) */
-extern int	rmx_write_data(const double *dp, int nc, int len,
+extern int	rmx_write_data(const rmx_dtype *dp, int nc, int len,
 				int dtype, FILE *fp);
 
 /* Write matrix using file format indicated by dtype */
