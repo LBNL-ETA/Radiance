@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.22 2024/06/04 21:23:11 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.23 2024/06/06 16:46:31 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -16,10 +16,10 @@ extern "C" {
 	none, transmission, reflection front (normal side), reflection back */
 typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
-/* Private flags:
-	need to swap input, need to free/unmap memory */
+/* RMATRIX flags (usually private):
+	need to swap input, we should free memory */
 #define	RMF_SWAPIN	1
-#define RMF_OURMEM	2
+#define RMF_FREEMEM	2
 
 #define	DTrmx_native	DTdouble	/* in-core data type */
 

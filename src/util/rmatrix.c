@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.80 2024/06/04 21:23:11 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.81 2024/06/06 16:46:31 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -51,7 +51,7 @@ rmx_prepare(RMATRIX *rm)
 	if ((rm->nrows <= 0) | (rm->ncols <= 0) | (rm->ncomp <= 0))
 		return(0);
 	rm->mtx = (double *)malloc(rmx_array_size(rm));
-	rm->pflags |= RMF_OURMEM;
+	rm->pflags |= RMF_FREEMEM;
 	return(rm->mtx != NULL);
 }
 
@@ -77,15 +77,15 @@ rmx_reset(RMATRIX *rm)
 		free(rm->info);
 		rm->info = NULL;
 	}
-	if (rm->mtx && rm->pflags & RMF_OURMEM) {
 #ifdef MAP_FILE
-		if (rm->mapped) {
-			munmap(rm->mapped, rmx_mapped_size(rm));
-			rm->mapped = NULL;
-		} else
+	if (rm->mapped) {
+		munmap(rm->mapped, rmx_mapped_size(rm));
+		rm->mapped = NULL;
+	} else
 #endif
-			free(rm->mtx);
-		rm->pflags &= ~RMF_OURMEM;
+	if (rm->pflags & RMF_FREEMEM) {
+		free(rm->mtx);
+		rm->pflags &= ~RMF_FREEMEM;
 	}
 	rm->mtx = NULL;
 }
@@ -340,14 +340,16 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 	int	i;
 #ifdef MAP_FILE
 	long	pos;		/* map memory for file > 1MB if possible */
-	if ((rm->dtype == DTrmx_native) & !(rm->pflags & RMF_SWAPIN) &&
-			rmx_array_size(rm) >= 1L<<20 &&
+	if ((rm->dtype == DTrmx_native) & !(rm->pflags & RMF_SWAPIN) &
+			(rmx_array_size(rm) >= 1L<<20) &&
 			(pos = ftell(fp)) >= 0 && !(pos % sizeof(double))) {
 		rm->mapped = mmap(NULL, rmx_array_size(rm)+pos, PROT_READ|PROT_WRITE,
 					MAP_PRIVATE, fileno(fp), 0);
 		if (rm->mapped != MAP_FAILED) {
+			if (rm->pflags & RMF_FREEMEM)
+				free(rm->mtx);
 			rm->mtx = (double *)rm->mapped + pos/sizeof(double);
-			rm->pflags |= RMF_OURMEM;
+			rm->pflags &= ~RMF_FREEMEM;
 			return(1);
 		}		/* else fall back on reading into memory */
 		rm->mapped = NULL;
@@ -436,17 +438,17 @@ rmx_load(const char *inspec, RMPref rmp)
 			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
 		double	cmlt[MAXCSAMP];
 		int	i;
-		cmlt[0] = 1./dnew->cexp[0];
-		cmlt[1] = 1./dnew->cexp[1];
-		cmlt[2] = 1./dnew->cexp[2];
 		if (dnew->ncomp > MAXCSAMP) {
 			fprintf(stderr, "Excess spectral components in: %s\n",
 					inspec);
 			rmx_free(dnew);
 			return(NULL);
 		}
+		cmlt[0] = 1./dnew->cexp[0];
+		cmlt[1] = 1./dnew->cexp[1];
+		cmlt[2] = 1./dnew->cexp[2];
 		for (i = dnew->ncomp; i-- > 3; )
-			cmlt[i] = cmlt[1];
+			cmlt[i] = cmlt[1];	/* XXX hack! */
 		rmx_scale(dnew, cmlt);
 		setcolor(dnew->cexp, 1.f, 1.f, 1.f);
 	}
@@ -693,21 +695,19 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
 		return(1);
 	}
-	if (rdst->pflags & RMF_OURMEM) {
 #ifdef MAP_FILE			/* just matrix data -- leave metadata */
-		if (rdst->mapped)
-			munmap(rdst->mapped, rmx_mapped_size(rdst));
-		else
+	if (rdst->mapped)
+		munmap(rdst->mapped, rmx_mapped_size(rdst));
+	else
 #endif
-		if (rdst->mtx)
-			free(rdst->mtx);
-	}
+	if (rdst->pflags & RMF_FREEMEM)
+		free(rdst->mtx);
 	rdst->mapped = rsrc->mapped;
 	rdst->mtx = rsrc->mtx;
-	if (rsrc->pflags & RMF_OURMEM)
-		rdst->pflags |= RMF_OURMEM;
+	if (rsrc->pflags & RMF_FREEMEM)
+		rdst->pflags |= RMF_FREEMEM;
 	else
-		rdst->pflags &= ~RMF_OURMEM;
+		rdst->pflags &= ~RMF_FREEMEM;
 	rsrc->mapped = NULL; rsrc->mtx = NULL;
 	return(1);
 }
