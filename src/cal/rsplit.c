@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.16 2024/06/07 18:19:22 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.17 2024/06/07 20:26:53 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -17,8 +17,6 @@ static const char	RCSid[] = "$Id: rsplit.c,v 1.16 2024/06/07 18:19:22 greg Exp $
 #define	DOHEADER	1
 #define DORESOLU	2
 
-#define MAXFILE		512		/* maximum number of files */
-
 int			swapped = 0;	/* input is byte-swapped */
 
 struct outstream {		/* structure to hold output stream info */
@@ -27,8 +25,8 @@ struct outstream {		/* structure to hold output stream info */
 	int		ncomp;		/* component count */
 	int		bytsiz;		/* bytes/component if binary */
 	int		hdrflags;	/* header output flags */
-	const char	*format;	/* data format */
 	int		termc;		/* data separation character */
+	const char	*format;	/* data format */
 }	*rofile = NULL;
 
 int		nfiles = 0;	/* output file count */
