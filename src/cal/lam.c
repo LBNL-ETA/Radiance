@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.25 2019/08/13 16:31:35 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.26 2024/06/07 18:19:22 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -13,13 +13,14 @@ static const char	RCSid[] = "$Id: lam.c,v 1.25 2019/08/13 16:31:35 greg Exp $";
 #include "platform.h"
 #include "paths.h"
 
-#define MAXFILE		512		/* maximum number of files */
+#define MAXLINE		262144		/* maximum input line */
 
-#define MAXLINE		65536		/* maximum input line */
+struct instream {		/* structure to hold input stream info */
+	FILE		*input;		/* input stream */
+	int		bytsiz;		/* bytes/component if binary */
+	char		*tabc;		/* data separation string */
+}	*rifile = NULL;
 
-FILE	*input[MAXFILE];
-int	bytsiz[MAXFILE];
-char	*tabc[MAXFILE];
 int	nfiles = 0;
 
 char	buf[MAXLINE];
@@ -35,6 +36,12 @@ main(int argc, char *argv[])
 	int	puteol;
 	int	i;
 
+	rifile = (struct instream *)calloc(argc-1, sizeof(struct instream));
+	if (!rifile) {
+		fputs(argv[0], stderr);
+		fputs(": not enough memory\n", stderr);
+		return(1);
+	}
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
@@ -89,11 +96,11 @@ main(int argc, char *argv[])
 				}
 				break;
 			case '\0':
-				tabc[nfiles] = curtab;
-				input[nfiles] = stdin;
+				rifile[nfiles].tabc = curtab;
+				rifile[nfiles].input = stdin;
 				if (curbytes > 0)
-					SET_FILE_BINARY(input[nfiles]);
-				bytsiz[nfiles++] = curbytes;
+					SET_FILE_BINARY(rifile[nfiles].input);
+				rifile[nfiles++].bytsiz = curbytes;
 				break;
 			badopt:;
 			default:
@@ -102,61 +109,62 @@ main(int argc, char *argv[])
 				return(1);
 			}
 		} else if (argv[i][0] == '!') {
-			tabc[nfiles] = curtab;
-			if ((input[nfiles] = popen(argv[i]+1, "r")) == NULL) {
+			rifile[nfiles].tabc = curtab;
+			if ((rifile[nfiles].input = popen(argv[i]+1, "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
 				return(1);
 			}
 			if (curbytes > 0)
-				SET_FILE_BINARY(input[nfiles]);
-			bytsiz[nfiles++] = curbytes;
+				SET_FILE_BINARY(rifile[nfiles].input);
+			rifile[nfiles++].bytsiz = curbytes;
 		} else {
-			tabc[nfiles] = curtab;
-			if ((input[nfiles] = fopen(argv[i], "r")) == NULL) {
+			rifile[nfiles].tabc = curtab;
+			if ((rifile[nfiles].input = fopen(argv[i], "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot open file\n", stderr);
 				return(1);
 			}
 			if (curbytes > 0)
-				SET_FILE_BINARY(input[nfiles]);
-			bytsiz[nfiles++] = curbytes;
-		}
-		if (nfiles >= MAXFILE) {
-			fputs(argv[0], stderr);
-			fputs(": too many input streams\n", stderr);
-			return(1);
+				SET_FILE_BINARY(rifile[nfiles].input);
+			rifile[nfiles++].bytsiz = curbytes;
 		}
 	}
 	if (!nfiles) {
 		fputs(argv[0], stderr);
 		fputs(": no input streams\n", stderr);
 		return(1);
+	}					/* reduce array to size we need */
+	rifile = (struct instream *)realloc(rifile, nfiles*sizeof(struct instream));
+	if (!rifile) {
+		fputs(argv[0], stderr);
+		fputs(": realloc() failed!\n", stderr);
+		return(1);
 	}
 	if (binout)				/* binary output? */
 		SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 	for (i = nfiles; i--; )
-		flockfile(input[i]);
+		flockfile(rifile[i].input);
 	flockfile(stdout);
 #endif
 	puteol = 0;				/* any ASCII output at all? */
 	for (i = nfiles; i--; )
-		puteol += (bytsiz[i] <= 0);
+		puteol += (rifile[i].bytsiz <= 0);
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
-			if (bytsiz[i] > 0) {		/* binary input */
-				if (getbinary(buf, bytsiz[i], 1, input[i]) < 1)
+			if (rifile[i].bytsiz > 0) {		/* binary input */
+				if (getbinary(buf, rifile[i].bytsiz, 1, rifile[i].input) < 1)
 					break;
-				if (putbinary(buf, bytsiz[i], 1, stdout) != 1)
+				if (putbinary(buf, rifile[i].bytsiz, 1, stdout) != 1)
 					break;
-			} else if (bytsiz[i] < 0) {	/* multi-line input */
-				int	n = -bytsiz[i];
+			} else if (rifile[i].bytsiz < 0) {	/* multi-line input */
+				int	n = -rifile[i].bytsiz;
 				while (n--) {
-					if (fgets(buf, MAXLINE, input[i]) == NULL)
+					if (fgets(buf, MAXLINE, rifile[i].input) == NULL)
 						break;
-					if ((i > 0) | (n < -bytsiz[i]-1))
-						fputs(tabc[i], stdout);
+					if ((i > 0) | (n < -rifile[i].bytsiz-1))
+						fputs(rifile[i].tabc, stdout);
 					buf[strlen(buf)-1] = '\0';
 					if (fputs(buf, stdout) == EOF)
 						break;
@@ -164,10 +172,10 @@ main(int argc, char *argv[])
 				if (n >= 0)		/* fell short? */
 					break;
 			} else {			/* single-line input */
-				if (fgets(buf, MAXLINE, input[i]) == NULL)
+				if (fgets(buf, MAXLINE, rifile[i].input) == NULL)
 					break;
 				if (i)
-					fputs(tabc[i], stdout);
+					fputs(rifile[i].tabc, stdout);
 				buf[strlen(buf)-1] = '\0';
 				if (fputs(buf, stdout) == EOF)
 					break;

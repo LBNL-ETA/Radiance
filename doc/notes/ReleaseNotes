@@ -2697,3 +2697,6 @@ Thanks to Yongqing for initial implementation.
 Changed rcrop so negative #rows or #cols counts back from end.
 
 Added rcomb -n option for multi-processing of very large matrices.
+
+Made it so rsplit and rlam can handle any number of input files
+up to active open file descriptor limit.

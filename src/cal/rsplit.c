@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.15 2020/04/05 15:07:09 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.16 2024/06/07 18:19:22 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -19,23 +19,27 @@ static const char	RCSid[] = "$Id: rsplit.c,v 1.15 2020/04/05 15:07:09 greg Exp $
 
 #define MAXFILE		512		/* maximum number of files */
 
-static int		swapped = 0;	/* input is byte-swapped */
+int			swapped = 0;	/* input is byte-swapped */
 
-static FILE		*output[MAXFILE];
-static int		ncomp[MAXFILE];
-static int		bytsiz[MAXFILE];
-static int		hdrflags[MAXFILE];
-static const char	*format[MAXFILE];
-static int		termc[MAXFILE];
-static int		nfiles = 0;
+struct outstream {		/* structure to hold output stream info */
+	const char	*outspec;	/* output specification */
+	FILE		*output;	/* output stream */
+	int		ncomp;		/* component count */
+	int		bytsiz;		/* bytes/component if binary */
+	int		hdrflags;	/* header output flags */
+	const char	*format;	/* data format */
+	int		termc;		/* data separation character */
+}	*rofile = NULL;
 
-static RESOLU	ourres = {PIXSTANDARD, 0, 0};
+int		nfiles = 0;	/* output file count */
 
-static char	buf[16384];		/* input buffer used in scanOK() */
+RESOLU		ourres = {PIXSTANDARD, 0, 0};
+
+char		buf[16384];		/* input buffer used in scanOK() */
 
 
 /* process header line */
-static int
+int
 headline(char *s, void *p)
 {
 	extern const char	FMTSTR[];
@@ -55,14 +59,14 @@ headline(char *s, void *p)
 	}
 	i = nfiles;
 	while (i--)			/* else copy line to output streams */
-		if (hdrflags[i] & DOHEADER)
-			fputs(s, output[i]);
+		if (rofile[i].hdrflags & DOHEADER)
+			fputs(s, rofile[i].output);
 	return(1);
 }
 
 
 /* scan field into buffer up to and including terminating byte */
-static int
+int
 scanOK(int termc)
 {
 	int	skip_white = (termc == ' ');
@@ -102,10 +106,14 @@ main(int argc, char *argv[])
 	int		curbytes = 0;
 	int		curflags = 0;
 	const char	*curfmt = "ascii";
-	short		outndx[MAXFILE];
 	int		i;
 
-	memset(outndx, 0, sizeof(outndx));
+	rofile = (struct outstream *)calloc(argc-1, sizeof(struct outstream));
+	if (!rofile) {
+		fputs(argv[0], stderr);
+		fputs(": not enough memory\n", stderr);
+		return(1);
+	}
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
@@ -187,17 +195,17 @@ main(int argc, char *argv[])
 			case '\0':			/* stdout */
 				if (!nstdoutcomp) {	/* first use? */
 					needres |= (curflags & DORESOLU);
-					hdrflags[nfiles] = curflags;
+					rofile[nfiles].hdrflags = curflags;
 				}
-				output[nfiles] = stdout;
+				rofile[nfiles].output = stdout;
 				if (curbytes > 0)
-					SET_FILE_BINARY(output[nfiles]);
-				termc[nfiles] = curterm;
-				format[nfiles] = curfmt;
+					SET_FILE_BINARY(rofile[nfiles].output);
+				rofile[nfiles].termc = curterm;
+				rofile[nfiles].format = curfmt;
 				nstdoutcomp +=
-					ncomp[nfiles] = curncomp;
-				bytsiz[nfiles] = curbytes;
-				outndx[nfiles++] = i;
+					rofile[nfiles].ncomp = curncomp;
+				rofile[nfiles].bytsiz = curbytes;
+				rofile[nfiles++].outspec = argv[i];
 				break;
 			badopt:;
 			default:
@@ -206,31 +214,31 @@ main(int argc, char *argv[])
 				return(1);
 			}
 		} else if (argv[i][0] == '.' && !argv[i][1]) {
-			output[nfiles] = NULL;		/* discard data */
-			termc[nfiles] = curterm;
-			format[nfiles] = curfmt;
-			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles] = curbytes;
-			outndx[nfiles++] = i;
+			rofile[nfiles].output = NULL;		/* discard data */
+			rofile[nfiles].termc = curterm;
+			rofile[nfiles].format = curfmt;
+			rofile[nfiles].ncomp = curncomp;
+			rofile[nfiles].bytsiz = curbytes;
+			rofile[nfiles++].outspec = argv[i];
 		} else if (argv[i][0] == '!') {
 			needres |= (curflags & DORESOLU);
-			hdrflags[nfiles] = curflags;
-			termc[nfiles] = curterm;
-			if ((output[nfiles] = popen(argv[i]+1, "w")) == NULL) {
+			rofile[nfiles].hdrflags = curflags;
+			rofile[nfiles].termc = curterm;
+			if ((rofile[nfiles].output = popen(argv[i]+1, "w")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
 				return(1);
 			}
 			if (curbytes > 0)
-				SET_FILE_BINARY(output[nfiles]);
-			format[nfiles] = curfmt;
-			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles] = curbytes;
-			outndx[nfiles++] = i;
+				SET_FILE_BINARY(rofile[nfiles].output);
+			rofile[nfiles].format = curfmt;
+			rofile[nfiles].ncomp = curncomp;
+			rofile[nfiles].bytsiz = curbytes;
+			rofile[nfiles++].outspec = argv[i];
 		} else {
 			int	j = nfiles;
 			while (j--)			/* check duplicates */
-				if (!strcmp(argv[i], argv[outndx[j]])) {
+				if (!strcmp(argv[i], rofile[j].outspec)) {
 					fputs(argv[0], stderr);
 					fputs(": duplicate output: ", stderr);
 					fputs(argv[i], stderr);
@@ -244,36 +252,37 @@ main(int argc, char *argv[])
 				return(1);
 			}
 			needres |= (curflags & DORESOLU);
-			hdrflags[nfiles] = curflags;
-			termc[nfiles] = curterm;
+			rofile[nfiles].hdrflags = curflags;
+			rofile[nfiles].termc = curterm;
 			if (!append & !force && access(argv[i], F_OK) == 0) {
 				fputs(argv[i], stderr);
 				fputs(": file exists -- use -f to overwrite\n",
 						stderr);
 				return(1);
 			}
-			output[nfiles] = fopen(argv[i], append ? "a" : "w");
-			if (output[nfiles] == NULL) {
+			rofile[nfiles].output = fopen(argv[i], append ? "a" : "w");
+			if (!rofile[nfiles].output) {
 				fputs(argv[i], stderr);
 				fputs(": cannot open for output\n", stderr);
 				return(1);
 			}
 			if (curbytes > 0)
-				SET_FILE_BINARY(output[nfiles]);
-			format[nfiles] = curfmt;
-			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles] = curbytes;
-			outndx[nfiles++] = i;
-		}
-		if (nfiles >= MAXFILE) {
-			fputs(argv[0], stderr);
-			fputs(": too many output streams\n", stderr);
-			return(1);
+				SET_FILE_BINARY(rofile[nfiles].output);
+			rofile[nfiles].format = curfmt;
+			rofile[nfiles].ncomp = curncomp;
+			rofile[nfiles].bytsiz = curbytes;
+			rofile[nfiles++].outspec = argv[i];
 		}
 	}
 	if (!nfiles) {
 		fputs(argv[0], stderr);
 		fputs(": no output streams\n", stderr);
+		return(1);
+	}					/* reduce array to size we need */
+	rofile = (struct outstream *)realloc(rofile, nfiles*sizeof(struct outstream));
+	if (!rofile) {
+		fputs(argv[0], stderr);
+		fputs(": realloc() failed!\n", stderr);
 		return(1);
 	}
 	if (bininp)				/* binary input? */
@@ -281,8 +290,8 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 	flockfile(stdin);
 	for (i = nfiles; i--; )
-		if (output[i] != NULL)
-			ftrylockfile(output[i]);
+		if (rofile[i].output != NULL)
+			ftrylockfile(rofile[i].output);
 #endif
 						/* load/copy header */
 	if (inpflags & DOHEADER && getheader(stdin, headline, NULL) < 0) {
@@ -312,62 +321,62 @@ main(int argc, char *argv[])
 		}
 	}
 	for (i = 0; i < nfiles; i++) {		/* complete headers */
-		if (hdrflags[i] & DOHEADER) {
+		if (rofile[i].hdrflags & DOHEADER) {
 			if (!(inpflags & DOHEADER))
-				newheader("RADIANCE", output[i]);
-			printargs(argc, argv, output[i]);
-			fprintf(output[i], "NCOMP=%d\n", output[i]==stdout ?
-						nstdoutcomp : ncomp[i]);
-			if (format[i] != NULL) {
+				newheader("RADIANCE", rofile[i].output);
+			printargs(argc, argv, rofile[i].output);
+			fprintf(rofile[i].output, "NCOMP=%d\n", rofile[i].output==stdout ?
+						nstdoutcomp : rofile[i].ncomp);
+			if (rofile[i].format != NULL) {
 				extern const char  BIGEND[];
-				if (bytsiz[i] > 1) {
-					fputs(BIGEND, output[i]);
+				if (rofile[i].bytsiz > 1) {
+					fputs(BIGEND, rofile[i].output);
 					fputs(nativebigendian() ^ swapped ?
-						"1\n" : "0\n", output[i]);
+						"1\n" : "0\n", rofile[i].output);
 				}
-				fputformat(format[i], output[i]);
+				fputformat(rofile[i].format, rofile[i].output);
 			}
-			fputc('\n', output[i]);
+			fputc('\n', rofile[i].output);
 		}
-		if (hdrflags[i] & DORESOLU)
-			fputsresolu(&ourres, output[i]);
+		if (rofile[i].hdrflags & DORESOLU)
+			fputsresolu(&ourres, rofile[i].output);
 	}
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
-			if (bytsiz[i] > 0) {		/* binary output */
-				if (getbinary(buf, bytsiz[i], ncomp[i],
-							stdin) < ncomp[i])
+			if (rofile[i].bytsiz > 0) {		/* binary output */
+				if (getbinary(buf, rofile[i].bytsiz, rofile[i].ncomp,
+							stdin) != rofile[i].ncomp)
 					break;
-				if (output[i] != NULL &&
-					    putbinary(buf, bytsiz[i], ncomp[i],
-							output[i]) < ncomp[i])
+				if (rofile[i].output != NULL &&
+					    putbinary(buf, rofile[i].bytsiz, rofile[i].ncomp,
+							rofile[i].output) != rofile[i].ncomp)
 					break;
-			} else if (ncomp[i] > 1) {	/* N-field output */
-				int	n = ncomp[i];
+			} else if (rofile[i].ncomp > 1) {	/* N-field output */
+				int	n = rofile[i].ncomp;
 				while (n--) {
-					if (!scanOK(termc[i]))
+					if (!scanOK(rofile[i].termc))
 						break;
-					if (output[i] != NULL &&
-						    fputs(buf, output[i]) == EOF)
+					if (rofile[i].output != NULL &&
+						    fputs(buf, rofile[i].output) == EOF)
 						break;
 				}
 				if (n >= 0)		/* fell short? */
 					break;
-				if ((output[i] != NULL) &  /* add EOL if none */
-						(termc[i] != '\n'))
-					fputc('\n', output[i]);
+				if ((rofile[i].output != NULL) &  /* add EOL if none */
+						(rofile[i].termc != '\n'))
+					fputc('\n', rofile[i].output);
 			} else {			/* 1-field output */
-				if (!scanOK(termc[i]))
+				if (!scanOK(rofile[i].termc))
 					break;
-				if (output[i] != NULL) {
-					if (fputs(buf, output[i]) == EOF)
+				if (rofile[i].output != NULL) {
+					if (fputs(buf, rofile[i].output) == EOF)
 						break;
-					if (termc[i] != '\n')	/* add EOL? */
-						fputc('\n', output[i]);
+					if (rofile[i].termc != '\n')	/* add EOL? */
+						fputc('\n', rofile[i].output);
 				}
 			}
 							/* skip input EOL? */
-			if (!bininp && termc[nfiles-1] != '\n') {
+			if (!bininp && rofile[nfiles-1].termc != '\n') {
 				int	c = getchar();
 				if ((c != '\n') & (c != EOF))
 					ungetc(c, stdin);
