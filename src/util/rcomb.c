@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.23 2024/06/07 03:55:59 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.24 2024/06/10 18:20:06 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -488,7 +488,7 @@ initialize(RMATRIX *imp)
 		restype = mop[i].rmp->dtype;
 		if (!imp->dtype || (restype = rmx_newtype(restype, imp->dtype)) > 0)
 			imp->dtype = restype;
-		else
+		else if (!nowarn)
 			fprintf(stderr, "%s: warning - data type mismatch\n",
 					mop[i].inspec);
 		if (!i) {
@@ -552,7 +552,8 @@ spawned_children(int np)
 
 #if defined(_WIN32) || defined(_WIN64)
 	if (np > 1) {
-		fputs("Warning: only one process under Windows\n", stderr);
+		if (!nowarn)
+			fputs("Warning: only one process under Windows\n", stderr);
 		np = 1;
 	} else
 #endif
@@ -689,7 +690,8 @@ parent_loop(void)
 	i = close_processes(cproc, nchildren);	/* collect family */
 	free(cproc); cproc = NULL; nchildren = 0;
 	if (i < 0) {
-		fputs("Warning: lost child in parent_loop()\n", stderr);
+		if (!nowarn)
+			fputs("Warning: lost child in parent_loop()\n", stderr);
 		return(1);
 	}
 	if (i > 0) {
