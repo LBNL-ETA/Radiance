@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.51 2023/11/20 21:44:29 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.52 2024/06/11 17:23:25 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -1246,7 +1246,7 @@ clearqueue(void)				/* process queue */
 	}
 					/* mark end and get results */
 	memset((char *)fbp, '\0', 6*sizeof(float));
-	if (process(&PDesc, (char *)fbuf, (char *)fbuf,
+	if (process(&PDesc, fbuf, fbuf,
 			4*sizeof(float)*(queuesiz+1),
 			6*sizeof(float)*(queuesiz+1)) !=
 			4*sizeof(float)*(queuesiz+1)) {
