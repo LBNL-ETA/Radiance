@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.21 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.22 2024/06/11 17:24:01 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -21,8 +21,10 @@ int  force = 0;				/* force file overwrite? */
 int  findframe = 0;			/* find a specific frame? */
 int  frameno = 0;			/* current frame number */
 int  fmterr = 0;			/* got input format error */
-char  *headlines;			/* current header info. */
-int  headlen;				/* current header length */
+char  *headlines = NULL;		/* current header info. */
+int  headlen1 = 0;			/* length of initial frame header */
+int  headlen = 0;			/* current header length */
+char  fmt[MAXFMTLEN];			/* input format */
 
 char  *progname;
 
@@ -150,7 +152,8 @@ transfer(			/* transfer a Radiance picture */
 		}
 	}
 	SET_FILE_BINARY(fp);
-	dumpheader(fp);			/* put out header */
+	newheader("RADIANCE", fp);		/* put out header */
+	dumpheader(fp);
 	fputs(progname, fp);
 	if (bradj)
 		fprintf(fp, " -e %+d", bradj);
@@ -159,6 +162,10 @@ transfer(			/* transfer a Radiance picture */
 	fputc('\n', fp);
 	if (bradj)
 		fputexpos(pow(2.0, (double)bradj), fp);
+	if (frameno)
+		fprintf(fp, "FRAME=%d\n", frameno);
+	if (fmt[0])
+		fputformat(fmt, fp);
 	fputc('\n', fp);
 	fputresolu(order, xmax, ymax, fp);
 					/* transfer picture */
@@ -170,22 +177,21 @@ transfer(			/* transfer a Radiance picture */
 		}
 		if (bradj)
 			shiftcolrs(scanin, xmax, bradj);
-		if (doflat)
-			putbinary((char *)scanin, sizeof(COLR), xmax, fp);
-		else
-			fwritecolrs(scanin, xmax, fp);
-		if (ferror(fp)) {
-			fprintf(stderr, "%s: error writing output to \"%s\"\n",
-					progname, oname);
-			exit(1);
-		}
+		if (doflat ? (putbinary(scanin, sizeof(COLR), xmax, fp) != xmax) :
+				(fwritecolrs(scanin, xmax, fp) < 0))
+			goto writerr;
 	}
-					/* clean up */
+	if (fflush(fp) == EOF)		/* clean up */
+		goto writerr;
 	if (oname[0] == '!')
 		pclose(fp);
 	else if (ospec != NULL)
 		fclose(fp);
 	return(1);
+writerr:
+	fprintf(stderr, "%s: error writing output to \"%s\"\n",
+			progname, oname);
+	exit(1);
 }
 
 
@@ -195,13 +201,18 @@ addhline(			/* add a line to our info. header */
 	void	*p
 )
 {
-	char	fmt[MAXFMTLEN];
 	int	n;
 
-	if (formatval(fmt, s))
-		fmterr += !globmatch(PICFMT, fmt);
-	else if (!strncmp(s, "FRAME=", 6))
+	if (isheadid(s))
+		return(0);
+	if (!strncmp(s, "FRAME=", 6)) {
 		frameno = atoi(s+6);
+		return(0);
+	}
+	if (formatval(fmt, s)) {
+		fmterr += !globmatch(PICFMT, fmt);
+		return(0);
+	}
 	n = strlen(s);
 	if (headlen)
 		headlines = (char *)realloc((void *)headlines, headlen+n+1);
@@ -223,10 +234,10 @@ loadheader(			/* load an info. header into memory */
 )
 {
 	fmterr = 0; frameno = 0;
-	if (headlen) {			/* free old header */
-		free(headlines);
-		headlen = 0;
-	}
+				/* revert to initial header length */
+	if (!headlen1) headlen1 = headlen;
+	else headlen = headlen1;
+
 	if (getheader(fp, addhline, NULL) < 0)
 		return(0);
 	if (fmterr)
