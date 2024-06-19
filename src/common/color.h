@@ -1,11 +1,75 @@
-/* RCSid $Id: color.h,v 2.45 2024/01/17 17:36:20 greg Exp $ */
+/* RCSid $Id: color.h,v 2.46 2024/06/19 16:58:07 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
+ *		(Notes by Randolph Fritz)
  *
+ *  COLOR REPRESENTATION OVERVIEW
+ *  =============================
+ *  Internally, Radiance represents light in multiple spectral
+ *  bands. Four spectral models are used: monochrome, RGB, XYZ,
+ *  and multiband.
+ *
+ *  Units
+ *  -----
+ *  Radiance -- W/sr/m2
+ *  Irradiance -- W/m2
+ *  Luminance -- lm/sr/m2
+ *  Illuminance -- lm/m2
+ *
+ *  Colors
+ *  ------
+ *  In the monochrome, RGB, and multiband formats, units of
+ *  radiance and irradiance are used. In the XYZ format, units
+ *  of luminance and illuminance are used, or sometimes an
+ *  intermediate form, where the units are multiplied by the
+ *  constant WHTEFFICACY, the scotopic luminous efficacy of
+ *  white light. WHTEFFICACY is 179, an approximation of the
+ *  luminous efficacy of the equal energy spectrum.
+ *
+ *  In the multiband format, up to MAXCSAMP (by default 24)
+ *  spectral bands may be used. 24 was chosen after testing,
+ *  which found virtually no benefit for more than 18 bands. 24
+ *  was chosen to allow for additional infrared or ultraviolet
+ *  bands. If even that is not enough, MAXCSAMP can be increased
+ *  at compile time.
+ *
+ *  Numbers
+ *  -------
+ *  Calculations are done using 32-bit floating point numbers.
+ *  Values are stored in the compressed real pixels[1] format,
+ *  which allocates one byte per band, plus one for an exponent.
+ *
+ *  Real Pixel Format
+ *  -----------------
+ *  The real pixel format gives at most eight bits of floating
+ *  point precision to each spectral band; the brightest bands
+ *  have full precision, darker ones less.
+ *
+ *  In the real pixel format, each spectral band is allotted a
+ *  one byte mantissa and a common single-byte exponent is used.
+ *  The exponent has the range [-128,127] and each mantissa is
+ *  assumed to have a binary point at the left, so they have the
+ *  range [0,255/256]. In addition, the mantissas are
+ *  normalized, so that at least one mantissa always is in the
+ *  range [128/256, 255/256] -- one mantissa will always have
+ *  its high-order bit set.
+ *
+ *  References
+ *  ----------
+ *  [1] Ward, Greg. "Real Pixels." In Graphics Gems II, edited
+ *  by Arvo, James, 80--83. Graphics Gems Series. Boston:
+ *  Academic Press, 1991.
+ *
+ *
+ *  IMPLEMENTATION DETAILS
+ *  ======================
  *  Two color representations are used, one for calculation and
- *  another for storage.  Calculation is done with three floats
- *  for speed.  Stored color values use 4 bytes which contain
- *  three single byte mantissas and a common exponent.
+ *  another for storage.  Calculation is done with an array of 32-bit
+ *  floats for speed.  Stored color values use single byte mantissas
+ *  and a common exponent.  By convention, types containing 32-bit
+ *  floats are denoted by COLOR and compressed types are denoted by
+ *  COLR.  Tristimulus -- RGB or XYZ -- values can be stored in a
+ *  single 32-bit word.
  *
  *  Spectral colors have between 3 and MAXCSAMP samples, and cover
  *  wavelengths from WLPART[0] to WLPART[3] (max to min nanometers).
@@ -20,9 +84,9 @@
  *  the current number of samples and final conversions
  *  to tristimulus should use scolor_rgb() or scolor_cie().
  *
- *  A new Radiance format is provided for spectral pictures,
- *  and spectral colors must be converted by caller if the
- *  sampling doesn't match.
+ *  A Radiance file format is provided for spectral pictures, and
+ *  spectral colors must be converted by caller if the sampling
+ *  doesn't match.
  */
 #ifndef _RAD_COLOR_H_
 #define _RAD_COLOR_H_
@@ -39,6 +103,7 @@ extern "C" {
 #define MAXCSAMP	24	/* maximum # spectral samples */
 #endif
 
+/* Subscripts for tristimulus colors */
 #define  RED		0
 #define  GRN		1
 #define  BLU		2
