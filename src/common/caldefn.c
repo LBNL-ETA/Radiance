@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.38 2024/02/23 03:47:57 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.39 2024/06/20 21:21:24 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -604,9 +604,13 @@ getstatement(void)			/* get next statement */
     if (esupport&E_OUTCHAN &&
 		nextc == '$') {		/* channel assignment */
 	ep = getchan();
+	if (optimized)
+	    epoptimize(ep);		/* optimize new chan expr */
 	addchan(ep);
     } else {				/* ordinary definition */
 	ep = getdefn();
+    	if (optimized)
+    	    epoptimize(ep);		/* optimize new statement */
 	qname = qualname(dfn_name(ep), 0);
 	if (esupport&E_REDEFW && (vdef = varlookup(qname)) != NULL) {
 	    if (vdef->def != NULL && epcmp(ep, vdef->def)) {
@@ -631,8 +635,6 @@ getstatement(void)			/* get next statement */
 	    syntax("';' expected");
 	scan();
     }
-    if (optimized)
-    	epoptimize(ep);			/* optimize new statement */
 }
 
 
