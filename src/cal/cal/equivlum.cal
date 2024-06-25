@@ -1,0 +1,34 @@
+{ RCSid $Id: equivlum.cal,v 1.1 2024/06/25 23:54:54 greg Exp $ }
+{
+	Compute "Equivalent Luminance" with Helmholtz-Kohlrausch effect
+
+	June 2024	G. Ward
+
+	Usage:
+
+		rcomb -fc -f equivlum.cal -c XYZS input.hsr -c 1 0 0 0 \
+			> elum.hdr
+
+	Input may be HDR or HSR (spectral) image
+}
+
+x555 : 0.5120501/(0.5120501 + 1 + 0.005749999);
+y555 : 1/(0.5120501 + 1 + 0.005749999);
+
+Lp = ci(1,2);
+Lp_sqrt = sqrt(Lp);
+Ls = ci(1,4);
+XYZsum = ci(1,1) + Lp + ci(1,3);
+xin = ci(1,1)/XYZsum;
+yin = Lp/XYZsum;
+
+chrom_f(x,y) : .5*log(-.0054 - .21*x + .77*y + 1.44*x*x - 2.97*x*y
+			+ 1.59*y*y - 2.11*(1-x-y)*y*y) - log(y);
+
+ac_el = 1.3*Lp_sqrt/(Lp_sqrt + 2.24);
+
+a_el = Lp/(Lp + .05);
+
+c_el = ac_el*(chrom_f(xin,yin) - chrom_f(x555,y555));
+
+co(p) = if(min(Lp,XYZsum,1.5-p), Lp^a_el*Ls^(1-a_el)*10^c_el, 0);
