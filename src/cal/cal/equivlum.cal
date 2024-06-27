@@ -1,4 +1,4 @@
-{ RCSid $Id: equivlum.cal,v 1.2 2024/06/26 01:24:52 greg Exp $ }
+{ RCSid $Id: equivlum.cal,v 1.3 2024/06/27 17:08:33 greg Exp $ }
 {
 	Compute "Equivalent Luminance" with Helmholtz-Kohlrausch effect
 
@@ -22,13 +22,21 @@ XYZsum = ci(1,1) + Lp + ci(1,3);
 xin = ci(1,1)/XYZsum;
 yin = Lp/XYZsum;
 
-chrom_f(x,y) : .5*log10(-.0054 - .21*x + .77*y + 1.44*x*x - 2.97*x*y
-			+ 1.59*y*y - 2.11*(1-x-y)*y*y) - log10(y);
+chrom_f(a,y) : log(a)/2 - log(y);
+
+chrom_fa(x,y) : -.0054 - .21*x + .77*y + 1.44*x*x - 2.97*x*y
+			+ 1.59*y*y - 2.11*(1-x-y)*y*y;
+
+chrom_f555 : chrom_f(chrom_fa(x555,y555), y555);
+
+chrom_fain = chrom_fa(xin,yin);
 
 ac_el = 1.3*Lp_sqrt/(Lp_sqrt + 2.24);
 
 a_el = Lp/(Lp + .05);
 
-c_el = ac_el*(chrom_f(xin,yin) - chrom_f(x555,y555));
+c_el = ac_el*(chrom_f(chrom_fain,yin) - chrom_f555);
 
-co(p) = if(min(Lp,XYZsum,1.5-p), Lp^a_el*Ls^(1-a_el)*10^c_el, 0);
+co(p) = if(if(min(1.5-p,Lp,XYZsum),chrom_fain,-1),
+		Lp^a_el*Ls^(1-a_el)*exp(c_el),
+		0);
