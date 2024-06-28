@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.9 2024/05/22 16:49:19 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.10 2024/06/28 21:04:49 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -259,10 +259,10 @@ which may improve performance on multi-core architectures,
 especially for matrix multiplication
 and complex operations on long input rows.
 .SH EXAMPLES
-To convert two hyperspectral inputs to RGB color space,
+To convert two hyperspectral pictures to RGB color space,
 average them together, and write them out as a RADIANCE picture:
 .IP "" .2i
-rcomb -C RGB -s .5 img1.spc -s .5 img2.spc > avg.hdr
+rcomb -C RGB -s .5 img1.hsr -s .5 -fc img2.hsr > avg.hdr
 .PP
 Divide one set of matrix elements by the Euclidean sum of two others:
 .IP "" .2i
@@ -272,9 +272,9 @@ inp2.mtx inp3.mtx > out.mtx
 Compute the absolute and relative differences between melanopic and photopic values
 in a spectral image:
 .IP "" .2i
-rcomb -fa -C MY -e "abs(x):if(x,x,-x)"
+rcomb -C MY -e "abs(x):if(x,x,-x)"
 -e "co(p)=select(p,abs(ci(1,1)-ci(1,2)),(ci(1,1)-ci(1,2))/ci(1,2))"
-input_spec.hsr > compare.mtx
+input_spec.hsr -fa > compare.mtx
 .PP
 Concatenate a spectral flux coefficient matrix with a spectral sky
 matrix to compute a set of melanopic lux values:
