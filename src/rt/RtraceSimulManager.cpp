@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.9 2024/05/03 18:01:20 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.10 2024/07/02 23:54:16 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -237,7 +237,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 			res.revf = raycast;
 		double	d = normalize(res.rdir);
 		bool	sendRes = (cookedCall != NULL);
-		if (d > 0) {		// direction vector is valid?
+		if (d > .0) {		// direction vector is valid?
 			if (curFlags & RTlimDist)
 				res.rmax = d;
 			if (((curFlags&RTdoFIFO) != 0) & (ray_pnprocs > 0)) {

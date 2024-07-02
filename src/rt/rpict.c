@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.99 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.100 2024/07/02 23:54:16 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -472,7 +472,7 @@ render(				/* render the scene */
 							/* fill bar */
 		fillscanbar(scanbar, zbar, hres, ypos, ystep);
 		if (directvis)				/* add bitty sources */
-			drawsources(scanbar, zbar, 0, hres, ypos, ystep);
+			drawsources((COLORV **)scanbar, zbar, 0, hres, ypos, ystep);
 							/* write it out */
 #ifdef SIGCONT
 		signal(SIGCONT, SIG_IGN);	/* don't interrupt writes */

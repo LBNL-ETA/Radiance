@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.25 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.26 2024/07/02 23:54:16 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -428,7 +428,7 @@ parental_loop()
 			if (accumulate > 1)		/* need terminator? */
 				memset(orgdir[2*n++], 0, sizeof(FVECT)*2);
 			n *= sizeof(FVECT)*2;		/* send assignment */
-			if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
+			if (writebuf(kidpr[i].w, orgdir, n) != n)
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;	/* mark as busy */
@@ -527,7 +527,7 @@ feeder_loop()
 		if (++ninq >= MAXIQ) {
 			i = next_child_ready();		/* get eager child */
 			n = sizeof(FVECT)*2 * ninq;	/* give assignment */
-			if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
+			if (writebuf(kidpr[i].w, orgdir, n) != n)
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;
@@ -541,7 +541,7 @@ feeder_loop()
 	if (ninq) {				/* polish off input */
 		i = next_child_ready();
 		n = sizeof(FVECT)*2 * ninq;
-		if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
+		if (writebuf(kidpr[i].w, orgdir, n) != n)
 			error(SYSTEM, "pipe write error");
 		kida[i].r1 = lastray+1;
 		lastray += kida[i].nr = ninq;
@@ -549,7 +549,7 @@ feeder_loop()
 	}
 	memset(orgdir, 0, sizeof(FVECT)*2);	/* get results */
 	for (i = nchild; i--; ) {
-		writebuf(kidpr[i].w, (char *)orgdir, sizeof(FVECT)*2);
+		writebuf(kidpr[i].w, orgdir, sizeof(FVECT)*2);
 		queue_results(i);
 	}
 	if (recover)				/* and from before? */

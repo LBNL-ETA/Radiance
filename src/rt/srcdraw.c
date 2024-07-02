@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.22 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.23 2024/07/02 23:54:16 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -395,7 +395,7 @@ init_drawsources(
 
 void				/* add sources smaller than rad to computed subimage */
 drawsources(
-	COLOR	*pic[],				/* subimage pixel value array */
+	COLORV	*pic[],				/* subimage pixel value array */
 	float	*zbf[],				/* subimage distance array (opt.) */
 	int	x0,				/* origin and size of subimage */
 	int	xsiz,
@@ -407,7 +407,6 @@ drawsources(
 	int	nsv, npv;
 	int	xmin, xmax, ymin, ymax, x, y;
 	RREAL	cxy[2];
-	COLOR	rcol;
 	double	w;
 	RAY	sr;
 	SPLIST	*sp;
@@ -434,8 +433,9 @@ drawsources(
 				ymax = spoly[i][1]*vres - FTINY;
 		}
 					/* evaluate each pixel in BBox */
-		for (y = ymin; y <= ymax; y++)
-			for (x = xmin; x <= xmax; x++) {
+		for (y = ymin; y <= ymax; y++) {
+			COLORV	*pp = pic[y-y0] + (xmin-x0)*NCSAMP;
+			for (x = xmin; x <= xmax; x++, pp += NCSAMP) {
 							/* subarea for pixel */
 				npv = box_clip_poly(spoly, nsv,
 						(double)x/hres, (x+1.)/hres,
@@ -455,20 +455,19 @@ drawsources(
 				rayvalue(&sr);		/* compute value */
 				if (sintens(sr.rcol) <= FTINY)
 					continue;	/* missed/blocked */
-				scolor_rgb(rcol, sr.rcol);
 							/* modify pixel */
 				w = poly_area(ppoly, npv) * hres * vres;
 				if (zbf[y-y0] != NULL &&
 						sr.rxt < 0.99*zbf[y-y0][x-x0]) {
 					zbf[y-y0][x-x0] = sr.rxt;
-				} else if (!bigdiff(rcol, pic[y-y0][x-x0],
-						0.01)) { /* source sample */
-					scalecolor(pic[y-y0][x-x0], w);
+				} else if (!bigdiff(sr.rcol, pp, 0.01)) { /* source sample */
+					scalescolor(pp, w);
 					continue;
 				}
-				scalecolor(rcol, w);
-				scalecolor(pic[y-y0][x-x0], 1.-w);
-				addcolor(pic[y-y0][x-x0], rcol);
+				scalescolor(sr.rcol, w);
+				scalescolor(pp, 1.-w);
+				saddscolor(pp, sr.rcol);
 			}
+		}
 	}
 }

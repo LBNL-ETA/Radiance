@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.38 2024/04/30 22:25:46 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.39 2024/07/02 23:54:16 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -217,7 +217,7 @@ ray_pflush(void)			/* send queued rays to idle children */
 			continue;
 					/* smuggle set size in crtype */
 		r_queue[sfirst].crtype = n;
-		nw = writebuf(r_proc[i].fd_send, (char *)&r_queue[sfirst],
+		nw = writebuf(r_proc[i].fd_send, &r_queue[sfirst],
 				sizeof(RAY)*n);
 		if (nw != sizeof(RAY)*n)
 			return(-1);	/* write error */
@@ -348,7 +348,7 @@ getready:				/* any children waiting for us? */
 		error(CONSISTENCY, "buffer shortage in ray_presult()");
 
 					/* read rendered ray data */
-	n = readbuf(r_proc[pn].fd_recv, (char *)&r_queue[r_recv_next],
+	n = readbuf(r_proc[pn].fd_recv, &r_queue[r_recv_next],
 			sizeof(RAY)*r_proc[pn].npending);
 	if (n > 0) {
 		r_recv_next += n/sizeof(RAY);
@@ -435,7 +435,7 @@ ray_pchild(	/* process rays (never returns) */
 			rayvalue(&r_queue[i]);
 		}
 					/* write back our results */
-		i = writebuf(fd_out, (char *)r_queue, sizeof(RAY)*n);
+		i = writebuf(fd_out, r_queue, sizeof(RAY)*n);
 		if (i != sizeof(RAY)*n)
 			error(SYSTEM, "write error in ray_pchild()");
 	}
