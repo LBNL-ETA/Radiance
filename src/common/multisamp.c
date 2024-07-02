@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: multisamp.c,v 2.6 2024/04/17 15:07:29 greg Exp $";
+static const char	RCSid[] = "$Id: multisamp.c,v 2.7 2024/07/02 18:04:08 greg Exp $";
 #endif
 /*
  * Binary space partitioning curve for multidimensional sampling.
@@ -23,6 +23,8 @@ multisamp(double t[], int n, double r)
 	int	ti[8];
 	double	s;
 
+	while (n > 8)
+		t[--n] = frandom();
 	i = n;
 	while (i-- > 0)
 		ti[i] = 0;
