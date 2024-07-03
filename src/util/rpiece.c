@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.63 2024/07/03 17:06:57 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.64 2024/07/03 17:18:17 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -170,6 +170,10 @@ main(
 				if (argv[i][2] != 'a' || argv[i][3])
 					break;
 				pixaspect = atof(argv[++i]);
+				continue;
+			case 'S':
+				fprintf(stderr, "%s: -S unsupported\n", argv[0]);
+				i++;
 				continue;
 			case 'T':		/* time limit (hours) */
 				if (argv[i][2])
