@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.62 2024/06/03 18:55:51 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.63 2024/07/03 17:06:57 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -298,6 +298,7 @@ init(			/* set up output file and start rpict */
 	sprintf(vrbuf, "%d", vres);
 	rpargv[rpargc++] = "-y"; rpargv[rpargc++] = vrbuf;
 	rpargv[rpargc++] = "-pa"; rpargv[rpargc++] = "0";
+	rpargv[rpargc++] = "-pm"; rpargv[rpargc++] = "0";
 	rpargv[rpargc++] = av[ac-1];
 	rpargv[rpargc] = NULL;
 					/* open output file */
