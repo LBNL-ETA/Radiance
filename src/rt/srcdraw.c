@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.24 2024/07/02 23:59:20 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.25 2024/07/03 16:46:43 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -460,7 +460,7 @@ drawsources(
 				if (zbf[y-y0] != NULL &&
 						sr.rxt < 0.99*zbf[y-y0][x-x0]) {
 					zbf[y-y0][x-x0] = sr.rxt;
-				} else if (!sbigsdiff(sr.rcol, pp, 0.01)) { /* source sample */
+				} else if (!sbigsdiff(sr.rcol, pp, 0.07)) { /* source sample */
 					scalescolor(pp, w);
 					continue;
 				}

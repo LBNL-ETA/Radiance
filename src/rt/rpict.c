@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.100 2024/07/02 23:54:16 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.101 2024/07/03 16:46:43 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -384,6 +384,8 @@ render(				/* render the scene */
 	char  *oldfile
 )
 {
+	const int  srcdrawing =		/* manually draw tiny light sources? */
+		(directvis && dblur <= FTINY && (mblur <= FTINY) | !lastview.type);
 	COLOR  *scanbar[MAXDIV+1];	/* scanline arrays of pixel values */
 	float  *zbar[MAXDIV+1];		/* z values */
 	char  *sampdens;		/* previous sample density */
@@ -450,7 +452,7 @@ render(				/* render the scene */
 	signal(SIGCONT, report);
 #endif
 	ypos = vres-1 - i;			/* initialize sampling */
-	if (directvis)
+	if (srcdrawing)
 		init_drawsources(psample);
 	fillscanline(scanbar[0], zbar[0], sampdens, hres, ypos, hstep);
 						/* compute scanlines */
@@ -471,7 +473,7 @@ render(				/* render the scene */
 				hres, ypos, hstep);
 							/* fill bar */
 		fillscanbar(scanbar, zbar, hres, ypos, ystep);
-		if (directvis)				/* add bitty sources */
+		if (srcdrawing)				/* add bitty sources */
 			drawsources((COLORV **)scanbar, zbar, 0, hres, ypos, ystep);
 							/* write it out */
 #ifdef SIGCONT
