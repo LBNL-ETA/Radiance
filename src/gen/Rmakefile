@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.42 2023/02/09 00:18:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.43 2024/07/05 18:04:36 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -16,10 +16,10 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = genbox gensky xform genblinds genrev genworm gendaylit gendaymtx \
-		gensurf genprism replmarks mkillum mksource genclock
+		gensurf genprism replmarks mkillum mksource genclock genssky
 
 LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
-		glaze1.cal glaze2.cal perezlum.cal perezlum_c.cal
+		glaze1.cal glaze2.cal perezlum.cal perezlum_c.cal mie_ca.dat
 
 all:	$(PROGS)
 
@@ -71,7 +71,7 @@ mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \
 -lraycalls -lradiance -lrtrad $(MLIB)
 
-genrev:	genrev.o 
+genrev:	genrev.o
 	$(CC) $(CFLAGS) -o genrev genrev.o -lrtrad $(MLIB)
 
 gencatenary: gencat.o
@@ -88,6 +88,11 @@ genclock:	genclock.o
 
 genbranch:	genbranch.o
 	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
+
+
+# Assume rt is built before this
+genssky:	genssky.o sun.o ../rt/data.o atmos.o
+	$(CC) $(CFLAGS) -o genssky genssky.o ../rt/data.o sun.o atmos.o -lrtrad $(MLIB)
 
 mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
@@ -127,3 +132,7 @@ gendaylit.o gensky.o sun.o:	sun.h
 
 gendaymtx.o:	../common/platform.h ../common/rtmath.h \
 ../common/mat4.h ../common/fvect.h ../common/color.h
+
+genssky.o: ../common/rtio.h ../common/rtmath.h ../common/paths.h ../common/color.h
+
+atmos.o: ../common/rtio.h ../common/rtmath.h ../common/color.h ../rt/data.h sun.h

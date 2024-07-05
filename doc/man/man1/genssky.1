@@ -1,0 +1,106 @@
+.\" RCSid $Id: genssky.1,v 1.1 2024/07/05 18:04:36 greg Exp $
+.TH "GENSSKY" "1" "8/31/24" "RADIANCE" ""
+.SH "NAME"
+genssky - generates a RADIANCE description of the spectral daylight sources
+.SH "SYNOPSIS"
+\fBgenssky month day hour [-y year] [-d AOD] [-c cloud_cover] [-l file] [-g grefl] [-n nproc] [-r res] [-f out]\fR
+.SH "DESCRIPTION"
+\fIGenssky\fR produces a RADIANCE scene description of spectral sky
+and ground using the precomputed atmospheric scattering method
+(Bruneton et al). For a given atmospheric condition, a set of
+Radiance data files are pre-computed and reused for other solar
+positions. Precomputation can be sped up using multithreading with
+the \fI-n\fR flag. Extraterestrial solar radiation are spectrally
+resolved from 380-780nm at 20nm interval and constant regardless
+of location and time. The resulting sky source is in the same spectra
+range. The output are three files defaults to {prefix}.rad,
+{prefix}_sky.hsr, {prefix}_ground.hsr. The default prefix is "out"
+and can be changed using \fI-f\fR flag. The two .hsr files stores
+the fisheye spectral image of the sky and ground, with a default
+resolution of 128x128, which can be changed using \fI-r\fR flag.
+.PP
+Non-clear conditions are modeled by linearly interpolating between
+clear sky and CIE overcast sky.  The resulting sky is the weight
+(cloud cover) average of clear and overcast sky. The overcast sky
+has a CCT of 6415K, from which the daylight spectra was computed.
+.PP
+Genssky models the Mie scattering differently from the original
+implementation.  Instead of assuming exponential decay uniformly
+across the spectral range, the Mie scattering coefficients, as a
+functinon of the altitude, are computed into a lookup table using
+libradtran radiative transfer solver and interpolated directly
+during precomputation. The default Mie scattering profile is OPAC
+continental average, and can be overridden using the \fI-l\fR flag.
+The overall aerosol profile can also be scaled linearly by applying
+a broadband aerosol depth value using the \fI-d\fR flag.
+.PP
+Rayleigh scattering as a function of altitude is assumed to be
+exponential decay. The Rayleigh scattering coefficients at sea level
+are taken from Anderson et al (1986). There are a total of five
+sets of Rayleigh scattering data: mid-latitude summer, mid-latitude
+winter, sub-arctic summer, sub-arctic winter, and tropical. Latitudes
+are divided at 23.5 and 62.5 deg and summer is from month [4-9].
+The scale-height of each Rayleigh scattering profile are tuned to
+fit the corresponding results from a libradtran calculation.
+.PP
+\fIgenssky\fR can be used with the following input parameters.
+.PP
+\fB-a	     Latitude in degree, north positive. Used along with datetime to determine solar angle and Rayleigh scattering profile.
+.br
+
+\fB-c        Total cloud cover, value ranging from 0(clear)-1(overcast), default=0.
+.br
+
+\fB-d        Broadband aerosol optical depth, default: 0.115. This parameter linearlly scales the overall aerosol scattering, default=0.115.
+.br
+
+\fB-f        Output file name, default="out"
+.br
+
+\fB-g	     Average ground reflectance, default=0.2
+.br
+
+\fB-l        Custom Mie scattering profile file
+.br
+
+\fB-m	     Standard meridian, west positive. For example, UTC-8:00 = 120. Used to calculated solar angle.
+.br
+
+\fB-n        Number of threads for precomputation, no benefits beyond 16 threads
+.br
+
+\fB-o	     Longitude in degree, west positive. Used to calculated solar angle.
+.br
+
+\fB-r	     Sky and ground hyperspectral image resolution. default=128. Increase this value to reduce artifacts at horizon.
+.br
+
+
+.SH "EXAMPLES"
+To generate a clear sky for March 2th at 3:15pm standard time at a site latitude of 42 degrees, 108 degrees west longitude, and a 110 degrees standard meridian, using 8 threads:
+.br
+
+  genssky 3 2 15.25 -a 42 -o 108 -m 110 -n 8
+
+.br
+
+For the same sky but with 100 percent total cloud cover:
+.br
+
+  genssky 3 2 15.25 -a 42 -o 108 -m 110 -n 8 -c 1
+
+.br
+
+
+.SH "FILES"
+/usr/local/lib/ray/mie_ca.dat
+.br
+
+.SH "AUTHOR"
+Taoning Wang
+.br
+
+.SH "SEE ALSO"
+gensky(1), gensky(1), rcomb(1), rcontrib(1), rpict(1), rtpict(1),
+rtrace(1), xform(1)
+.br

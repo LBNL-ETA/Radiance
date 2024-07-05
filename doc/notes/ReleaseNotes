@@ -2700,3 +2700,6 @@ Added rcomb -n option for multi-processing of very large matrices.
 
 Made it so rsplit and rlam can handle any number of input files
 up to active open file descriptor limit.
+
+Taoning Wang added genssky tool for generating spectral sky
+descriptions.
