@@ -1,3 +1,4 @@
+/* RCSid $Id: atmos.h,v 2.2 2024/07/19 23:38:28 greg Exp $ */
 #ifndef ATMOS_H
 #define ATMOS_H
 
@@ -84,4 +85,4 @@ extern int compute_sundir(const int year, const int month, const int day,
 extern int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
                       int num_threads);
 
-#endif // ATMOS_H
+#endif /* ATMOS_H */

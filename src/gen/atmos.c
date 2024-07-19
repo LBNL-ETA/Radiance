@@ -1,3 +1,87 @@
+#ifndef lint
+static const char RCSid[] = "$Id: atmos.c,v 2.2 2024/07/19 23:38:28 greg Exp $";
+#endif
+/*
+The Radiance Software License, Version 2.0
+
+Radiance v5.4 Copyright (c) 1990 to 2022, The Regents of the University of
+California, through Lawrence Berkeley National Laboratory (subject to receipt
+of any required approvals from the U.S. Dept. of Energy).  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+(1) Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+(2) Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+(3) Neither the name of the University of California, Lawrence Berkeley
+National Laboratory, U.S. Dept. of Energy nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+You are under no obligation whatsoever to provide any bug fixes, patches,
+or upgrades to the features, functionality or performance of the source
+code ("Enhancements") to anyone; however, if you choose to make your
+Enhancements available either publicly, or directly to Lawrence Berkeley
+National Laboratory, without imposing a separate written license agreement
+for such Enhancements, then you hereby grant the following license: a
+non-exclusive, royalty-free perpetual license to install, use, modify,
+prepare derivative works, incorporate into other computer software,
+distribute, and sublicense such enhancements or derivative works thereof,
+in binary and source code form.
+
+=================================================================================
+
+Copyright (c) 2017 Eric Bruneton
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Additional modifications by T. Wang
+- N-dimensional data storage and lookup using Radiance data structure
+- Mie scattering coefficients precomputed using libRadTrans and interpolated at runtime
+- Translation to C from C++ with multi-threading
+*/
+
 #include "atmos.h"
 #include "data.h"
 
@@ -55,42 +139,42 @@ typedef struct {
   DATARRAY *delta_scattering_density_dp;
 } ScatDenseTdat;
 
-const double ER = 6360000.0; // Earth radius in meters
-const double AR = 6420000; // Atmosphere radius in meters
-const double AH = 60000;   // Atmosphere thickness in meters
+const double ER = 6360000.0; /* Earth radius in meters */
+const double AR = 6420000; /* Atmosphere radius in meters */
+const double AH = 60000;   /* Atmosphere thickness in meters */
 
 const float START_WVL = 390.0;
 const float END_WVL = 770.0;
 const double SUNRAD = 0.004625;
 
-// The cosine of the maximum Sun zenith angle
+/* The cosine of the maximum Sun zenith angle */
 const double MU_S_MIN = -0.2;
 
-// Scale heights (m)
-// Rayleigh scattering
-const double HR_MS = 8820; // Midlatitude summer
-const double HR_MW = 8100; // Midlatitude winter
-const double HR_SS = 8550; // Subarctic summer
-const double HR_SW = 7600; // Subarctic winter
-const double HR_T = 9050;  // Tropical
+/* Scale heights (m) */
+/* Rayleigh scattering */
+const double HR_MS = 8820; /* Midlatitude summer */
+const double HR_MW = 8100; /* Midlatitude winter */
+const double HR_SS = 8550; /* Subarctic summer */
+const double HR_SW = 7600; /* Subarctic winter */
+const double HR_T = 9050;  /* Tropical */
 
-const double AOD0_CA = 0.115; // Broadband AOD for continental average
+const double AOD0_CA = 0.115; /* Broadband AOD for continental average */
 
-const double SOLOMG = 6.7967e-5; // .533 apex angle
-const int WVLSPAN = 400;         // 380nm to 780nm
+const double SOLOMG = 6.7967e-5; /* .533 apex angle */
+const int WVLSPAN = 400;         /* 380nm to 780nm */
 
-// Aerosol optical depth at 550nm for continental clean
+/* Aerosol optical depth at 550nm for continental clean */
 const double AOD_CC_550 = 0.05352;
 
 /** 380nm to 780nm at 20nm intervals **/
-// Extraterrestrial solar W/m^2/nm
+/* Extraterrestrial solar W/m^2/nm */
 const float EXTSOL[NSSAMP] = {1.11099345, 1.75363199, 1.67126921, 1.97235667,
                               2.01863015, 1.93612482, 1.87310758, 1.88792588,
                               1.86274213, 1.84433248, 1.80370942, 1.73020456,
                               1.67036654, 1.57482149, 1.53646383, 1.45515319,
                               1.38207435, 1.3265141,  1.26648111, 1.20592043};
 
-// Rayleight scattering coefficients at sea level in m^-1
+/* Rayleight scattering coefficients at sea level in m^-1 */
 const float BR0_MS[NSSAMP] = {
     4.63889967e-05, 3.76703293e-05, 3.09193474e-05, 2.56223081e-05,
     2.14198405e-05, 1.80483398e-05, 1.53177709e-05, 1.30867298e-05,
@@ -125,19 +209,19 @@ const float BR0_T[NSSAMP] = {
     6.35240772e-06, 5.59544593e-06, 4.94840517e-06, 4.39219003e-06,
     3.91235655e-06, 3.49641927e-06, 3.13434084e-06, 2.81804244e-06};
 
-// Ozone extinction coefficients at sea level
+/* Ozone extinction coefficients at sea level */
 const float AO0[NSSAMP] = {
     3.5661864e-09, 1.4848362e-08, 4.5415674e-08, 1.2446184e-07, 2.6461576e-07,
     4.8451984e-07, 8.609148e-07,  1.480537e-06,  1.8809e-06,    2.5107328e-06,
     2.5263174e-06, 2.313507e-06,  1.727741e-06,  1.2027012e-06, 7.915902e-07,
     5.0639202e-07, 3.5285684e-07, 2.23021e-07,   1.7395638e-07, 1.5052574e-07};
 
-const double MIE_G = 0.7;  // Mie eccentricity
+const double MIE_G = 0.7;  /* Mie eccentricity */
 
 const int TRANSMITTANCE_TEXTURE_WIDTH = 256;
 const int TRANSMITTANCE_TEXTURE_HEIGHT = 64;
 
-// Resolution halved by original impl
+/* Resolution halved by original impl */
 const int SCATTERING_TEXTURE_R_SIZE = 16;
 const int SCATTERING_TEXTURE_MU_SIZE = 64;
 const int SCATTERING_TEXTURE_MU_S_SIZE = 16;
@@ -188,14 +272,14 @@ static inline double get_profile_density(const DensityProfile *profile,
 
 static int compute_optical_length_to_space_mie(DATARRAY *mdp, const double radius,
                                                const double mu, double *result) {
-  // Number of intervals for the numerical integration.
+  /* Number of intervals for the numerical integration. */
   const int nsamp = 500;
-  // The integration step, i.e. the length of each integration interval.
+  /* The integration step, i.e. the length of each integration interval. */
   const double dx = distance_to_space(radius, mu) / nsamp;
-  // Integration loop.
+  /* Integration loop. */
   for (int i = 0; i <= nsamp; ++i) {
     double d_i = i * dx;
-    // Distance between the current sample point and the planet center.
+    /* Distance between the current sample point and the planet center. */
     double r_i = sqrt(d_i * d_i + 2.0 * radius * mu * d_i + radius * radius);
     double pt[1] = {r_i - ER};
     DATARRAY *mie = datavector(mdp, pt);
@@ -210,20 +294,20 @@ static int compute_optical_length_to_space_mie(DATARRAY *mdp, const double radiu
 
 static double compute_optical_length_to_space(const DensityProfile *profile,
                                               const double radius, const double mu) {
-  // Number of intervals for the numerical integration.
+  /* Number of intervals for the numerical integration. */
   const int SAMPLE_COUNT = 500;
-  // The integration step, i.e. the length of each integration interval.
+  /* The integration step, i.e. the length of each integration interval. */
   const double dx = distance_to_space(radius, mu) / SAMPLE_COUNT;
-  // Integration loop.
+  /* Integration loop. */
   double result = 0.0;
   for (int i = 0; i <= SAMPLE_COUNT; ++i) {
     double d_i = i * dx;
-    // Distance between the current sample point and the planet center.
+    /* Distance between the current sample point and the planet center. */
     double r_i = sqrt(d_i * d_i + 2.0 * radius * mu * d_i + radius * radius);
-    // Number density at the current sample point (divided by the number density
-    // at the bottom of the atmosphere, yielding a dimensionless number).
+    /* Number density at the current sample point (divided by the number density */
+    /* at the bottom of the atmosphere, yielding a dimensionless number). */
     double y_i = get_profile_density(profile, r_i - ER);
-    // Sample weight (from the trapezoidal rule).
+    /* Sample weight (from the trapezoidal rule). */
     double weight_i = i == 0 || i == SAMPLE_COUNT ? 0.5 : 1.0;
     result += y_i * weight_i * dx;
   }
@@ -257,12 +341,12 @@ static inline double get_unit_range_from_texture_coord(const double u,
 
 static void to_transmittance_uv(const double radius, const double mu, double *u,
                                 double *v) {
-  // Distance to top atmosphere boundary for a horizontal ray at ground level.
+  /* Distance to top atmosphere boundary for a horizontal ray at ground level. */
   double H = sqrt(AR * AR - ER * ER);
-  // Distance to the horizon.
+  /* Distance to the horizon. */
   double rho = safe_sqrt(radius * radius - ER * ER);
-  // Distance to the top atmosphere boundary for the ray (r,mu), and its minimum
-  // and maximum values over all mu - obtained for (r,1) and (r,mu_horizon).
+  /* Distance to the top atmosphere boundary for the ray (r,mu), and its minimum */
+  /* and maximum values over all mu - obtained for (r,1) and (r,mu_horizon). */
   double d = distance_to_space(radius, mu);
   double d_min = AR - radius;
   double d_max = rho + H;
@@ -276,14 +360,14 @@ static void from_transmittance_uv(const double u, const double v, double *radius
                                   double *mu) {
   double x_mu = u;
   double x_r = v;
-  // Distance to top atmosphere boundary for a horizontal ray at ground level.
+  /* Distance to top atmosphere boundary for a horizontal ray at ground level. */
   double H = sqrt(AR * AR - ER * ER);
-  // Distance to the horizon, from which we can compute r:
+  /* Distance to the horizon, from which we can compute r: */
   double rho = H * x_r;
   *radius = sqrt(rho * rho + ER * ER);
-  // Distance to the top atmosphere boundary for the ray (r,mu), and its minimum
-  // and maximum values over all mu - obtained for (r,1) and (r,mu_horizon) -
-  // from which we can recover mu:
+  /* Distance to the top atmosphere boundary for the ray (r,mu), and its minimum */
+  /* and maximum values over all mu - obtained for (r,1) and (r,mu_horizon) - */
+  /* from which we can recover mu: */
   double d_min = AR - *radius;
   double d_max = rho + H;
   double d = d_min + x_mu * (d_max - d_min);
@@ -328,7 +412,7 @@ void get_transmittance_to_sun(DATARRAY *tau_dp, const double r,
   const double sin_theta_h = ER / r;
   const double cos_theta_h = -sqrt(fmax(1.0 - sin_theta_h * sin_theta_h, 0.0));
   DATARRAY *tau_sun = get_transmittance_to_space(tau_dp, r, mu_s);
-  // Smooth step
+  /* Smooth step */
   const double edge0 = -sin_theta_h * SUNRAD;
   const double edge1 = edge0 * -1;
   double x = mu_s - cos_theta_h;
@@ -348,7 +432,7 @@ static void compute_single_scattering_integrand(
 
   const double radius_d = clamp_radius(sqrt(distance * distance + 2.0 * radius * mu * distance + radius * radius));
   const double mu_s_d = clamp_cosine((radius * mu_s + distance * nu) / radius_d);
-  // double transmittance[NSSAMP];
+  /* double transmittance[NSSAMP]; */
   double tau_r_mu[NSSAMP] = {0};
   double tau_sun[NSSAMP] = {0};
   get_transmittance(tau_dp, radius, mu, distance, r_mu_intersects_ground, tau_r_mu);
@@ -485,9 +569,9 @@ static void from_scattering_uvwz(const double x, const double y, const double z,
   *radius = sqrt(rho * rho + ER * ER);
 
   if (z < 0.5) {
-    // Distance to the ground for the ray (r,mu), and its minimum and maximum
-    // values over all mu - obtained for (r,-1) and (r,mu_horizon) - from which
-    // we can recover mu:
+    /* Distance to the ground for the ray (r,mu), and its minimum and maximum */
+    /* values over all mu - obtained for (r,-1) and (r,mu_horizon) - from which */
+    /* we can recover mu: */
     const double d_min = *radius - ER;
     const double d_max = rho;
     const double d = d_min + (d_max - d_min) *
@@ -496,9 +580,9 @@ static void from_scattering_uvwz(const double x, const double y, const double z,
     *mu = d == 0.0 ? -1.0 : clamp_cosine(-(rho * rho + d * d) / (2.0 * *radius * d));
     *r_mu_hits_ground = 1;
   } else {
-    // Distance to the top atmosphere boundary for the ray (r,mu), and its
-    // minimum and maximum values over all mu - obtained for (r,1) and
-    // (r,mu_horizon) - from which we can recover mu:
+    /* Distance to the top atmosphere boundary for the ray (r,mu), and its */
+    /* minimum and maximum values over all mu - obtained for (r,1) and */
+    /* (r,mu_horizon) - from which we can recover mu: */
     const double d_min = AR - *radius;
     const double d_max = rho + H;
     const double d = d_min + (d_max - d_min) *
@@ -588,10 +672,10 @@ compute_scattering_density(const Atmosphere *atmos, DATARRAY *tau_dp,
                            DATARRAY *irrad_dp, const double radius, const double mu,
                            const double mu_s, const double nu,
                            const int scattering_order, double *result) {
-  // Compute unit direction vectors for the zenith, the view direction omega and
-  // and the sun direction omega_s, such that the cosine of the view-zenith
-  // angle is mu, the cosine of the sun-zenith angle is mu_s, and the cosine of
-  // the view-sun angle is nu. The goal is to simplify computations below.
+  /* Compute unit direction vectors for the zenith, the view direction omega and */
+  /* and the sun direction omega_s, such that the cosine of the view-zenith */
+  /* angle is mu, the cosine of the sun-zenith angle is mu_s, and the cosine of */
+  /* the view-sun angle is nu. The goal is to simplify computations below. */
   const double height = radius - ER;
   const double epsilon = 1e-6;
   const FVECT zenith_direction = {0.0, 0.0, 1.0};
@@ -607,21 +691,21 @@ compute_scattering_density(const Atmosphere *atmos, DATARRAY *tau_dp,
   const double dphi = PI / SAMPLE_COUNT;
   const double dtheta = PI / SAMPLE_COUNT;
 
-  // Nested loops for the integral over all the incident directions omega_i.
+  /* Nested loops for the integral over all the incident directions omega_i. */
   for (int l = 0; l < SAMPLE_COUNT; ++l) {
     const double theta = (l + 0.5) * dtheta;
     const double cos_theta = cos(theta);
     const double sin_theta = sin(theta);
     const int r_theta_hits_ground = ray_hits_ground(radius, cos_theta);
 
-    // The distance and transmittance to the ground only depend on theta, so we
-    // can compute them in the outer loop for efficiency.
+    /* The distance and transmittance to the ground only depend on theta, so we */
+    /* can compute them in the outer loop for efficiency. */
     double distance_to_ground = 0.0;
     double transmittance_to_ground[NSSAMP] = {0};
     double ground_albedo = 0;
     if (r_theta_hits_ground) {
       distance_to_ground = distance_to_earth(radius, cos_theta);
-      // assert(distance_to_ground >= 0.0 && distance_to_ground <= HMAX);
+      /* assert(distance_to_ground >= 0.0 && distance_to_ground <= HMAX); */
       get_transmittance(tau_dp, radius, cos_theta, distance_to_ground, r_theta_hits_ground,
                         transmittance_to_ground);
       ground_albedo = atmos->grefl;
@@ -633,9 +717,9 @@ compute_scattering_density(const Atmosphere *atmos, DATARRAY *tau_dp,
                              cos_theta};
       const double domega_i = dtheta * dphi * sin(theta);
 
-      // The radiance L_i arriving from direction omega_i after n-1 bounces is
-      // the sum of a term given by the precomputed scattering texture for the
-      // (n-1)-th order:
+      /* The radiance L_i arriving from direction omega_i after n-1 bounces is */
+      /* the sum of a term given by the precomputed scattering texture for the */
+      /* (n-1)-th order: */
       double nu1 = fdot(omega_s, omega_i);
       if (nu1 <= -1.0) {
         nu1 += 0.1;
@@ -647,10 +731,10 @@ compute_scattering_density(const Atmosphere *atmos, DATARRAY *tau_dp,
                      r_theta_hits_ground, scattering_order - 1,
                      incident_radiance);
 
-      // and of the contribution from the light paths with n-1 bounces and whose
-      // last bounce is on the ground. This contribution is the product of the
-      // transmittance to the ground, the ground albedo, the ground BRDF, and
-      // the irradiance received on the ground after n-2 bounces.
+      /* and of the contribution from the light paths with n-1 bounces and whose */
+      /* last bounce is on the ground. This contribution is the product of the */
+      /* transmittance to the ground, the ground albedo, the ground BRDF, and */
+      /* the irradiance received on the ground after n-2 bounces. */
       FVECT ground_normal = {
           zenith_direction[0] * radius + omega_i[0] * distance_to_ground,
           zenith_direction[1] * radius + omega_i[1] * distance_to_ground,
@@ -664,10 +748,10 @@ compute_scattering_density(const Atmosphere *atmos, DATARRAY *tau_dp,
       }
       free(ground_irradiance);
 
-      // The radiance finally scattered from direction omega_i towards direction
-      // -omega is the product of the incident radiance, the scattering
-      // coefficient, and the phase function for directions omega and omega_i
-      // (all this summed over all particle types, i.e. Rayleigh and Mie).
+      /* The radiance finally scattered from direction omega_i towards direction */
+      /* -omega is the product of the incident radiance, the scattering */
+      /* coefficient, and the phase function for directions omega and omega_i */
+      /* (all this summed over all particle types, i.e. Rayleigh and Mie). */
       const double nu2 = fdot(omega, omega_i);
       const double rayleigh_density =
           get_profile_density(&atmos->rayleigh_density, height);
@@ -694,7 +778,7 @@ static void compute_multi_scattering(DATARRAY *tau_dp,
                                         double *result) {
 
 
-  // Numerical integration sample count.
+  /* Numerical integration sample count. */
   const int nsamp = 50;
   const double dx = distance_to_nearst_atmosphere_boundary(
                         radius, mu, r_mu_hits_ground) /
@@ -703,21 +787,21 @@ static void compute_multi_scattering(DATARRAY *tau_dp,
   for (int i = 0; i <= nsamp; ++i) {
     const double d_i = i * dx;
 
-    // The r, mu and mu_s parameters at the current integration point (see the
-    // single scattering section for a detailed explanation).
+    /* The r, mu and mu_s parameters at the current integration point (see the */
+    /* single scattering section for a detailed explanation). */
     const double r_i =
         clamp_radius(sqrt(d_i * d_i + 2.0 * radius * mu * d_i + radius * radius));
     const double mu_i = clamp_cosine((radius * mu + d_i) / r_i);
     const double mu_s_i = clamp_cosine((radius * mu_s + d_i * nu) / r_i);
 
-    // The Rayleigh and Mie multiple scattering at the current sample point.
+    /* The Rayleigh and Mie multiple scattering at the current sample point. */
     double transmittance[NSSAMP] = {0};
     DATARRAY *rayleigh_mie_s =
         interpolate_scattering(scattering_density_dp, r_i, mu_i, mu_s_i, nu,
                                r_mu_hits_ground);
     get_transmittance(tau_dp, radius, mu, d_i, r_mu_hits_ground,
                       transmittance);
-    // Sample weight (from the trapezoidal rule).
+    /* Sample weight (from the trapezoidal rule). */
     const double weight_i = (i == 0 || i == nsamp) ? 0.5 : 1.0;
     for (int j = 0; j < NSSAMP; ++j) {
       result[j] += rayleigh_mie_s->arr.d[j] * transmittance[j] * dx * weight_i;
@@ -729,8 +813,8 @@ static void compute_multi_scattering(DATARRAY *tau_dp,
 static void compute_direct_irradiance(DATARRAY *tau_dp, const double r,
                                       const double mu_s, float *result) {
 
-  // Approximate the average of the cosine factor mu_s over the visible fraction
-  // of the sun disc
+  /* Approximate the average of the cosine factor mu_s over the visible fraction */
+  /* of the sun disc */
   const double average_cosine_factor =
       mu_s < -SUNRAD
           ? 0.0
@@ -795,8 +879,8 @@ DATARRAY *allocate_3d_datarray(const char *name, const int ri, const int rj,
   dp->dim[2].siz = rk - 1;
   dp->dim[2].ne = rk;
   dp->dim[2].p = NULL;
-  // dp->arr.p =
-  // malloc(sizeof(DATATYPE)*dp->dim[0].ne*dp->dim[1].ne*dp->dim[2].ne);
+  /* dp->arr.p = */
+  /* malloc(sizeof(DATATYPE)*dp->dim[0].ne*dp->dim[1].ne*dp->dim[2].ne); */
   if ((dp->arr.d = (DATATYPE *)malloc(asize * sizeof(DATATYPE))) == NULL)
     goto memerr;
   return (dp);
@@ -1053,7 +1137,7 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
       SCATTERING_TEXTURE_NU_SIZE, NSSAMP);
 
   int idx = 0;
-  // Computing transmittance...
+  /* Computing transmittance... */
   for (int j = 0; j < TRANSMITTANCE_TEXTURE_HEIGHT; ++j) {
     for (int i = 0; i < TRANSMITTANCE_TEXTURE_WIDTH; ++i) {
       double r, mu;
@@ -1070,7 +1154,7 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
   }
   savedata(tau_dp);
 
-  // Computing direct irradiance...
+  /* Computing direct irradiance... */
   idx = 0;
   for (int j = 0; j < IRRADIANCE_TEXTURE_HEIGHT; ++j) {
     for (int i = 0; i < IRRADIANCE_TEXTURE_WIDTH; ++i) {
@@ -1088,7 +1172,7 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
     }
   }
 
-  // Computing single scattering...
+  /* Computing single scattering... */
   THREAD *threads = (THREAD *)malloc(num_threads * sizeof(THREAD));
   Scat1Tdat *tdata = (Scat1Tdat *)malloc(num_threads * sizeof(Scat1Tdat));
   for (int i = 0; i < num_threads; i++) {
@@ -1116,10 +1200,7 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
   savedata(delta_mie_scattering_dp);
 
 
-  // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
   for (int scattering_order = 2; scattering_order <= sorder; ++scattering_order) {
-    // Compute the scattering density, and store it in
-    // delta_scattering_density_texture.
     THREAD *threads = (THREAD *)malloc(num_threads * sizeof(THREAD));
     ScatDenseTdat *tdata = (ScatDenseTdat *)malloc(num_threads * sizeof(ScatDenseTdat));
     for (int i = 0; i < num_threads; i++) {
@@ -1148,8 +1229,6 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
     free(tdata);
     free(threads);
 
-    // Compute the indirect irradiance, store it in delta_irradiance_texture
-    // and accumulate it in irradiance_texture_.
     idx = 0;
     for (unsigned int j = 0; j < IRRADIANCE_TEXTURE_HEIGHT; ++j) {
       for (unsigned int i = 0; i < IRRADIANCE_TEXTURE_WIDTH; ++i) {
@@ -1171,7 +1250,6 @@ int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
 
     increment_dp(irradiance_dp, delta_irradiance_dp);
 
-    // Computing multiple scattering...
     THREAD *threads2 = (THREAD *)malloc(num_threads * sizeof(THREAD));
     ScatNTdat *tdata2 = (ScatNTdat *)malloc(num_threads * sizeof(ScatNTdat));
     for (int i = 0; i < num_threads; i++) {
@@ -1294,19 +1372,19 @@ void get_ground_radiance(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m, DATARR
     FVECT point, normal;
     const double distance = distance_to_earth(radius, mu);
 
-    // direct + indirect irradiance
+    /* direct + indirect irradiance */
     VSUM(point, view_point, view_direction, distance);
     VCOPY(normal, point);
     normalize(normal);
     double irradiance[NSSAMP] = {0};
     get_irradiance(tau, irrad, ER, point, normal, sundir, irradiance);
 
-    // transmittance between view point and ground point
+    /* transmittance between view point and ground point */
     double trans[NSSAMP] = {0};
     get_transmittance(tau, radius, mu, distance, intersect, trans);
     if (trans[0] == 0) {printf("trans 0\n");}
 
-    // inscattering
+    /* inscattering */
     float inscatter[NSSAMP] = {0}; 
     get_sky_radiance(scat, scat1m, radius, mu, sun_ct, nu, inscatter);
 

@@ -1,3 +1,8 @@
+# Locate the threads package
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../rt)
 
 add_executable(genbeads genbeads.c hermite3.c)
@@ -12,8 +17,9 @@ target_link_libraries(genmarble ${LIB_M})
 add_executable(gensky gensky.c sun.c)
 target_link_libraries(gensky rtrad ${LIB_M})
 
+
 add_executable(genssky genssky.c sun.c atmos.c ../rt/data.c)
-target_link_libraries(genssky rtrad ${LIB_M})
+target_link_libraries(genssky rtrad ${LIB_M} Threads::Threads)
 
 add_executable(gendaylit gendaylit.c sun.c)
 target_link_libraries(gendaylit rtrad ${LIB_M})
