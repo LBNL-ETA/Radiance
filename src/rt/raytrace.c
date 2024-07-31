@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.88 2023/11/15 18:02:53 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.89 2024/07/31 22:29:18 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -50,7 +50,7 @@ rayorigin(		/* start new ray from old one */
 		rw = 1.0;
 		setscolor(r->rcoef, 1., 1., 1.);
 	} else {
-		rw = sintens(rc);
+		rw = sintens((COLORV *)rc);
 		if (rw > 1.0)
 			rw = 1.0;		/* avoid calculation growth */
 		if (rc != r->rcoef)
