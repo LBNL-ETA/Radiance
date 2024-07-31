@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.25 2024/07/03 16:46:43 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.26 2024/07/31 22:21:28 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -396,6 +396,7 @@ init_drawsources(
 void				/* add sources smaller than rad to computed subimage */
 drawsources(
 	COLORV	*pic[],				/* subimage pixel value array */
+	int	nc,				/* number of target components */
 	float	*zbf[],				/* subimage distance array (opt.) */
 	int	x0,				/* origin and size of subimage */
 	int	xsiz,
@@ -407,10 +408,14 @@ drawsources(
 	int	nsv, npv;
 	int	xmin, xmax, ymin, ymax, x, y;
 	RREAL	cxy[2];
+	COLOR	rcol;
 	double	w;
 	RAY	sr;
 	SPLIST	*sp;
 	int	i;
+					/* check #components */
+	if ((nc != 3) & (nc != NCSAMP))
+		error(INTERNAL, "unsupported #components in drawsources()");
 					/* check each source in our list */
 	for (sp = sphead; sp != NULL; sp = sp->next) {
 					/* clip source poly to subimage */
@@ -434,8 +439,8 @@ drawsources(
 		}
 					/* evaluate each pixel in BBox */
 		for (y = ymin; y <= ymax; y++) {
-			COLORV	*pp = pic[y-y0] + (xmin-x0)*NCSAMP;
-			for (x = xmin; x <= xmax; x++, pp += NCSAMP) {
+			COLORV	*pp = pic[y-y0] + (xmin-x0)*nc;
+			for (x = xmin; x <= xmax; x++, pp += nc) {
 							/* subarea for pixel */
 				npv = box_clip_poly(spoly, nsv,
 						(double)x/hres, (x+1.)/hres,
@@ -455,18 +460,31 @@ drawsources(
 				rayvalue(&sr);		/* compute value */
 				if (sintens(sr.rcol) <= FTINY)
 					continue;	/* missed/blocked */
+				if (nc == 3)
+					scolor_rgb(rcol, sr.rcol);
 							/* modify pixel */
 				w = poly_area(ppoly, npv) * hres * vres;
 				if (zbf[y-y0] != NULL &&
 						sr.rxt < 0.99*zbf[y-y0][x-x0]) {
 					zbf[y-y0][x-x0] = sr.rxt;
-				} else if (!sbigsdiff(sr.rcol, pp, 0.07)) { /* source sample */
+				} else if (nc == 3) {
+					if (!bigdiff(rcol, pp, 0.07)) {
+						scalecolor(pp, w);
+						continue;
+					}
+				} else if (!sbigsdiff(sr.rcol, pp, 0.07)) {
 					scalescolor(pp, w);
 					continue;
 				}
-				scalescolor(sr.rcol, w);
-				scalescolor(pp, 1.-w);
-				saddscolor(pp, sr.rcol);
+				if (nc == 3) {
+					scalecolor(rcol, w);
+					scalecolor(pp, 1.-w);
+					addcolor(pp, rcol);
+				} else {
+					scalescolor(sr.rcol, w);
+					scalescolor(pp, 1.-w);
+					saddscolor(pp, sr.rcol);
+				}
 			}
 		}
 	}
