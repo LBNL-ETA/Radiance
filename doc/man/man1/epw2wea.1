@@ -1,16 +1,33 @@
-.\" RCSid $Id: epw2wea.1,v 1.1 2013/09/25 16:52:28 greg Exp $
+.\" RCSid $Id: epw2wea.1,v 1.2 2024/08/02 21:18:39 greg Exp $
 .TH EPW2WEA 08/07/13 RADIANCE
 .SH NAME
 epw2wea - weather file converter
 .SH SYNOPSIS
 .B epw2wea
+[
+.B \-a
+]
 .B file_name.epw
+[
 .B file_name.wea
+]
 .SH DESCRIPTION
 .I epw2wea 
 transforms an EnergyPlus weather data (.epw) file into the DAYSIM weather file
-format, for use with the RADIANCE gendaymtx program.
+format, for use with the RADIANCE
+.I gendaymtx
+and
+.I gensdaymtx
+programs.
+.PP
+The
+.I \-a
+option adds atmospheric data needed by
+.I gensdaymtx
+to generate full spectral data.
+.PP
+If no output file is given, the standard output is written instead.
 .SH AUTHOR
 Christoph Reinhart, Jason Turner
 .SH "SEE ALSO"
-gendaymtx(1)
+gendaymtx(1), gensdaymtx(1)

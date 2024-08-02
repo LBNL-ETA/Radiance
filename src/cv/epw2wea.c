@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: epw2wea.c,v 2.5 2024/08/02 21:18:40 greg Exp $";
+#endif
 /*  Copyright (c) 2003
  *  National Research Council Canada
  *  written by Christoph Reinhart
@@ -12,8 +15,8 @@
 
 int main( int argc, char  *argv[])
 {
-	FILE *EPW_FILE;
-	FILE* WEA_FILE;
+	FILE *EPW_FILE = NULL;
+	FILE* WEA_FILE = stdout;
 	int year, month,day, hour_in,minute=60,i;
 	int minute_message=1;
 	int get_ac = 0;
@@ -22,40 +25,40 @@ int main( int argc, char  *argv[])
 	int cc;
     char keyword[2000]="";
 	char minute_string[2000]="";
-	char epw_file[200]="";
-	char wea_file[200] ="";
+	char *epw_file = NULL;
+	char *wea_file = NULL;
 	char city[200] ="";
 	char country[200] ="";
 	char latitude[200] ="",longitude[200] ="",time_zone[200] ="",elevation[200] ="";
 
-	if (argc < 3)
+	for ( ; argc > 2 && argv[1][0] == '-'; argc--, argv++)
+		if (argv[1][1] == 'a') {
+			get_ac = !get_ac;
+		} else {
+			fprintf(stderr, "epw2wea: unknown option: %s\n", argv[1]);
+			exit(1);
+		}
+
+	if ((argc < 2) | (argc > 3))
 	{
 		fprintf(stderr,"epw2wea: FATAL ERROR - wrong number of arguments\n");
-		fprintf(stderr,"start program with: epw2wea <file-name.epw> <file-name.wea>\n");
+		fprintf(stderr,"Usage: epw2wea [-a] file-name.epw [file-name.wea]\n");
 		exit(1);
 	}
-	if (argc >= 3)
-	{
-		strcpy(epw_file, argv[1]);
-		strcpy(wea_file, argv[2]);
-		if (argc ==4 && argv[3][0] == '-' && argv[3][1] == 'a') /* option -a */
-			get_ac = 1;
-		for (i = 3; i < argc; i++)
-		if (argv[i][0] == '-' )
-			switch (argv[i][1])
-			{
-				case 'h':	/* scaling factor */
-					break;
-			}
-		else
-		{
-			fprintf(stdout,"epw2wea: fatal error - %s bad option for input arguments\n", argv[i]);
-			exit(0);
+	epw_file = argv[1];
+	EPW_FILE=fopen(epw_file, "r");
+	if (!EPW_FILE) {
+		fprintf(stderr, "%s: cannot open for reading\n", epw_file);
+		exit(1);
+	}
+	if (argc == 3) {
+		wea_file = argv[2];
+		WEA_FILE=fopen(wea_file, "w");
+		if (!WEA_FILE) {
+			fprintf(stderr, "%s: cannot open for writing\n", wea_file);
+			exit(1);
 		}
 	}
-
-	EPW_FILE=fopen(epw_file, "r");
-	WEA_FILE=fopen(wea_file, "w");
 	fscanf(EPW_FILE,"%[^,]s",keyword);
 	if( !strcmp(keyword,"LOCATION") ){
 	fscanf(EPW_FILE,",%[^,]s",city);
