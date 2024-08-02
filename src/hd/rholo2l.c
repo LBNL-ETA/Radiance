@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.20 2023/12/16 18:33:55 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.21 2024/08/02 18:46:27 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -147,7 +147,7 @@ queue_packet(			/* queue up a beam packet */
 	packrays(rtbuf, p);
 	if ((n = p->nr) < RPACKSIZ)	/* add flush block? */
 		memset((char *)(rtbuf+6*n++), '\0', 6*sizeof(float));
-	if (writebuf(rtpd[pn].w, (char *)rtbuf, 6*sizeof(float)*n) < 0)
+	if (writebuf(rtpd[pn].w, rtbuf, 6*sizeof(float)*n) < 0)
 		error(SYSTEM, "write error in queue_packet");
 	p->next = NULL;
 	if (!pqlen[pn]++)	/* add it to the end of the queue */
@@ -282,8 +282,7 @@ flush_queue(void)			/* empty all rtrace queues */
 				if (rpl->nr < RPACKSIZ)
 					nr++;		/* add flush block */
 			}
-			n = readbuf(rtpd[i].r, (char *)rtbuf,
-					4*sizeof(float)*nr);
+			n = readbuf(rtpd[i].r, rtbuf, 4*sizeof(float)*nr);
 			if (n < 0)
 				error(SYSTEM, "read failure in flush_queue");
 			bp = rtbuf;			/* process packets */

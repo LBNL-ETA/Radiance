@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.22 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.23 2024/08/02 18:46:27 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -909,7 +909,7 @@ dobj_trace(	/* check for ray intersection with object(s) */
 		VCOPY(darr, rorg); VCOPY(darr+3, rdir);
 	}
 				/* trace it */
-	if (process(&op->rtp, (char *)darr, (char *)darr, sizeof(double),
+	if (process(&op->rtp, darr, darr, sizeof(double),
 			6*sizeof(double)) != sizeof(double))
 		error(SYSTEM, "rtrace communication error");
 				/* return distance */
