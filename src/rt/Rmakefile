@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.93 2023/11/17 20:02:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.94 2024/08/02 18:47:25 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -91,8 +91,8 @@ MATSRC = aniso.c normal.c dielectric.c m_clip.c glass.c m_brdf.c \
 MODOBJS = p_func.o t_func.o p_data.o t_data.o text.o mx_func.o mx_data.o
 MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c
 
-SUPPOBJS = func.o noise3.o data.o
-SUPPSRC = func.c noise3.c data.c
+SUPPOBJS = func.o noise3.o
+SUPPSRC = func.c noise3.c
 
 PMOBJS = pmap.o pmapsrc.o pmapmat.o pmaprand.o pmapio.o pmapdata.o \
          pmapbias.o pmapparm.o pmapcontrib.o pmapamb.o pmapray.o pmapopt.o \
@@ -103,7 +103,7 @@ PMSRC = pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c \
         pmapdiag.c pmaptype.c pmapkdt.c pmapooc.c oocmorton.c oococt.c \
         oocsort.c oocbuild.c oocnn.c ooccache.c pmutil.c pmcontrib2.c
 
-HEADERS = ambient.h ray.h data.h otspecial.h source.h
+HEADERS = ambient.h ray.h otspecial.h source.h
 
 #
 # What this makefile produces:
@@ -190,13 +190,13 @@ Version.c:	VERSION $(RSRC) $(HEADERS)
 # Include dependencies:
 #
 
-ambio.o colortab.o data.o devcomm.o \
+ambio.o colortab.o devcomm.o \
 devmain.o lookamb.o rview.o x11.o:	../common/color.h
 
 freeobjmem.o o_cone.o srcsupp.o:	../common/cone.h
 
-data.o freeobjmem.o m_brdf.o mx_data.o \
-p_data.o raycalls.o t_data.o:	data.h
+freeobjmem.o m_brdf.o mx_data.o \
+p_data.o raycalls.o t_data.o:	../common/data.h
 
 devcomm.o devmain.o devtable.o \
 editline.o x11.o:	driver.h
@@ -234,7 +234,7 @@ m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
 rpict.o rpmain.o rtmain.o rvmain.o source.o srcdraw.o \
 srcobstr.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
-cone.o data.o devcomm.o initotypes.o fprism.o preload.o \
+cone.o devcomm.o initotypes.o fprism.o preload.o \
 duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
 ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/mat4.h ../common/fvect.h
@@ -257,13 +257,13 @@ x11.o:	x11icon.h
 
 ambient.o ambcomp.o ambio.o lookamb.o raycalls.o:	ambient.h
 
-data.o rpmain.o rtmain.o rvmain.o rpict.o rtrace.o \
+rpmain.o rtmain.o rvmain.o rpict.o rtrace.o \
 rv2.o:	../common/resolu.h
 
 aniso.o func.o m_brdf.o m_direct.o mx_data.o mx_func.o p_data.o \
 p_func.o t_data.o t_func.o:	func.h ../common/calcomp.h
 
-preload.o:	data.h func.h ../common/object.h ../common/face.h \
+preload.o:	func.h ../common/data.h ../common/object.h ../common/face.h \
 ../common/cone.h ../common/instance.h ../common/mesh.h \
 ../common/color.h ../common/bsdf.h ../common/otypes.h
 
@@ -390,8 +390,8 @@ pmapmat.o: pmapmat.c pmapmat.h pmap.h pmapparm.h pmaptype.h pmapdata.h \
  ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
  ../common/fvect.h ../common/rterror.h ../common/octree.h \
  ../common/object.h ../common/color.h ../common/lookup.h pmaprand.h \
- ../common/otypes.h data.h func.h ../common/calcomp.h ../common/bsdf.h \
- ../common/ccolor.h
+ ../common/otypes.h ../common/data.h func.h ../common/calcomp.h \
+ ../common/bsdf.h ../common/ccolor.h
 
 pmapopt.o: pmapopt.c pmapparm.h pmaptype.h ../common/rtio.h \
  ../common/rterror.h

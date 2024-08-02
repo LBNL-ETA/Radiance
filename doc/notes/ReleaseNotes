@@ -2703,3 +2703,6 @@ up to active open file descriptor limit.
 
 Taoning Wang added genssky tool for generating spectral sky
 descriptions.
+
+Taoning added gensdaymtx utility based on gendaymtx, and
+added epw2wea -a option to include required information.

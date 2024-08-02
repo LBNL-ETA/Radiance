@@ -16,7 +16,10 @@ int main( int argc, char  *argv[])
 	FILE* WEA_FILE;
 	int year, month,day, hour_in,minute=60,i;
 	int minute_message=1;
+	int get_ac = 0;
 	float dir_norm_rad, dif_or_rad,dummy_float;
+	float aod;
+	int cc;
     char keyword[2000]="";
 	char minute_string[2000]="";
 	char epw_file[200]="";
@@ -35,6 +38,8 @@ int main( int argc, char  *argv[])
 	{
 		strcpy(epw_file, argv[1]);
 		strcpy(wea_file, argv[2]);
+		if (argc ==4 && argv[3][0] == '-' && argv[3][1] == 'a') /* option -a */
+			get_ac = 1;
 		for (i = 3; i < argc; i++)
 		if (argv[i][0] == '-' )
 			switch (argv[i][1])
@@ -110,6 +115,25 @@ int main( int argc, char  *argv[])
 
 		fscanf(EPW_FILE,",%f,%f",&dir_norm_rad, &dif_or_rad);
 		fprintf(WEA_FILE,"%.0f %.0f",dir_norm_rad, dif_or_rad);
+		if (get_ac){
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%d",&cc);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&dummy_float);
+			fscanf(EPW_FILE,",%f",&aod);
+
+			fprintf(WEA_FILE," %.3f %.1f",aod, cc/10.);
+			
+		}
 
 		fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
 		fprintf(WEA_FILE,"\n");

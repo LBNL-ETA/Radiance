@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.41 2024/03/14 06:30:53 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.1 2024/08/02 18:47:25 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -13,7 +13,6 @@ static const char	RCSid[] = "$Id: data.c,v 2.41 2024/03/14 06:30:53 greg Exp $";
 #include  "paths.h"
 #include  "standard.h"
 #include  "color.h"
-#include  "resolu.h"
 #include  "view.h"
 #include  "data.h"
 
@@ -577,4 +576,3 @@ datavector(DATARRAY *dp, double *pt)
 
 	return(newdp);			/* will be free'd using free() */
 }
-

@@ -1,4 +1,4 @@
-/* RCSid $Id: data.h,v 2.9 2024/03/12 16:54:51 greg Exp $ */
+/* RCSid $Id: data.h,v 2.1 2024/08/02 18:47:25 greg Exp $ */
 /*
  * Header for data file loading and computation routines.
  */
@@ -44,4 +44,3 @@ extern DATARRAY	*datavector(DATARRAY *dp, double *pt);
 }
 #endif
 #endif /* _RAD_DATA_H_ */
-

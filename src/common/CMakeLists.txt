@@ -20,6 +20,7 @@ set(rtrad_SOURCES
   colrops.c
   cone.c
   cvtcmd.c
+  data.c
   depthcodec.c
   dircode.c
   disk2square.c

@@ -11,7 +11,6 @@ add_library(radiance
   ambio.c
   aniso.c
   ashikhmin.c
-  data.c
   dielectric.c
   fprism.c
   freeobjmem.c
