@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.2 2024/08/02 19:01:13 greg Exp $";
+#endif
 #include "atmos.h"
 #include "copyright.h"
 #include "data.h"

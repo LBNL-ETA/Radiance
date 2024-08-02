@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.44 2024/08/02 18:47:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.45 2024/08/02 19:01:13 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -139,6 +139,8 @@ gendaymtx.o:	../common/platform.h ../common/rtmath.h \
 
 genssky.o: ../common/rtio.h ../common/rtmath.h \
 ../common/paths.h ../common/color.h
+
+genssky.o gensdaymtx.o:	atmos.h
 
 atmos.o: ../common/rtio.h ../common/rtmath.h ../common/color.h \
 ../common/data.h sun.h
