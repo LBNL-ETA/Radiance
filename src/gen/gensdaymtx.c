@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.2 2024/08/02 19:01:13 greg Exp $";
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.3 2024/08/02 23:13:54 greg Exp $";
 #endif
 #include "atmos.h"
 #include "copyright.h"
@@ -617,12 +617,6 @@ int main(int argc, char *argv[]) {
     if (verbose && mo != last_monthly)
       fprintf(stderr, "%s: stepping through month %d...\n", progname,
               last_monthly = mo);
-    /* note whether leap-day was given */
-
-    freedata(tau_clear_dp);
-    freedata(irrad_clear_dp);
-    freedata(scat_clear_dp);
-    freedata(scat1m_clear_dp);
   }
   freedata(mie_dp);
   if (!ntsteps) {
