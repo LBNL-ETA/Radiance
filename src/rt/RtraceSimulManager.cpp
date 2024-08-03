@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.12 2024/08/03 01:54:46 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.13 2024/08/03 15:38:06 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -26,7 +26,7 @@ RadSimulManager::LoadOctree(const char *octn)
 	if (!octn)		// don't support stdin octree
 		return false;
 
-	NewHeader(octn);	// load header if we can
+	NewHeader(octn);	// get octree header
 	ray_init((char *)octn);
 	return true;
 }
@@ -46,38 +46,45 @@ add2header(char *str, void *p)
 // Prepare header from previous input (or clear)
 // Normally called during octree load
 bool
-RadSimulManager::NewHeader(const char *fname)
+RadSimulManager::NewHeader(const char *inspec)
 {
-	if (header) {
-		free(header); header = NULL;
+	if (hlen) {
+		free(header); header = NULL; hlen = 0;
 	}
-	if (!fname || fname[0] == '!')
+	if (!inspec || !*inspec)
 		return false;
-	FILE	*fp = fopen(fname, "rb");
+	if (inspec[0] == '!')		// save command as header?
+		return AddHeader(inspec+1);
+					// attempt to read from file
+	FILE	*fp = fopen(inspec, "rb");
+	if (!fp) return false;
 	bool	ok = (getheader(fp, add2header, this) >= 0);
 	fclose(fp);
 	return ok;
 }
 
-// Add a string to header (adds newline if none)
+// Add a string to header (adds newline if missing)
 bool
 RadSimulManager::AddHeader(const char *str)
 {
 	if (!str) return false;
 	int	len = strlen(str);
-	if (!len || str[0] == '\n') return false;
-	int	olen = 0;
-	if (header) {
-		olen = strlen(header);
-		header = (char *)realloc(header, olen+len+2);
-	} else
+	while (len && str[len-1] == '\n')
+		--len;			// don't copy EOL(s)
+	if (!len)
+		return false;
+	if (hlen)
+		header = (char *)realloc(header, hlen+len+2);
+	else
 		header = (char *)malloc(len+2);
-	if (!header) return false;
-	strcpy(header+olen, str);
-	if (str[len-1] != '\n') {
-		header[olen+len++] = '\n';
-		header[olen+len] = '\0';
+	if (!header) {
+		hlen = 0;		// XXX should report?
+		return false;
 	}
+	memcpy(header+hlen, str, len);
+	hlen += len;
+	header[hlen++] = '\n';		// add single EOL
+	header[hlen] = '\0';
 	return true;
 }
 
@@ -108,24 +115,24 @@ RadSimulManager::AddHeader(int ac, const char *av[])
 		if (!av[n]) return false;
 		len += strlen(av[n]) + 3;
 	}
-	int	hlen = 0;
-	if (header) {			// add to header
-		hlen = strlen(header);
+	if (hlen)			// add to header
 		header = (char *)realloc(header, hlen+len+1);
-	} else
+	else
 		header = (char *)malloc(len+1);
+
 	for (n = 0; n < ac; n++) {
 		int	c = check_special(av[n]);
-		if (c) {		// need to quote argument?
-			if (c == '"') c = '\'';
+		len = strlen(av[n]);
+		if (c | !len) {		// need to quote argument?
+			if ((c == '"') | (c == '\n')) c = '\'';
 			else c = '"';
 			header[hlen++] = c;
 			strcpy(header+hlen, av[n]);
-			hlen += strlen(av[n]);
+			hlen += len;
 			header[hlen++] = c;
 		} else {
 			strcpy(header+hlen, av[n]);
-			hlen += strlen(av[n]);
+			hlen += len;
 		}
 		header[hlen++] = ' ';
 	}
@@ -203,6 +210,7 @@ RadSimulManager::WaitResult(RAY *r)
 int
 RadSimulManager::Cleanup(bool everything)
 {
+	NewHeader();
 	if (!ray_pnprocs)
 		ray_done(everything);
 	else
