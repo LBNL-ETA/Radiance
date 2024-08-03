@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.5 2024/08/03 01:54:46 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.6 2024/08/03 21:33:15 greg Exp $";
 #endif
 /*
  *  rxtmain.c - main for per-ray calculation program
@@ -352,8 +352,7 @@ main(int  argc, char  *argv[])
 		SET_FILE_BINARY(stdout);
 	if (doheader) {			/* print header? */
 		newheader("RADIANCE", stdout);
-		const char *	ohdr = myRTmanager.GetHeader();
-		if (ohdr) fputs(ohdr, stdout);
+		fputs(myRTmanager.GetHeader(), stdout);
 		printargs(i, argv, stdout);
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
