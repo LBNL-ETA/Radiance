@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.8 2024/05/02 22:10:43 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.9 2024/08/03 01:54:46 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -23,11 +23,13 @@ typedef int	RayReportCall(RAY *r, void *cd);
 
 /// Multi-threaded simulation manager base class
 class RadSimulManager {
+	char *			header;			// header (less intro and format)
 protected:
 				// Assign ray to subthread (fails if NThreads()<2)
 	bool			SplitRay(RAY *r);
 public:
 				RadSimulManager(const char *octn = NULL) {
+					header = NULL;
 					LoadOctree(octn);
 				}
 				~RadSimulManager() {
@@ -35,6 +37,17 @@ public:
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn);
+				/// Prepare header from previous input (or clear)
+				/// Normally called during octree load
+	bool			NewHeader(const char *fname=NULL);
+				/// Add a string to header (adds newline if none)
+	bool			AddHeader(const char *str);
+				/// Append program line to header
+	bool			AddHeader(int ac, const char *av[]);
+				/// Get header lines if any
+	const char *		GetHeader() const {
+					return header;
+				}
 				/// How many cores are available?
 	static int		GetNCores();
 				/// Set number of computation threads (0 => #cores)

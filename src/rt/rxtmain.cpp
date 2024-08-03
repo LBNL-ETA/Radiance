@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.4 2024/05/01 22:06:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.5 2024/08/03 01:54:46 greg Exp $";
 #endif
 /*
  *  rxtmain.c - main for per-ray calculation program
@@ -351,11 +351,9 @@ main(int  argc, char  *argv[])
 	if (outform != 'a')
 		SET_FILE_BINARY(stdout);
 	if (doheader) {			/* print header? */
-		static char	fmt[] = OCTFMT;
-		FILE *		octfp = fopen(argv[i], "rb");
-		if (checkheader(octfp, fmt, stdout) < 0)
-			error(USER, "bad octree header");
-		fclose(octfp);
+		newheader("RADIANCE", stdout);
+		const char *	ohdr = myRTmanager.GetHeader();
+		if (ohdr) fputs(ohdr, stdout);
 		printargs(i, argv, stdout);
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.11 2024/07/08 23:46:04 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.12 2024/08/03 01:54:46 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.11 2024/07/08 23:46
  */
 
 #include <unistd.h>
+#include <ctype.h>
 #include "RtraceSimulManager.h"
 #include "source.h"
 
@@ -22,10 +23,114 @@ RadSimulManager::LoadOctree(const char *octn)
 			return true;
 		Cleanup();
 	}
-	if (!octn)
+	if (!octn)		// don't support stdin octree
 		return false;
 
+	NewHeader(octn);	// load header if we can
 	ray_init((char *)octn);
+	return true;
+}
+
+// callback function for loading header
+static int
+add2header(char *str, void *p)
+{
+	if (isheadid(str))
+		return 0;
+	if (isformat(str))
+		return 0;
+
+	return (*(RadSimulManager *)p).AddHeader(str);
+}
+
+// Prepare header from previous input (or clear)
+// Normally called during octree load
+bool
+RadSimulManager::NewHeader(const char *fname)
+{
+	if (header) {
+		free(header); header = NULL;
+	}
+	if (!fname || fname[0] == '!')
+		return false;
+	FILE	*fp = fopen(fname, "rb");
+	bool	ok = (getheader(fp, add2header, this) >= 0);
+	fclose(fp);
+	return ok;
+}
+
+// Add a string to header (adds newline if none)
+bool
+RadSimulManager::AddHeader(const char *str)
+{
+	if (!str) return false;
+	int	len = strlen(str);
+	if (!len || str[0] == '\n') return false;
+	int	olen = 0;
+	if (header) {
+		olen = strlen(header);
+		header = (char *)realloc(header, olen+len+2);
+	} else
+		header = (char *)malloc(len+2);
+	if (!header) return false;
+	strcpy(header+olen, str);
+	if (str[len-1] != '\n') {
+		header[olen+len++] = '\n';
+		header[olen+len] = '\0';
+	}
+	return true;
+}
+
+// helper function to check for white-space and quotations
+static int
+check_special(const char *s)
+{
+	int	space_found = 0;
+
+	while (*s) {
+		if ((*s == '"') | (*s == '\''))
+			return *s;	// quotes have priority
+		if (isspace(*s))
+			space_found = *s;
+		s++;
+	}
+	return space_found;
+}
+
+// Append program line to header
+bool
+RadSimulManager::AddHeader(int ac, const char *av[])
+{
+	if ((ac <= 0) | !av) return false;
+	int	len = 0;
+	int	n;
+	for (n = 0; n < ac; n++) {
+		if (!av[n]) return false;
+		len += strlen(av[n]) + 3;
+	}
+	int	hlen = 0;
+	if (header) {			// add to header
+		hlen = strlen(header);
+		header = (char *)realloc(header, hlen+len+1);
+	} else
+		header = (char *)malloc(len+1);
+	for (n = 0; n < ac; n++) {
+		int	c = check_special(av[n]);
+		if (c) {		// need to quote argument?
+			if (c == '"') c = '\'';
+			else c = '"';
+			header[hlen++] = c;
+			strcpy(header+hlen, av[n]);
+			hlen += strlen(av[n]);
+			header[hlen++] = c;
+		} else {
+			strcpy(header+hlen, av[n]);
+			hlen += strlen(av[n]);
+		}
+		header[hlen++] = ' ';
+	}
+	header[hlen-1] = '\n';		// terminate line
+	header[hlen] = '\0';
 	return true;
 }
 
