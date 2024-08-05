@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.11 2024/08/03 21:33:15 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.12 2024/08/05 19:51:18 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -105,7 +105,7 @@ public:
 	int			SetThreadCount(int nt = 0) {
 					if (nt <= 0) nt = castonly ? 1 : GetNCores();
 					if (nt == NThreads()) return nt;
-					if (FlushQueue() < 0) return 0;
+					if (nt < NThreads() && FlushQueue() < 0) return 0;
 					return RadSimulManager::SetThreadCount(nt);
 				}
 				/// Add ray bundle to queue w/ optional 1st ray ID

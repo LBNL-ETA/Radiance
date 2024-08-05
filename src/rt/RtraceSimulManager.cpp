@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.13 2024/08/03 15:38:06 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.14 2024/08/05 19:51:18 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -69,7 +69,7 @@ RadSimulManager::AddHeader(const char *str)
 {
 	if (!str) return false;
 	int	len = strlen(str);
-	while (len && str[len-1] == '\n')
+	while (len && (str[len-1] == '\n') | (str[len-1] == '\r'))
 		--len;			// don't copy EOL(s)
 	if (!len)
 		return false;
