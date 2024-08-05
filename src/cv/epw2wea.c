@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: epw2wea.c,v 2.5 2024/08/02 21:18:40 greg Exp $";
+static const char RCSid[] = "$Id: epw2wea.c,v 2.6 2024/08/05 18:02:07 greg Exp $";
 #endif
 /*  Copyright (c) 2003
  *  National Research Council Canada
@@ -65,23 +65,18 @@ int main( int argc, char  *argv[])
 	fscanf(EPW_FILE,",%[^,]s",country);
 	fscanf(EPW_FILE,",%[^,]s",country);
 	sprintf(keyword,"place %s_%s\n",city,country);
-	printf("%s",keyword);
 	fprintf(WEA_FILE,"%s",keyword);
 
 	fscanf(EPW_FILE,",%[^,]s",country);
 	fscanf(EPW_FILE,",%[^,]s",country);
 	fscanf(EPW_FILE,",%[^,]s",latitude);
-	printf("latitude %s\n",latitude);
 	fprintf(WEA_FILE,"latitude %s\n",latitude);
 	fscanf(EPW_FILE,",%[^,]s",longitude);
 
-	printf("longitude %.2f\n",-1.0*atof(longitude));
 	fprintf(WEA_FILE,"longitude %.2f\n",-1.0*atof(longitude));
 	fscanf(EPW_FILE,",%[^,]s",time_zone);
-	printf("time_zone %.2f\n",-15.0*atof(time_zone));
 	fprintf(WEA_FILE,"time_zone %.0f\n",-15.0*atoi(time_zone));
 	fscanf(EPW_FILE,",%s[^\n]",elevation);
-	printf("site_elevation %s\nweather_data_file_units 1\n",elevation);
 	fprintf(WEA_FILE,"site_elevation %s\nweather_data_file_units 1\n",elevation);
 
 	fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
