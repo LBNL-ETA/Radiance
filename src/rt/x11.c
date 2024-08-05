@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.36 2024/05/23 22:45:05 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.37 2024/08/05 21:54:01 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -399,6 +399,8 @@ std_comin(		/* read in command line from stdin */
 	char  *prompt
 )
 {
+	int	n, c;
+
 	if (prompt != NULL) {
 		if (fromcombuf(inp, &x11_driver))
 			return;
@@ -414,13 +416,17 @@ std_comin(		/* read in command line from stdin */
 		inpcheck = IC_IOCTL;
 	}
 #endif
-	if (gets(inp) == NULL) {
+	n = 0;		/* gets() no longer exists... */
+	while ((c = getchar()) != EOF && c != '\n')
+		inp[n++] = c;
+
+	if (!n & (c == EOF)) {
 		strcpy(inp, "quit");
 		return;
 	}
-	x11_driver.inpready -= strlen(inp) + 1;
-	if (x11_driver.inpready < 0)
-		x11_driver.inpready = 0;
+	inp[n] = '\0';
+	x11_driver.inpready -= n + 1;
+	x11_driver.inpready *= (x11_driver.inpready > 0);
 }
 
 
