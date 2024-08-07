@@ -2706,3 +2706,7 @@ descriptions.
 
 Taoning added gensdaymtx utility based on gendaymtx, and
 added epw2wea -a option to include required information.
+
+Fixed bug introduced in Auguest 2022 (5.4 release) in distant
+light source sampling, which caused aiming failures.  (Thanks
+to Mike DiPompeo of LightStanza for reporting the issue.)
