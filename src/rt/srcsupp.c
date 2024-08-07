@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.24 2022/08/04 22:43:46 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.25 2024/08/07 18:33:33 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -175,6 +175,7 @@ ssetsrc(			/* set a source as a source */
 	src->srad = sqrt(src->ss2/PI);
 	VCOPY(src->snorm, src->sloc);
 	setflatss(src);			/* hey, whatever works */
+	src->ss[SW][0] = src->ss[SW][1] = src->ss[SW][2] = 0.0;
 }
 
 
