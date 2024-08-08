@@ -71,6 +71,7 @@ install(TARGETS
   genclock
   gendaylit
   gendaymtx
+  gensdaymtx
   genprism
   genrev
   gensky
