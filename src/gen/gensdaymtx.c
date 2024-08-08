@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.3 2024/08/02 23:13:54 greg Exp $";
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.4 2024/08/08 02:00:20 greg Exp $";
 #endif
 #include "atmos.h"
 #include "copyright.h"
@@ -308,7 +308,8 @@ void add_direct(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m,
   if (ccover > 0) {
     double zenithbr = get_zenith_brightness(sundir);
     double skybr = get_overcast_brightness(sundir[2], zenithbr);
-    for (int l = 0; l < NSSAMP; ++l) {
+    int l;
+    for (l = 0; l < NSSAMP; ++l) {
       sun_radiance[l] =
           wmean2(sun_radiance[l], D6415[l] * skybr / WVLSPAN, ccover);
     }
@@ -320,7 +321,8 @@ void add_direct(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m,
   /* add to nearest patch radiances */
   for (i = nsuns; i--;) {
     float *pdest = parr + NSSAMP * near_patch[i];
-    for (int k = 0; k < NSSAMP; k++) {
+    int k;
+    for (k = 0; k < NSSAMP; k++) {
       *pdest++ = sun_radiance[k] * wta[i] / wtot;
     }
   }
@@ -331,17 +333,17 @@ void calc_sky_patch_radiance(DATARRAY *scat, DATARRAY *scat1m, double ccover,
   int i;
   double mu_sky; /* Sun-sky point azimuthal angle */
   double sspa;   /* Sun-sky point angle */
-  double zsa;    /* Zenithal sun angle */
   FVECT view_point = {0, 0, ER};
   for (i = 1; i < nskypatch; i++) {
     FVECT rdir_sky;
+    int k;
     vectorize(rh_palt[i], rh_pazi[i], rdir_sky);
     mu_sky = fdot(view_point, rdir_sky) / ER;
     sspa = fdot(rdir_sky, sundir);
     SCOLOR sky_radiance = {0};
 
     get_sky_radiance(scat, scat1m, ER, mu_sky, sun_ct, sspa, sky_radiance);
-    for (int k = 0; k < NSSAMP; ++k) {
+    for (k = 0; k < NSSAMP; ++k) {
       sky_radiance[k] *= WVLSPAN;
     }
 
@@ -349,12 +351,13 @@ void calc_sky_patch_radiance(DATARRAY *scat, DATARRAY *scat1m, double ccover,
       double zenithbr = get_zenith_brightness(sundir);
       double grndbr = zenithbr * GNORM;
       double skybr = get_overcast_brightness(rdir_sky[2], zenithbr);
-      for (int k = 0; k < NSSAMP; ++k) {
+      int k;
+      for (k = 0; k < NSSAMP; ++k) {
         sky_radiance[k] = wmean2(sky_radiance[k], skybr * D6415[k], ccover);
       }
     }
 
-    for (int k = 0; k < NSSAMP; ++k) {
+    for (k = 0; k < NSSAMP; ++k) {
       parr[NSSAMP * i + k] = sky_radiance[k];
     }
   }
@@ -379,6 +382,7 @@ void compute_sky(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m,
   const FVECT rdir_grnd = {0, 0, -1};
   const double mu_grnd = fdot(view_point, rdir_grnd) / radius;
   const double nu_grnd = fdot(rdir_grnd, sundir);
+  int j;
 
   /* Calculate sun zenith angle (don't let it dip below horizon) */
   /* Also limit minimum angle to keep circumsolar off zenith */
@@ -392,7 +396,7 @@ void compute_sky(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m,
   /* Compute ground radiance (include solar contribution if any) */
   get_ground_radiance(tau, scat, scat1m, irrad, view_point, rdir_grnd, radius,
                       mu_grnd, sun_ct, nu_grnd, grefl, sundir, parr);
-  for (int j = 0; j < NSSAMP; j++) {
+  for (j = 0; j < NSSAMP; j++) {
     parr[j] *= WVLSPAN;
   }
   calc_sky_patch_radiance(scat, scat1m, ccover, parr);
@@ -538,6 +542,10 @@ int main(int argc, char *argv[]) {
 
   while (scanf("%d %d %lf %lf %lf %lf %lf\n", &mo, &da, &hr, &dni, &dhi, &aod,
                &cc) == 7) {
+    if (aod == 0.0) {
+      aod = AOD0_CA;
+      fprintf(stderr, "aod is zero, using default value %.3f\n", AOD0_CA);
+    }
     double sda, sta;
     int sun_in_sky;
     /* compute solar position */
@@ -561,8 +569,12 @@ int main(int argc, char *argv[]) {
 
     mtx_offset = NSSAMP * nskypatch * nstored;
     nstored += 1;
+    printf("mtx_offset = %d nstored = %d nskypatch = %d\n", mtx_offset, nstored,
+           nskypatch);
     /* make space for next row */
     if (nstored > tstorage) {
+      printf("make space for next row nstored = %d tstorage = %d\n", nstored,
+             tstorage);
       tstorage += (tstorage >> 1) + nstored + 7;
       mtx_data = resize_dmatrix(mtx_data, tstorage, nskypatch);
     }
@@ -610,9 +622,6 @@ int main(int argc, char *argv[]) {
     if (!sky_only)
       add_direct(tau_clear_dp, scat_clear_dp, scat1m_clear_dp, irrad_clear_dp,
                  cc, mtx_data + mtx_offset);
-    /* update cumulative sky? */
-    for (i = NSSAMP * nskypatch * (ntsteps > 1); i--;)
-      mtx_data[i] += mtx_data[mtx_offset + i];
     /* monthly reporting */
     if (verbose && mo != last_monthly)
       fprintf(stderr, "%s: stepping through month %d...\n", progname,
@@ -662,8 +671,9 @@ int main(int argc, char *argv[]) {
     switch (outfmt) {
     case 'a':
       for (j = 0; j < nstored; j++) {
-        for (int k = 0; k < NSSAMP; k++) {
-          printf("%.3g \n", mtx_data[mtx_offset + k]);
+	int	k;
+        for (k = 0; k < NSSAMP; k++) {
+          printf("%.3g ", mtx_data[mtx_offset + k]);
         }
         printf("\n");
         mtx_offset += NSSAMP * nskypatch;
