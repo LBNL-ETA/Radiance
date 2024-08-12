@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.46 2024/06/19 16:58:07 greg Exp $ */
+/* RCSid $Id: color.h,v 2.47 2024/08/12 18:57:00 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -418,6 +418,7 @@ extern double	sintens(SCOLOR scol);
 extern int	bigdiff(COLOR c1, COLOR c2, double md);
 extern int	sbigsdiff(SCOLOR sc1, SCOLOR sc2, double md);
 					/* defined in spec_rgb.c */
+extern void	scolor_out(COLORV *cout, RGBPRIMP primp, SCOLOR cres);
 extern void	spec_cie(COLOR col, int s, int e);
 extern void	spec_rgb(COLOR col, int s, int e);
 extern void	cie_rgb(COLOR rgb, COLOR xyz);

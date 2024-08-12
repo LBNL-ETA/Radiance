@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.32 2024/01/17 17:36:20 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.33 2024/08/12 18:57:00 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -343,6 +343,36 @@ scolor2rgb(			/* accurate conversion from spectrum to RGB */
 	}
 	scolor2cie(ciecolor, scol, ncs, wlpt);
 	cie_rgb(col, ciecolor);
+}
+
+
+void
+scolor_out(			/* prepare (spectral) color for output */
+	COLORV *cout,
+	RGBPRIMP primp,
+	SCOLOR cres
+)
+{
+	static COLORMAT	xyz2myp;
+	static RGBPRIMP	lastp = NULL;
+
+	if (!primp) {			/* output is spectral */
+		copyscolor(cout, cres);
+	} else if (primp == stdprims) {	/* output is standard RGB */
+		scolor_rgb(cout, cres);
+	} else if (primp == xyzprims) {	/* output is XYZ */
+		scolor_cie(cout, cres);
+		scalecolor(cout, WHTEFFICACY);
+	} else if (NCSAMP > 3) {	/* spectral -> custom RGB */
+		COLOR	xyz;
+		if (lastp != primp)
+			compxyz2rgbWBmat(xyz2myp, lastp=primp);
+		scolor_cie(xyz, cres);
+		colortrans(cout, xyz2myp, xyz);
+		clipgamut(cout, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
+	} else {			/* else copy unknown RGB */
+		copycolor(cout, cres);
+	}
 }
 
 

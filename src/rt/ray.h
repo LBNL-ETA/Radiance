@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.54 2024/07/31 22:21:28 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.55 2024/08/12 18:57:00 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -248,9 +248,9 @@ extern int	feature_status(int ac, char *av[]);
 extern int	getrenderopt(int ac, char *av[]);
 extern void	print_rdefaults(void);
 					/* defined in srcdraw.c */
-extern void	drawsources(COLORV *pic[], int nc, float *zbf[],
-			int x0, int xsiz, int y0, int ysiz);
 extern void	init_drawsources(int rad);
+extern void	drawsources(COLORV *pic[], RGBPRIMP primp, float *zbf[],
+			int x0, int xsiz, int y0, int ysiz);
 					/* defined in rt/initotypes.c */
 extern void	initotypes(void);
 					/* module main procedures */

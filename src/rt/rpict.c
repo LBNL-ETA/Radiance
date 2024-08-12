@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.102 2024/07/31 22:21:28 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.103 2024/08/12 18:57:00 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -668,7 +668,6 @@ pixvalue(		/* compute pixel value */
 	int  y
 )
 {
-	static COLORMAT	xyz2myrgbmat;
 	RAY  thisray;
 	FVECT	lorg, ldir;
 	double	hpos, vpos, lmax;
@@ -702,21 +701,8 @@ pixvalue(		/* compute pixel value */
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 
 	rayvalue(&thisray);			/* trace ray */
-
-	if (out_prims == stdprims) {		/* return color */
-		scolor_rgb(col, thisray.rcol);
-	} else if (out_prims == xyzprims) {
-		scolor_cie(col, thisray.rcol);
-		scalecolor(col, WHTEFFICACY);
-	} else if (NCSAMP > 3) {
-		COLOR	xyz;
-		if (xyz2myrgbmat[0][0] == 0)
-			compxyz2rgbWBmat(xyz2myrgbmat, out_prims);
-		scolor_cie(xyz, thisray.rcol);
-		colortrans(col, xyz2myrgbmat, xyz);
-		clipgamut(col, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
-	} else
-		copycolor(col, thisray.rcol);
+						/* -> color */
+	scolor_out(col, out_prims, thisray.rcol);
 
 	return(raydistance(&thisray));		/* return distance */
 }
