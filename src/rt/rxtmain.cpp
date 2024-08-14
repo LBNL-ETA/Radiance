@@ -1,8 +1,8 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.6 2024/08/03 21:33:15 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.7 2024/08/14 20:05:23 greg Exp $";
 #endif
 /*
- *  rxtmain.c - main for per-ray calculation program
+ *  rxtmain.cpp - main for per-ray calculation program
  */
 
 #include "copyright.h"
@@ -43,7 +43,7 @@ extern void  tranotify(OBJECT obj);
 char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 
-double  (*sens_curve)(SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
+double  (*sens_curve)(const SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
 double  out_scalefactor = 1;		/* output calibration scale factor */
 RGBPRIMP  out_prims = stdprims;		/* output color primitives (NULL if spectral) */
 static RGBPRIMS  our_prims;		/* private output color primitives */

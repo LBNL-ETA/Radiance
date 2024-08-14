@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.34 2024/05/20 22:37:35 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.35 2024/08/14 20:05:23 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -107,7 +107,7 @@ setscolor(			/* assign spectral color from RGB */
 void
 scolor2color(			/* assign RGB color from spectrum */
 	COLOR col,
-	SCOLOR scol,		/* uses average over bands */
+	const SCOLOR scol,		/* uses average over bands */
 	int ncs,
 	const float wlpt[4]
 )
@@ -134,7 +134,7 @@ scolor2color(			/* assign RGB color from spectrum */
 void
 scolor2colr(			/* assign RGBE from spectral color */
 	COLR clr,
-	SCOLOR scol,		/* uses average over bands */
+	const SCOLOR scol,		/* uses average over bands */
 	int ncs,
 	const float wlpt[4]
 )
@@ -149,7 +149,7 @@ scolor2colr(			/* assign RGBE from spectral color */
 void
 scolr2color(			/* assign RGB from common exponent */
 	COLOR col,
-	SCOLR sclr,
+	const SCOLR sclr,
 	int ncs,
 	const float wlpt[4]
 )
@@ -164,7 +164,7 @@ scolr2color(			/* assign RGB from common exponent */
 void
 scolor2scolr(			/* float spectrum to common exponent */
 	SCOLR sclr,
-	SCOLOR scol,
+	const SCOLOR scol,
 	int ncs
 )
 {
@@ -188,7 +188,7 @@ scolor2scolr(			/* float spectrum to common exponent */
 void
 scolr2scolor(			/* common exponent to float spectrum */
 	SCOLOR scol,
-	SCOLR sclr,
+	const SCOLR sclr,
 	int ncs
 )
 {
@@ -208,7 +208,7 @@ scolr2scolor(			/* common exponent to float spectrum */
 
 double
 scolor_mean(			/* compute average for spectral color */
-	SCOLOR  scol
+	const SCOLOR  scol
 )
 {
 	int	i = NCSAMP;
@@ -223,7 +223,7 @@ scolor_mean(			/* compute average for spectral color */
 
 double
 sintens(			/* find maximum value from spectrum */
-	SCOLOR  scol
+	const SCOLOR  scol
 )
 {
 	int	i = NCSAMP;
@@ -505,7 +505,7 @@ freadcolrs(			/* read in an encoded colr scanline */
 
 /* read an nc-component common-exponent color scanline */
 int
-freadscolrs(uby8 *scanline, int nc, int len, FILE *fp)
+freadscolrs(COLRV *scanline, int nc, int len, FILE *fp)
 {
 	if (nc < 3)
 		return(-1);
@@ -520,7 +520,7 @@ freadscolrs(uby8 *scanline, int nc, int len, FILE *fp)
 
 /* write an common-exponent spectral color scanline */
 int
-fwritescolrs(uby8 *sscanline, int nc, int len, FILE *fp)
+fwritescolrs(const COLRV *sscanline, int nc, int len, FILE *fp)
 {
 	if (nc < 3)
 		return(-1);
@@ -593,7 +593,7 @@ freadscan(		/* read in an RGB or XYZ scanline */
 int
 freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
 {
-	uby8	*tscn = (uby8 *)tempbuffer((nc+1)*len);
+	COLRV	*tscn = (COLRV *)tempbuffer((nc+1)*len);
 	int	i;
 
 	if (tscn == NULL || freadscolrs(tscn, nc, len, fp) < 0)
@@ -609,9 +609,9 @@ freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
 
 /* write an nc-component spectral color scanline */
 int
-fwritesscan(COLORV *sscanline, int nc, int len, FILE *fp)
+fwritesscan(const COLORV *sscanline, int nc, int len, FILE *fp)
 {
-	uby8	*tscn = (uby8 *)tempbuffer((nc+1)*len);
+	COLRV	*tscn = (COLRV *)tempbuffer((nc+1)*len);
 	int	i;
 
 	if (tscn == NULL)
@@ -656,7 +656,7 @@ setcolr(			/* assign a short color value */
 void
 colr_color(			/* convert short to float color */
 	COLOR  col,
-	COLR  clr
+	const COLR  clr
 )
 {
 	double  f;
@@ -674,8 +674,8 @@ colr_color(			/* convert short to float color */
 
 int
 bigdiff(				/* c1 delta c2 > md? */
-	COLOR  c1,
-	COLOR  c2,
+	const COLOR  c1,
+	const COLOR  c2,
 	double  md
 )
 {
@@ -691,8 +691,8 @@ bigdiff(				/* c1 delta c2 > md? */
 
 int
 sbigsdiff(				/* sc1 delta sc2 > md? */
-	SCOLOR  c1,
-	SCOLOR  c2,
+	const SCOLOR  c1,
+	const SCOLOR  c2,
 	double  md
 )
 {

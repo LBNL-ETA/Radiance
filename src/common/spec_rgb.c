@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.33 2024/08/12 18:57:00 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.34 2024/08/14 20:05:23 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -277,7 +277,7 @@ int  e
 
 static double
 spec_dot(			/* spectrum dot-product with cumulative observer */
-	SCOLOR scol,
+	const SCOLOR scol,
 	int  ncs,
 	const float wlpt[4],
 	const unsigned short cumul[],
@@ -312,7 +312,7 @@ spec_dot(			/* spectrum dot-product with cumulative observer */
 void
 scolor2cie(			/* accurate conversion from spectrum to XYZ */
 	COLOR col,
-	SCOLOR scol,
+	const SCOLOR scol,
 	int ncs,
 	const float wlpt[4]
 )
@@ -330,7 +330,7 @@ scolor2cie(			/* accurate conversion from spectrum to XYZ */
 void
 scolor2rgb(			/* accurate conversion from spectrum to RGB */
 	COLOR col,
-	SCOLOR scol,
+	const SCOLOR scol,
 	int ncs,
 	const float wlpt[4]
 )
@@ -349,24 +349,24 @@ scolor2rgb(			/* accurate conversion from spectrum to RGB */
 void
 scolor_out(			/* prepare (spectral) color for output */
 	COLORV *cout,
-	RGBPRIMP primp,
-	SCOLOR cres
+	RGBPRIMS pr,
+	const SCOLOR cres
 )
 {
 	static COLORMAT	xyz2myp;
 	static RGBPRIMP	lastp = NULL;
 
-	if (!primp) {			/* output is spectral */
+	if (!pr) {			/* output is spectral */
 		copyscolor(cout, cres);
-	} else if (primp == stdprims) {	/* output is standard RGB */
+	} else if (pr == stdprims) {	/* output is standard RGB */
 		scolor_rgb(cout, cres);
-	} else if (primp == xyzprims) {	/* output is XYZ */
+	} else if (pr == xyzprims) {	/* output is XYZ */
 		scolor_cie(cout, cres);
 		scalecolor(cout, WHTEFFICACY);
 	} else if (NCSAMP > 3) {	/* spectral -> custom RGB */
 		COLOR	xyz;
-		if (lastp != primp)
-			compxyz2rgbWBmat(xyz2myp, lastp=primp);
+		if (lastp != pr)
+			compxyz2rgbWBmat(xyz2myp, lastp=pr);
 		scolor_cie(xyz, cres);
 		colortrans(cout, xyz2myp, xyz);
 		clipgamut(cout, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
@@ -378,7 +378,7 @@ scolor_out(			/* prepare (spectral) color for output */
 
 double
 scolor2photopic(		/* compute scotopic integral for spectral color */
-	SCOLOR  scol,
+	const SCOLOR  scol,
 	int ncs,
 	const float wlpt[4]
 )
@@ -392,7 +392,7 @@ scolor2photopic(		/* compute scotopic integral for spectral color */
 
 double
 scolor2scotopic(		/* compute Y channel for spectral color */
-	SCOLOR  scol,
+	const SCOLOR  scol,
 	int ncs,
 	const float wlpt[4]
 )
@@ -403,7 +403,7 @@ scolor2scotopic(		/* compute Y channel for spectral color */
 
 double
 scolor2melanopic(		/* compute melanopic integral for spectral color */
-	SCOLOR  scol,
+	const SCOLOR  scol,
 	int ncs,
 	const float wlpt[4]
 )
@@ -414,7 +414,7 @@ scolor2melanopic(		/* compute melanopic integral for spectral color */
 
 double
 scolor_photopic(		/* compute scotopic integral for spectral color */
-	SCOLOR  scol
+	const SCOLOR  scol
 )
 {
 	return(scolor2photopic(scol, NCSAMP, WLPART));
@@ -423,7 +423,7 @@ scolor_photopic(		/* compute scotopic integral for spectral color */
 
 double
 scolor_scotopic(		/* compute Y channel for spectral color */
-	SCOLOR  scol
+	const SCOLOR  scol
 )
 {
 	return(scolor2scotopic(scol, NCSAMP, WLPART));
@@ -432,7 +432,7 @@ scolor_scotopic(		/* compute Y channel for spectral color */
 
 double
 scolor_melanopic(		/* compute melanopic integral for spectral color */
-	SCOLOR  scol
+	const SCOLOR  scol
 )
 {
 	return(scolor2melanopic(scol, NCSAMP, WLPART));
@@ -469,7 +469,7 @@ convertscolorcol(		/* any uniform spectrum to working */
 void
 cie_rgb(			/* convert CIE color to standard RGB */
 COLOR	rgb,
-COLOR  xyz
+const COLOR  xyz
 )
 {
 	colortrans(rgb, xyz2rgbmat, xyz);
@@ -482,8 +482,8 @@ clipgamut(			/* clip to gamut cube */
 COLOR  col,
 double  brt,
 int  gamut,
-COLOR  lower,
-COLOR  upper
+const COLOR  lower,
+const COLOR  upper
 )
 {
 	int  rflags = 0;
@@ -528,8 +528,8 @@ COLOR  upper
 void
 colortrans(			/* convert c1 by mat and put into c2 */
 COLOR  c2,
-COLORMAT  mat,
-COLOR  c1
+const COLORMAT  mat,
+const COLOR  c1
 )
 {
 	COLOR	cout;
@@ -545,8 +545,8 @@ COLOR  c1
 void
 multcolormat(			/* multiply m1 by m2 and put into m3 */
 COLORMAT  m3,			/* m3 can be either m1 or m2 w/o harm */
-COLORMAT  m2,
-COLORMAT  m1
+const COLORMAT  m2,
+const COLORMAT  m1
 )
 {
 	COLORMAT  mt;
@@ -738,8 +738,8 @@ RGBPRIMS  pr2
 int
 compxyzWBmat(			/* CIE von Kries transform from wht1 to wht2 */
 COLORMAT  mat,
-float  wht1[2],
-float  wht2[2]
+const float  wht1[2],
+const float  wht2[2]
 )
 {
 	COLOR	cw1, cw2;

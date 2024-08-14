@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.94 2024/08/02 18:47:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.95 2024/08/14 20:05:23 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -34,6 +34,7 @@ LIBDIR = /usr/local/lib/ray
 RLIB = ../lib/libradiance.a
 RCLIB = ../lib/libraycalls.a
 LIBS = -lrtrad $(MLIB)
+CXXLIBS = -lcpprad $(LIBS)
 
 #
 # Device drivers for rvu (see also devtable.c):
@@ -60,8 +61,11 @@ RVSRC = rvmain.c rview.c rv2.c rv3.c $(DSRC)
 RCOBJS = rcmain.o rcontrib.o rc2.o rc3.o
 RCSRC = rcmain.c rcontrib.c rc2.c rc3.c
 
-RATOBJS = rxtmain.o rxtrace.o RtraceSimulManager.o
-RATSRC = rxtmain.cpp rxtrace.cpp RtraceSimulManager.cpp
+RXTOBJS = rxtmain.o rxtrace.o RtraceSimulManager.o
+RXTSRC = rxtmain.cpp rxtrace.cpp RtraceSimulManager.cpp
+
+RXPOBJS = rxpmain.o RpictSimulManager.o RtraceSimulManager.o srcdraw.o
+RXPSRC = rxpmain.cpp RpictSimulManager.cpp RtraceSimulManager.cpp srcdraw.c
 
 RLOBJS = raycalls.o raypcalls.o rayfifo.o
 RLSRC = raycalls.c raypcalls.c rayfifo.c
@@ -144,9 +148,13 @@ $(RLIB) $(LIBS) $(DLIBS)
 $(DESTDIR)/rcontrib:      $(RCOBJS) $(RLIB)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/rcontrib $(RCOBJS) $(RLIB) $(LIBS)
 
-$(DESTDIR)/rxtrace:	$(RATOBJS) $(RCLIB) $(RLIB)
-	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/rxtrace $(RATOBJS) $(RCLIB) \
-$(RLIB) $(LIBS)
+$(DESTDIR)/rxtrace:	$(RXTOBJS) $(RCLIB) $(RLIB)
+	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/rxtrace $(RXTOBJS) $(RCLIB) \
+$(RLIB) $(CXXLIBS)
+
+$(DESTDIR)/rxpict:	$(RXPOBJS) $(RCLIB) $(RLIB)
+	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/rxpict $(RXPOBJS) $(RCLIB) \
+$(RLIB) $(CXXLIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
@@ -223,7 +231,8 @@ o_mesh.o mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o rayfifo.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
 text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o rcmain.o \
-rcontrib.o rc2.o rc3.o:	ray.h \
+rcontrib.o rc2.o rc3.o RtraceSimulManager.o RpictSimulManager.o \
+rxtrace.o rxtmain.o rxpmain.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
@@ -441,4 +450,9 @@ oocbuild.o: oocbuild.c oocbuild.h oocsort.h oococt.h
 
 oocnn.o: oocnn.c oocnn.h oococt.h oocsort.h
 
-RtraceSimulManager.o rxtrace.o:	RtraceSimulManager.h
+RtraceSimulManager.o rxpmain.o rxtmain.o rxtrace.o:	RtraceSimulManager.h
+
+RpictSimulManager.o rxpmain.o:	RpictSimulManager.h ../common/view.h \
+../common/depthcodec.h ../common/abitmap.h
+
+RpictSimulManager.o:	../common/random.h

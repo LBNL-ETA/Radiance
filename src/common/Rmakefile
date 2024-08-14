@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.91 2024/08/02 18:47:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.92 2024/08/14 20:05:23 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -32,9 +32,11 @@ STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	savqstr.o badarg.o fgetword.o words.o expandarg.o wordfile.o fgetval.o \
 	clip.o plocate.o eputs.o wputs.o quit.o lookup.o bmalloc.o \
 	loadvars.o tcos.o fputword.o chanvalue.o dircode.o paths.o byteswap.o \
-	cvtcmd.o
+	cvtcmd.o dmessage.o
 
 SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
+
+CPPOBJ = abitmap.o abitmapio.o
 
 MGFOBJ = mgf_parser.o mgf_object.o mgf_xf.o mgf_context.o
 
@@ -50,6 +52,10 @@ librtrad.a:	$(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	rm -f librtrad.a
 	$(AR) rc librtrad.a $(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	-ranlib librtrad.a
+
+libcpprad.a:	$(CPPOBJ)
+	rm -f libcpprad.a
+	$(AR) rc libcpprad.a $(CPPOBJ)
 
 libmgf.a:	$(MGFOBJ)
 	rm -f libmgf.a
@@ -67,11 +73,11 @@ libreetz.a:	$(REETZOBJ)
 	-ranlib libreetz.a
 
 install:	all
-	mv -f librtrad.a libmgf.a libwfobj.a libreetz.a ../lib
+	mv -f librtrad.a libcpprad.a libmgf.a libwfobj.a libreetz.a ../lib
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp -f $(LIBFILES) $(LIBDIR)
 
-all:	librtrad.a libmgf.a libwfobj.a libreetz.a $(SPECIAL)
+all:	librtrad.a libcpprad.a libmgf.a libwfobj.a libreetz.a $(SPECIAL)
 
 clean:
 	rm -f *.o *.a
@@ -146,6 +152,12 @@ lookup.o:	lookup.h
 loadvars.o:	vars.h
 
 mesh.o readmesh.o:	mesh.h lookup.h
+
+dmessage.o abitmapio.o:	dmessage.h
+
+abitmap.o abitmapio.o:	abitmap.h tiff.h
+
+abitmapio.o:	bmpfile.h
 
 tonemap.o tmapcolrs.o tmapluv.o tmap16bit.o:	tmprivat.h tonemap.h \
 tiff.h color.h

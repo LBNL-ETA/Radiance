@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.47 2024/08/12 18:57:00 greg Exp $ */
+/* RCSid $Id: color.h,v 2.48 2024/08/14 20:05:23 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -117,8 +117,9 @@ extern "C" {
 #undef uby8
 #define uby8  unsigned char	/* 8-bit unsigned integer */
 
-typedef uby8  COLR[4];		/* red, green, blue (or X,Y,Z), exponent */
-typedef uby8  SCOLR[MAXCSAMP+1];	/* spectral color, common exponent */
+typedef uby8 COLRV;
+typedef COLRV COLR[4];		/* red, green, blue (or X,Y,Z), exponent */
+typedef COLRV SCOLR[MAXCSAMP+1];	/* spectral color, common exponent */
 
 typedef float COLORV;
 typedef COLORV  COLOR[3];	/* red, green, blue (or X,Y,Z) */
@@ -391,11 +392,11 @@ extern void	*tempbuffer(size_t len);
 extern int	setspectrsamp(int cn[4], float wlpt[4]);
 extern int	fwritecolrs(COLR *scanline, int len, FILE *fp);
 extern int	fwritescan(COLOR *scanline, int len, FILE *fp);
-extern int	fwritescolrs(uby8 *sscanline, int nc, int len, FILE *fp);
-extern int	fwritesscan(COLORV *sscanline, int nc, int len, FILE *fp);
+extern int	fwritescolrs(const COLRV *sscanline, int nc, int len, FILE *fp);
+extern int	fwritesscan(const COLORV *sscanline, int nc, int len, FILE *fp);
 extern int	freadcolrs(COLR *scanline, int len, FILE *fp);
 extern int	freadscan(COLOR *scanline, int len, FILE *fp);
-extern int	freadscolrs(uby8 *scanline, int nc, int len, FILE *fp);
+extern int	freadscolrs(COLRV *scanline, int nc, int len, FILE *fp);
 extern int	freadsscan(COLORV *sscanline, int nc, int len, FILE *fp);
 				/* spectrum conversion, zero-fill past ends */
 extern void	convertscolor(SCOLOR dst, int dnc, double dwl0, double dwl1,
@@ -404,35 +405,33 @@ extern void	convertscolor(SCOLOR dst, int dnc, double dwl0, double dwl1,
 				/* compare scolor_rgb() and scolor_cie() */
 				/* also, pcolor_color() and pcolor_colr() */
 extern void	setscolor(SCOLOR scol, double r, double g, double b);
-extern void	scolor2color(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
-extern void	scolor2colr(COLR clr, SCOLOR scol, int ncs, const float wlpt[4]);
-extern void	scolor2scolr(SCOLR sclr, SCOLOR scol, int ncs);
-extern void	colr_color(COLOR col, COLR clr);
-extern void	scolr2scolor(SCOLOR scol, SCOLR sclr, int ncs);
-extern void	scolr2color(COLOR col, SCOLR sclr, int ncs, const float wlpt[4]);
-extern void	colr_scolor(SCOLOR scol, COLR clr);
+extern void	scolor2color(COLOR col, const SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolor2colr(COLR clr, const SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolor2scolr(SCOLR sclr, const SCOLOR scol, int ncs);
+extern void	colr_color(COLOR col, const COLR clr);
+extern void	scolr2scolor(SCOLOR scol, const SCOLR sclr, int ncs);
+extern void	scolr2color(COLOR col, const SCOLR sclr, int ncs, const float wlpt[4]);
 extern void	setcolr(COLR clr, double r, double g, double b);
 extern void	setscolr(SCOLR sclr, double r, double g, double b);
-extern double	scolor_mean(SCOLOR scol);
-extern double	sintens(SCOLOR scol);
-extern int	bigdiff(COLOR c1, COLOR c2, double md);
-extern int	sbigsdiff(SCOLOR sc1, SCOLOR sc2, double md);
+extern double	scolor_mean(const SCOLOR scol);
+extern double	sintens(const SCOLOR scol);
+extern int	bigdiff(const COLOR c1, const COLOR c2, double md);
+extern int	sbigsdiff(const SCOLOR sc1, const SCOLOR sc2, double md);
 					/* defined in spec_rgb.c */
-extern void	scolor_out(COLORV *cout, RGBPRIMP primp, SCOLOR cres);
+extern void	scolor_out(COLORV *cout, RGBPRIMS pr, const SCOLOR cres);
 extern void	spec_cie(COLOR col, int s, int e);
 extern void	spec_rgb(COLOR col, int s, int e);
-extern void	cie_rgb(COLOR rgb, COLOR xyz);
+extern void	cie_rgb(COLOR rgb, const COLOR xyz);
 extern int	clipgamut(COLOR col, double brt, int gamut,
-				COLOR lower, COLOR upper);
-extern void	colortrans(COLOR c2, COLORMAT mat, COLOR c1);
-extern void	multcolormat(COLORMAT m3, COLORMAT m2,
-					COLORMAT m1);
+				const COLOR lower, const COLOR upper);
+extern void	colortrans(COLOR c2, const COLORMAT mat, const COLOR c1);
+extern void	multcolormat(COLORMAT m3, const COLORMAT m2,
+					const COLORMAT m1);
 extern int	colorprimsOK(RGBPRIMS pr);
 extern int	compxyz2rgbmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2xyzmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2rgbmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
-extern int	compxyzWBmat(COLORMAT mat, float wht1[2],
-				float wht2[2]);
+extern int	compxyzWBmat(COLORMAT mat, const float wht1[2], const float wht2[2]);
 extern int	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
 extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
@@ -440,14 +439,14 @@ extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
 extern void	convertscolorcol(SCOLOR rcol, const COLORV src[], int snc,
 					double swl0, double swl1);
 					/* most accurate spectral->tristim */
-extern void	scolor2cie(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
-extern void	scolor2rgb(COLOR col, SCOLOR scol, int ncs, const float wlpt[4]);
-extern double	scolor2photopic(SCOLOR scol, int ncs, const float wlpt[4]);
-extern double	scolor2scotopic(SCOLOR scol, int ncs, const float wlpt[4]);
-extern double	scolor2melanopic(SCOLOR scol, int ncs, const float wlpt[4]);
-extern double	scolor_photopic(SCOLOR scol);
-extern double	scolor_scotopic(SCOLOR scol);
-extern double	scolor_melanopic(SCOLOR scol);
+extern void	scolor2cie(COLOR col, const SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolor2rgb(COLOR col, const SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2photopic(const SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2scotopic(const SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor2melanopic(const SCOLOR scol, int ncs, const float wlpt[4]);
+extern double	scolor_photopic(const SCOLOR scol);
+extern double	scolor_scotopic(const SCOLOR scol);
+extern double	scolor_melanopic(const SCOLOR scol);
 					/* defined in colrops.c */
 extern int	setcolrcor(double (*f)(double, double), double a2);
 extern int	setcolrinv(double (*f)(double, double), double a2);

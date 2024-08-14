@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.14 2024/08/05 19:51:18 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.15 2024/08/14 20:05:23 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -106,7 +106,7 @@ check_special(const char *s)
 
 // Append program line to header
 bool
-RadSimulManager::AddHeader(int ac, const char *av[])
+RadSimulManager::AddHeader(int ac, char *av[])
 {
 	if ((ac <= 0) | !av) return false;
 	int	len = 0;

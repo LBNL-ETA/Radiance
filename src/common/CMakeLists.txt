@@ -24,6 +24,7 @@ set(rtrad_SOURCES
   depthcodec.c
   dircode.c
   disk2square.c
+  dmessage.c
   ealloc.c
   eputs.c
   erf.c
@@ -116,6 +117,11 @@ if(WIN32)
   target_link_libraries(rtrad ws2_32)
 endif()
 
+add_library(cpprad,
+  abitmap.cpp
+  abitmapio.cpp
+)
+
 add_library(rgl
   rgldomat.c
   rglfile.c
@@ -142,19 +148,11 @@ add_library(wfobj
 
 add_library(reetz
   g3affine.c
-  g3affine.h
   g3flist.c
-  g3flist.h
-  g3list.h
-  g3nlist.h
   g3sphere.c
-  g3sphere.h
   g3vector.c
-  g3vector.h
   gbasic.c
-  gbasic.h
   muc_randvar.c
-  muc_randvar.h
 )
 
 add_executable(testBSDF
@@ -164,7 +162,7 @@ add_executable(testBSDF
 )
 target_link_libraries(testBSDF radiance rtrad)
 
-install(TARGETS rtrad mgf
+install(TARGETS rtrad cpprad mgf
   LIBRARY DESTINATION "bin"
   ARCHIVE DESTINATION "bin"
 )
