@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.7 2024/08/14 20:05:23 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.8 2024/08/14 22:51:21 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -387,7 +387,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	char  *s
+	const char  *s
 )
 {
 	static int  midline = 0;
