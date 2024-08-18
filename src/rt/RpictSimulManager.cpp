@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.1 2024/08/14 20:05:23 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.2 2024/08/18 00:37:13 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -50,7 +50,7 @@ PixelAccess::SetPixel(int x, int y, const RAY *rp)
 		scolor_out(col, primp, rp->rcol);
 		return SetPixel(x, y, col, zv);
 	default:
-		error(INTERNAL, "missing color space type in SetPixel()");
+		error(INTERNAL, "botched color space type in SetPixel()");
 	}
 	return false;
 }
@@ -79,13 +79,14 @@ PixelAccess::SetColorSpace(RenderDataType cs, RGBPRIMP pr)
 	case RDTrgb:
 		primp = pr ? pr : stdprims;
 		break;
-	default:			// RDTscolr | RDTscolor
+	case RDTscolr:
+	case RDTscolor:
 		primp = NULL;
 		break;
+	default:
+		error(INTERNAL, "botched color space type in SetColorSpace()");
 	}
 	dtyp = RDTnewCT(dtyp, cs);
-	if (primp)
-		xyz2myrgbmat[0][0] = 0;
 	return true;
 }
 
@@ -138,8 +139,8 @@ int
 RpictSimulManager::RtCall(RAY *r, void *cd)
 {
 	RpictSimulManager *	rsp = (RpictSimulManager *)cd;
-	const int		ty = r->rno / rsp->TWidth();
-	const int		tx = r->rno - (RNUMBER)ty*rsp->TWidth();
+	const int		ty = (r->rno-1) / rsp->TWidth();
+	const int		tx = r->rno-1 - (RNUMBER)ty*rsp->TWidth();
 
 	if (ty >= rsp->THeight()) {
 		error(INTERNAL, "bad pixel calculation position in RtCall()");
@@ -227,7 +228,7 @@ RpictSimulManager::ComputePixel(int x, int y)
 	for (i = (dlim > FTINY)*3; i--; )
 		rodir[1][i] *= dlim;
 
-	return EnqueueRay(rodir[0], rodir[1], (RNUMBER)y*TWidth()+x);
+	return EnqueueRay(rodir[0], rodir[1], (RNUMBER)y*TWidth()+x+1);
 }
 
 // Check if neighbor differences are below pixel sampling threshold
@@ -261,7 +262,7 @@ RpictSimulManager::BelowSampThresh(int x, int y, const int noff[4][2]) const
 
 // Fill an interior square patch with interpolated values
 void
-RpictSimulManager::FillSquare(int x, int y, const int noff[4][2])
+RpictSimulManager::FillSquare(const int x, const int y, const int noff[4][2])
 {
 	SCOLOR	pval[4];
 	float	dist[4];
@@ -271,14 +272,13 @@ RpictSimulManager::FillSquare(int x, int y, const int noff[4][2])
 		pacc.GetPixel(x+noff[i][0], y+noff[i][1], pval[i], &dist[i]);
 
 	i = abs(noff[1][0]-noff[0][0]);
-	j = abs(noff[1][1]-noff[0][1]);
-	const int	slen =  i > j ? i : j;
-	const double	sf = 1./slen;
+	j = abs(noff[1][1]-noff[0][1]);	// i==j for diamond fill
+	const int	slen =  (i > j) ? i : j;
 	const bool	spectr = (pacc.NC() > 3);
-	for (i = 0; i <= slen; i++) {	// bilinear interpolant
-	    const double	c1 = i*sf;
-	    for (j = 0; j <= slen; j++) {
-	    	const double	c2 = j*sf;
+	for (i = slen+1 + (i==j)*slen; i--; ) {
+	    const double	c1 = (i>slen ? i-slen-.5 : (double)i)/slen;
+	    for (j = slen + (i<=slen); j--; ) {
+	    	const double	c2 = (j + (i>slen)*.5)/slen;
 		const int	px = int(x + (1.-c1)*(1.-c2)*noff[0][0] +
 						c1*(1.-c2)*noff[1][0] +
 						(1.-c1)*c2*noff[2][0] +
@@ -331,7 +331,7 @@ static void
 SetQuincunx(ABitMap2 *bmp2, int noff[4][2], const int spc, const bool odd)
 {
 	for (int y = 0; y < bmp2->Height(); y += spc>>1)
-	    for (int x = odd*(spc>>1); x < bmp2->Width(); x += spc)
+	    for (int x = (odd^(y&1))*(spc>>1); x < bmp2->Width(); x += spc)
 	    	bmp2->Set(x, y);
 					// order neighbors CCW
 	if (odd) {
@@ -370,7 +370,7 @@ TWidth(), THeight(), psample, maxdiff);
 		sampMap -= doneSamples;	// avoid resampling pixels
 		// Are we into adaptive sampling realm?
 		if (noff[0][0]*noff[0][0] + noff[0][1]*noff[0][1] < psample*psample) {
-			if (FlushQueue() < 0)	// need results to check threshold
+			if (FlushQueue() < 0)	// need results to check thresholds
 				return false;
 			ABitMap2	fillMap = sampMap;
 			for (x = y = 0; sampMap.Find(&x, &y); x++)
@@ -378,12 +378,9 @@ TWidth(), THeight(), psample, maxdiff);
 					sampMap.Reset(x, y);
 					// spread sampling to neighbors...
 			const ABitMap2	origSampMap = sampMap;
-			for (int yoff = -(1<<(sp2-1));
-					yoff <= 1<<(sp2-1); yoff += 1<<sp2)
-			    for (int xoff = -(1<<(sp2-1));
-			    		xoff <= 1<<(sp2-1); xoff += 1<<sp2) {
+			for (x = 4; x--; ) {
 				ABitMap2	stamp = origSampMap;
-				stamp.Shift(xoff, yoff);
+				stamp.Shift(noff[x][0], noff[x][1]);
 				sampMap |= stamp;
 			}		// ...but don't resample what's done
 			sampMap -= doneSamples;
@@ -509,8 +506,8 @@ RpictSimulManager::LowerBar(int v)
 	if (v <= 0) return !v;
 	if (!barPix | !barDepth | (v > THeight()) | !tvw.type)
 		return false;
-	tvw.voff -= double(v)/GetHeight();
-	ptvw.voff -= double(v)/GetHeight();
+	tvw.voff -= double(v)/THeight();
+	ptvw.voff -= double(v)/THeight();
 	if (v == THeight()) {
 		doneMap.ClearBitMap();
 		return true;
@@ -562,6 +559,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 	}
 	int		lastOut = ytop;		// render down frame
 	while (ytop > 0) {
+fprintf(stderr, "At y=%d, source drawing %s...\n", ytop, parr ? "ON" : "OFF");
 		if (ytop < THeight())		// mark what we won't do as finished
 			doneMap.ClearRect(0, 0, TWidth(), THeight()-ytop, true);
 		if (prCB)
@@ -605,7 +603,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 					error(SYSTEM, "cannot write SCOLOR output");
 				break;
 			default:
-				error(INTERNAL, "missing output color type in RenderBelow()");
+				error(INTERNAL, "botched output color type in RenderBelow()");
 				break;
 			}
 			bpos += pacc.NC()*TWidth();
@@ -629,8 +627,8 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
  * Render and write a frame to the named file
  * Include any header lines set prior to call
  * Picture file must not already exist
- * Picture to stdout if pfname==NULL
- * Depth written to a command if dfname[0]=='!'
+ * Write pixels to stdout if !pfname
+ * Write depth to a command if dfname[0]=='!'
  */
 RenderDataType
 RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char *dfname)
@@ -640,7 +638,7 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	FILE *	dfp = NULL;
 
 	if (!RDTcolorT(dt))
-		error(INTERNAL, "missing pixel output type in RenderFrame()");
+		error(INTERNAL, "botched color output type in RenderFrame()");
 	if (NCSAMP == 3) {
 		if (RDTcolorT(dt) == RDTscolr)
 			dt = RDTnewCT(dt, prims==xyzprims ? RDTxyze : RDTrgbe);
@@ -676,7 +674,7 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	if (frameNo > 0)
 		fprintf(pfp, "FRAME=%d\n", frameNo);
 	double	pasp = viewaspect(&vw) * GetWidth() / GetHeight();
-	if (!FABSEQ(pasp, 1.0))
+	if ((0.99 > pasp) | (pasp > 1.01))
 		fputaspect(pasp, pfp);
 	fputnow(pfp);
 	switch (RDTcolorT(dt)) {		// set primaries and picture format

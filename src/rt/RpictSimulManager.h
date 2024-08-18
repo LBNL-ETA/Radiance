@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.1 2024/08/14 20:05:23 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.2 2024/08/18 00:37:13 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -27,8 +27,8 @@ enum RenderDataType {
 #define	RDTcolorT(f)	RenderDataType((f) & RDTcolorM)
 #define RDTdepthT(f)	RenderDataType((f) & RDTdepthM)
 #define RDTcommonE(f)	(RDTcolorT(f) >= RDTscolr)
-#define RDTnewCT(f,c)	RenderDataType((f) & ~RDTcolorM | (c))
-#define RDTnewDT(f,d)	RenderDataType((f) & ~RDTdepthM | (d))
+#define RDTnewCT(f,c)	RenderDataType((f) & ~RDTcolorM | (c) & RDTcolorM)
+#define RDTnewDT(f,d)	RenderDataType((f) & ~RDTdepthM | (d) & RDTdepthM)
 
 /// Pixel accessor (read/write to caller's buffer with possible conversion)
 class PixelAccess {
@@ -43,30 +43,29 @@ class PixelAccess {
 	long		rowStride;	// # values to next y position
 	int		dtyp;		// data type flags
 	RGBPRIMP	primp;		// color primaries if tristimulus
-	COLORMAT	xyz2myrgbmat;	// custom color conversion matrix
+	const COLORV *	CF3(int x, int y) const {
+				return pbase.f + (rowStride*y + x)*3;
+			}
 	COLORV *	CF3(int x, int y) {
 				return pbase.f + (rowStride*y + x)*3;
 			}
-	COLORV *	GetCF3(int x, int y) const {
-				return const_cast<COLORV *>(pbase.f + (rowStride*y + x)*3);
-			}
-	COLORV *	SCF(int x, int y) {
-				return pbase.f + (rowStride*y + x)*NCSAMP;
-			}
-	COLORV *	GetSCF(int x, int y) const {
-				return const_cast<COLORV *>(pbase.f + (rowStride*y + x)*NCSAMP);
+	const COLRV *	CB3(int x, int y) const {
+				return pbase.b + (rowStride*y + x)*4;
 			}
 	COLRV *		CB3(int x, int y) {
 				return pbase.b + (rowStride*y + x)*4;
 			}
-	COLRV *		GetCB3(int x, int y) const {
-				return const_cast<COLRV *>(pbase.b + (rowStride*y + x)*4);
+	const COLORV *	SCF(int x, int y) const {
+				return pbase.f + (rowStride*y + x)*NCSAMP;
+			}
+	COLORV *	SCF(int x, int y) {
+				return pbase.f + (rowStride*y + x)*NCSAMP;
+			}
+	const COLRV *	SCB(int x, int y) const {
+				return pbase.b + (rowStride*y + x)*(NCSAMP+1);
 			}
 	COLRV *		SCB(int x, int y) {
 				return pbase.b + (rowStride*y + x)*(NCSAMP+1);
-			}
-	COLRV *		GetSCB(int x, int y) const {
-				return const_cast<COLRV *>(pbase.b + (rowStride*y + x)*(NCSAMP+1));
 			}
 public:
 	double		refDepth;	// reference depth
@@ -176,13 +175,13 @@ public:
 	bool		GetPixel(int x, int y, COLORV *pv, float *zp=NULL) const {
 				if (NC() == 3) {
 					if (RDTcommonE(dtyp))
-						colr_color(pv, GetCB3(x,y));
+						colr_color(pv, CB3(x,y));
 					else
-						copycolor(pv, GetCF3(x,y));
+						copycolor(pv, CF3(x,y));
 				} else if (RDTcommonE(dtyp))
-					scolr_scolor(pv, GetSCB(x,y));
+					scolr_scolor(pv, SCB(x,y));
 				else
-					copyscolor(pv, GetSCF(x,y));
+					copyscolor(pv, SCF(x,y));
 				if (!zp) return true;
 				if (RDTdepthT(dtyp) == RDTdfloat)
 					*zp = dbase.f[rowStride*y + x];
@@ -198,13 +197,13 @@ public:
 				const int	nc = NC();
 				if (nc == 3) {
 					if (RDTcommonE(dtyp))
-						copycolr(CB3(dx,dy), GetCB3(sx,sy));
+						copycolr(CB3(dx,dy), CB3(sx,sy));
 					else
-						copycolor(CF3(dx,dy), GetCF3(sx,sy));
+						copycolor(CF3(dx,dy), CF3(sx,sy));
 				} else if (RDTcommonE(dtyp))
-					copyscolr(SCB(dx,dy), GetSCB(sx,sy));
+					copyscolr(SCB(dx,dy), SCB(sx,sy));
 				else
-					copyscolor(SCF(dx,dy), GetSCF(sx,sy));
+					copyscolor(SCF(dx,dy), SCF(sx,sy));
 				switch (RDTdepthT(dtyp)) {
 				case RDTdfloat:
 					dbase.f[rowStride*dy + dx] =
@@ -241,7 +240,7 @@ class RpictSimulManager : protected RtraceSimulManager {
 	bool			RenderRect();
 	bool			ComputePixel(int x, int y);
 	bool			BelowSampThresh(int x, int y, const int noff[4][2]) const;
-	void			FillSquare(int x, int y, const int noff[4][2]);
+	void			FillSquare(const int x, const int y, const int noff[4][2]);
 	void			NewBar(int ht = 0);
 	bool			LowerBar(int v);
 	bool			RenderBelow(int ytop, const int vstep, FILE *pfp,
@@ -357,8 +356,8 @@ public:
 				/// Render and write a frame to the named file
 				/// Include any header lines set prior to call
 				/// Picture file must not already exist
-				/// Picture to stdout if pfname==NULL
-				/// Depth written to a command if dfname[0]=='!'
+				/// Write pixels to stdout if !pfname
+				/// Write depth to a command if dfname[0]=='!'
 	RenderDataType		RenderFrame(const char *pfname,
 						RenderDataType dt=RDTrgbe,
 						const char *dfname=NULL);
