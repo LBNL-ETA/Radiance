@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.2 2024/08/18 00:37:13 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.3 2024/08/18 17:24:48 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -359,8 +359,8 @@ RpictSimulManager::RenderRect()
 	int		sp2 = ceil(log2((TWidth()>THeight() ? TWidth() : THeight()) - 1.));
 	int		layer = 0;
 	int		x, y;
-fprintf(stderr, "Rendering %dx%d tile with psample=%d, maxdiff=%.3f ...\n",
-TWidth(), THeight(), psample, maxdiff);
+// fprintf(stderr, "Rendering %dx%d tile with psample=%d, maxdiff=%.3f ...\n",
+// TWidth(), THeight(), psample, maxdiff);
 	while (sp2 > 0) {
 		ABitMap2	sampMap(TWidth(), THeight());
 		int		noff[4][2];
@@ -394,11 +394,11 @@ TWidth(), THeight(), psample, maxdiff);
 			if (!ComputePixel(x, y))
 				return false;
 		doneSamples |= sampMap;	// samples now done or at least queued
-fprintf(stderr, "Sampled %ld pixels at (sp2,layer)=(%d,%d)\n",
-(long)sampMap.SumTotal(), sp2, layer);
-fprintf(stderr, "\t%ld pixels (%.3f%%) completed (+%ld in process)\n",
-(long)doneMap.SumTotal(), 100.*doneMap.SumTotal()/doneMap.Width()/doneMap.Height(),
-(long)(doneSamples.SumTotal()-doneMap.SumTotal()));
+// fprintf(stderr, "Sampled %ld pixels at (sp2,layer)=(%d,%d)\n",
+// (long)sampMap.SumTotal(), sp2, layer);
+// fprintf(stderr, "\t%ld pixels (%.3f%%) completed (+%ld in process)\n",
+// (long)doneMap.SumTotal(), 100.*doneMap.SumTotal()/doneMap.Width()/doneMap.Height(),
+// (long)(doneSamples.SumTotal()-doneMap.SumTotal()));
 		sp2 -= layer++ & 1;	// next denser sampling
 	}
 	if (FlushQueue() < 0)		// make sure we got everyone
@@ -501,11 +501,13 @@ RpictSimulManager::NewBar(int ht)
 
 // Shift render bar area the specified amount down the frame
 bool
-RpictSimulManager::LowerBar(int v)
+RpictSimulManager::LowerBar(int v, int ytop)
 {
-	if (v <= 0) return !v;
 	if (!barPix | !barDepth | (v > THeight()) | !tvw.type)
 		return false;
+	if (v <= 0) return !v;
+	if ((ytop -= v) <= 0)
+		return true;
 	tvw.voff -= double(v)/THeight();
 	ptvw.voff -= double(v)/THeight();
 	if (v == THeight()) {
@@ -518,6 +520,11 @@ RpictSimulManager::LowerBar(int v)
 			sizeof(COLORV)*NC*TWidth()*(THeight()-v));
 	memmove(barDepth, barDepth + TWidth()*v,
 			sizeof(float)*TWidth()*(THeight()-v));
+	if (ytop < THeight()) {			// mark what we won't do as finished
+		doneMap.ClearRect(0, 0, TWidth(), THeight()-ytop, true);
+		memset(barPix, 0, sizeof(COLORV)*NC*TWidth()*(THeight()-ytop));
+		memset(barDepth, 0, sizeof(float)*TWidth()*(THeight()-ytop));
+	}
 	return true;
 }
 
@@ -559,9 +566,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 	}
 	int		lastOut = ytop;		// render down frame
 	while (ytop > 0) {
-fprintf(stderr, "At y=%d, source drawing %s...\n", ytop, parr ? "ON" : "OFF");
-		if (ytop < THeight())		// mark what we won't do as finished
-			doneMap.ClearRect(0, 0, TWidth(), THeight()-ytop, true);
+// fprintf(stderr, "At y=%d, source drawing %s...\n", ytop, parr ? "ON" : "OFF");
 		if (prCB)
 			(*prCB)(100.*(GetHeight()-ytop)/GetHeight());
 		if (!RenderRect())		// render this bar
@@ -612,7 +617,7 @@ fprintf(stderr, "At y=%d, source drawing %s...\n", ytop, parr ? "ON" : "OFF");
 		if (fflush(pfp) == EOF || (dfp && fflush(dfp) == EOF))
 			error(SYSTEM, "output write error");
 						// advance down the frame
-		if (lastOut > 0 && !LowerBar(vstep))
+		if (lastOut > 0 && !LowerBar(vstep, ytop))
 			return false;
 		ytop -= vstep;
 	}

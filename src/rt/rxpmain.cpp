@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.1 2024/08/14 20:05:23 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.2 2024/08/18 17:24:48 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -499,7 +499,7 @@ progReporter(double pct)
 	static time_t	lastReportTime = 0;
 	time_t		tnow = time(NULL);
 
-	if (tnow - lastReportTime < ralrm)
+	if (pct < 100.-FTINY && tnow - lastReportTime < ralrm)
 		return;			// too soon, my Precious...
 
 	sprintf(errmsg, "%7.3f%% done after %7.3f hours\n", pct, (tnow-tstart)/3600.);

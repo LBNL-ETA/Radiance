@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.2 2024/08/18 00:37:13 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.3 2024/08/18 17:24:48 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -242,7 +242,7 @@ class RpictSimulManager : protected RtraceSimulManager {
 	bool			BelowSampThresh(int x, int y, const int noff[4][2]) const;
 	void			FillSquare(const int x, const int y, const int noff[4][2]);
 	void			NewBar(int ht = 0);
-	bool			LowerBar(int v);
+	bool			LowerBar(int v, int ytop);
 	bool			RenderBelow(int ytop, const int vstep, FILE *pfp,
 							const int dt, FILE *dfp=NULL);
 public:
