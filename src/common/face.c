@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.16 2021/02/16 16:48:11 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.17 2024/08/18 00:06:10 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -140,6 +140,9 @@ inface(				/* determine if point is in face */
 	ncross = 0;
 					/* positive x axis cross test */
 	while (n--) {
+		if (FRELEQ(p0[yi], y) && FRELEQ(p1[yi], y) &&
+				(p0[xi] > x) ^ (p1[xi] > x))
+			return(1);			/* edge case #1 */
 		if ((p0[yi] > y) ^ (p1[yi] > y)) {
 			tst = (p0[xi] > x) + (p1[xi] > x);
 			if (tst == 2)
@@ -148,13 +151,11 @@ inface(				/* determine if point is in face */
 				double	prodA = (p0[yi]-y)*(p1[xi]-x);
 				double	prodB = (p0[xi]-x)*(p1[yi]-y);
 				if (FRELEQ(prodA, prodB))
-					return(1);	/* edge case #1 */
+					return(1);	/* edge case #2 */
 				ncross += (p1[yi] > p0[yi]) ^ (prodA > prodB);
 			} else if (FRELEQ(p0[xi], x) && FRELEQ(p1[xi], x))
-				return(1);		/* edge case #2 */
-		} else if (FRELEQ(p0[yi], y) && FRELEQ(p1[yi], y) &&
-				(p0[xi] > x) ^ (p1[xi] > x))
-			return(1);			/* edge case #3 */
+				return(1);		/* edge case #3 */
+		}
 		p0 = p1;
 		p1 += 3;
 	}
