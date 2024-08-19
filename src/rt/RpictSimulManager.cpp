@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.3 2024/08/18 17:24:48 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.4 2024/08/19 16:41:40 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -467,6 +467,23 @@ RpictSimulManager::RenderTile(COLRV *bp, int ystride, short *dp, const int *tile
 		pacc.SetColorSpace(RDTxyze);
 	else if (prims)
 		pacc.SetColorSpace(RDTrgbe, prims);
+
+	return SetTile(tile) && RenderRect();
+}
+
+// Back to float color with 16-bit depth
+bool
+RpictSimulManager::RenderTile(COLORV *rp, int ystride, short *dp, const int *tile)
+{
+	if (!rp | (GetWidth() <= 0) | (GetHeight() <= 0) | !vw.type)
+		return false;
+	if (!ystride)			// contiguous rows?
+		ystride = TWidth();
+	pacc.Init(rp, ystride, dp);
+	if (prims == xyzprims)
+		pacc.SetColorSpace(RDTxyz);
+	else if (prims)
+		pacc.SetColorSpace(RDTrgb, prims);
 
 	return SetTile(tile) && RenderRect();
 }

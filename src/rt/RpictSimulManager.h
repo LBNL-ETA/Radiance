@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.3 2024/08/18 17:24:48 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.4 2024/08/19 16:41:40 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -85,6 +85,10 @@ public:
 				refDepth = 1.;
 				Init(bp, ystride, dp);
 			}
+			PixelAccess(COLORV *rp, int ystride, short *dp) {
+				refDepth = 1.;
+				Init(rp, ystride, dp);
+			}
 	void		Init() {
 				pbase.f = NULL; dbase.f = NULL;
 				rowStride = 0;
@@ -119,6 +123,16 @@ public:
 					dtyp = RDTscolr; primp = NULL;
 				} else {
 					dtyp = RDTrgbe; primp = stdprims;
+				}
+				if (dp) dtyp |= RDTdshort;
+			}
+	void		Init(COLORV *rp, int ystride, short *dp) {
+				pbase.f = rp; dbase.s = dp;
+				rowStride = ystride;
+				if (NCSAMP > 3) {
+					dtyp = RDTscolor; primp = NULL;
+				} else {
+					dtyp = RDTrgb; primp = stdprims;
 				}
 				if (dp) dtyp |= RDTdshort;
 			}
@@ -325,6 +339,15 @@ public:
 				/// Increments frameNo if >0
 	bool			NewFrame(const VIEW &v, int xydim[2], double *ap=NULL,
 						const int *tgrid=NULL);
+				/// Get current view if set
+	const VIEW *		GetView() const {
+					if (!vw.type) return NULL;
+					return &vw;
+				}
+				/// Writeable previous view (for motion blur)
+	VIEW &			PreView() {
+					return pvw;
+				}
 				/// Get current picture width
 	int			GetWidth() const {
 					return hvres[0];
@@ -352,6 +375,9 @@ public:
 						const int *tile=NULL);
 				/// Same but also use 16-bit encoded depth buffer
 	bool			RenderTile(COLRV *bp, int ystride, short *dp,
+						const int *tile=NULL);
+				/// Back to float color with 16-bit depth
+	bool			RenderTile(COLORV *rp, int ystride, short *dp,
 						const int *tile=NULL);
 				/// Render and write a frame to the named file
 				/// Include any header lines set prior to call
