@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: genssky.c,v 2.4 2024/08/08 02:00:48 greg Exp $";
+static const char RCSid[] = "$Id: genssky.c,v 2.5 2024/08/19 18:07:44 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -210,8 +210,8 @@ static void write_rad(const double *sun_radiance, const FVECT sundir,
     printf("solar source sun\n0\n0\n4 %f %f %f 0.533\n\n", sundir[0], sundir[1],
            sundir[2]);
   }
-  printf("void specpict skyfunc\n5 noop %s . 'atan2(Dy,Dx)/PI+1' "
-         "'acos(Dz)/PI'\n0\n0\n\n",
+  printf("void specpict skyfunc\n5 noop %s . 'Atan2(Dy,Dx)/PI+1' "
+         "'1-Acos(Dz)/PI'\n0\n0\n\n",
          skyfile);
 }
 
