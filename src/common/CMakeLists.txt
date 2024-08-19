@@ -117,7 +117,7 @@ if(WIN32)
   target_link_libraries(rtrad ws2_32)
 endif()
 
-add_library(cpprad,
+add_library(cpprad
   abitmap.cpp
   abitmapio.cpp
 )
