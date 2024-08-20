@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.53 2024/04/30 22:25:46 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.54 2024/08/20 18:57:11 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -59,7 +59,7 @@ extern void  tranotify(OBJECT obj);
 char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 
-double  (*sens_curve)(SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
+double  (*sens_curve)(const SCOLOR scol) = NULL;	/* spectral conversion for 1-channel */
 double  out_scalefactor = 1;		/* output calibration scale factor */
 RGBPRIMP  out_prims = stdprims;		/* output color primitives (NULL if spectral) */
 static RGBPRIMS  our_prims;		/* private output color primitives */
