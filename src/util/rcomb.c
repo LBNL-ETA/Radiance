@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.24 2024/06/10 18:20:06 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.25 2024/08/21 01:09:25 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -174,7 +174,7 @@ xyzrow(ROPMAT *rop, int r, int p)
 
 /* Use the spectral sensitivity function to compute matrix coefficients */
 void
-sensrow(ROPMAT *rop, int r, double (*sf)(SCOLOR sc, int ncs, const float wlpt[4]))
+sensrow(ROPMAT *rop, int r, double (*sf)(const SCOLOR sc, int ncs, const float wlpt[4]))
 {
 	const int	nc = rop->imx.ncomp;
 	int		i;
