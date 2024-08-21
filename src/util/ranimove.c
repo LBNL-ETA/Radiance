@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.20 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.21 2024/08/21 16:18:54 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -539,7 +539,6 @@ getexp(			/* get exposure for nth frame */
 	int	n
 )
 {
-	extern char	*fskip();
 	static char	expval[32];
 	static FILE	*expfp = NULL;
 	static int	curfrm = 0;

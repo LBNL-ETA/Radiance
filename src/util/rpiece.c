@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.64 2024/07/03 17:18:17 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.65 2024/08/21 16:18:54 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -58,8 +58,6 @@ main(
 #define guard_io()	
 #define unguard()	
 #endif
-
-extern char  *strerror();
 
 				/* rpict command */
 char  *rpargv[128] = {"rpict", "-S", "1"};
