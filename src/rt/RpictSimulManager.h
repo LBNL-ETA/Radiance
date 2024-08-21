@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.4 2024/08/19 16:41:40 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.5 2024/08/21 23:32:24 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -275,7 +275,7 @@ public:
 					frameNo = 0;
 				}
 				~RpictSimulManager() {
-					NewBar();
+					delete [] barPix; delete [] barDepth;
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn) {
@@ -381,7 +381,7 @@ public:
 						const int *tile=NULL);
 				/// Render and write a frame to the named file
 				/// Include any header lines set prior to call
-				/// Picture file must not already exist
+				/// Picture file must not exist
 				/// Write pixels to stdout if !pfname
 				/// Write depth to a command if dfname[0]=='!'
 	RenderDataType		RenderFrame(const char *pfname,
@@ -390,6 +390,15 @@ public:
 				/// Resume partially finished rendering
 				/// Picture file must exist with valid header
 	RenderDataType		ResumeFrame(const char *pfname,
+						const char *dfname=NULL);
+				/// Prepare new picture (and depth) output
+				/// Writes current render size as resolution
+	RenderDataType		NewOutput(FILE *pdfp[2], const char *pfname,
+						RenderDataType dt=RDTrgbe,
+						const char *dfname=NULL);
+				/// Reopen existing picture (and depth) file
+				/// File pointers @ end of header (before res.)
+	RenderDataType		ReopenOutput(FILE *pdfp[2], const char *pfname,
 						const char *dfname=NULL);
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {

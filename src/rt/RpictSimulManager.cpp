@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.4 2024/08/19 16:41:40 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.5 2024/08/21 23:32:24 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -645,22 +645,14 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 	return true;
 }
 
-/*
- * Render and write a frame to the named file
- * Include any header lines set prior to call
- * Picture file must not already exist
- * Write pixels to stdout if !pfname
- * Write depth to a command if dfname[0]=='!'
- */
+// Open new output picture file (and optional depth file)
 RenderDataType
-RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char *dfname)
+RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
+				RenderDataType dt, const char *dfname)
 {
-	int	fd = 1;
-	FILE *	pfp = NULL;
-	FILE *	dfp = NULL;
-
+	pdfp[0] = pdfp[1] = NULL;
 	if (!RDTcolorT(dt))
-		error(INTERNAL, "botched color output type in RenderFrame()");
+		error(INTERNAL, "botched color output type in NewOutput()");
 	if (NCSAMP == 3) {
 		if (RDTcolorT(dt) == RDTscolr)
 			dt = RDTnewCT(dt, prims==xyzprims ? RDTxyze : RDTrgbe);
@@ -668,7 +660,8 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 			dt = RDTnewCT(dt, prims==xyzprims ? RDTxyz : RDTrgb);
 	}
 	if (!RDTdepthT(dt) ^ !dfname)
-		error(INTERNAL, "depth output requires file name and type in RenderFrame()");
+		error(INTERNAL, "depth output requires file name and type in NewOutput()");
+	int	fd = 1;
 	if (pfname) {				// open picture output file
 		if (pfname[0] == '!') {
 			error(INTERNAL, "writing picture to a command not supported");
@@ -684,99 +677,134 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 		return RDTnone;			// expected in parallel sequence
 	}
 	if (fd == 1)
-		pfp = stdout;
-	else if (!(pfp = fdopen(fd, "w")))
+		pdfp[0] = stdout;
+	else if (!(pdfp[0] = fdopen(fd, "w")))
 		error(SYSTEM, "failure calling fdopen()");
-	SET_FILE_BINARY(pfp);			// write picture header
-	if ((pfp != stdout) | (frameNo <= 1)) {
-		newheader("RADIANCE", pfp);
-		fputs(GetHeader(), pfp);
+	SET_FILE_BINARY(pdfp[0]);		// write picture header
+	if ((pdfp[0] != stdout) | (frameNo <= 1)) {
+		newheader("RADIANCE", pdfp[0]);
+		fputs(GetHeader(), pdfp[0]);
 	}
-	fputs(VIEWSTR, pfp); fprintview(&vw, pfp); fputc('\n', pfp);
+	fputs(VIEWSTR, pdfp[0]); fprintview(&vw, pdfp[0]); fputc('\n', pdfp[0]);
 	if (frameNo > 0)
-		fprintf(pfp, "FRAME=%d\n", frameNo);
+		fprintf(pdfp[0], "FRAME=%d\n", frameNo);
 	double	pasp = viewaspect(&vw) * GetWidth() / GetHeight();
 	if ((0.99 > pasp) | (pasp > 1.01))
-		fputaspect(pasp, pfp);
-	fputnow(pfp);
+		fputaspect(pasp, pdfp[0]);
+	fputnow(pdfp[0]);
 	switch (RDTcolorT(dt)) {		// set primaries and picture format
 	case RDTrgbe:
 		if (!prims | (prims == xyzprims)) prims = stdprims;
-		fputprims(prims, pfp);
-		fputformat(COLRFMT, pfp);
+		fputprims(prims, pdfp[0]);
+		fputformat(COLRFMT, pdfp[0]);
 		break;
 	case RDTxyze:
 		prims = xyzprims;
-		fputformat(CIEFMT, pfp);
+		fputformat(CIEFMT, pdfp[0]);
 		break;
 	case RDTscolr:
 		prims = NULL;
-		fputwlsplit(WLPART, pfp);
-		fputncomp(NCSAMP, pfp);
-		fputformat(SPECFMT, pfp);
+		fputwlsplit(WLPART, pdfp[0]);
+		fputncomp(NCSAMP, pdfp[0]);
+		fputformat(SPECFMT, pdfp[0]);
 		break;
 	case RDTrgb:
 		if (!prims | (prims == xyzprims)) prims = stdprims;
-		fputprims(prims, pfp);
-		fputncomp(3, pfp);
-		fputendian(pfp);
-		fputformat("float", pfp);
+		fputprims(prims, pdfp[0]);
+		fputncomp(3, pdfp[0]);
+		fputendian(pdfp[0]);
+		fputformat("float", pdfp[0]);
 		break;
 	case RDTxyz:
 		prims = xyzprims;
-		fputprims(prims, pfp);
-		fputncomp(3, pfp);
-		fputendian(pfp);
-		fputformat("float", pfp);
+		fputprims(prims, pdfp[0]);
+		fputncomp(3, pdfp[0]);
+		fputendian(pdfp[0]);
+		fputformat("float", pdfp[0]);
 		break;
 	case RDTscolor:
 		prims = NULL;
-		fputwlsplit(WLPART, pfp);
-		fputncomp(NCSAMP, pfp);
-		fputendian(pfp);
-		fputformat("float", pfp);
+		fputwlsplit(WLPART, pdfp[0]);
+		fputncomp(NCSAMP, pdfp[0]);
+		fputendian(pdfp[0]);
+		fputformat("float", pdfp[0]);
 		break;
 	default:;
 	}
-	fputc('\n', pfp);			// end picture header
-	fprtresolu(GetWidth(), GetHeight(), pfp);
+	fputc('\n', pdfp[0]);			// flush picture header + resolution
+	fprtresolu(GetWidth(), GetHeight(), pdfp[0]);
+	if (fflush(pdfp[0]) == EOF) {
+		sprintf(errmsg, "cannot write header to picture '%s'", pfname);
+		error(SYSTEM, errmsg);
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
+		return RDTnone;
+	}
 	if (dfname) {
 		if (dfname[0] == '!')
-			dfp = popen(dfname+1, "w");
+			pdfp[1] = popen(dfname+1, "w");
 		else
-			dfp = fopen(dfname, "w");
-		if (!dfp) {
+			pdfp[1] = fopen(dfname, "w");
+		if (!pdfp[1]) {
 			sprintf(errmsg, "cannot open depth output '%s'", dfname);
 			error(SYSTEM, errmsg);
+			fclose(pdfp[0]);
+			pdfp[0] = NULL;
 			return RDTnone;
 		}
-		SET_FILE_BINARY(dfp);
+		SET_FILE_BINARY(pdfp[1]);
 	}
 	if (RDTdepthT(dt) == RDTdshort) {	// write header for 16-bit depth?
-		newheader("RADIANCE", dfp);
-		fputs(GetHeader(), dfp);
-		fputs(VIEWSTR, dfp); fprintview(&vw, dfp); fputc('\n', dfp);
-		fputs(DEPTHSTR, dfp); fputs(dunit, dfp); fputc('\n', dfp);
-		fputformat(DEPTH16FMT, dfp);
-		fputc('\n', dfp);		// end-of-info
-		fprtresolu(GetWidth(), GetHeight(), dfp);
+		newheader("RADIANCE", pdfp[1]);
+		fputs(GetHeader(), pdfp[1]);
+		fputs(VIEWSTR, pdfp[1]); fprintview(&vw, pdfp[1]); fputc('\n', pdfp[1]);
+		fputs(DEPTHSTR, pdfp[1]); fputs(dunit, pdfp[1]); fputc('\n', pdfp[1]);
+		fputformat(DEPTH16FMT, pdfp[1]);
+		fputc('\n', pdfp[1]);		// end-of-info
+		fprtresolu(GetWidth(), GetHeight(), pdfp[1]);
+		if (fflush(pdfp[1]) == EOF) {
+			sprintf(errmsg, "cannot write header to '%s'", dfname);
+			error(SYSTEM, errmsg);
+			fclose(pdfp[0]); fclose(pdfp[1]);
+			pdfp[0] = pdfp[1] = NULL;
+			return RDTnone;
+		}
 	}
+	return dt;				// ready to roll
+}
+
+/*
+ * Render and write a frame to the named file
+ * Include any header lines set prior to call
+ * Picture file must not exist
+ * Write pixels to stdout if !pfname
+ * Write depth to a command if dfname[0]=='!'
+ */
+RenderDataType
+RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char *dfname)
+{
+	FILE	*pdfp[2];
+						// prepare output file(s)
+	dt = NewOutput(pdfp, pfname, dt, dfname);
+	if (dt == RDTnone)
+		return RDTnone;
+
 	const int	bheight = (psample > 1) ? int(2*psample+.99) : 4;
 	const int	vstep =  bheight >> (psample > 1);
 
 	NewBar(bheight);			// render frame if we can
-	if (!RenderBelow(GetHeight(), vstep, pfp, dt, dfp)) {
-		fclose(pfp);
-		if (dfp) (dfname[0] == '!') ? pclose(dfp) : fclose(dfp);
+	if (!RenderBelow(GetHeight(), vstep, pdfp[0], dt, pdfp[1])) {
+		fclose(pdfp[0]);
+		if (pdfp[1]) (dfname[0] == '!') ? pclose(pdfp[1]) : fclose(pdfp[1]);
 		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// clean up and return
-	if (pfp != stdout)
-		fclose(pfp);
-	if (dfp) {
+	if (pdfp[0] != stdout)
+		fclose(pdfp[0]);
+	if (pdfp[1]) {
 		if (dfname[0] == '!') {
-			int	status = pclose(dfp);
+			int	status = pclose(pdfp[1]);
 			if (status) {
 				sprintf(errmsg, "depth output (%s) error status: %d",
 						dfname, status);
@@ -784,13 +812,13 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 				return RDTnone;
 			}
 		} else
-			fclose(dfp);
+			fclose(pdfp[1]);
 	}
 	return dt;
 }
 
 // passed struct for header line callback
-struct HeaderInfo {
+static struct HeaderInfo {
 	char		fmt[MAXFMTLEN];
 	char		depth_unit[32];
 	int		ncomp;
@@ -811,7 +839,7 @@ struct HeaderInfo {
 				gotview = false;
 				endianMatch = true;
 			}
-};
+}	hinfo;		// XXX single copy to hold custom primitives
 
 // helper function checks header line and records req. info.
 static int
@@ -853,50 +881,47 @@ head_check(char *s, void *p)
 	return 0;
 }
 
-// Resume partially finished rendering
-// Picture file must exist
+// Reopen output file(s), leaving pointers at end of (each) header
 RenderDataType
-RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
+RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *dfname)
 {
-	if (!pfname || pfname[0] == '!')
-		return RDTnone;
+	extern const char	HDRSTR[];
 
+	if (!pfname || pfname[0] == '!') {
+		pdfp[0] = pdfp[1] = NULL;
+		return RDTnone;
+	}
 	RenderDataType	dt = RDTnone;
-	FILE *		dfp = NULL;
-	FILE *		pfp = fopen(pfname, "r+");
-	if (!pfp) {
+	pdfp[1] = NULL;
+	pdfp[0] = fopen(pfname, "r+");
+	if (!pdfp[0]) {
 		sprintf(errmsg, "cannot reopen output picture '%s'", pfname);
 		error(SYSTEM, errmsg);
 		return RDTnone;
 	}
-	SET_FILE_BINARY(pfp);
-	HeaderInfo	hinfo;		// read header information & dimensions
-	RESOLU		res;
-	if (getheader(pfp, head_check, &hinfo) < 0) {
-		fclose(pfp);
-		return RDTnone;
-	}
-	if (!fgetsresolu(&res, pfp) || res.rt != PIXSTANDARD) {
-		sprintf(errmsg, "missing/bad resolution for '%s'", pfname);
-		error(USER, errmsg);
-		fclose(pfp);
+	SET_FILE_BINARY(pdfp[0]);	// read header information
+	if (getheader(pdfp[0], head_check, &hinfo) < 0) {
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
 		return RDTnone;
 	}
 	if (!hinfo.gotview) {
 		sprintf(errmsg, "missing view for '%s'", pfname);
 		error(USER, errmsg);
-		fclose(pfp);
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
 		return RDTnone;
 	}
 	if (hinfo.ncomp < 3) {
 		sprintf(errmsg, "bad # components (%d) in '%s'", hinfo.ncomp, pfname);
 		error(USER, errmsg);
-		fclose(pfp);
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
 		return RDTnone;
 	}
-	int	bytesPer = 0;		// complicated part to set rendering/output space
+					// set rendering/output space
 	if (!strcmp(hinfo.fmt, COLRFMT)) {
-		prims = hinfo.prims;
+		prims = hinfo.prims;	// XXX static array
 		int	n = 8*hinfo.gotprims;
 		while (n--)
 			if (!FABSEQ(hinfo.prims[0][n], stdprims[0][n]))
@@ -912,27 +937,28 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 			sprintf(errmsg, "incompatible sample count (%d) in '%s'",
 					hinfo.ncomp, pfname);
 			error(USER, errmsg);
-			fclose(pfp);
+			fclose(pdfp[0]);
+			pdfp[0] = NULL;
 			return RDTnone;
 		}
-		NCSAMP = hinfo.ncomp;	// overrides global setting
+		NCSAMP = hinfo.ncomp;		// overrides global setting
 		prims = NULL;
 		dt = RDTnewCT(dt, RDTscolr);
-		bytesPer = hinfo.ncomp + 1;	// XXX assumes no compression
 	} else if (!strcmp(hinfo.fmt, "float")) {
 		if (!hinfo.endianMatch) {
 			sprintf(errmsg, "incompatible byte ordering in '%s'", pfname);
 			error(USER, errmsg);
-			fclose(pfp);
+			fclose(pdfp[0]);
+			pdfp[0] = NULL;
 			return RDTnone;
 		}
 		if (hinfo.ncomp == 3) {
-			prims = hinfo.prims;		// custom primaries?
+			prims = hinfo.prims;	// custom primaries?
 			int	n = 8*hinfo.gotprims;
 			while (n--)
 				if (!FABSEQ(hinfo.prims[0][n], stdprims[0][n]))
 					break;
-			if (n < 0)			// standard primaries?
+			if (n < 0)		// standard primaries?
 				prims = stdprims;
 			else if (hinfo.gotprims) {	// or check if XYZ
 				for (n = 8; n--; )
@@ -950,11 +976,108 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 			prims = NULL;
 			dt = RDTnewCT(dt, RDTscolor);
 		}
-		bytesPer = sizeof(float)*hinfo.ncomp;
 	} else {
 		sprintf(errmsg, "unknown format (%s) for '%s'", hinfo.fmt, pfname);
 		error(USER, errmsg);
-		fclose(pfp);
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
+		return RDTnone;
+	}
+	if (!dfname)				// no depth file?
+		return dt;
+
+	if (dfname[0] == '!') {
+		error(USER, "depth data cannot be reloaded from command");
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
+		return RDTnone;
+	}
+	pdfp[1] = fopen(dfname, "r+");
+	if (!pdfp[1]) {
+		sprintf(errmsg, "cannot reopen depth file '%s'", dfname);
+		error(SYSTEM, errmsg);
+		fclose(pdfp[0]);
+		pdfp[0] = NULL;
+		return RDTnone;
+	}
+	SET_FILE_BINARY(pdfp[1]);
+	int	n, len = strlen(HDRSTR);
+	char	buf[32];		// sniff for 16-bit header
+	if (read(fileno(pdfp[1]), buf, len+1) < len+1) {
+		sprintf(errmsg, "empty depth file '%s'", dfname);
+		error(SYSTEM, errmsg);
+		fclose(pdfp[0]); fclose(pdfp[1]);
+		pdfp[0] = pdfp[1] = NULL;
+		return RDTnone;
+	}
+	for (n = 0; n < len; n++)
+		if (buf[n] != HDRSTR[n])
+			break;		// not a Radiance header
+	lseek(fileno(pdfp[1]), 0, SEEK_SET);
+	if ((n < len) | !isprint(buf[len]))
+		return RDTnewDT(dt, RDTdfloat);
+
+	HeaderInfo	dinfo;		// thinking it's 16-bit encoded
+	if (getheader(pdfp[1], head_check, &dinfo) < 0)
+		sprintf(errmsg, "bad header in encoded depth file '%s'",
+				dfname);
+	else if (strcmp(dinfo.fmt, DEPTH16FMT))
+		sprintf(errmsg, "wrong format (%s) for depth file '%s'",
+				dinfo.fmt, dfname);
+	else if (!SetReferenceDepth(dinfo.depth_unit))
+		sprintf(errmsg, "bad/missing reference depth (%s) in '%s'",
+				dinfo.depth_unit, dfname);
+	else
+		errmsg[0] = '\0';
+
+	if (errmsg[0]) {
+		error(USER, errmsg);
+		fclose(pdfp[1]); fclose(pdfp[0]);
+		pdfp[0] = pdfp[1] = NULL;
+		return RDTnone;
+	}
+	return RDTnewDT(dt, RDTdshort);
+}
+
+// Resume partially finished rendering
+// Picture file must exist
+RenderDataType
+RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
+{
+	FILE		*pdfp[2];
+
+	RenderDataType	dt = ReopenOutput(pdfp, pfname, dfname);
+	if (dt == RDTnone)
+		return RDTnone;
+
+	int	bytesPer = 0;		// figure out how far we got...
+	switch (RDTcolorT(dt)) {
+	case RDTrgbe:
+	case RDTxyze:
+		break;
+	case RDTscolr:
+		bytesPer = hinfo.ncomp + 1;	// XXX assumes no compression
+		break;
+	case RDTrgb:
+	case RDTxyz:
+		bytesPer = sizeof(float)*3;
+		break;
+	case RDTscolor:
+		bytesPer = sizeof(float)*hinfo.ncomp;
+		break;
+	default:
+		sprintf(errmsg, "unknown format (%s) for '%s'", hinfo.fmt, pfname);
+		error(USER, errmsg);
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
+		return RDTnone;
+	}
+	RESOLU	res;
+	if (!fgetsresolu(&res, pdfp[0]) || res.rt != PIXSTANDARD) {
+		sprintf(errmsg, "missing/bad resolution for '%s'", pfname);
+		error(USER, errmsg);
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
 		return RDTnone;
 	}
 	vw.type = 0;				// set up new (unreferenced) frame
@@ -963,103 +1086,71 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 	double	noAdj = 0;
 	if (!NewFrame(hinfo.vw, hvdim, &noAdj) ||
 			(hvdim[0] != res.xr) | (hvdim[1] != res.yr)) {
-		fclose(pfp);
+		error(CONSISTENCY, "unexpected resolution change in ResumeFrame()");
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
 		return RDTnone;
 	}
-	long	dataStart = ftell(pfp);		// picture starting point
+	long	dataStart = ftell(pdfp[0]);	// picture starting point
 	if (dataStart < 0) {
 		sprintf(errmsg, "cannot seek on '%s'", pfname);
 		error(SYSTEM, errmsg);
-		fclose(pfp);
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
 		return RDTnone;
 	}
 	long	doneScans = 0;
 	if (bytesPer) {				// fixed-width records?
-		fseek(pfp, 0, SEEK_END);
-		long	dataEnd = ftell(pfp);
+		fseek(pdfp[0], 0, SEEK_END);
+		long	dataEnd = ftell(pdfp[0]);
 		doneScans = (dataEnd - dataStart)/(bytesPer*GetWidth());
 		if (dataEnd-dataStart > bytesPer*GetWidth()*doneScans)
-			fseek(pfp, dataStart + bytesPer*GetWidth()*doneScans, SEEK_SET);
+			fseek(pdfp[0], dataStart + bytesPer*GetWidth()*doneScans, SEEK_SET);
 	} else {				// else get compressed scanlines
 		COLR *	scan = (COLR *)tempbuffer(sizeof(COLR)*GetWidth());
-		while (freadcolrs(scan, GetWidth(), pfp) >= 0)
+		while (freadcolrs(scan, GetWidth(), pdfp[0]) >= 0)
 			++doneScans;
-		if (!feof(pfp)) {
+		if (!feof(pdfp[0])) {
 			sprintf(errmsg, "error reading compressed scanline from '%s'", pfname);
 			error(USER, errmsg);
-			fclose(pfp);
+			fclose(pdfp[0]);
+			if (pdfp[1]) fclose(pdfp[1]);
 			return RDTnone;
 		}
 	}
 	if (doneScans >= GetHeight()) {		// nothing left to do?
 		sprintf(errmsg, "output file '%s' is already complete", pfname);
 		error(WARNING, errmsg);
-		fclose(pfp);
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
 		return dt;
 	}
 	if (!doneScans) {
 		sprintf(errmsg, "restarting empty frame '%s'", pfname);
 		error(WARNING, errmsg);
 	}
-	if (dfname) {				// append depth file, too?
-		if (dfname[0] == '!') {
-			error(USER, "depth data cannot be reloaded from command");
-			fclose(pfp);
+	long	toSkip = 0;
+	switch (RDTdepthT(dt)) {			// append depth file, too?
+	case RDTdfloat:
+		toSkip = sizeof(float)*GetWidth()*doneScans;
+		break;
+	case RDTdshort:
+		if (!fgetsresolu(&res, pdfp[1]) || (res.rt != PIXSTANDARD) |
+				(res.xr != GetWidth()) | (res.yr != GetHeight())) {
+			sprintf(errmsg, "missing/bad resolution for '%s'", dfname);
+			error(USER, errmsg);
+			fclose(pdfp[0]); fclose(pdfp[0]);
 			return RDTnone;
 		}
-		dfp = fopen(dfname, "a");
-		if (!dfp) {
-			sprintf(errmsg, "cannot reopen depth file '%s'", dfname);
-			error(SYSTEM, errmsg);
-			fclose(pfp);
-			return RDTnone;
-		}
-		SET_FILE_BINARY(dfp);
-		const long	dflen = ftell(dfp);
-		if (dflen != sizeof(float)*GetWidth()*doneScans) {
-			fclose(dfp);
-			dfp = fopen(dfname, "r+");
-			if (!dfp) return RDTnone;	// WTH?
-			SET_FILE_BINARY(dfp);
-		}
-		if (dflen < sizeof(float)*GetWidth()*doneScans) {
-			HeaderInfo	dinfo;
-			if (getheader(dfp, head_check, &dinfo) < 0)
-				sprintf(errmsg, "bad header in encoded depth file '%s'",
-						dfname);
-			else if (strcmp(dinfo.fmt, DEPTH16FMT))
-				sprintf(errmsg, "wrong format (%s) for depth file '%s'",
-						dinfo.fmt, dfname);
-			else if (!SetReferenceDepth(dinfo.depth_unit))
-				sprintf(errmsg, "bad/missing reference depth (%s) in '%s'",
-						dinfo.depth_unit, dfname);
-			else if (!fscnresolu(hvdim, hvdim+1, dfp) ||
-					(hvdim[0] != GetWidth()) | (hvdim[1] != GetHeight()))
-				sprintf(errmsg, "bad/mismatched resolution in '%s'",
-						dfname);
-			else
-				errmsg[0] = '\0';
-
-			if (errmsg[0]) {
-				error(USER, errmsg);
-				fclose(dfp);
-				fclose(pfp);
-				return RDTnone;
-			}
-			const long	dStart = ftell(dfp);
-			if (dflen-dStart < 2*GetWidth()*doneScans) {
-				sprintf(errmsg, "missing %ld depths in '%s'",
-					(long)GetWidth()*doneScans - (dflen-dStart)/2,
-					dfname);
-				error(WARNING, errmsg);
-			}
-			fseek(dfp, dStart + 2*GetWidth()*doneScans, SEEK_SET);
-			dt = RDTnewDT(dt, RDTdshort);
-		} else {
-			if (dflen > sizeof(float)*GetWidth()*doneScans)
-				fseek(dfp, sizeof(float)*GetWidth()*doneScans, SEEK_SET);
-			dt = RDTnewDT(dt, RDTdfloat);
-		}
+		toSkip = 2L*GetWidth()*doneScans;
+		break;
+	default:;
+	}
+	if (toSkip && fseek(pdfp[1], toSkip, SEEK_CUR) < 0) {
+		sprintf(errmsg, "cannot seek on depth file '%s'", dfname);
+		error(SYSTEM, errmsg);
+		fclose(pdfp[0]); fclose(pdfp[1]);
+		return RDTnone;
 	}
 	int	bheight = (psample > 1) ? int(2*psample+.99) : 4;
 	if (bheight > GetHeight()-doneScans)
@@ -1068,14 +1159,14 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 	vstep += !vstep;
 
 	NewBar(bheight);			// render remainder if we can
-	if (!RenderBelow(GetHeight()-doneScans, vstep, pfp, dt, dfp)) {
-		fclose(pfp);
-		if (dfp) fclose(dfp);
+	if (!RenderBelow(GetHeight()-doneScans, vstep, pdfp[0], dt, pdfp[1])) {
+		fclose(pdfp[0]);
+		if (pdfp[1]) fclose(pdfp[1]);
 		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// close up and return success
-	fclose(pfp);
-	if (dfp) fclose(dfp);
+	fclose(pdfp[0]);
+	if (pdfp[1]) fclose(pdfp[1]);
 	return dt;
 }
