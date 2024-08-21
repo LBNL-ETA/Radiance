@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.39 2024/07/02 23:54:16 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.40 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -157,8 +157,6 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.39 2024/07/02 23:54:16 greg Ex
 #define MAX_NPROCS	64		/* max. # rendering processes */
 #endif
 #endif
-
-extern char	*shm_boundary;		/* boundary of shared memory */
 
 int		ray_pnprocs = 0;	/* number of child processes */
 int		ray_pnidle = 0;		/* number of idle children */
@@ -388,10 +386,7 @@ ray_pdone(		/* reap children and free data */
 {
 	ray_pclose(0);			/* close child processes */
 
-	if (shm_boundary != NULL) {	/* clear shared memory boundary */
-		free((void *)shm_boundary);
-		shm_boundary = NULL;
-	}
+	cow_doneshare();		/* clear shared memory boundary */
 
 	ray_done(freall);		/* free rendering data */
 }
@@ -459,12 +454,7 @@ ray_popen(			/* open the specified # processes */
 	if (nobjects <= 0)
 		error(CONSISTENCY, "ray_popen() called before scene loaded");
 	ambsync();			/* load any new ambient values */
-	if (shm_boundary == NULL) {	/* first child process? */
-		preload_objs();		/* preload auxiliary data */
-					/* set shared memory boundary */
-		shm_boundary = (char *)malloc(16);
-		strcpy(shm_boundary, "SHM_BOUNDARY");
-	}
+	cow_memshare();			/* copy-on-write shared memory */
 	fflush(NULL);			/* clear pending output */
 	samplestep = ray_pnprocs + nadd;
 	while (nadd--) {		/* fork each new process */

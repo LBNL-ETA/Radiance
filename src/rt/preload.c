@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.17 2024/04/04 18:51:18 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.18 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -18,6 +18,8 @@ static const char	RCSid[] = "$Id: preload.c,v 2.17 2024/04/04 18:51:18 greg Exp 
 #include "data.h"
 #include "func.h"
 #include "bsdf.h"
+
+char	*shm_boundary = NULL;		/* boundary of shared memory */
 
 
 /* KEEP THIS ROUTINE CONSISTENT WITH THE DIFFERENT OBJECT FUNCTIONS! */
@@ -174,4 +176,28 @@ preload_objs(void)		/* preload object data structures */
 				/* note that nobjects may change during loop */
 	for (on = 0; on < nobjects; on++)
 		load_os(objptr(on));
+}
+
+
+void
+cow_memshare(void)		/* set up copy-on-write memory sharing */
+{
+	if (shm_boundary != NULL)
+		return;			/* assume we're good */
+
+	preload_objs();			/* preload auxiliary data */
+					/* set shared memory boundary */
+	shm_boundary = (char *)malloc(16);
+	strcpy(shm_boundary, "SHM_BOUNDARY");
+}
+
+
+void
+cow_doneshare(void)		/* clear memory sharing boundary */
+{
+	if (shm_boundary == NULL)
+		return;
+					/* clear shared memory boundary */
+	free((void *)shm_boundary);
+	shm_boundary = NULL;
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.54 2024/08/20 18:57:11 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.55 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -20,8 +20,6 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.54 2024/08/20 18:57:11 greg Exp $
 #include  "pmapray.h"
 
 extern char	*progname;		/* global argv[0] */
-
-extern char	*shm_boundary;		/* boundary of shared memory */
 
 					/* persistent processes define */
 #ifdef  F_SETLKW
@@ -453,9 +451,7 @@ main(int  argc, char  *argv[])
 		dup2(duped1, fileno(stdout));
 		close(duped1);
 		if (persist == PARALLEL) {	/* multiprocessing */
-			preload_objs();		/* preload scene */
-			shm_boundary = (char *)malloc(16);
-			strcpy(shm_boundary, "SHM_BOUNDARY");
+			cow_memshare();		/* preloads scene */
 			while ((rval=fork()) == 0) {	/* keep on forkin' */
 				pflock(1);
 				pfhold();

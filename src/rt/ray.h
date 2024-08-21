@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.55 2024/08/12 18:57:00 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.56 2024/08/21 20:42:20 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -205,6 +205,9 @@ extern void	free_objmem(void);
 					/* defined in preload.c */
 extern int	load_os(OBJREC *op);
 extern void	preload_objs(void);
+extern char	*shm_boundary;
+extern void	cow_memshare(void);
+extern void	cow_doneshare(void);
 					/* defined in raycalls.c */
 extern void	ray_init(char *otnm);
 extern void	ray_trace(RAY *r);

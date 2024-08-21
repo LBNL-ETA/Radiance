@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.44 2024/02/23 03:45:52 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.45 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -11,8 +11,6 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.44 2024/02/23 03:45:52 greg Exp
 #include "rcontrib.h"
 #include "otypes.h"
 #include "source.h"
-
-char	*shm_boundary = NULL;		/* boundary of shared memory */
 
 CUBE	thescene;			/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
@@ -226,11 +224,8 @@ rcinit(void)
 	if (nproc > MAXPROCESS)
 		sprintf(errmsg, "too many processes requested -- reducing to %d",
 				nproc = MAXPROCESS);
-	if (nproc > 1) {
-		preload_objs();		/* preload auxiliary data */
-					/* set shared memory boundary */
-		shm_boundary = strcpy((char *)malloc(16), "SHM_BOUNDARY");
-	}
+	if (nproc > 1)
+		cow_memshare();		/* preload auxiliary data */
 	trace = trace_contrib;		/* set up trace call-back */
 	for (i = 0; i < nsources; i++)	/* tracing to sources as well */
 		source[i].sflags |= SFOLLOW;

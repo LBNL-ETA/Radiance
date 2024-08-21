@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.33 2024/04/08 17:08:15 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.34 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -30,7 +30,6 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.33 2024/04/08 17:08:15 greg Exp $
 char  *progname;			/* argv[0] */
 char  *octname;				/* octree name */
 char  *sigerr[NSIG];			/* signal error messages */
-char  *shm_boundary = NULL;		/* boundary of shared memory */
 char  *errfile = NULL;			/* error output file */
 
 extern time_t  time();
@@ -367,9 +366,7 @@ main(int  argc, char  *argv[])
 			close(duped1);
 		}
 		if (persist == PARALLEL) {	/* multiprocessing */
-			preload_objs();		/* preload scene */
-			shm_boundary = (char *)malloc(16);
-			strcpy(shm_boundary, "SHM_BOUNDARY");
+			cow_memshare();		/* preloads scene */
 			while ((rval=fork()) == 0) {	/* keep on forkin' */
 				pflock(1);
 				pfhold();

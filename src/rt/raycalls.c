@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.30 2024/05/02 15:02:08 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.31 2024/08/21 20:42:20 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -105,8 +105,6 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.30 2024/05/02 15:02:08 greg Exp
 char	*progname = "unknown_app";	/* caller sets to argv[0] */
 
 char	*octname;			/* octree name we are given */
-
-char	*shm_boundary = NULL;		/* boundary of shared memory */
 
 CUBE	thescene;			/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
