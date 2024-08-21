@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.5 2024/08/21 23:32:24 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.6 2024/08/21 23:52:24 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -392,11 +392,12 @@ public:
 	RenderDataType		ResumeFrame(const char *pfname,
 						const char *dfname=NULL);
 				/// Prepare new picture (and depth) output
-				/// Writes current render size as resolution
+				/// Called by RenderFrame()
 	RenderDataType		NewOutput(FILE *pdfp[2], const char *pfname,
 						RenderDataType dt=RDTrgbe,
 						const char *dfname=NULL);
 				/// Reopen existing picture (and depth) file
+				/// Called by ResumeFrame()
 				/// File pointers @ end of header (before res.)
 	RenderDataType		ReopenOutput(FILE *pdfp[2], const char *pfname,
 						const char *dfname=NULL);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.5 2024/08/21 23:32:24 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.6 2024/08/21 23:52:24 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -732,7 +732,6 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 	default:;
 	}
 	fputc('\n', pdfp[0]);			// flush picture header + resolution
-	fprtresolu(GetWidth(), GetHeight(), pdfp[0]);
 	if (fflush(pdfp[0]) == EOF) {
 		sprintf(errmsg, "cannot write header to picture '%s'", pfname);
 		error(SYSTEM, errmsg);
@@ -740,7 +739,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 		pdfp[0] = NULL;
 		return RDTnone;
 	}
-	if (dfname) {
+	if (dfname) {				// open depth output
 		if (dfname[0] == '!')
 			pdfp[1] = popen(dfname+1, "w");
 		else
@@ -761,7 +760,6 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 		fputs(DEPTHSTR, pdfp[1]); fputs(dunit, pdfp[1]); fputc('\n', pdfp[1]);
 		fputformat(DEPTH16FMT, pdfp[1]);
 		fputc('\n', pdfp[1]);		// end-of-info
-		fprtresolu(GetWidth(), GetHeight(), pdfp[1]);
 		if (fflush(pdfp[1]) == EOF) {
 			sprintf(errmsg, "cannot write header to '%s'", dfname);
 			error(SYSTEM, errmsg);
@@ -788,6 +786,10 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	dt = NewOutput(pdfp, pfname, dt, dfname);
 	if (dt == RDTnone)
 		return RDTnone;
+						// add resolution string(s)
+	fprtresolu(GetWidth(), GetHeight(), pdfp[0]);
+	if (RDTdepthT(dt) == RDTdshort)
+		fprtresolu(GetWidth(), GetHeight(), pdfp[1]);
 
 	const int	bheight = (psample > 1) ? int(2*psample+.99) : 4;
 	const int	vstep =  bheight >> (psample > 1);
@@ -1130,7 +1132,7 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 		error(WARNING, errmsg);
 	}
 	long	toSkip = 0;
-	switch (RDTdepthT(dt)) {			// append depth file, too?
+	switch (RDTdepthT(dt)) {		// append depth file, too?
 	case RDTdfloat:
 		toSkip = sizeof(float)*GetWidth()*doneScans;
 		break;
@@ -1145,8 +1147,8 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 		toSkip = 2L*GetWidth()*doneScans;
 		break;
 	default:;
-	}
-	if (toSkip && fseek(pdfp[1], toSkip, SEEK_CUR) < 0) {
+	}					// fseek() needed for output
+	if (pdfp[1] && fseek(pdfp[1], toSkip, SEEK_CUR) < 0) {
 		sprintf(errmsg, "cannot seek on depth file '%s'", dfname);
 		error(SYSTEM, errmsg);
 		fclose(pdfp[0]); fclose(pdfp[1]);
