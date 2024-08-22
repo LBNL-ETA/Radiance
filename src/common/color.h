@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.48 2024/08/14 20:05:23 greg Exp $ */
+/* RCSid $Id: color.h,v 2.49 2024/08/22 04:27:53 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -376,7 +376,8 @@ extern RGBPRIMS  stdprims;	/* standard primary chromaticities */
 extern RGBPRIMS  xyzprims;	/* to indicate XYZ input or output */
 extern COLORMAT  rgb2xyzmat;	/* RGB to XYZ conversion matrix */
 extern COLORMAT  xyz2rgbmat;	/* XYZ to RGB conversion matrix */
-extern COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
+extern const COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
+extern const SCOLOR scblack;	/* black spectral color (all 0's) */
 
 #define  CGAMUT_LOWER		01
 #define  CGAMUT_UPPER		02

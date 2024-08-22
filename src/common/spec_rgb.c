@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.34 2024/08/14 20:05:23 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.35 2024/08/22 04:27:53 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -25,8 +25,9 @@ static const char	RCSid[] = "$Id: spec_rgb.c,v 2.34 2024/08/14 20:05:23 greg Exp
 RGBPRIMS  stdprims = STDPRIMS;	/* standard primary chromaticities */
 RGBPRIMS  xyzprims = {1,0, 0,1, 0,0, 1.f/3.f,1.f/3.f};
 
-COLOR  cblack = BLKCOLOR;		/* global black color */
-COLOR  cwhite = WHTCOLOR;		/* global white color */
+const COLOR  cblack = BLKCOLOR;		/* global black color */
+const COLOR  cwhite = WHTCOLOR;		/* global white color */
+const SCOLOR scblack = {0};		/* global black spectrum */
 
 float  xyneu[2] = {1./3., 1./3.};	/* neutral xy chromaticities */
 
