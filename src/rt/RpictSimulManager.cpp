@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.6 2024/08/21 23:52:24 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.7 2024/08/22 00:44:02 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -1005,7 +1005,7 @@ RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *d
 	SET_FILE_BINARY(pdfp[1]);
 	int	n, len = strlen(HDRSTR);
 	char	buf[32];		// sniff for 16-bit header
-	if (read(fileno(pdfp[1]), buf, len+1) < len+1) {
+	if (getbinary(buf, 1, len+1, pdfp[1]) < len+1) {
 		sprintf(errmsg, "empty depth file '%s'", dfname);
 		error(SYSTEM, errmsg);
 		fclose(pdfp[0]); fclose(pdfp[1]);
@@ -1015,7 +1015,7 @@ RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *d
 	for (n = 0; n < len; n++)
 		if (buf[n] != HDRSTR[n])
 			break;		// not a Radiance header
-	lseek(fileno(pdfp[1]), 0, SEEK_SET);
+	rewind(pdfp[1]);
 	if ((n < len) | !isprint(buf[len]))
 		return RDTnewDT(dt, RDTdfloat);
 
