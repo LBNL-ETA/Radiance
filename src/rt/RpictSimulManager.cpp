@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.7 2024/08/22 00:44:02 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.8 2024/08/23 02:08:28 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -196,14 +196,13 @@ RpictSimulManager::SetTile(const int ti[2])
 bool
 RpictSimulManager::ComputePixel(int x, int y)
 {
-	static const SCOLOR	scBlack = {0};
 	int	i;
 	FVECT	rodir[2];
 	double	hpos = (x+pixjitter())/TWidth();
 	double	vpos = (y+pixjitter())/THeight();
 	double	dlim = viewray(rodir[0], rodir[1], &tvw, hpos, vpos);
 	if (dlim < -FTINY) {	// off view?
-		pacc.SetPixel(x, y, scBlack);
+		pacc.SetPixel(x, y, scblack);
 		doneMap.Set(x, y);
 		return true;
 	}
@@ -328,13 +327,9 @@ RpictSimulManager::FillSquare(const int x, const int y, const int noff[4][2])
 
 // helper function to set up quincunx sampling
 static void
-SetQuincunx(ABitMap2 *bmp2, int noff[4][2], const int spc, const bool odd)
+SetQuincunx(ABitMap2 *bmp2, int noff[4][2], const int spc, bool odd, int x0, int y)
 {
-	for (int y = 0; y < bmp2->Height(); y += spc>>1)
-	    for (int x = (odd^(y&1))*(spc>>1); x < bmp2->Width(); x += spc)
-	    	bmp2->Set(x, y);
-					// order neighbors CCW
-	if (odd) {
+	if (odd) {			// order neighbors CCW
 		noff[0][0] = spc>>1; noff[0][1] = 0;
 		noff[1][0] = 0; noff[1][1] = spc>>1;
 		noff[2][0] = -(spc>>1); noff[2][1] = 0;
@@ -345,11 +340,27 @@ SetQuincunx(ABitMap2 *bmp2, int noff[4][2], const int spc, const bool odd)
 		noff[2][0] = -(spc>>1); noff[2][1] = -(spc>>1);
 		noff[3][0] = spc>>1; noff[3][1] = -(spc>>1);
 	}
+	int	nsteps;			// non-negative range
+	if (x0 < -(spc>>1)) {
+		nsteps = (spc-1 - x0 - (spc>>1))/spc;
+		x0 += nsteps*spc;
+	}
+	if (y < 0) {			// get past y==0
+		nsteps = ((spc>>1)-1 - y)/(spc>>1);
+		y += nsteps*(spc>>1);
+		odd ^= nsteps&1;
+	}
+	while (y < bmp2->Height()) {
+	    for (int x = x0 + odd*(spc>>1); x < bmp2->Width(); x += spc)
+	    	bmp2->Set(x, y);
+	    y += spc>>1;
+	    odd = !odd;
+	}
 }
 
 // Render (or finish rendering) current tile
 bool
-RpictSimulManager::RenderRect()
+RpictSimulManager::RenderRect(const int x0, const int y0)
 {
 	if (!tvw.type || !Ready()) {
 		error(INTERNAL, "need octree and view for RenderRect()");
@@ -359,17 +370,15 @@ RpictSimulManager::RenderRect()
 	int		sp2 = ceil(log2((TWidth()>THeight() ? TWidth() : THeight()) - 1.));
 	int		layer = 0;
 	int		x, y;
-// fprintf(stderr, "Rendering %dx%d tile with psample=%d, maxdiff=%.3f ...\n",
-// TWidth(), THeight(), psample, maxdiff);
 	while (sp2 > 0) {
 		ABitMap2	sampMap(TWidth(), THeight());
 		int		noff[4][2];
 		if ((prCB != NULL) & (barPix == NULL))
 			(*prCB)(100.*doneMap.SumTotal()/doneMap.Width()/doneMap.Height());
-		SetQuincunx(&sampMap, noff, 1<<sp2, layer&1);
+		SetQuincunx(&sampMap, noff, 1<<sp2, layer&1, x0, y0);
 		sampMap -= doneSamples;	// avoid resampling pixels
 		// Are we into adaptive sampling realm?
-		if (noff[0][0]*noff[0][0] + noff[0][1]*noff[0][1] < psample*psample) {
+		if (noff[0][0]*noff[0][0] + noff[0][1]*noff[0][1] < 4*psample*psample) {
 			if (FlushQueue() < 0)	// need results to check thresholds
 				return false;
 			ABitMap2	fillMap = sampMap;
@@ -394,11 +403,6 @@ RpictSimulManager::RenderRect()
 			if (!ComputePixel(x, y))
 				return false;
 		doneSamples |= sampMap;	// samples now done or at least queued
-// fprintf(stderr, "Sampled %ld pixels at (sp2,layer)=(%d,%d)\n",
-// (long)sampMap.SumTotal(), sp2, layer);
-// fprintf(stderr, "\t%ld pixels (%.3f%%) completed (+%ld in process)\n",
-// (long)doneMap.SumTotal(), 100.*doneMap.SumTotal()/doneMap.Width()/doneMap.Height(),
-// (long)(doneSamples.SumTotal()-doneMap.SumTotal()));
 		sp2 -= layer++ & 1;	// next denser sampling
 	}
 	if (FlushQueue() < 0)		// make sure we got everyone
@@ -433,8 +437,13 @@ RpictSimulManager::RenderTile(COLORV *rp, int ystride, float *zp, const int *til
 		pacc.SetColorSpace(RDTxyz);
 	else if (prims)
 		pacc.SetColorSpace(RDTrgb, prims);
-		
-	return SetTile(tile) && RenderRect();
+
+	int	x0=0, y0=0;
+	if (tile) {
+		x0 = -tile[0]*TWidth();
+		y0 = -tile[1]*THeight();
+	}
+	return SetTile(tile) && RenderRect(x0, y0);
 }
 
 // Same but store as common-exponent COLR or SCOLR
@@ -451,7 +460,12 @@ RpictSimulManager::RenderTile(COLRV *bp, int ystride, float *zp, const int *tile
 	else if (prims)
 		pacc.SetColorSpace(RDTrgbe, prims);
 
-	return SetTile(tile) && RenderRect();
+	int	x0=0, y0=0;
+	if (tile) {
+		x0 = -tile[0]*TWidth();
+		y0 = -tile[1]*THeight();
+	}
+	return SetTile(tile) && RenderRect(x0, y0);
 }
 
 // Same but also use 16-bit encoded depth buffer
@@ -468,7 +482,12 @@ RpictSimulManager::RenderTile(COLRV *bp, int ystride, short *dp, const int *tile
 	else if (prims)
 		pacc.SetColorSpace(RDTrgbe, prims);
 
-	return SetTile(tile) && RenderRect();
+	int	x0=0, y0=0;
+	if (tile) {
+		x0 = -tile[0]*TWidth();
+		y0 = -tile[1]*THeight();
+	}
+	return SetTile(tile) && RenderRect(x0, y0);
 }
 
 // Back to float color with 16-bit depth
@@ -485,7 +504,12 @@ RpictSimulManager::RenderTile(COLORV *rp, int ystride, short *dp, const int *til
 	else if (prims)
 		pacc.SetColorSpace(RDTrgb, prims);
 
-	return SetTile(tile) && RenderRect();
+	int	x0=0, y0=0;
+	if (tile) {
+		x0 = -tile[0]*TWidth();
+		y0 = -tile[1]*THeight();
+	}
+	return SetTile(tile) && RenderRect(x0, y0);
 }
 
 // Allocate a new render bar
@@ -583,10 +607,9 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 	}
 	int		lastOut = ytop;		// render down frame
 	while (ytop > 0) {
-// fprintf(stderr, "At y=%d, source drawing %s...\n", ytop, parr ? "ON" : "OFF");
 		if (prCB)
 			(*prCB)(100.*(GetHeight()-ytop)/GetHeight());
-		if (!RenderRect())		// render this bar
+		if (!RenderRect(0, THeight()-ytop))	// render this bar
 			return false;
 		int	nlines = lastOut - ytop + THeight();
 		if (nlines > ytop)
@@ -791,8 +814,8 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	if (RDTdepthT(dt) == RDTdshort)
 		fprtresolu(GetWidth(), GetHeight(), pdfp[1]);
 
-	const int	bheight = (psample > 1) ? int(2*psample+.99) : 4;
-	const int	vstep =  bheight >> (psample > 1);
+	const int	bheight = (psample > 1) ? int(4*psample+.99) : 8;
+	const int	vstep = bheight >> (psample > 1);
 
 	NewBar(bheight);			// render frame if we can
 	if (!RenderBelow(GetHeight(), vstep, pdfp[0], dt, pdfp[1])) {
@@ -1154,7 +1177,7 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 		fclose(pdfp[0]); fclose(pdfp[1]);
 		return RDTnone;
 	}
-	int	bheight = (psample > 1) ? int(2*psample+.99) : 4;
+	int	bheight = (psample > 1) ? int(4*psample+.99) : 8;
 	if (bheight > GetHeight()-doneScans)
 		bheight = GetHeight()-doneScans;
 	int	vstep =  bheight >> (psample > 1);

@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.6 2024/08/21 23:52:24 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.7 2024/08/23 02:08:28 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -251,9 +251,10 @@ class RpictSimulManager : protected RtraceSimulManager {
 	COLORV *		barPix;			// current render bar pixels
 	float *			barDepth;		// current render bar depths
 	bool			SetTile(const int ti[2]);
-	bool			RenderRect();
+	bool			RenderRect(const int x0 = 0, const int y0 = 0);
 	bool			ComputePixel(int x, int y);
-	bool			BelowSampThresh(int x, int y, const int noff[4][2]) const;
+	bool			BelowSampThresh(const int x, const int y,
+							const int noff[4][2]) const;
 	void			FillSquare(const int x, const int y, const int noff[4][2]);
 	void			NewBar(int ht = 0);
 	bool			LowerBar(int v, int ytop);
