@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: abitmapio.cpp,v 2.2 2024/08/24 23:25:24 greg Exp $";
+#endif
 /*
  *  abitmapio.cpp
  *  panlib

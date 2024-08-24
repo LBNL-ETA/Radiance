@@ -1,3 +1,4 @@
+/* RCSid $Id: abitmap.h,v 2.2 2024/08/24 23:25:24 greg Exp $ */
 /*
  *  abitmap.h
  *  panlib
