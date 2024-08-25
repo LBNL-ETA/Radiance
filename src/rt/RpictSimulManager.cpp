@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.8 2024/08/23 02:08:28 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.9 2024/08/25 03:13:07 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -8,6 +8,8 @@ static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.8 2024/08/23 02:08:2
  *
  *  Created by Greg Ward on 07/11/2024.
  */
+
+#define DEBUG	1	// XXX temporary!
 
 #include <ctype.h>
 #include "platform.h"
@@ -196,6 +198,8 @@ RpictSimulManager::SetTile(const int ti[2])
 bool
 RpictSimulManager::ComputePixel(int x, int y)
 {
+	DCHECK(doneMap.OffBitMap(x,y),
+			CONSISTENCY, "illegal pixel index in ComputPixel()");
 	int	i;
 	FVECT	rodir[2];
 	double	hpos = (x+pixjitter())/TWidth();
@@ -267,9 +271,11 @@ RpictSimulManager::FillSquare(const int x, const int y, const int noff[4][2])
 	float	dist[4];
 	int	i, j;
 					// assumes 4 corners are valid!
-	for (i = 4; i--; )
+	for (i = 4; i--; ) {
+		DCHECK(!doneMap.Check(x+noff[i][0], y+noff[i][1]),
+			CONSISTENCY, "inclusion of bad pixel in FillSquare()");
 		pacc.GetPixel(x+noff[i][0], y+noff[i][1], pval[i], &dist[i]);
-
+	}
 	i = abs(noff[1][0]-noff[0][0]);
 	j = abs(noff[1][1]-noff[0][1]);	// i==j for diamond fill
 	const int	slen =  (i > j) ? i : j;
@@ -378,13 +384,15 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 		SetQuincunx(&sampMap, noff, 1<<sp2, layer&1, x0, y0);
 		sampMap -= doneSamples;	// avoid resampling pixels
 		// Are we into adaptive sampling realm?
-		if (noff[0][0]*noff[0][0] + noff[0][1]*noff[0][1] < 4*psample*psample) {
+		if (noff[0][0]*noff[0][0] + noff[0][1]*noff[0][1] < psample*psample) {
 			if (FlushQueue() < 0)	// need results to check thresholds
 				return false;
 			ABitMap2	fillMap = sampMap;
 			for (x = y = 0; sampMap.Find(&x, &y); x++)
 				if (BelowSampThresh(x, y, noff))
 					sampMap.Reset(x, y);
+#if 0
+XXX Need to fix directions for spreading!!
 					// spread sampling to neighbors...
 			const ABitMap2	origSampMap = sampMap;
 			for (x = 4; x--; ) {
@@ -393,6 +401,7 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 				sampMap |= stamp;
 			}		// ...but don't resample what's done
 			sampMap -= doneSamples;
+#endif
 					// interpolate smooth regions
 			fillMap -= sampMap;
 			for (x = y = 0; fillMap.Find(&x, &y); x++)
@@ -561,11 +570,8 @@ RpictSimulManager::LowerBar(int v, int ytop)
 			sizeof(COLORV)*NC*TWidth()*(THeight()-v));
 	memmove(barDepth, barDepth + TWidth()*v,
 			sizeof(float)*TWidth()*(THeight()-v));
-	if (ytop < THeight()) {			// mark what we won't do as finished
+	if (ytop < THeight())			// mark what we won't do as finished
 		doneMap.ClearRect(0, 0, TWidth(), THeight()-ytop, true);
-		memset(barPix, 0, sizeof(COLORV)*NC*TWidth()*(THeight()-ytop));
-		memset(barDepth, 0, sizeof(float)*TWidth()*(THeight()-ytop));
-	}
 	return true;
 }
 
@@ -588,7 +594,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 			cropview(&ptvw, 0., double(ytop-THeight())/GetHeight(),
 						1., double(ytop)/GetHeight()))
 		ptvw.type = 0;
-						// set up spectral sampling
+						// update spectral sampling
 	if (setspectrsamp(CNDX, WLPART) <= 0) {
 		error(USER, "unsupported spectral sampling");
 		return false;
@@ -675,7 +681,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 {
 	pdfp[0] = pdfp[1] = NULL;
 	if (!RDTcolorT(dt))
-		error(INTERNAL, "botched color output type in NewOutput()");
+		error(INTERNAL, "missing color output type in NewOutput()");
 	if (NCSAMP == 3) {
 		if (RDTcolorT(dt) == RDTscolr)
 			dt = RDTnewCT(dt, prims==xyzprims ? RDTxyze : RDTrgbe);
@@ -697,7 +703,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 			sprintf(errmsg, "cannot open picture file '%s'", pfname);
 			error(SYSTEM, errmsg);
 		}
-		return RDTnone;			// expected in parallel sequence
+		return RDTnone;			// may be expected in sequence run
 	}
 	if (fd == 1)
 		pdfp[0] = stdout;
@@ -752,9 +758,9 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 		fputendian(pdfp[0]);
 		fputformat("float", pdfp[0]);
 		break;
-	default:;
+	default:;	// pro forma - caught this above
 	}
-	fputc('\n', pdfp[0]);			// flush picture header + resolution
+	fputc('\n', pdfp[0]);			// flush picture header
 	if (fflush(pdfp[0]) == EOF) {
 		sprintf(errmsg, "cannot write header to picture '%s'", pfname);
 		error(SYSTEM, errmsg);
