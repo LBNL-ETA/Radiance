@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.9 2024/08/25 03:13:07 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.10 2024/08/25 17:24:48 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -236,31 +236,37 @@ RpictSimulManager::ComputePixel(int x, int y)
 
 // Check if neighbor differences are below pixel sampling threshold
 bool
-RpictSimulManager::BelowSampThresh(int x, int y, const int noff[4][2]) const
+RpictSimulManager::BelowSampThresh(const int x, const int y, const int noff[4][2]) const
 {
 	SCOLOR	pval[4];
 	float	dist[4];
 	int	i, j;
 
 	for (i = 4; i--; ) {		// get pixels from tile store
-		int	px = x + noff[i][0];
-		int	py = y + noff[i][1];
+		const int	px = x + noff[i][0];
+		const int	py = y + noff[i][1];
 		if (!doneMap.Check(px, py) ||
 				!pacc.GetPixel(px, py, pval[i], &dist[i]))
 			return false;
 	}
-	const bool	spectr = (pacc.NC() > 3);
-	for (i = 4; --i; )		// do pairwise comparisons
-	    for (j = i; j--; ) {
-	        if (pacc.DepthType() &&
-	        		(dist[i] - dist[j] > maxdiff*dist[j]) |
+					// do pairwise comparisons
+	for (i = (pacc.DepthType() != RDTnone)*4; --i > 0; )
+	    for (j = i; j--; )
+	        if ((dist[i] - dist[j] > maxdiff*dist[j]) |
 	        		(dist[j] - dist[i] > maxdiff*dist[i]))
 			return false;
-		if (spectr ? sbigsdiff(pval[i], pval[j], maxdiff) :
-				bigdiff(pval[i], pval[j], maxdiff))
+	if (pacc.NC() > 3) {
+	    for (i = 4; --i; )
+	    	for (j = i; j--; )
+		    if (sbigsdiff(pval[i], pval[j], maxdiff))
 			return false;
-	    }
-	return true;			// linear interpolation OK
+	} else {
+	    for (i = 4; --i; )
+	    	for (j = i; j--; )
+		    if (bigdiff(pval[i], pval[j], maxdiff))
+			return false;
+	}
+	return true;
 }
 
 // Fill an interior square patch with interpolated values
@@ -391,19 +397,18 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 			for (x = y = 0; sampMap.Find(&x, &y); x++)
 				if (BelowSampThresh(x, y, noff))
 					sampMap.Reset(x, y);
-#if 0
-XXX Need to fix directions for spreading!!
 					// spread sampling to neighbors...
 			const ABitMap2	origSampMap = sampMap;
 			for (x = 4; x--; ) {
 				ABitMap2	stamp = origSampMap;
-				stamp.Shift(noff[x][0], noff[x][1]);
+				stamp.Shift(noff[x][0] + noff[(x+1)&3][0],
+						noff[x][1] + noff[(x+1)&3][1]);
 				sampMap |= stamp;
 			}		// ...but don't resample what's done
 			sampMap -= doneSamples;
-#endif
 					// interpolate smooth regions
 			fillMap -= sampMap;
+			fillMap -= doneSamples;
 			for (x = y = 0; fillMap.Find(&x, &y); x++)
 				FillSquare(x, y, noff);
 			doneSamples |= doneMap;
@@ -418,9 +423,9 @@ XXX Need to fix directions for spreading!!
 		return false;
 	x = y = 0;
 	if (doneMap.Find(&x, &y, false)) {
-		sprintf(errmsg, "missed %ld tile pixels, e.g. (%d,%d)",
-				(long)doneMap.Width()*doneMap.Height() -
-					doneMap.SumTotal(), x, y);
+		sprintf(errmsg, "missed %.4f%% of pixels in rectangle\n",
+				100. - 100.*doneMap.SumTotal() /
+					doneMap.Width() / doneMap.Height());
 		error(WARNING, errmsg);
 	}
 	if ((prCB != NULL) & (barPix == NULL))
@@ -447,12 +452,7 @@ RpictSimulManager::RenderTile(COLORV *rp, int ystride, float *zp, const int *til
 	else if (prims)
 		pacc.SetColorSpace(RDTrgb, prims);
 
-	int	x0=0, y0=0;
-	if (tile) {
-		x0 = -tile[0]*TWidth();
-		y0 = -tile[1]*THeight();
-	}
-	return SetTile(tile) && RenderRect(x0, y0);
+	return SetTile(tile) && RenderRect();
 }
 
 // Same but store as common-exponent COLR or SCOLR
@@ -469,12 +469,7 @@ RpictSimulManager::RenderTile(COLRV *bp, int ystride, float *zp, const int *tile
 	else if (prims)
 		pacc.SetColorSpace(RDTrgbe, prims);
 
-	int	x0=0, y0=0;
-	if (tile) {
-		x0 = -tile[0]*TWidth();
-		y0 = -tile[1]*THeight();
-	}
-	return SetTile(tile) && RenderRect(x0, y0);
+	return SetTile(tile) && RenderRect();
 }
 
 // Same but also use 16-bit encoded depth buffer
@@ -491,12 +486,7 @@ RpictSimulManager::RenderTile(COLRV *bp, int ystride, short *dp, const int *tile
 	else if (prims)
 		pacc.SetColorSpace(RDTrgbe, prims);
 
-	int	x0=0, y0=0;
-	if (tile) {
-		x0 = -tile[0]*TWidth();
-		y0 = -tile[1]*THeight();
-	}
-	return SetTile(tile) && RenderRect(x0, y0);
+	return SetTile(tile) && RenderRect();
 }
 
 // Back to float color with 16-bit depth
@@ -513,12 +503,7 @@ RpictSimulManager::RenderTile(COLORV *rp, int ystride, short *dp, const int *til
 	else if (prims)
 		pacc.SetColorSpace(RDTrgb, prims);
 
-	int	x0=0, y0=0;
-	if (tile) {
-		x0 = -tile[0]*TWidth();
-		y0 = -tile[1]*THeight();
-	}
-	return SetTile(tile) && RenderRect(x0, y0);
+	return SetTile(tile) && RenderRect();
 }
 
 // Allocate a new render bar
@@ -820,7 +805,7 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	if (RDTdepthT(dt) == RDTdshort)
 		fprtresolu(GetWidth(), GetHeight(), pdfp[1]);
 
-	const int	bheight = (psample > 1) ? int(4*psample+.99) : 8;
+	const int	bheight = (psample > 1) ? int(8*psample+.99) : 16;
 	const int	vstep = bheight >> (psample > 1);
 
 	NewBar(bheight);			// render frame if we can
@@ -1183,7 +1168,7 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 		fclose(pdfp[0]); fclose(pdfp[1]);
 		return RDTnone;
 	}
-	int	bheight = (psample > 1) ? int(4*psample+.99) : 8;
+	int	bheight = (psample > 1) ? int(8*psample+.99) : 16;
 	if (bheight > GetHeight()-doneScans)
 		bheight = GetHeight()-doneScans;
 	int	vstep =  bheight >> (psample > 1);
