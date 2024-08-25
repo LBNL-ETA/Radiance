@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.15 2024/08/14 20:05:23 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.16 2024/08/25 00:17:29 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -341,6 +341,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 	while (n-- > 0) {		// queue each ray
 		VCOPY(res.rorg, orig_direc[0]);
 		VCOPY(res.rdir, orig_direc[1]);
+		res.rmax = .0;
 		orig_direc += 2;
 		rayorigin(&res, PRIMARY, NULL, NULL);
 		res.rno = rID0 ? (lastRayID = rID0++) : ++lastRayID;
