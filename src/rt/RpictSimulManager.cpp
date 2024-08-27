@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.10 2024/08/25 17:24:48 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.11 2024/08/27 18:50:01 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -580,10 +580,13 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 						1., double(ytop)/GetHeight()))
 		ptvw.type = 0;
 						// update spectral sampling
-	if (setspectrsamp(CNDX, WLPART) <= 0) {
+	int	rv = setspectrsamp(CNDX, WLPART);
+	if (rv < 0) {
 		error(USER, "unsupported spectral sampling");
 		return false;
 	}
+	if (!rv & (RDTcolorT(dt) != RDTscolor) & (RDTcolorT(dt) != RDTscolr))
+		error(WARNING, "spectral range incompatible with color output");
 	COLORV **	parr = NULL;		// set up tiny source drawing
 	float **	zarr = NULL;
 	if (!ptvw.type && directvis && dblur <= FTINY) {
