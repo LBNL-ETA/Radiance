@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.5 2023/02/09 21:54:10 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.6 2024/09/09 00:54:30 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -185,11 +185,12 @@ main(int argc, char *argv[])
 	}
 	if (verbose)
 		fputs("Checking for duplicate faces...\n", stderr);
-	if (findDuplicateFaces(myScene))
+	if (findDuplicateFaces(myScene)) {
 		n = deleteFaces(myScene, FACE_DUPLICATE, 0);
-	if (n) {
-		sprintf(cbuf, "Removed %d duplicate faces", n);
-		addComment(myScene, cbuf);
+		if (n) {
+			sprintf(cbuf, "Removed %d duplicate faces", n);
+			addComment(myScene, cbuf);
+		}
 	}
 	if (do_triangulate) {
 		if (verbose)
