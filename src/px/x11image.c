@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.76 2018/08/02 18:33:48 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.77 2024/09/10 20:24:42 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -288,9 +288,13 @@ headline(		/* get relevant info from header */
 	if (isexpos(s))
 		exposure *= exposval(s);
 	else if (formatval(fmt, s))
-		wrongformat = strcmp(fmt, COLRFMT);
-	else if (isview(s) && sscanview(&ourview, s) > 0)
-		gotview++;
+		wrongformat = strcmp(fmt, COLRFMT) && strcmp(fmt, SPECFMT);
+	else if (isview(s))
+		gotview += sscanview(&ourview, s);
+	else if (isncomp(s))
+		NCSAMP = ncompval(s);
+	else if (iswlsplit(s))
+		wlsplitval(WLPART, s);
 	return(0);
 }
 
@@ -1401,7 +1405,7 @@ skipit:
 	} else if (scanpos != NULL && scanpos[y] == -1)
 		scanpos[y] = ftell(fin);
 
-	if (freadcolrs(scanline, xmax, fin) < 0) {
+	if (fread2colrs(scanline, xmax, fin, NCSAMP, WLPART) < 0) {
 		fprintf(stderr, "%s: %s: unfinished picture\n",
 				progname, fname==NULL?"<stdin>":fname);
 		trunced = y;

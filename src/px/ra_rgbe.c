@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.22 2024/06/11 17:24:01 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.23 2024/09/10 20:24:42 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -109,20 +109,27 @@ transfer(			/* transfer a Radiance picture */
 	if (findframe && findframe < frameno)
 		return(0);
 					/* allocate scanline */
-	scanin = (COLR *)tempbuffer(xmax*sizeof(COLR));
+	scanin = (COLR *)malloc(xmax*sizeof(COLR));
 	if (scanin == NULL) {
 		perror(progname);
 		exit(1);
 	}
 					/* skip frame? */
 	if (findframe > frameno) {
-		for (y = ymax; y--; )
+		if (NCSAMP > 3) {
+			if (fseek(stdin, ymax*xmax*LSCOLR, SEEK_CUR) < 0) {
+				perror(progname);
+				exit(1);
+			}
+		} else
+		    for (y = ymax; y--; )
 			if (freadcolrs(scanin, xmax, stdin) < 0) {
 				fprintf(stderr,
 					"%s: error reading input picture\n",
 						progname);
 				exit(1);
 			}
+		free(scanin);
 		return(1);
 	}
 					/* open output file/command */
@@ -170,7 +177,7 @@ transfer(			/* transfer a Radiance picture */
 	fputresolu(order, xmax, ymax, fp);
 					/* transfer picture */
 	for (y = ymax; y--; ) {
-		if (freadcolrs(scanin, xmax, stdin) < 0) {
+		if (fread2colrs(scanin, xmax, stdin, NCSAMP, WLPART) < 0) {
 			fprintf(stderr, "%s: error reading input picture\n",
 					progname);
 			exit(1);
@@ -181,7 +188,8 @@ transfer(			/* transfer a Radiance picture */
 				(fwritecolrs(scanin, xmax, fp) < 0))
 			goto writerr;
 	}
-	if (fflush(fp) == EOF)		/* clean up */
+	free(scanin);			/* clean up */
+	if (fflush(fp) == EOF)
 		goto writerr;
 	if (oname[0] == '!')
 		pclose(fp);
@@ -210,7 +218,18 @@ addhline(			/* add a line to our info. header */
 		return(0);
 	}
 	if (formatval(fmt, s)) {
-		fmterr += !globmatch(PICFMT, fmt);
+		if (!strcmp(fmt, SPECFMT))
+			strcpy(fmt, COLRFMT);
+		else
+			fmterr += !globmatch(PICFMT, fmt);
+		return(0);
+	}
+	if (isncomp(s)) {
+		NCSAMP = ncompval(s);
+		return(NCSAMP - 3);
+	}
+	if (iswlsplit(s)) {
+		wlsplitval(WLPART, s);
 		return(0);
 	}
 	n = strlen(s);

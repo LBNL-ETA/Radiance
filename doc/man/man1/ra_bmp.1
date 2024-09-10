@@ -79,8 +79,15 @@ be reversed from their usual ordering.
 Reversed scanlines sometimes causes difficulties for programs attempting
 to interpret the resulting RADIANCE picture or BMP image, which
 may be rejected or displayed inverted.
+.SH NOTES
+Hyperspectral Radiance pictures (.hsr files) are
+converted to approximate RGB pixels.
+However, the colors may not be very accurate.
+Pass the HSR picture through
+.I rcomb(1)
+first if greater color fidelity is required.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
 pfilt(1), ra_ppm(1), ra_pr(1), ra_pr24(1), ra_t8(1), ra_t16(1),
-ra_tiff(1), ximage(1)
+ra_tiff(1), rcomb(1), ximage(1)

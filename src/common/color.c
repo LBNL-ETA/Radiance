@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.35 2024/08/14 20:05:23 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.36 2024/09/10 20:24:42 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -128,6 +128,48 @@ scolor2color(			/* assign RGB color from spectrum */
 		cwl += step;
 	}
 	if (n > 1) col[j] /= (COLORV)n;
+}
+
+
+void
+scolr2colr(			/* assign RGBE from common-exponent spectrum */
+	COLR clr,
+	const SCOLR sclr,
+	int ncs,
+	const float wlpt[4]
+)
+{
+	const double	step = (wlpt[3] - wlpt[0])/(double)ncs;
+	double		cwl;
+	int		csum[3], cnt[3], eshft;
+	int		i, j;
+
+	csum[0] = csum[1] = csum[2] = 0;
+	cnt[0] = cnt[1] = cnt[2] = 0;
+	cwl = wlpt[j=0] + .5*step;
+	for (i = 0; i < ncs; i++) {
+		csum[j] += sclr[i];
+		++cnt[j];
+		j += ((cwl += step) < wlpt[j+1]);
+	}
+	eshft = 7;		/* compute exponent shift */
+	for (j = 3; (eshft > 0) & (j-- > 0); ) {
+		i = 0;
+		while (csum[j] < 128*cnt[j] >> i)
+			if (++i >= eshft)
+				break;
+		if (eshft > i)
+			eshft = i;
+	}
+	if (sclr[ncs] <= eshft) {
+		clr[RED] = clr[GRN] = clr[BLU] = 0;
+		clr[EXP] = 0;
+		return;
+	}
+	for (j = 3; j--; )
+		clr[j] = (csum[j]<<eshft)/cnt[j];
+
+	clr[EXP] = sclr[ncs] - eshft;
 }
 
 
@@ -518,6 +560,29 @@ freadscolrs(COLRV *scanline, int nc, int len, FILE *fp)
 }
 
 
+/* read nc-component common-exponent color scan and convert to COLR's */
+int
+fread2colrs(COLR *scanline, int len, FILE *fp, int nc, const float wlpt[4])
+{
+	COLRV  *sclrscan;
+	int  n;
+
+	if (nc < 3)
+		return(-1);
+	if (nc == 3)
+		return(freadcolrs(scanline, len, fp));
+
+	sclrscan = (COLRV *)tempbuffer(sizeof(COLRV)*(nc+1)*len);
+	if (sclrscan == NULL || freadscolrs(sclrscan, nc, len, fp) < 0)
+		return(-1);
+	for (n = len; n--; ) {
+		scolr2colr(*scanline++, sclrscan, nc, wlpt);
+		sclrscan += nc+1;
+	}
+	return(0);
+}
+
+
 /* write an common-exponent spectral color scanline */
 int
 fwritescolrs(const COLRV *sscanline, int nc, int len, FILE *fp)
@@ -601,6 +666,29 @@ freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
 	for (i = len; i-- > 0; ) {
 		scolr2scolor(sscanline, tscn, nc);
 		sscanline += nc;
+		tscn += nc+1;
+	}
+	return(0);
+}
+
+
+/* read an nc-component color scanline and return as RGB */
+int
+fread2scan(COLOR *scanline, int len, FILE *fp, int nc, const float wlpt[4])
+{
+	COLRV	*tscn;
+	int	i;
+
+	if (nc < 3)
+		return(-1);
+	if (nc == 3)
+		return(freadscan(scanline, len, fp));
+
+	tscn = (COLRV *)tempbuffer((nc+1)*len);
+	if (tscn == NULL || freadscolrs(tscn, nc, len, fp) < 0)
+		return(-1);
+	for (i = len; i-- > 0; ) {
+		scolr2color(*scanline++, tscn, nc, wlpt);
 		tscn += nc+1;
 	}
 	return(0);

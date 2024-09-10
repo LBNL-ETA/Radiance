@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.49 2024/08/22 04:27:53 greg Exp $ */
+/* RCSid $Id: color.h,v 2.50 2024/09/10 20:24:42 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -399,6 +399,10 @@ extern int	freadcolrs(COLR *scanline, int len, FILE *fp);
 extern int	freadscan(COLOR *scanline, int len, FILE *fp);
 extern int	freadscolrs(COLRV *scanline, int nc, int len, FILE *fp);
 extern int	freadsscan(COLORV *sscanline, int nc, int len, FILE *fp);
+extern int	fread2colrs(COLR *scanline, int len, FILE *fp,
+				int nc, const float wlpt[4]);
+extern int	fread2scan(COLOR *scanline, int len, FILE *fp,
+				int nc, const float wlpt[4]);
 				/* spectrum conversion, zero-fill past ends */
 extern void	convertscolor(SCOLOR dst, int dnc, double dwl0, double dwl1,
 			const COLORV src[], int snc, double swl0, double swl1);
@@ -408,6 +412,7 @@ extern void	convertscolor(SCOLOR dst, int dnc, double dwl0, double dwl1,
 extern void	setscolor(SCOLOR scol, double r, double g, double b);
 extern void	scolor2color(COLOR col, const SCOLOR scol, int ncs, const float wlpt[4]);
 extern void	scolor2colr(COLR clr, const SCOLOR scol, int ncs, const float wlpt[4]);
+extern void	scolr2colr(COLR clr, const SCOLR sclr, int ncs, const float wlpt[4]);
 extern void	scolor2scolr(SCOLR sclr, const SCOLOR scol, int ncs);
 extern void	colr_color(COLOR col, const COLR clr);
 extern void	scolr2scolor(SCOLOR scol, const SCOLR sclr, int ncs);

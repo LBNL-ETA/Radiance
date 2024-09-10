@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.14 2020/04/05 19:10:51 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.15 2024/09/10 20:24:42 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -219,11 +219,21 @@ headline(char *s, void *p)
 			rgbinp = TM_XYZPRIM;
 			return(0);
 		}
+		if (!strcmp(fmt,SPECFMT))
+			return(0);
 		return(-1);
 	}
 	if (isprims(s)) {		/* get input primaries */
 		primsval(myinprims, s);
 		rgbinp = myinprims;
+		return(0);
+	}
+	if (isncomp(s)) {
+		NCSAMP = ncompval(s);
+		return(0);
+	}
+	if (iswlsplit(s)) {
+		wlsplitval(WLPART, s);
 		return(0);
 	}
 					/* should I grok colcorr also? */
@@ -269,7 +279,7 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 	}
 						/* convert each scanline */
 	for ( ; y != yend; y += ystp) {
-		if (freadcolrs(scanin, bwr->hdr->width, rfp) < 0)
+		if (fread2colrs(scanin, bwr->hdr->width, rfp, NCSAMP, WLPART) < 0)
 			quiterr("error reading Radiance picture");
 		if (usexfm)
 			for (x = bwr->hdr->width; x--; ) {

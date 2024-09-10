@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ximage.1,v 1.9 2019/07/20 02:07:23 greg Exp $"
+.\" RCSid "$Id: ximage.1,v 1.10 2024/09/10 20:24:42 greg Exp $"
 .TH XIMAGE 1 10/27/98 RADIANCE
 .SH NAME
 ximage - RADIANCE picture display for X window system
@@ -229,6 +229,10 @@ for other windows.
 In addition to the commands listed above, the control or shift key may
 be held while the cursor is dragged to reposition the image within the
 window.
+.SH NOTES
+Hyperspectral Radiance pictures (.hsr files) are understood and crudely
+converted to RGB for display.
+However, the colors may not be very accurate.
 .SH "X RESOURCES"
 radiance.gamma	the default gamma correction value
 .SH ENVIRONMENT

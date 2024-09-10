@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.37 2022/01/15 16:57:46 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.38 2024/09/10 20:24:42 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -142,15 +142,18 @@ int	len
 
 #define	FMTRGB		1	/* Input is RGBE */
 #define	FMTCIE		2	/* Input is CIE XYZE */
-#define FMTUNK		3	/* Input format is unspecified */
-#define FMTBAD		4	/* Input is not a recognized format */
+#define FMTSPEC		3	/* Input is N-component spectral data */
+#define FMTUNK		0	/* Input format is unspecified */
+#define FMTBAD		(-1)	/* Input is not a recognized format */
 
 static struct radhead {
 	int	format;		/* FMTRGB, FMTCIE, FMTUNK, FMTBAD */
 	double	expos;		/* input exposure value */
 	RGBPRIMP	primp;	/* input primaries */
 	RGBPRIMS	mypri;	/* custom primaries */
-} rhdefault = {FMTUNK, 1., stdprims, STDPRIMS};
+	int		ncs;	/* number of color samples */
+	float		wpt[4];	/* spectral partition */
+} rhdefault = {FMTUNK, 1., stdprims, STDPRIMS, 3, {0,0,0,0}};
 
 
 static int
@@ -167,6 +170,8 @@ headline(			/* grok a header line */
 			rh->format = FMTRGB;
 		else if (!strcmp(fmt, CIEFMT))
 			rh->format = FMTCIE;
+		else if (!strcmp(fmt, SPECFMT))
+			rh->format = FMTSPEC;
 		else
 			rh->format = FMTBAD;
 		return(0);
@@ -178,6 +183,14 @@ headline(			/* grok a header line */
 	if (isprims(s)) {
 		primsval(rh->mypri, s);
 		rh->primp = rh->mypri;
+		return(0);
+	}
+	if (isncomp(s)) {
+		rh->ncs = ncompval(s);
+		return(0);
+	}
+	if (iswlsplit(s)) {
+		wlsplitval(rh->wpt, s);
 		return(0);
 	}
 	return(0);
@@ -218,12 +231,19 @@ FILE	*fp
 			fgetresolu(xp, yp, inpf) < 0) {
 		err = TM_E_BADFILE; goto done;
 	}
-	if (info.format == FMTUNK)		/* assume RGBE format */
+	if (info.format == FMTSPEC) {		/* valid spectrum? */
+		if (info.ncs <= 3) {
+			err = TM_E_BADFILE; goto done;
+		}
+		if (info.wpt[0] == 0)
+			memcpy(info.wpt, WLPART, sizeof(info.wpt));
+	} else if (info.format == FMTUNK)	/* assume RGBE format? */
 		info.format = FMTRGB;
-	if (info.format == FMTRGB)
-		info.expos /= WHTEFFICACY;
-	else if (info.format == FMTCIE)
+
+	if (info.format == FMTCIE)
 		info.primp = TM_XYZPRIM;
+	else
+		info.expos /= WHTEFFICACY;
 						/* prepare library */
 	if ((err = tmSetSpace(tms, info.primp, 1./info.expos, NULL)) != TM_E_OK)
 		goto done;
@@ -241,7 +261,7 @@ FILE	*fp
 		goto done;
 	err = TM_E_BADFILE;			/* read & convert scanlines */
 	for (i = 0; i < *yp; i++) {
-		if (freadcolrs(scanin, *xp, inpf) < 0) {
+		if (fread2colrs(scanin, *xp, inpf, info.ncs, info.wpt) < 0) {
 			err = TM_E_BADFILE; break;
 		}
 		err = tmCvColrs(tms, *lpp + (i * *xp),
