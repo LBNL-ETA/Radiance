@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.36 2024/09/10 20:24:42 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.37 2024/09/11 01:34:40 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -138,6 +138,7 @@ scolr2colr(			/* assign RGBE from common-exponent spectrum */
 	int ncs,
 	const float wlpt[4]
 )
+#if 0			/* fancier method seems to be slower(!) */
 {
 	const double	step = (wlpt[3] - wlpt[0])/(double)ncs;
 	double		cwl;
@@ -171,6 +172,16 @@ scolr2colr(			/* assign RGBE from common-exponent spectrum */
 
 	clr[EXP] = sclr[ncs] - eshft;
 }
+#else
+{
+	SCOLOR	scol;
+	COLOR	col;
+
+	scolr2scolor(scol, sclr, ncs);
+	scolor2color(col, scol, ncs, wlpt);
+	setcolr(clr, col[RED], col[GRN], col[BLU]);
+}
+#endif
 
 
 void
