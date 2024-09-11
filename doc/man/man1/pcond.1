@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcond.1,v 1.5 2021/04/07 21:13:52 greg Exp $"
+.\" RCSid "$Id: pcond.1,v 1.6 2024/09/11 18:56:11 greg Exp $"
 .TH PCOND 1 10/27/98 RADIANCE
 .SH NAME
 pcond - condition a RADIANCE picture for output
@@ -213,9 +213,17 @@ Scenes,''
 December 1997.
 .PP
 http://www.sgi.com/Technology/pixformat/Larsonetal.html
+.SH NOTES
+Hyperspectral Radiance pictures (.hsr files) are
+converted to approximate RGB pixels.
+However, the colors may not be very accurate.
+Pass the HSR picture through
+.I rcomb(1)
+first if greater color fidelity is required.
 .SH AUTHOR
 Greg Ward Larson
 .SH "SEE ALSO"
 getinfo(1), macbethcal(1), normtiff(1),
 pcompos(1), pflip(1), phisto(1), pinterp(1),
-pvalue(1), protate(1), ra_xyze(1), rad(1), rpict(1), ximage(1)
+pvalue(1), protate(1), ra_xyze(1), rad(1),
+rcomb(1), rpict(1), ximage(1)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.42 2022/03/10 03:25:54 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.43 2024/09/11 18:56:12 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -26,7 +26,7 @@ int  dataonly = 0;		/* data only format? */
 int  putprim = ALL;		/* what to put out */
 int  reverse = 0;		/* reverse conversion? */
 int  format = 'a';		/* input/output format */
-char  *fmtid = "ascii";		/* format identifier for header */
+const char  *fmtid = "ascii";	/* format identifier for header */
 int  header = 1;		/* do header? */
 long  skipbytes = 0;		/* skip bytes in input? */
 int  swapbytes = 0;		/* swap bytes? */
@@ -66,6 +66,7 @@ static putfunc_t putbascii, putbint, putbdouble, putbfloat, putbbyte, putbword;
 static putfunc_t putcascii, putcint, putcdouble, putcfloat, putcbyte, putcword;
 static putfunc_t putpascii, putpint, putpdouble, putpfloat, putpbyte, putpword;
 
+static int IDformat(const char *s);
 static void set_io(void);
 static void pixtoval(void);
 static void valtopix(void);
@@ -99,6 +100,7 @@ main(
 
 	progname = argv[0];
 	mybright = &rgb_bright; /* default */
+	picres.rt = PIXSTANDARD;
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-' || argv[i][0] == '+')
@@ -218,17 +220,23 @@ main(
 				}
 				break;
 			case 'x':		/* x resolution */
-			case 'X':		/* x resolution */
+			case 'X':
 				resolution = 0;
 				if (argv[i][0] == '-')
 					picres.rt |= XDECR;
+				else
+					picres.rt &= ~XDECR;
+				if (picres.yr == 0)
+					picres.rt &= ~YMAJOR;
 				picres.xr = atoi(argv[++i]);
 				break;
 			case 'y':		/* y resolution */
-			case 'Y':		/* y resolution */
+			case 'Y':
 				resolution = 0;
 				if (argv[i][0] == '-')
 					picres.rt |= YDECR;
+				else
+					picres.rt &= ~YDECR;
 				if (picres.xr == 0)
 					picres.rt |= YMAJOR;
 				picres.yr = atoi(argv[++i]);
@@ -243,19 +251,19 @@ unkopt:
 		else
 			break;
 					/* recognize special formats */
-	if (dataonly && format == 'b') {
+	if (dataonly & (format == 'b')) {
 		if (putprim == ALL)
 			fmtid = "24-bit_rgb";
 		else
 			fmtid = "8-bit_grey";
 	}
-	if (dataonly && format == 'w') {
+	if (dataonly & (format == 'w')) {
 		if (putprim == ALL)
 			fmtid = "48-bit_rgb";
 		else
 			fmtid = "16-bit_grey";
 	}
-	if (!reverse || (format != 'a') & (format != 'i'))
+	if (!reverse | ((format != 'a') & (format != 'i')))
 		inpmode = "rb";
 					/* assign reverse ordering */
 	rord[ord[0]] = 0;
@@ -280,7 +288,7 @@ unkopt:
 						progname, argv[i]);
 			quit(1);
 		}
-		if (reverse && putprim != BRIGHT && i == argc-3) {
+		if (reverse & (putprim != BRIGHT ) & (i == argc-3)) {
 			if ((fin2 = fopen(argv[i+1], inpmode)) == NULL) {
 				fprintf(stderr, "%s: can't open file \"%s\"\n",
 						progname, argv[i+1]);
@@ -294,7 +302,7 @@ unkopt:
 			interleave = -1;
 		} else if (i != argc-1)
 			fin = NULL;
-		if (reverse && putprim != BRIGHT && !interleave) {
+		if (reverse & (putprim != BRIGHT) & !interleave) {
 			fin2 = fopen(argv[i], inpmode);
 			fin3 = fopen(argv[i], inpmode);
 		}
@@ -310,7 +318,6 @@ unkopt:
 		fprintf(stderr, "%s: bad # file arguments\n", progname);
 		quit(1);
 	}
-
 	if (reverse) {
 		SET_FILE_BINARY(stdout);
 					/* get header */
@@ -325,24 +332,26 @@ unkopt:
 				getheader(fin2, NULL, NULL);
 				getheader(fin3, NULL, NULL);
 			}
-		} else
+			resolution &= (picres.xr <= 0) | (picres.yr <= 0);
+		} else {
 			newheader("RADIANCE", stdout);
+		}
 					/* get resolution */
 		if ((resolution && !fgetsresolu(&picres, fin)) ||
-				picres.xr <= 0 || picres.yr <= 0) {
+				(picres.xr <= 0) | (picres.yr <= 0)) {
 			fprintf(stderr, "%s: missing resolution\n", progname);
 			quit(1);
 		}
 		if (resolution && fin2 != NULL) {
 			RESOLU  pres2;
 			if (!fgetsresolu(&pres2, fin2) ||
-					pres2.rt != picres.rt ||
-					pres2.xr != picres.xr ||
-					pres2.yr != picres.yr ||
+					(pres2.rt != picres.rt) |
+					(pres2.xr != picres.xr) |
+					(pres2.yr != picres.yr) ||
 					!fgetsresolu(&pres2, fin3) ||
-					pres2.rt != picres.rt ||
-					pres2.xr != picres.xr ||
-					pres2.yr != picres.yr) {
+					(pres2.rt != picres.rt) |
+					(pres2.xr != picres.xr) |
+					(pres2.yr != picres.yr)) {
 				fprintf(stderr, "%s: resolution mismatch\n",
 						progname);
 				quit(1);
@@ -350,8 +359,22 @@ unkopt:
 		}
 						/* add to header */
 		printargs(i, argv, stdout);
-		if (expval < .99 || expval > 1.01)
+		if ((expval < .99) | (expval > 1.01))
 			fputexpos(expval, stdout);
+		if (NCSAMP == 1) {
+			if (putprim == ALL)
+				putprim = BRIGHT;
+		} else {
+			if (NCSAMP != 3) {
+				fprintf(stderr, "%s: input NCOMP must be 1 or 3\n",
+						progname);
+				quit(1);
+			}
+			if (putprim != ALL) {
+				fprintf(stderr, "%s: NCOMP mismatch\n", progname);
+				quit(1);
+			}
+		}
 		if (outprims != NULL) {
 			if (outprims != stdprims)
 				fputprims(outprims, stdout);
@@ -370,6 +393,8 @@ unkopt:
 		if ((format != 'a') & (format != 'i'))
 			SET_FILE_BINARY(stdout);
 						/* get header */
+		picres.rt = PIXSTANDARD;
+		picres.xr = picres.yr = 0;
 		getheader(fin, checkhead, header ? stdout : (FILE *)NULL);
 		if (wrongformat) {
 			fprintf(stderr,
@@ -377,21 +402,22 @@ unkopt:
 					progname);
 			quit(1);
 		}
-		if (!fgetsresolu(&picres, fin)) {
+		if ((picres.xr <= 0) | (picres.yr <= 0) &&
+				!fgetsresolu(&picres, fin)) {
 			fprintf(stderr, "%s: missing resolution\n", progname);
 			quit(1);
 		}
-		if (original < 0 && mybright == &xyz_bright) {
+		if ((original < 0) & (mybright == &xyz_bright)) {
 			scalecolor(exposure, 1./WHTEFFICACY);
 			doexposure++;
 		}
 		if (header) {
 			printargs(i, argv, stdout);
-			printf("NCOMP=%d\n", putprim==ALL ? 3 : 1);
-			if (!resolution && dataonly && !uniq)
+			printf("%s%c\n", NCOMPSTR, "13"[putprim==ALL]);
+			if (dataonly && !resolution & !uniq)
 				printf("NCOLS=%d\nNROWS=%d\n", scanlen(&picres),
 						numscans(&picres));
-			if (expval < .99 || expval > 1.01)
+			if ((expval < .99) | (expval > 1.01))
 				fputexpos(expval, stdout);
 			if (swapbytes) {
 				if (nativebigendian())
@@ -415,33 +441,65 @@ unkopt:
 
 
 static int
+IDformat(const char *s)
+{
+	if (!s || !*s) return(0);
+	if (!strcmp(s, "ascii")) return('a');
+	if (!strcmp(s, "float")) return('f');
+	if (!strcmp(s, "double")) return('d');
+	if (!strcmp(s, "byte")) return('b');
+	if (!strcmp(s, "16-bit")) return('w');
+	return(0);
+}
+
+
+static int
 checkhead(				/* deal with line from header */
 	char	*line,
 	void	*p
 )
 {
+	static char	fmt[MAXFMTLEN];
 	FILE	*fout = (FILE *)p;
-	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
 	int	rv;
 
 	if (formatval(fmt, line)) {
-		if (reverse)
-			wrongformat = strcmp(fmt, fmtid);
-		else if (!strcmp(fmt, CIEFMT))
+		if (reverse) {
+			if (format == 'a') {
+				format = IDformat(fmt);
+				if (format)
+					fmtid = fmt;
+				else
+					wrongformat = 1;
+			} else
+				wrongformat = strcmp(fmt, fmtid);
+		} else if (!strcmp(fmt, CIEFMT))
 			mybright = &xyz_bright;
-		else if (!strcmp(fmt, COLRFMT))
+		else if (!strcmp(fmt, COLRFMT) || !strcmp(fmt, SPECFMT))
 			mybright = &rgb_bright;
 		else
-			wrongformat++;
+			wrongformat = 1;
 		return(1);
 	}
-	if (!strncmp(line,"NROWS=",6) ||
-			!strncmp(line,"NCOLS=",6) ||
-			!strncmp(line,"NCOMP=",6))
+	if (!strncmp(line,"NROWS=",6)) {
+		picres.yr = atoi(line+6);
 		return(1);
-
+	}
+	if (!strncmp(line,"NCOLS=",6)) {
+		picres.xr = atoi(line+6);
+		return(1);
+	}
+	if (isncomp(line)) {
+		NCSAMP = ncompval(line);
+		dataonly |= reverse;	/* pretty safe assumption */
+		return(1);
+	}
+	if (iswlsplit(line)) {
+		wlsplitval(WLPART, line);
+		return(1);
+	}
 	if (original && isexpos(line)) {
 		d = 1.0/exposval(line);
 		scalecolor(exposure, d);
@@ -499,7 +557,8 @@ pixtoval(void)				/* convert picture to values */
 		set_io();
 		setcolor(lastc, 0.0, 0.0, 0.0);
 		for (y = 0; y < numscans(&picres); y++) {
-			if (freadscan(scanln, scanlen(&picres), fin) < 0) {
+			if (fread2scan(scanln, scanlen(&picres), fin,
+						NCSAMP, WLPART) < 0) {
 				fprintf(stderr, "%s: read error\n", progname);
 				quit(1);
 			}

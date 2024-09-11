@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.32 2023/10/27 16:35:02 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.33 2024/09/11 18:56:11 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -219,10 +219,21 @@ headline(				/* process header line */
 	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {	/* check if format string */
-		if (!strcmp(fmt,COLRFMT)) lumf = rgblum;
-		else if (!strcmp(fmt,CIEFMT)) lumf = cielum;
-		else lumf = NULL;
+		if (!strcmp(fmt,COLRFMT) || !strcmp(fmt,SPECFMT))
+			lumf = rgblum;
+		else if (!strcmp(fmt,CIEFMT))
+			lumf = cielum;
+		else
+			lumf = NULL;
 		return(0);		/* don't echo */
+	}
+	if (isncomp(s)) {
+		NCSAMP = ncompval(s);
+		return(0);
+	}
+	if (iswlsplit(s)) {
+		wlsplitval(WLPART, s);
+		return(0);
 	}
 					/* get input primaries */
 	if (isprims(s) && primsval(inprimS, s)) {
@@ -348,7 +359,7 @@ getfovimg(void)			/* load foveal sampled image */
 	if (fgetresolu(&x, &y, fp) < 0 || (x != fvxr) | (y != fvyr))
 		goto readerr;
 	for (y = 0; y < fvyr; y++)
-		if (freadscan(fovscan(y), fvxr, fp) < 0)
+		if (fread2scan(fovscan(y), fvxr, fp, NCSAMP, WLPART) < 0)
 			goto readerr;
 	pclose(fp);
 	return;

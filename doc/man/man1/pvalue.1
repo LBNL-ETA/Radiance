@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pvalue.1,v 1.12 2022/02/04 20:11:48 greg Exp $"
+.\" RCSid "$Id: pvalue.1,v 1.13 2024/09/11 18:56:11 greg Exp $"
 .TH PVALUE 1 1/15/99 RADIANCE
 .SH NAME
 pvalue - convert RADIANCE picture to/from alternate formats
@@ -240,6 +240,13 @@ left to right scanline ordering:
 pvalue \-r \-db \-b \-h +y 400 +x 512 input.im > flipped.hdr
 .br
 pflip \-v flipped.hdr > final.hdr
+.SH NOTES
+Hyperspectral Radiance pictures (.hsr files) are
+converted to approximate RGB.
+However, the colors may not be very accurate.
+Use
+.I rcomb(1)
+for conversion if greater color fidelity is required.
 .SH AUTHOR
 Greg Ward
 .SH BUGS
@@ -248,4 +255,4 @@ conversion, so this information is not used in determining
 the scanline ordering or picture size.
 .SH "SEE ALSO"
 getinfo(1), pcompos(1), pfilt(1), pflip(1),
-protate(1), ra_xyze(1), rpict(1), rtrace(1), rvu(1)
+protate(1), ra_xyze(1), rcomb(1), rpict(1), rtrace(1), rvu(1)

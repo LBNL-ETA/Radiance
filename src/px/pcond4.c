@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond4.c,v 3.20 2015/08/21 05:48:28 greg Exp $";
+static const char	RCSid[] = "$Id: pcond4.c,v 3.21 2024/09/11 18:56:12 greg Exp $";
 #endif
 /*
  * Routines for veiling glare and loss of acuity.
@@ -331,7 +331,7 @@ getascan(			/* find/read scanline y for scanbar sb */
 	for ( ; y >= sb->nread; sb->nread++) {		/* read as necessary */
 		mysl = bscan(sb, sb->nread);
 		if (sb->sampe == 0) {
-			if (freadscan(mysl, sb->len, infp) < 0) {
+			if (fread2scan(mysl, sb->len, infp, NCSAMP, WLPART) < 0) {
 				fprintf(stderr, "%s: %s: scanline read error\n",
 						progname, infn);
 				exit(1);

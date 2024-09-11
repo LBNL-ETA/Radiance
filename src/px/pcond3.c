@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.19 2021/04/13 02:56:42 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.20 2024/09/11 18:56:12 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -196,7 +196,8 @@ getlumsamp(int n)		/* get set of random point sample luminances */
 		int	sv = 0;
 		double	rval, cumprob = 0;
 
-		if (x <= 0 && freadcolrs(cscan, x=scanlen(&inpres), infp) < 0) {
+		if (x <= 0 && fread2colrs(cscan, x=scanlen(&inpres), infp,
+						NCSAMP, WLPART) < 0) {
 			fprintf(stderr, "%s: %s: scanline read error\n",
 					progname, infn);
 			exit(1);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.18 2015/08/21 05:48:28 greg Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.19 2024/09/11 18:56:11 greg Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -78,7 +78,8 @@ nextscan(void)				/* read and condition next scanline */
 	}
 	if (what2do&DO_ACUITY)
 		acuscan(scanbuf, nread);
-	else if (freadscan(scanbuf, scanlen(&inpres), infp) < 0) {
+	else if (fread2scan(scanbuf, scanlen(&inpres), infp,
+				NCSAMP, WLPART) < 0) {
 		fprintf(stderr, "%s: %s: scanline read error\n",
 				progname, infn);
 		exit(1);
