@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.43 2024/09/11 18:56:12 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.44 2024/09/11 23:21:01 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -413,7 +413,8 @@ unkopt:
 		}
 		if (header) {
 			printargs(i, argv, stdout);
-			printf("%s%c\n", NCOMPSTR, "13"[putprim==ALL]);
+			if (dataonly)
+				printf("%s%c\n", NCOMPSTR, "13"[putprim==ALL]);
 			if (dataonly && !resolution & !uniq)
 				printf("NCOLS=%d\nNROWS=%d\n", scanlen(&picres),
 						numscans(&picres));
