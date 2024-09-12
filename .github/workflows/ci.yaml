@@ -193,7 +193,7 @@ jobs:
           Compress-Archive -U -Path WindowsBuild -DestinationPath Radiance_Windows_both
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Windows_both
           path: Radiance_Windows_both.zip
@@ -266,7 +266,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
@@ -337,7 +337,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_OSX_arm64_both
           path: Radiance_OSX_arm64_both.zip
@@ -399,7 +399,7 @@ jobs:
           
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Linux
           path: Radiance_Linux.zip
@@ -506,7 +506,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Windows_Failed1
           path: Radiance_Windows_Failed1.zip
@@ -557,7 +557,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Windows_Failed2
           path: Radiance_Windows_Failed2.zip
@@ -608,7 +608,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Windows_Failed3
           path: Radiance_Windows_Failed3.zip
@@ -660,7 +660,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Windows_Failed4
           path: Radiance_Windows_Failed4.zip
@@ -765,7 +765,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Mac_Failed1
           path: Radiance_Mac_Failed1.zip
@@ -819,7 +819,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Mac_Failed2
           path: Radiance_Mac_Failed2.zip
@@ -873,7 +873,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Mac_Failed3
           path: Radiance_Mac_Failed3.zip
@@ -927,7 +927,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Mac_Failed4
           path: Radiance_Mac_Failed4.zip
@@ -1035,7 +1035,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Linux_Failed1
           path: Radiance_Linux_Failed1.zip
@@ -1093,7 +1093,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Linux_Failed2
           path: Radiance_Linux_Failed2.zip
@@ -1151,7 +1151,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Linux_Failed3
           path: Radiance_Linux_Failed3.zip
@@ -1209,7 +1209,7 @@ jobs:
           
       - name: Upload artifact
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Linux_Failed4
           path: Radiance_Linux_Failed4.zip
@@ -1248,7 +1248,7 @@ jobs:
           zip -r Radiance_Auxiliary.zip ./*
           
       - name: Upload artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: Radiance_Auxiliary
           path: Radiance_Auxiliary.zip
