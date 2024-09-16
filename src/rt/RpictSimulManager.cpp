@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.11 2024/08/27 18:50:01 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.12 2024/09/16 23:49:13 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -105,8 +105,12 @@ RpictSimulManager::NewFrame(const VIEW &v, int xydim[2], double *ap, const int *
 
 	if (!xydim) return false;
 	if (!ap) ap = &pasp;
-	pvw = vw;			// save previous view for motion blur
-	vw = v;
+	if (&v == &vw) {
+		pvw.type = 0;
+	} else {
+		pvw = vw;		// save previous view for motion blur
+		vw = v;
+	}
 	const char *	verr = setview(&vw);
 	if (verr) {
 		error(WARNING, verr);
@@ -684,7 +688,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 			error(INTERNAL, "writing picture to a command not supported");
 			return RDTnone;
 		}
-		fd = open(pfname, O_WRONLY|O_CREAT|O_EXCL, 0666);
+		fd = open(pfname, O_RDWR|O_CREAT|O_EXCL, 0666);
 	}
 	if (fd < 0) {
 		if ((frameNo <= 0) | (errno != EEXIST)) {
@@ -695,12 +699,12 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 	}
 	if (fd == 1)
 		pdfp[0] = stdout;
-	else if (!(pdfp[0] = fdopen(fd, "w")))
+	else if (!(pdfp[0] = fdopen(fd, "w+")))
 		error(SYSTEM, "failure calling fdopen()");
 	SET_FILE_BINARY(pdfp[0]);		// write picture header
 	if ((pdfp[0] != stdout) | (frameNo <= 1)) {
 		newheader("RADIANCE", pdfp[0]);
-		fputs(GetHeader(), pdfp[0]);
+		fputs(GetHeadStr(), pdfp[0]);
 	}
 	fputs(VIEWSTR, pdfp[0]); fprintview(&vw, pdfp[0]); fputc('\n', pdfp[0]);
 	if (frameNo > 0)
@@ -760,7 +764,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 		if (dfname[0] == '!')
 			pdfp[1] = popen(dfname+1, "w");
 		else
-			pdfp[1] = fopen(dfname, "w");
+			pdfp[1] = fopen(dfname, "w+");
 		if (!pdfp[1]) {
 			sprintf(errmsg, "cannot open depth output '%s'", dfname);
 			error(SYSTEM, errmsg);
@@ -772,7 +776,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 	}
 	if (RDTdepthT(dt) == RDTdshort) {	// write header for 16-bit depth?
 		newheader("RADIANCE", pdfp[1]);
-		fputs(GetHeader(), pdfp[1]);
+		fputs(GetHeadStr(), pdfp[1]);
 		fputs(VIEWSTR, pdfp[1]); fprintview(&vw, pdfp[1]); fputc('\n', pdfp[1]);
 		fputs(DEPTHSTR, pdfp[1]); fputs(dunit, pdfp[1]); fputc('\n', pdfp[1]);
 		fputformat(DEPTH16FMT, pdfp[1]);
@@ -1002,6 +1006,10 @@ RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *d
 		pdfp[0] = NULL;
 		return RDTnone;
 	}
+	if (hinfo.gotview) {			// header view overrides
+		pvw = vw;
+		vw = hinfo.vw;
+	}
 	if (!dfname)				// no depth file?
 		return dt;
 
@@ -1021,7 +1029,7 @@ RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *d
 	}
 	SET_FILE_BINARY(pdfp[1]);
 	int	n, len = strlen(HDRSTR);
-	char	buf[32];		// sniff for 16-bit header
+	char	buf[32];			// sniff for 16-bit header
 	if (getbinary(buf, 1, len+1, pdfp[1]) < len+1) {
 		sprintf(errmsg, "empty depth file '%s'", dfname);
 		error(SYSTEM, errmsg);
@@ -1031,12 +1039,12 @@ RpictSimulManager::ReopenOutput(FILE *pdfp[2], const char *pfname, const char *d
 	}
 	for (n = 0; n < len; n++)
 		if (buf[n] != HDRSTR[n])
-			break;		// not a Radiance header
+			break;			// not a Radiance header
 	rewind(pdfp[1]);
 	if ((n < len) | !isprint(buf[len]))
 		return RDTnewDT(dt, RDTdfloat);
 
-	HeaderInfo	dinfo;		// thinking it's 16-bit encoded
+	HeaderInfo	dinfo;			// thinking it's 16-bit encoded
 	if (getheader(pdfp[1], head_check, &dinfo) < 0)
 		sprintf(errmsg, "bad header in encoded depth file '%s'",
 				dfname);
@@ -1075,17 +1083,17 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 	case RDTxyze:
 		break;
 	case RDTscolr:
-		bytesPer = hinfo.ncomp + 1;	// XXX assumes no compression
+		bytesPer = NCSAMP + 1;	// XXX assumes no compression
 		break;
 	case RDTrgb:
 	case RDTxyz:
 		bytesPer = sizeof(float)*3;
 		break;
 	case RDTscolor:
-		bytesPer = sizeof(float)*hinfo.ncomp;
+		bytesPer = sizeof(float)*NCSAMP;
 		break;
 	default:
-		sprintf(errmsg, "unknown format (%s) for '%s'", hinfo.fmt, pfname);
+		sprintf(errmsg, "unknown format for '%s'", pfname);
 		error(USER, errmsg);
 		fclose(pdfp[0]);
 		if (pdfp[1]) fclose(pdfp[1]);
@@ -1099,11 +1107,10 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 		if (pdfp[1]) fclose(pdfp[1]);
 		return RDTnone;
 	}
-	vw.type = 0;				// set up new (unreferenced) frame
-	frameNo = 0;
+	frameNo = 0;				// set up unreferenced frame
 	int	hvdim[2] = {res.xr, res.yr};
 	double	noAdj = 0;
-	if (!NewFrame(hinfo.vw, hvdim, &noAdj) ||
+	if (!NewFrame(vw, hvdim, &noAdj) ||
 			(hvdim[0] != res.xr) | (hvdim[1] != res.yr)) {
 		error(CONSISTENCY, "unexpected resolution change in ResumeFrame()");
 		fclose(pdfp[0]);

@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.8 2024/09/16 19:18:32 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.9 2024/09/16 23:49:13 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -43,6 +43,7 @@ class PixelAccess {
 	long		rowStride;	// # values to next y position
 	int		dtyp;		// data type flags
 	RGBPRIMP	primp;		// color primaries if tristimulus
+	bool		swap2d;		// need to swap 16-bit depths?
 	const COLORV *	CF3(int x, int y) const {
 				return pbase.f + (rowStride*y + x)*3;
 			}
@@ -67,26 +68,41 @@ class PixelAccess {
 	COLRV *		SCB(int x, int y) {
 				return pbase.b + (rowStride*y + x)*(NCSAMP+1);
 			}
+	void		EncodeDepth16(int x, int y, float z) {
+				short *	sp = dbase.s + rowStride*y + x;
+				*sp = depth2code(z, refDepth);
+				if (swap2d) swap16((char *)sp, 1);
+			}
+	float		DecodeDepth16(int x, int y) const {
+				short	sv = dbase.s[rowStride*y + x];
+				if (swap2d) swap16((char *)&sv, 1);
+				return code2depth(sv, refDepth);
+			}
 public:
 	double		refDepth;	// reference depth
 			PixelAccess() {
 				refDepth = 1.;
+				swap2d = !nativebigendian();
 				Init();
 			}
 			PixelAccess(COLORV *rp, int ystride, float *zp=NULL) {
 				refDepth = 1.;
+				swap2d = !nativebigendian();
 				Init(rp, ystride, zp);
 			}
 			PixelAccess(COLRV *bp, int ystride, float *zp=NULL) {
 				refDepth = 1.;
+				swap2d = !nativebigendian();
 				Init(bp, ystride, zp);
 			}
 			PixelAccess(COLRV *bp, int ystride, short *dp) {
 				refDepth = 1.;
+				swap2d = !nativebigendian();
 				Init(bp, ystride, dp);
 			}
 			PixelAccess(COLORV *rp, int ystride, short *dp) {
 				refDepth = 1.;
+				swap2d = !nativebigendian();
 				Init(rp, ystride, dp);
 			}
 	void		Init() {
@@ -179,10 +195,10 @@ public:
 					scolor_scolr(SCB(x,y), pv);
 				else
 					copyscolor(SCF(x,y), pv);
-				if (RDTdepthT(dtyp) == RDTdfloat)
+				if (DepthType() == RDTdfloat)
 					dbase.f[rowStride*y + x] = z;
-				else if (RDTdepthT(dtyp) == RDTdshort)
-					dbase.s[rowStride*y + x] = depth2code(z, refDepth);
+				else if (DepthType() == RDTdshort)
+					EncodeDepth16(x, y, z);
 				return true;
 			}
 			/// Retrieve pixel color (& depth) -- may convert either/both
@@ -197,10 +213,10 @@ public:
 				else
 					copyscolor(pv, SCF(x,y));
 				if (!zp) return true;
-				if (RDTdepthT(dtyp) == RDTdfloat)
+				if (DepthType() == RDTdfloat)
 					*zp = dbase.f[rowStride*y + x];
-				else if (RDTdepthT(dtyp) == RDTdshort)
-					*zp = code2depth(dbase.s[rowStride*y + x], refDepth);
+				else if (DepthType() == RDTdshort)
+					*zp = DecodeDepth16(x, y);
 				else
 					*zp = .0f;
 				return true;
@@ -218,7 +234,7 @@ public:
 					copyscolr(SCB(dx,dy), SCB(sx,sy));
 				else
 					copyscolor(SCF(dx,dy), SCF(sx,sy));
-				switch (RDTdepthT(dtyp)) {
+				switch (DepthType()) {
 				case RDTdfloat:
 					dbase.f[rowStride*dy + dx] =
 							dbase.f[rowStride*sy + sx];
@@ -397,7 +413,7 @@ public:
 	RenderDataType		ResumeFrame(const char *pfname,
 						const char *dfname=NULL);
 				/// Prepare new picture (and depth) output
-				/// Called by RenderFrame()
+				/// Called by RenderFrame() after NewFrame()
 	RenderDataType		NewOutput(FILE *pdfp[2], const char *pfname,
 						RenderDataType dt=RDTrgbe,
 						const char *dfname=NULL);
