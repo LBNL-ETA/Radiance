@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.2 2024/08/18 17:24:48 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.3 2024/09/16 19:20:09 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -59,7 +59,7 @@ static void printdefaults(void);
 
 
 void
-quit(int code)			/* quit program -- called from ray_done() */
+quit(int code)			/* quit program */
 {
 	if (ray_pnprocs < 0)
 		_exit(code);		/* avoid flush in child */
