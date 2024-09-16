@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.46 2024/08/05 21:56:28 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.47 2024/09/16 17:01:53 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -7,6 +7,7 @@ OPT = -O
 MACH = -DBSD
 CFLAGS = -I../common -I../rt -L../lib $(OPT) $(MACH)
 CC = cc
+PTHD = -pthread
 MLIB = -lm
 
 INSTALL = cp
@@ -89,14 +90,14 @@ genclock:	genclock.o
 genbranch:	genbranch.o
 	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
 
-
 # Assume rt is built before this
 genssky:	genssky.o sun.o atmos.o
-	$(CC) $(CFLAGS) -o genssky genssky.o sun.o atmos.o -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o genssky genssky.o sun.o atmos.o \
+-lrtrad $(MLIB)
 
 gensdaymtx:	gensdaymtx.o sun.o atmos.o
-	$(CC) $(CFLAGS) -o gensdaymtx gensdaymtx.o sun.o atmos.o -lrtrad $(MLIB)
-
+	$(CC) $(CFLAGS) -o gensdaymtx gensdaymtx.o sun.o atmos.o \
+-lrtrad $(MLIB)
 
 mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
@@ -137,10 +138,11 @@ gendaylit.o gensky.o sun.o:	sun.h
 gendaymtx.o:	../common/platform.h ../common/rtmath.h \
 ../common/mat4.h ../common/fvect.h ../common/color.h
 
-genssky.o: ../common/rtio.h ../common/rtmath.h \
+genssky.o:	../common/rtio.h ../common/rtmath.h \
 ../common/paths.h ../common/color.h
 
 genssky.o gensdaymtx.o:	atmos.h
 
-atmos.o: ../common/rtio.h ../common/rtmath.h ../common/color.h \
+atmos.o:	../common/rtio.h ../common/rtmath.h ../common/color.h \
 ../common/data.h sun.h
+	$(CC) $(CFLAGS) $(PTHD) -c atmos.c
