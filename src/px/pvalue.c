@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.44 2024/09/11 23:21:01 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.45 2024/09/16 23:02:53 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -361,7 +361,9 @@ unkopt:
 		printargs(i, argv, stdout);
 		if ((expval < .99) | (expval > 1.01))
 			fputexpos(expval, stdout);
-		if (NCSAMP == 1) {
+		if (!header & (putprim != ALL)) {
+			NCSAMP = 1;		/* no header, so trust user */
+		} else if (NCSAMP == 1) {
 			if (putprim == ALL)
 				putprim = BRIGHT;
 		} else {
