@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.7 2024/08/23 02:08:28 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.8 2024/09/16 19:18:32 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -295,8 +295,12 @@ public:
 					return RtraceSimulManager::AddHeader(ac, av);
 				}
 				/// Get header lines if any
-	const char *		GetHeader() const {
-					return RtraceSimulManager::GetHeader();
+	const char *		GetHeadStr() const {
+					return RtraceSimulManager::GetHeadStr();
+				}
+				/// Look for specific header keyword, return value
+	const char *		GetHeadStr(const char *key, bool inOK = false) const {
+					return RtraceSimulManager::GetHeadStr(key, inOK);
 				}
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0) {

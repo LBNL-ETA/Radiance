@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.16 2024/08/25 00:17:29 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.17 2024/09/16 19:18:32 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -139,6 +139,35 @@ RadSimulManager::AddHeader(int ac, char *av[])
 	header[hlen-1] = '\n';		// terminate line
 	header[hlen] = '\0';
 	return true;
+}
+
+// Look for specific header keyword, return value
+const char *
+RadSimulManager::GetHeadStr(const char *key, bool inOK) const
+{
+	if (!key | !hlen || strchr(key, '\n'))
+		return NULL;
+	if (inOK)			// skip leading spaces?
+		while (isspace(*key)) key++;
+
+	const int	klen = strlen(key);
+	if (!klen)
+		return NULL;
+	const char *	cp = header;
+	while (*cp) {
+		if (inOK) {		// skip leading spaces?
+			while (isspace(*cp) && *cp++ != '\n')
+				;
+			if (cp[-1] == '\n')
+				continue;
+		}
+		if (!strncmp(cp, key, klen))
+			return cp+klen;	// found it!
+
+		while (*cp && *cp++ != '\n')
+			;
+	}
+	return NULL;
 }
 
 // How many processors are available?
