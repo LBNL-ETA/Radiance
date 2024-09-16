@@ -2718,3 +2718,9 @@ Added crude ability to read and convert spectra to RGB in ximage,
 ra_bmp, and ra_rgbe programs.  Also updated fast tone-mapping
 library to handle spectral HSR inputs at the same time.  HSR
 input handling was added in a similar fashion to pcond and pvalue.
+
+Wrote rxpiece tool that will render pictures using tiling and
+can handle different output formats and hyperspectral pictures.
+Only runs on a single machine, however -- now NFS locking on
+shared volumes.  Mainly a demonstration tool for RpictSimulManager
+C++ class, but may have its uses.
