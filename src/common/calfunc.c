@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.31 2024/02/26 20:55:00 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.32 2024/09/16 17:31:14 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -51,7 +51,7 @@ static double  l_asin(char *), l_acos(char *), l_atan(char *), l_atan2(char *);
 static double  l_exp(char *), l_log(char *), l_log10(char *);
 
 			/* functions must be listed alphabetically */
-static LIBR  library[MAXLIB] = {
+static ELIBR  library[MAXLIB] = {
     { "acos", 1, ':', l_acos },
     { "asin", 1, ':', l_asin },
     { "atan", 1, ':', l_atan },
@@ -74,7 +74,7 @@ static LIBR  library[MAXLIB] = {
 
 static int  libsize = 18;
 
-#define  resolve(ep)	((ep)->type==VAR?(ep)->v.ln:argf((ep)->v.chan))
+#define  resolve(ep)	((ep)->type==VAR?(ep)->v.ln:eargf((ep)->v.chan))
 
 
 int
@@ -82,13 +82,13 @@ fundefined(			/* return # of req'd arguments for function */
 	char  *fname
 )
 {
-    LIBR  *lp;
+    ELIBR  *lp;
     VARDEF  *vp;
 
     if ((vp = varlookup(fname)) != NULL && vp->def != NULL
 		&& vp->def->v.kid->type == FUNC)
 	return(nekids(vp->def->v.kid) - 1);
-    lp = vp != NULL ? vp->lib : liblookup(fname);
+    lp = vp != NULL ? vp->lib : eliblookup(fname);
     if (lp == NULL)
 	return(0);
     return(lp->nargs);
@@ -140,7 +140,7 @@ funset(				/* set a library function */
 {
     int  oldlibsize = libsize;
     char *cp;
-    LIBR  *lp;
+    ELIBR  *lp;
 						/* check for context */
     for (cp = fname; *cp; cp++)
 	;
@@ -150,7 +150,7 @@ funset(				/* set a library function */
 	*--cp = '\0';
 	if (cp == fname) return;
     }
-    if ((lp = liblookup(fname)) == NULL) {	/* insert */
+    if ((lp = eliblookup(fname)) == NULL) {	/* insert */
 	if (fptr == NULL)
 		return;				/* nothing! */
 	if (libsize >= MAXLIB) {
@@ -177,7 +177,7 @@ funset(				/* set a library function */
 	lp[0].f = fptr;
     }
     if (libsize != oldlibsize)
-	libupdate(fname);			/* relink library */
+	elibupdate(fname);			/* relink library */
 }
 
 
@@ -228,7 +228,7 @@ argument(int n)			/* return nth argument for active function */
 
 
 VARDEF *
-argf(int n)			/* return function def for nth argument */
+eargf(int n)			/* return function def for nth argument */
 {
     ACTIVATION  *actp;
     EPNODE  *ep;
@@ -254,7 +254,7 @@ argf(int n)			/* return function def for nth argument */
 
 	n = ep->v.chan;				/* try previous context */
     }
-    eputs("Bad call to argf!\n");
+    eputs("Bad call to eargf!\n");
     quit(1);
 
 badarg:
@@ -266,9 +266,9 @@ badarg:
 
 
 char *
-argfun(int n)			/* return function name for nth argument */
+eargfun(int n)			/* return function name for nth argument */
 {
-    return(argf(n)->name);
+    return(eargf(n)->name);
 }
 
 
@@ -310,8 +310,8 @@ eargument(				/* evaluate an argument */
 }
 
 
-LIBR *
-liblookup(char *fname)		/* look up a library function */
+ELIBR *
+eliblookup(char *fname)		/* look up a library function */
 {
     int  upper, lower;
     int  cm, i;
@@ -344,14 +344,14 @@ libfunc(				/* execute library function */
 	VARDEF  *vp
 )
 {
-    LIBR  *lp;
+    ELIBR  *lp;
     double  d;
     int  lasterrno;
 
     if (vp != NULL)
 	lp = vp->lib;
     else
-	lp = liblookup(fname);
+	lp = eliblookup(fname);
     if (lp == NULL) {
 	eputs(fname);
 	eputs(": undefined function\n");

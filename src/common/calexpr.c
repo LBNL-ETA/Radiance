@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.50 2024/02/27 01:24:10 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.51 2024/09/16 17:31:14 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -92,10 +92,10 @@ eparse(			/* parse an expression string */
     EPNODE  *ep;
 
     initstr(expr, NULL, 0);
-    curfunc = NULL;
+    ecurfunc = NULL;
     ep = getE1();
     if (nextc != EOF)
-	syntax("unexpected character");
+	esyntax("unexpected character");
     return(ep);
 }
 
@@ -423,7 +423,7 @@ initfile(		/* prepare input file */
     lineno = ln;
     linepos = 0;
     inpbuf[0] = '\0';
-    scan();
+    escan();
 }
 
 
@@ -439,7 +439,7 @@ initstr(		/* prepare input string */
     lineno = ln;
     linbuf = s;
     linepos = 0;
-    scan();
+    escan();
 }
 
 
@@ -459,7 +459,7 @@ getscanpos(	/* return current scan position */
 
 
 int
-scan(void)		/* scan next character, return literal next */
+escan(void)		/* scan next character, return literal next */
 {
     int  lnext = 0;
 
@@ -481,13 +481,13 @@ scan(void)		/* scan next character, return literal next */
 		break;
 	}
 	if (nextc == '{') {
-	    scan();
+	    escan();
 	    while (nextc != '}')
 		if (nextc == EOF)
-		    syntax("'}' expected");
+		    esyntax("'}' expected");
 		else
-		    scan();
-	    scan();
+		    escan();
+	    escan();
 	}
     } while (isspace(nextc));
     return(lnext);
@@ -522,7 +522,7 @@ long2ascii(			      /* convert long to ascii */
 
 
 void
-syntax(			/* report syntax error and quit */
+esyntax(			/* report syntax error and quit */
     char  *err
 )
 {
@@ -577,11 +577,11 @@ getname(void)			/* scan an identifier */
     int  i, lnext;
 
     lnext = nextc;
-    for (i = 0; i < RMAXWORD && isid(lnext); i++, lnext = scan())
+    for (i = 0; i < RMAXWORD && isid(lnext); i++, lnext = escan())
 	str[i] = lnext;
     str[i] = '\0';
     while (isid(lnext))		/* skip rest of name */
-	lnext = scan();
+	lnext = escan();
 
     return(str);
 }
@@ -596,7 +596,7 @@ getinum(void)			/* scan a positive integer */
     lnext = nextc;
     while (isdigit(lnext)) {
 	n = n * 10 + lnext - '0';
-	lnext = scan();
+	lnext = escan();
     }
     return(n);
 }
@@ -612,30 +612,30 @@ getnum(void)			/* scan a positive float */
     lnext = nextc;
     while (isdigit(lnext) && i < RMAXWORD) {
 	str[i++] = lnext;
-	lnext = scan();
+	lnext = escan();
     }
     if ((lnext == '.') & (i < RMAXWORD)) {
 	str[i++] = lnext;
-	lnext = scan();
+	lnext = escan();
 	if (i == 1 && !isdigit(lnext))
-	    syntax("badly formed number");
+	    esyntax("badly formed number");
 	while (isdigit(lnext) && i < RMAXWORD) {
 	    str[i++] = lnext;
-	    lnext = scan();
+	    lnext = escan();
 	}
     }
     if ((lnext == 'e') | (lnext == 'E') && i < RMAXWORD) {
 	str[i++] = lnext;
-	lnext = scan();
+	lnext = escan();
 	if ((lnext == '-') | (lnext == '+') && i < RMAXWORD) {
 	    str[i++] = lnext;
-	    lnext = scan();
+	    lnext = escan();
 	}
 	if (!isdigit(lnext))
-	    syntax("missing exponent");
+	    esyntax("missing exponent");
 	while (isdigit(lnext) && i < RMAXWORD) {
 	    str[i++] = lnext;
-	    lnext = scan();
+	    lnext = escan();
 	}
     }
     str[i] = '\0';
@@ -654,7 +654,7 @@ getE1(void)			/* E1 -> E1 ADDOP E2 */
     while ((nextc == '+') | (nextc == '-')) {
 	ep2 = newnode();
 	ep2->type = nextc;
-	scan();
+	escan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE2());
 	if (esupport&E_RCONST &&
@@ -676,7 +676,7 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
     while ((nextc == '*') | (nextc == '/')) {
 	ep2 = newnode();
 	ep2->type = nextc;
-	scan();
+	escan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
@@ -686,7 +686,7 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 		} else if (ep3->type == NUM) {
 			if (ep2->type == '/') {
 				if (ep3->v.num == 0)
-					syntax("divide by zero constant");
+					esyntax("divide by zero constant");
 				ep2->type = '*';	/* for speed */
 				ep3->v.num = 1./ep3->v.num;
 			} else if (ep3->v.num == 0) {
@@ -718,7 +718,7 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 		return(ep1);
 	ep2 = newnode();
 	ep2->type = nextc;
-	scan();
+	escan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
@@ -753,7 +753,7 @@ getE4(void)			/* E4 -> ADDOP E5 */
     EPNODE  *ep1, *ep2;
 
     if (nextc == '-') {
-	scan();
+	escan();
 	ep2 = getE5();
 	if (ep2->type == NUM) {
 		ep2->v.num = -ep2->v.num;
@@ -770,7 +770,7 @@ getE4(void)			/* E4 -> ADDOP E5 */
 	return(ep1);
     }
     if (nextc == '+')
-	scan();
+	escan();
     return(getE5());
 }
 
@@ -788,15 +788,15 @@ getE5(void)			/* E5 -> (E1) */
 	EPNODE  *ep1, *ep2;
 
 	if (nextc == '(') {
-		scan();
+		escan();
 		ep1 = getE1();
 		if (nextc != ')')
-			syntax("')' expected");
-		scan();
+			esyntax("')' expected");
+		escan();
 		return(ep1);
 	}
 	if (esupport&E_INCHAN && nextc == '$') {
-		scan();
+		escan();
 		ep1 = newnode();
 		ep1->type = CHAN;
 		ep1->v.chan = getinum();
@@ -807,8 +807,8 @@ getE5(void)			/* E5 -> (E1) */
 		nam = getname();
 		ep1 = NULL;
 		if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
-				&& curfunc != NULL)
-			for (i = 1, ep2 = curfunc->v.kid->sibling;
+				&& ecurfunc != NULL)
+			for (i = 1, ep2 = ecurfunc->v.kid->sibling;
 					ep2 != NULL; i++, ep2 = ep2->sibling)
 				if (!strcmp(ep2->v.name, nam)) {
 					ep1 = newnode();
@@ -827,14 +827,14 @@ getE5(void)			/* E5 -> (E1) */
 			addekid(ep2, ep1);
 			ep1 = ep2;
 			do {
-				scan();
+				escan();
 				addekid(ep1, getE1());
 			} while (nextc == ',');
 			if (nextc != ')')
-				syntax("')' expected");
-			scan();
+				esyntax("')' expected");
+			escan();
 		} else if (!(esupport&E_VARIABLE))
-			syntax("'(' expected");
+			esyntax("'(' expected");
 		if (esupport&E_RCONST && isconstvar(ep1))
 			ep1 = rconst(ep1);
 		return(ep1);
@@ -845,7 +845,7 @@ getE5(void)			/* E5 -> (E1) */
 		ep1->v.num = getnum();
 		return(ep1);
 	}
-	syntax("unexpected character");
+	esyntax("unexpected character");
 	return NULL; /* pro forma return */
 }
 
@@ -862,7 +862,7 @@ rconst(			/* reduce a constant expression */
     errno = 0;
     ep->v.num = evalue(epar);
     if ((errno == EDOM) | (errno == ERANGE))
-	syntax("bad constant expression");
+	esyntax("bad constant expression");
     epfree(epar,1);
  
     return(ep);
@@ -901,7 +901,7 @@ isconstfun(			/* is ep linked to a constant function? */
 )
 {
     EPNODE  *dp;
-    LIBR  *lp;
+    ELIBR  *lp;
 
     if (ep->type != VAR)
 	return(0);

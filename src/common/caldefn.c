@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.39 2024/06/20 21:21:24 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.40 2024/09/16 17:31:14 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -60,7 +60,7 @@ static EPNODE  *outchan;
 
 static int  optimized = 0;		/* are we optimized? */
 
-EPNODE	*curfunc = NULL;
+EPNODE	*ecurfunc = NULL;
 
 
 void
@@ -82,7 +82,7 @@ fcompile(			/* get definitions from a file */
 #endif
    initfile(fp, fname, 0);
     while (nextc != EOF)
-	getstatement();
+	egetstatement();
     if (fname != NULL)
 	fclose(fp);
 #ifdef getc_unlocked
@@ -101,7 +101,7 @@ scompile(		/* get definitions from a string */
 {
     initstr(str, fn, ln);
     while (nextc != EOF)
-	getstatement();
+	egetstatement();
 }
 
 
@@ -442,7 +442,7 @@ varinsert(			/* get a link to a variable */
 	return(vp);
     }
     vp = (VARDEF *)emalloc(sizeof(VARDEF));
-    vp->lib = liblookup(name);
+    vp->lib = eliblookup(name);
     if (vp->lib == NULL)		/* if name not in library */
 	name = qualname(name, 0);	/* use fully qualified version */
     hv = hash(name);
@@ -456,7 +456,7 @@ varinsert(			/* get a link to a variable */
 
 
 void
-libupdate(			/* update library links */
+elibupdate(			/* update library links */
 	char  *fn
 )
 {
@@ -466,7 +466,7 @@ libupdate(			/* update library links */
     for (i = 0; i < NHASH; i++)
 	for (vp = hashtbl[i]; vp != NULL; vp = vp->next)
 	    if ((vp->lib != NULL) | (fn == NULL) || !strcmp(fn, vp->name))
-		vp->lib = liblookup(vp->name);
+		vp->lib = eliblookup(vp->name);
 }
 
 
@@ -560,7 +560,7 @@ dpush(			/* push on a definition */
 
 
 void
-addchan(			/* add an output channel assignment */
+eaddchan(			/* add an output channel assignment */
 	EPNODE	*sp
 )
 {
@@ -591,24 +591,24 @@ addchan(			/* add an output channel assignment */
 
 
 void
-getstatement(void)			/* get next statement */
+egetstatement(void)			/* get next statement */
 {
     EPNODE  *ep;
     char  *qname;
     VARDEF  *vdef;
 
     if (nextc == ';') {		/* empty statement */
-	scan();
+	escan();
 	return;
     }
     if (esupport&E_OUTCHAN &&
 		nextc == '$') {		/* channel assignment */
-	ep = getchan();
+	ep = egetchan();
 	if (optimized)
 	    epoptimize(ep);		/* optimize new chan expr */
-	addchan(ep);
+	eaddchan(ep);
     } else {				/* ordinary definition */
-	ep = getdefn();
+	ep = egetdefn();
     	if (optimized)
     	    epoptimize(ep);		/* optimize new statement */
 	qname = qualname(dfn_name(ep), 0);
@@ -632,14 +632,14 @@ getstatement(void)			/* get next statement */
     }
     if (nextc != EOF) {
 	if (nextc != ';')
-	    syntax("';' expected");
-	scan();
+	    esyntax("';' expected");
+	escan();
     }
 }
 
 
 EPNODE *
-getdefn(void)
+egetdefn(void)
 	/* A -> SYM = E1 */
 	/*	SYM : E1 */
 	/*	FUNC(SYM,..) = E1 */
@@ -648,7 +648,7 @@ getdefn(void)
     EPNODE  *ep1, *ep2;
 
     if (!isalpha(nextc) & (nextc != CNTXMARK))
-	syntax("illegal variable name");
+	esyntax("illegal variable name");
 
     ep1 = newnode();
     ep1->type = SYM;
@@ -660,28 +660,28 @@ getdefn(void)
 	addekid(ep2, ep1);
 	ep1 = ep2;
 	do {
-	    scan();
+	    escan();
 	    if (!isalpha(nextc))
-		syntax("illegal parameter name");
+		esyntax("illegal parameter name");
 	    ep2 = newnode();
 	    ep2->type = SYM;
 	    ep2->v.name = savestr(getname());
 	    if (strchr(ep2->v.name, CNTXMARK) != NULL)
-		syntax("illegal parameter name");
+		esyntax("illegal parameter name");
 	    addekid(ep1, ep2);
 	} while (nextc == ',');
 	if (nextc != ')')
-	    syntax("')' expected");
-	scan();
-	curfunc = ep1;
+	    esyntax("')' expected");
+	escan();
+	ecurfunc = ep1;
     }
 
     if ((nextc != '=') & (nextc != ':'))
-	syntax("'=' or ':' expected");
+	esyntax("'=' or ':' expected");
 
     ep2 = newnode();
     ep2->type = nextc;
-    scan();
+    escan();
     addekid(ep2, ep1);
     addekid(ep2, getE1());
 
@@ -694,28 +694,28 @@ getdefn(void)
 	ep1->type = NUM;
 	addekid(ep2, ep1);
     }
-    curfunc = NULL;
+    ecurfunc = NULL;
 
     return(ep2);
 }
 
 
 EPNODE *
-getchan(void)			/* A -> $N = E1 */
+egetchan(void)			/* A -> $N = E1 */
 {
     EPNODE  *ep1, *ep2;
 
     if (nextc != '$')
-	syntax("missing '$'");
-    scan();
+	esyntax("missing '$'");
+    escan();
 
     ep1 = newnode();
     ep1->type = CHAN;
     ep1->v.chan = getinum();
 
     if (nextc != '=')
-	syntax("'=' expected");
-    scan();
+	esyntax("'=' expected");
+    escan();
 
     ep2 = newnode();
     ep2->type = '=';

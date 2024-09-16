@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.40 2024/02/23 03:45:52 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.41 2024/09/16 17:31:14 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -148,7 +148,7 @@ getfunc(	/* get function for this modifier */
 		} else				/* reference_count++ */
 			varset(REFVNAME, '=', varvalue(REFVNAME)+1.0);
 	}
-	curfunc = NULL;			/* parse expressions */
+	ecurfunc = NULL;			/* parse expressions */
 	sprintf(sbuf, "%s \"%s\"", ofun[m->otype].funame, m->oname);
 	for (i=0, ne=0; ef && i < na; i++, ef>>=1)
 		if (ef & 1) {			/* flagged as an expression? */
@@ -157,7 +157,7 @@ getfunc(	/* get function for this modifier */
 			initstr(arg[i], sbuf, 0);
 			f->ep[ne++] = getE1();
 			if (nextc != EOF)
-				syntax("unexpected character");
+				esyntax("unexpected character");
 		}
 	if (ef)
 		goto toofew;
@@ -336,7 +336,7 @@ chanvalue(			/* return channel n to calcomp */
 )
 {
 	if (fray == NULL)
-		syntax("ray parameter used in constant expression");
+		esyntax("ray parameter used in constant expression");
 
 	if (--n < 0)
 		goto badchan;

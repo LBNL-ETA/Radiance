@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.26 2024/02/26 18:16:35 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.27 2024/09/16 17:31:14 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -26,7 +26,7 @@ typedef struct {
     short  nargs;		/* # of required arguments */
     short  atyp;		/* assignment type (':' or '=') */
     double  (*f)(char *);	/* pointer to function */
-}  LIBR;		/* a library function */
+}  ELIBR;		/* a library function */
 
 typedef struct epnode {
     union {
@@ -39,7 +39,7 @@ typedef struct epnode {
 	    char  *name;		/* variable name */
 	    int	 nlinks;		/* number of references */
 	    struct epnode  *def;	/* definition */
-	    LIBR  *lib;			/* library definition */
+	    ELIBR  *lib;		/* library definition */
 	    struct vardef  *next;	/* next in hash list */
 	}  *ln;			/* link */
     } v;		/* value */
@@ -75,7 +75,7 @@ typedef struct vardef  VARDEF;	/* a variable definition */
 extern double  (*eoper[])(EPNODE *);
 extern unsigned long  eclock;
 extern unsigned int  esupport;
-extern EPNODE	*curfunc;
+extern EPNODE	*ecurfunc;
 extern int  nextc;
 extern int  eofc;
 					/* defined in biggerlib.c */
@@ -105,10 +105,10 @@ extern EPNODE	*dfirst(void);
 extern EPNODE	*dnext(void);
 extern EPNODE	*dpop(char *name);
 extern void	dpush(char *nm, EPNODE *ep);
-extern void	addchan(EPNODE *sp);
-extern void	getstatement(void);
-extern EPNODE	*getdefn(void);
-extern EPNODE	*getchan(void);
+extern void	eaddchan(EPNODE *sp);
+extern void	egetstatement(void);
+extern EPNODE	*egetdefn(void);
+extern EPNODE	*egetchan(void);
 					/* defined in calexpr.c */
 extern EPNODE	*eparse(char *expr);
 extern double	eval(char *expr);
@@ -119,9 +119,9 @@ extern EPNODE	*ekid(EPNODE *ep, int n);
 extern void	initfile(FILE *fp, char *fn, int ln);
 extern void	initstr(char *s, char *fn, int ln);
 extern void	getscanpos(char **fnp, int *lnp, char **spp, FILE **fpp);
-extern int	scan(void);
+extern int	escan(void);
 extern char	*long2ascii(long l);
-extern void	syntax(char *err);
+extern void	esyntax(char *err);
 extern void	addekid(EPNODE *ep, EPNODE *ek);
 extern char	*getname(void);
 extern int	getinum(void);
@@ -141,12 +141,12 @@ extern void	funset(char *fname, int nargs, int assign,
 				double (*fptr)(char *));
 extern int	nargum(void);
 extern double	argument(int n);
-extern VARDEF	*argf(int n);
-extern char	*argfun(int n);
+extern VARDEF	*eargf(int n);
+extern char	*eargfun(int n);
 extern double	efunc(EPNODE *ep);
 extern double	eargument(EPNODE *ep);
-extern LIBR	*liblookup(char *fname);
-extern void	libupdate(char *fn);
+extern ELIBR	*eliblookup(char *fname);
+extern void	elibupdate(char *fn);
 					/* defined in calprnt.c */
 extern void	eprint(EPNODE *ep, FILE *fp);
 extern void	dprint(char *name, FILE *fp);
