@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.2 2024/09/17 00:05:11 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.3 2024/09/17 00:25:41 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -714,6 +714,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 			error(USER, errmsg);
 		}
 		tile_p(ti)->status = 1;		// mark tile completed
+		ndone++;
 	}
 	if (!ndone)
 		error(WARNING, "no tiles need rendering, exit");
