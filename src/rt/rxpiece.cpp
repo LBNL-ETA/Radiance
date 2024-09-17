@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.3 2024/09/17 00:25:41 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.4 2024/09/17 02:24:18 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -598,7 +598,10 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 
 	const bool	newOutput = (access(pout, F_OK) < 0);
 	FILE		*pdfp[2];
-	if (!newOutput) {			// output exists?
+	if (newOutput) {			// new output file?
+		CHECK((tileGrid[0] <= 1) & (tileGrid[1] <= 1),
+				 USER, "bad tiling specification");
+	} else {
 		dt = myRPmanager.ReopenOutput(pdfp, pout, zout);
 		if (dt == RDTnone)
 			quit(1);
@@ -608,10 +611,8 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		myRPmanager.NewHeader(pout);	// get prev. header info
 		const char *	tval = myRPmanager.GetHeadStr("TILED=");
 		if (tval) sscanf(tval, "%d %d", &tileGrid[0], &tileGrid[1]);
-		if (!myRPmanager.GetView()) {
-			sprintf(errmsg, "missing view in picture file '%s'", pout);
-			error(USER, errmsg);
-		}
+		CHECK(myRPmanager.GetView()==NULL,
+				USER, "missing view in picture file");
 		ourview = *myRPmanager.GetView();
 	}
 	int	hvdim[2] = {hresolu, vresolu};	// set up tiled frame
@@ -653,7 +654,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 	if (pmlen&7) pmlen += 8 - (pmlen&7);	// 8-byte alignment to be safe
 	pmlen += sizeof(TileProg)*tileGrid[0]*tileGrid[1];
 						// map picture file to memory
-	if (ftruncate(fileno(pdfp[0]), pmlen) < 0)
+	if (newOutput && ftruncate(fileno(pdfp[0]), pmlen) < 0)
 		error(SYSTEM, "cannot extend picture buffer");
 	uby8 *		pixMap = (uby8 *)mmap(NULL, pmlen, PROT_READ|PROT_WRITE,
 						MAP_SHARED, fileno(pdfp[0]), 0);
@@ -666,7 +667,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 	const size_t	zmlen = zdata_beg + zdpSiz*hresolu*vresolu;
 	uby8 *		zdMap = NULL;
 	if (RDTdepthT(dt)) {
-		if (ftruncate(fileno(pdfp[1]), zmlen) < 0)
+		if (newOutput && ftruncate(fileno(pdfp[1]), zmlen) < 0)
 			error(SYSTEM, "cannot extend depth buffer");
 		zdMap = (uby8 *)mmap(NULL, zmlen, PROT_READ|PROT_WRITE,
 						MAP_SHARED, fileno(pdfp[1]), 0);
