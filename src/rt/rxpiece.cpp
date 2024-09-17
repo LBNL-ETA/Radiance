@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.1 2024/09/16 23:49:13 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.2 2024/09/17 00:05:11 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -482,10 +482,8 @@ children_finished()
 	for (ti[1] = 0; ti[1] < tileGrid[1]; ti[1]++)
 		for (ti[0] = 0; ti[0] < tileGrid[0]; ti[0]++)
 			cnt += renderable_tile(tile_p(ti));
-	if (!cnt) {			// nothing left to do?
-		error(WARNING, "output appears to be complete, nothing added");
-		return true;
-	}
+	if (!cnt)
+		return false;		// parent can do nothing
 	if (cnt < nproc) {
 		sprintf(errmsg, "only %d renderable tiles, reducing process count", cnt);
 		error(WARNING, errmsg);
@@ -606,6 +604,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 			quit(1);
 		if (!fscnresolu(&hresolu, &vresolu, pdfp[0]))
 			error(USER, "missing picture resolution");
+		pixaspect = .0;			// need to leave this as is
 		myRPmanager.NewHeader(pout);	// get prev. header info
 		const char *	tval = myRPmanager.GetHeadStr("TILED=");
 		if (tval) sscanf(tval, "%d %d", &tileGrid[0], &tileGrid[1]);
@@ -682,7 +681,8 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 	if (children_finished())		// work done in children?
 		return dt;
 
-	int	ti[2];				// else render tiles
+	int	ndone = 0;			// else render tiles
+	int	ti[2];
 	while (nexttile(ti)) {
 		const int	offset = (tileGrid[1]-1-ti[1])*myRPmanager.GetWidth()*myRPmanager.THeight() +
 						(myRPmanager.THeight()-1)*myRPmanager.GetWidth() +
@@ -715,6 +715,8 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		}
 		tile_p(ti)->status = 1;		// mark tile completed
 	}
+	if (!ndone)
+		error(WARNING, "no tiles need rendering, exit");
 	/*
 	munmap(pixMap, pmlen);			// technically unnecessary...
 	if (zdMap) munmap(zdMap, zmlen);
