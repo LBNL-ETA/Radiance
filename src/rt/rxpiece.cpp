@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.4 2024/09/17 02:24:18 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.5 2024/09/17 16:29:09 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -14,6 +14,8 @@ static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.4 2024/09/17 02:24:18 greg Exp
 
 #include  "platform.h"
 #include  "RpictSimulManager.h"
+#include  "ambient.h"
+#include  "pmapray.h"
 #include  "random.h"
 
 extern char  *progname;			/* argv[0] */
@@ -55,9 +57,15 @@ static RenderDataType rpiece(char *pout, RenderDataType dt, char *zout);
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
 
+// We could call myRPmanager.Cleanup() but why waste time
+// unwinding data structures when the whole frame is going away?
 void
 quit(int code)				/* quit program */
 {
+	ambsync();			// flush ambient cache
+
+	ray_done_pmap();		/* PMAP: free photon maps */
+
 	exit(code);
 }
 
@@ -315,7 +323,7 @@ main(int  argc, char  *argv[])
 					// render tiles
 	dtype = rpiece(outfile, dtype, zfile);
 
-	quit(dtype==RDTnone);		// clean up and exit
+	quit(dtype==RDTnone);		// status is 1 on failure
 
 badopt:
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
@@ -636,14 +644,15 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		if (dt == RDTnone)
 			quit(1);
 		fprtresolu(hresolu, vresolu, pdfp[0]);
-	}
-	if (RDTdepthT(dt) == RDTdshort) {
-		if (newOutput)
+		fflush(pdfp[0]);
+		if (RDTdepthT(dt) == RDTdshort) {
 			fprtresolu(hresolu, vresolu, pdfp[1]);
-		else if (!fscnresolu(&hvdim[0], &hvdim[1], pdfp[1]) ||
-				(hvdim[0] != hresolu) | (hvdim[1] != vresolu))
-			error(USER, "mismatched depth file resolution");
-	}
+			fflush(pdfp[1]);
+		}
+	} else if (RDTdepthT(dt) == RDTdshort &&
+			(!fscnresolu(&hvdim[0], &hvdim[1], pdfp[1]) ||
+				(hvdim[0] != hresolu) | (hvdim[1] != vresolu)))
+		error(USER, "mismatched depth file resolution");
 						// prepare (flat) pixel buffer
 	const long	pdata_beg = ftell(pdfp[0]);
 	const size_t	pixSiz = (RDTcolorT(dt)==RDTrgbe)|(RDTcolorT(dt)==RDTxyze) ? sizeof(COLR)
