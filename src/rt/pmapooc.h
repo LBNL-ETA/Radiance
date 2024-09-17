@@ -7,7 +7,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapooc.h,v 1.2 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmapooc.h,v 1.3 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -17,7 +17,10 @@
    
    #include "oocnn.h"
 
-   
+#ifdef __cplusplus
+extern "C" {
+#endif
+
    
    /* Suffixes for octree filenames */
    /* #define PMAP_OOC_NODESUFFIX   ".node"
@@ -81,5 +84,10 @@
    /* Retrieve photon from NN search queue after OOC_FindPhotons() */
 
    PhotonIdx OOC_FirstPhoton (const struct PhotonMap* pmap);
-   /* Return index to first photon in octree */    
+   /* Return index to first photon in octree */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

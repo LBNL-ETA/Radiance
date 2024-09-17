@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdiag.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmapdiag.h,v 2.8 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ==================================================================
@@ -10,7 +10,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdiag.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapdiag.h,v 2.8 2024/09/17 16:36:05 greg Exp $
 */
    
 
@@ -36,6 +36,9 @@
    #include  <time.h>   
    #include  <signal.h>
    
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* Time at start & last report */
    extern time_t repStartTime, repLastTime;   
@@ -58,5 +61,9 @@
    /* Append full OOC I/O cache statistics to stats; interface to rpict's
     * report() */    
 #endif
-   
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

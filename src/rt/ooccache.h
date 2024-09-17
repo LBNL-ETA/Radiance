@@ -17,7 +17,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =======================================================================
    
-   $Id: ooccache.h,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: ooccache.h,v 2.2 2024/09/17 16:36:04 greg Exp $
 */
 
 
@@ -27,8 +27,10 @@
    #include <stdio.h>
    #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-   
    /* Hashtable load factor to limit hash collisions */
    #define  OOC_CACHE_LOAD       0.75
    
@@ -94,4 +96,9 @@
    
    /* Delete cache and free allocated pages */
    void OOC_DeleteCache (OOC_Cache *cache);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

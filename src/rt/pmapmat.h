@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapmat.h,v 2.14 2021/02/22 13:27:49 rschregle Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.15 2024/09/17 16:36:05 greg Exp $ */
 /* 
    ======================================================================
    Photon map support routines for scattering by materials. 
@@ -19,6 +19,10 @@
    #define PMAPMAT_H
 
    #include "pmap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* 
       Check for paths already accounted for in photon map to avoid
@@ -100,5 +104,9 @@
 
    /* Find antimatter geometry declared as photon sensors */   
    void getPhotonSensors (char **sensorList);
-   
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

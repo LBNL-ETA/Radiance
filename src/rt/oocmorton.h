@@ -8,7 +8,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================   
    
-   $Id: oocmorton.h,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocmorton.h,v 2.2 2024/09/17 16:36:04 greg Exp $
 */
 
 #ifndef OOC_MORTON_H
@@ -17,7 +17,10 @@
    #include "fvect.h"
    #include <stdint.h>
 
-   
+#ifdef __cplusplus
+extern "C" {
+#endif
+
    /* Type to represent Morton codes (Z-curve indices) as sort keys */
    typedef uint64_t OOC_MortonIdx;   
    
@@ -49,5 +52,10 @@
     * index with scale */
    OOC_MortonIdx OOC_Key2Morton (const FVECT key, const FVECT org, 
                                  RREAL scale);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
  

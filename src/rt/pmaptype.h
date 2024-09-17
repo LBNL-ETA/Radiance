@@ -1,4 +1,4 @@
-/* RCSid $Id: pmaptype.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmaptype.h,v 2.6 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ==================================================================
@@ -10,13 +10,17 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmaptype.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmaptype.h,v 2.6 2024/09/17 16:36:05 greg Exp $
 */
 
 
 #ifndef PMAPTYPE_H
    #define PMAPTYPE_H
    
+#ifdef __cplusplus
+extern "C" {
+#endif
+
    /* Photon map types */
    typedef enum {
       PMAP_TYPE_NONE = -1, PMAP_TYPE_GLOBAL,    PMAP_TYPE_PRECOMP, 
@@ -35,4 +39,9 @@
    
    /* Photon map names per type */
    extern const char *pmapName [];
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

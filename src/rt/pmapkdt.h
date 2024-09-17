@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapkdt.h,v 1.2 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmapkdt.h,v 1.3 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -19,10 +19,12 @@
    #include "fvect.h" */
    #include "pmapdata.h"
    
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* Forward declarations to break dependency loop with pmapdata.h */
    struct PhotonMap;
-
 
    /* k-d tree as linear array of photons */
    typedef struct {
@@ -91,5 +93,9 @@
    
    void kdT_Delete (PhotonKdTree *kdt);
    /* Self-destruct */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

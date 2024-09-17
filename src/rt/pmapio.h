@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapio.h,v 2.8 2021/02/18 17:08:50 rschregle Exp $ */
+/* RCSid $Id: pmapio.h,v 2.9 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ======================================================================
@@ -13,7 +13,7 @@
        (SNSF #147053, "Daylight Redirecting Components")   
    ======================================================================
    
-   $Id: pmapio.h,v 2.8 2021/02/18 17:08:50 rschregle Exp $
+   $Id: pmapio.h,v 2.9 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -22,6 +22,9 @@
    
    #include "pmapdata.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* File format version with feature suffix */
    #define PMAP_FILEVER_MAJ   "3.1"
@@ -67,5 +70,8 @@
    /* Load portable photon map from specified filename, and return photon
     * map type as identified from file header. */
 
+#ifdef __cplusplus
+}
 #endif
 
+#endif

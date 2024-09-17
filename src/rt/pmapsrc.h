@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapsrc.h,v 2.7 2020/08/07 01:21:13 rschregle Exp $ */
+/* RCSid $Id: pmapsrc.h,v 2.8 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ======================================================================
@@ -14,7 +14,7 @@
        supported by the JSPS KAKENHI Grant Number JP19KK0115.
    ======================================================================
    
-   $Id: pmapsrc.h,v 2.7 2020/08/07 01:21:13 rschregle Exp $
+   $Id: pmapsrc.h,v 2.8 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -25,6 +25,9 @@
    #include "ray.h"
    #include "source.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
    /* Data structures for photon emission */
@@ -101,5 +104,9 @@
 
    void inscatterVolumePmap (RAY *r, COLOR inscatter);
    /* Add inscattering from volume photon map; interface to srcscatter() */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapparm.h,v 2.10 2021/04/14 11:26:25 rschregle Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.11 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ======================================================================
@@ -14,7 +14,7 @@
        (SNSF #147053, "Daylight Redirecting Components")
    ======================================================================
    
-   $Id: pmapparm.h,v 2.10 2021/04/14 11:26:25 rschregle Exp $
+   $Id: pmapparm.h,v 2.11 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -23,7 +23,10 @@
 
    #include "pmaptype.h"
    
-      
+#ifdef __cplusplus
+extern "C" {
+#endif
+
    /* Struct for passing params per photon map from rpict/rtrace/rvu */
    typedef struct {
       char *fileName;                /* Photon map file */
@@ -76,4 +79,9 @@
    unsigned long parseMultiplier (const char *num);
    /* Evaluate numeric parameter string with optional multiplier suffix
       (G = 10^9, M = 10^6, K = 10^3). Returns 0 if parsing fails. */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

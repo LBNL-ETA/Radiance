@@ -1,4 +1,4 @@
-/* RCSid $Id: pmap.h,v 2.9 2018/01/24 19:39:05 rschregle Exp $ */
+/* RCSid $Id: pmap.h,v 2.10 2024/09/17 16:36:04 greg Exp $ */
 
 /* 
    ======================================================================
@@ -10,7 +10,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmap.h,v 2.9 2018/01/24 19:39:05 rschregle Exp $
+   $Id: pmap.h,v 2.10 2024/09/17 16:36:04 greg Exp $
 */
 
 
@@ -28,6 +28,9 @@
    #include "pmapparm.h"
    #include "pmapdata.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    #ifndef min
       #define min(a, b)          ((a) < (b) ? (a) : (b))
@@ -87,5 +90,9 @@
 
    void colorNorm (COLOR);
    /* Normalise colour channels to average of 1 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

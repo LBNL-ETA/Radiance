@@ -7,7 +7,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: oocnn.h,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocnn.h,v 2.2 2024/09/17 16:36:04 greg Exp $
 */
 
 
@@ -41,7 +41,9 @@
       void  *data;
    } OOC_SearchFilter;
    
-
+#ifdef __cplusplus
+extern "C" {
+#endif
    
    float OOC_FindNearest (OOC_Octree *oct, OOC_Node *node, 
                           OOC_DataIdx dataIdx, const FVECT org, float size, 
@@ -84,4 +86,9 @@
     void *OOC_GetNearest (const OOC_SearchQueue *queue, unsigned idx);
     /* Return pointer to record at pos idx in search queue after calling
      * OOC_FindNearest() */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

@@ -7,7 +7,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: oococt.h,v 2.3 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oococt.h,v 2.4 2024/09/17 16:36:04 greg Exp $
 */
 
 
@@ -18,7 +18,6 @@
    #include "ooccache.h"
    #include <stdint.h>
    #include <stdio.h>
-
 
 
    /* ===================================================================
@@ -159,6 +158,9 @@
 
    /* DOAN' FORGET: NODES IN ***POSTFIX*** ORDAH!!! */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
    /* ===================================================================
@@ -229,6 +231,10 @@
 
    /* Self-destruct */
    void OOC_Delete (OOC_Octree *oct);
+
+#ifdef __cplusplus
+}
+#endif
 
    /* DID WE MENTION NODES ARE IN POSTFIX ORDAH? */
 #endif

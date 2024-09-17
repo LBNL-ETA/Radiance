@@ -1,4 +1,4 @@
-/* RCSid $Id: pmaprand.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $ */
+/* RCSid $Id: pmaprand.h,v 2.9 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ======================================================================
@@ -10,7 +10,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmaprand.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmaprand.h,v 2.9 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -44,9 +44,17 @@
    #define pmapRandom(state)     erand48(state)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
       
    extern unsigned short partState [3], emitState [3], cntState [3],
                          mediumState [3], scatterState [3], rouletteState [3],
                          randSeed;
+                         
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 

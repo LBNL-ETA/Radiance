@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapray.h,v 2.7 2024/03/22 16:54:16 greg Exp $ */
+/* RCSid $Id: pmapray.h,v 2.8 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ==================================================================
@@ -10,15 +10,19 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapray.h,v 2.7 2024/03/22 16:54:16 greg Exp $
+   $Id: pmapray.h,v 2.8 2024/09/17 16:36:05 greg Exp $
 */
 
 /* Include after ray.h */
 
-void ray_init_pmap ();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void ray_init_pmap (void);
 /* Interface to ray_init() and rtmain/rpmain/rvmain; init & load pmaps */
 
-void ray_done_pmap ();
+void ray_done_pmap (void);
 /* Interface to ray_done() and rtmain/rpmain/rvmain; free photon maps */
 
 void ray_save_pmap (RAYPARAMS *rp);
@@ -29,3 +33,7 @@ void ray_restore_pmap (RAYPARAMS *rp);
 
 void ray_defaults_pmap (RAYPARAMS *rp);
 /* Interface to ray_defaults(); set photon mapping defaults */
+
+#ifdef __cplusplus
+}
+#endif

@@ -7,12 +7,16 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    =======================================================================
    
-   $Id: oocbuild.h,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocbuild.h,v 2.2 2024/09/17 16:36:04 greg Exp $
 */
 
 
 #ifndef OOC_BUILD_H
    #define OOC_BUILD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* Bottom-up construction of out-of-core octree in postorder traversal.
     * The octree oct is assumed to be initialised with its origin (oct ->
@@ -38,5 +42,9 @@
     * failure, NULL is returned.  */
     OOC_Octree *OOC_Build (OOC_Octree *oct, unsigned leafMax, 
                            unsigned maxDepth);
+
+#ifdef __cplusplus
+}
 #endif
-    
+
+#endif

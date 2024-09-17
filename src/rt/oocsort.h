@@ -7,7 +7,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================   
    
-   $Id: oocsort.h,v 2.3 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocsort.h,v 2.4 2024/09/17 16:36:04 greg Exp $
 */
 
 #ifndef OOC_SORT_H
@@ -16,6 +16,9 @@
    #include "fvect.h"
    #include <stdio.h>   
    
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    /* Sort records in inFile and append to outFile by subdividing inFile
     * into small blocks, sorting these in-core, and merging them out-of-core
@@ -41,4 +44,9 @@
    int OOC_Sort (FILE *inFile, FILE *outFile, unsigned numBlk, 
                  unsigned long blkSize, unsigned numProc, unsigned recSize,
                  FVECT bbOrg, RREAL bbSize, RREAL *(*key)(const void*));
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

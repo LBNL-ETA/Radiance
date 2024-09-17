@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapcontrib.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmapcontrib.h,v 2.6 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    ==================================================================
@@ -9,14 +9,18 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapcontrib.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapcontrib.h,v 2.6 2024/09/17 16:36:05 greg Exp $
 */
 
 #ifndef PMAPCONTRIB_H
    #define PMAPCONTRIB_H
 
    #include "pmapdata.h"   
-   
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
    void initPmapContrib (LUTAB *srcContrib, unsigned numSrcContrib);
    /* Set up photon map contributions (interface to rcmain.c) */
 
@@ -27,5 +31,9 @@
    void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad);
    /* Accumulate light source contributions in pmap -> srcMods from
     * photons, and return cumulative irradiance from density esimate */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

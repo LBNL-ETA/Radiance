@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.14 2020/04/08 15:14:21 rschregle Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.15 2024/09/17 16:36:05 greg Exp $ */
 
 /* 
    =========================================================================
@@ -20,7 +20,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: pmapdata.h,v 2.14 2020/04/08 15:14:21 rschregle Exp $
+   $Id: pmapdata.h,v 2.15 2024/09/17 16:36:05 greg Exp $
 */
 
 
@@ -54,8 +54,6 @@
    #include "lookup.h"
    #include <stdint.h>
 
-
-   
    /* Primary photon ray for light source contributions */
    typedef struct {
       int16    srcIdx;              /* Index of emitting light source */
@@ -119,6 +117,12 @@
       PhotonPrimaryIdx     primary;       /* Index to primary ray */
    } Photon;
 
+   /* Define search queue and underlying data struct types */
+#ifdef PMAP_OOC
+   #include "pmapooc.h"
+#else
+   #include "pmapkdt.h"
+#endif
 
    
    /* Define PMAP_FLOAT_FLUX to store photon flux as floats instead of
@@ -142,14 +146,6 @@
 
    /* Forward declaration */
    struct PhotonMap;
-   
-   
-   /* Define search queue and underlying data struct types */
-#ifdef PMAP_OOC
-   #include "pmapooc.h"
-#else
-   #include "pmapkdt.h"
-#endif
 
 
    /* Mean size of heapfile write buffer, in number of photons */
@@ -269,7 +265,9 @@
    #define isContribPmap(p)   ((p) -> type == PMAP_TYPE_CONTRIB)
    #define isVolumePmap(p)    ((p) -> type == PMAP_TYPE_VOLUME)
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
    void initPhotonMap (PhotonMap *pmap, PhotonMapType t);
    /* Initialise empty photon map of specified type */
@@ -334,5 +332,9 @@
     
    void deletePhotons (PhotonMap*);
    /* Free dem mammaries... */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
