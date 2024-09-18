@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.73 2024/04/17 16:46:00 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.74 2024/09/18 19:52:35 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -238,7 +238,7 @@ direct_specular_OK(SCOLOR scval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
 	int	nsamp = 1;
 	int	scnt = 0;
-	FVECT	vsrc, vjit;
+	FVECT	vsrc;
 	double	tomega, tomega2;
 	double	tsr, sd[2];
 	SCOLOR	csmp, cdiff;
@@ -306,15 +306,17 @@ direct_specular_OK(SCOLOR scval, FVECT ldir, double omega, BSDFDAT *ndp)
 		nsamp = 4.*specjitter*ndp->pr->rweight + .5;
 		nsamp += !nsamp;
 	}
-					/* jitter to fuzz BSDF cells */
-	for (i = nsamp; i--; ) {
+	for (i = nsamp; i--; ) {	/* jitter to fuzz BSDF cells */
+		FVECT	vjit;
 		bsdf_jitter(vjit, ndp, tsr);
 					/* compute BSDF */
 		ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
 		if (ec)
 			goto baderror;
-		if (sv.cieY - diffY <= FTINY)
-			continue;	/* no specular part */
+		if (sv.cieY - diffY <= FTINY) {
+			++scnt;		/* still counts as 0 contribution */
+			continue;
+		}
 					/* check for variable resolution */
 		ec = SDsizeBSDF(&tomega2, vjit, vsrc, SDqueryMin, ndp->sd);
 		if (ec)
