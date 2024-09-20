@@ -1,8 +1,8 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.15 2022/02/04 20:11:49 greg Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.16 2024/09/20 17:39:12 greg Exp $";
 #endif
 /*
- * Find extrema points in a Radiance picture.
+ * Find extrema points in a Radiance picture (RGBE, XYZE, or HyperSpectral)
  */
 
 #include  <math.h>
@@ -33,7 +33,15 @@ headline(			/* check header line */
 
 	if (formatval(fmt, s))			/* format */
 		return(0);
-	if (!orig)
+	if (iswlsplit(s)) {			/* wavelength splits */
+		wlsplitval(WLPART, s);
+		return(0);
+	}
+	if (isncomp(s)) {			/* # spectral components */
+		NCSAMP = ncompval(s);
+		return(0);
+	}
+	if (!orig)				/* don't undo exposure? */
 		return(0);
 	if (isexpos(s)) {			/* exposure */
 		d = exposval(s);
@@ -55,10 +63,12 @@ main(
 	int  i;
 	int  xres, yres;
 	int  y;
-	register int  x;
-	COLR  *scan;
-	COLR  cmin, cmax;
+	int  x;
+	COLRV  *scan;
+	SCOLR  cmin, cmax;
+	COLOR  tcol;
 	int  xmin, ymin, xmax, ymax;
+
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	for (i = 1; i < argc; i++)	/* get options */
@@ -72,53 +82,60 @@ main(
 	if (i == argc-1 && freopen(argv[i], "r", stdin) == NULL) {
 		fprintf(stderr, "%s: can't open input \"%s\"\n",
 				argv[0], argv[i]);
-		exit(1);
+		return(1);
 	}
 					/* get our header */
-	if (getheader(stdin, headline, NULL) < 0 || !globmatch(PICFMT, fmt) ||
+	if (getheader(stdin, headline, NULL) < 0 ||
+			(!globmatch(PICFMT, fmt) && strcmp(fmt, SPECFMT)) ||
 			fgetresolu(&xres, &yres, stdin) < 0) {
 		fprintf(stderr, "%s: bad picture format\n", argv[0]);
-		exit(1);
+		return(1);
+	}
+	if (setspectrsamp(CNDX, WLPART) < 0) {
+		fprintf(stderr, "%s: bad wavelength split or component count",
+				argv[0]);
+		return(1);
 	}
 	if (orig < 0 && !strcmp(CIEFMT, fmt))
 		scalecolor(expos, 1./WHTEFFICACY);
-	if ((scan = (COLR *)malloc(xres*sizeof(COLR))) == NULL) {
+	if ((scan = (COLRV *)malloc(xres*sizeof(COLRV)*(NCSAMP+1))) == NULL) {
 		fprintf(stderr, "%s: out of memory\n", argv[0]);
-		exit(1);
+		return(1);
 	}
-	setcolr(cmin, 1e30, 1e30, 1e30);
-	setcolr(cmax, 0., 0., 0.); xmax=ymax=0;
+	setscolr(cmin, 1e30, 1e30, 1e30); xmin=ymin=0;
+	scolrblack(cmax); xmax=ymax=0;
 					/* find extrema */
 	for (y = yres-1; y >= 0; y--) {
-		if (freadcolrs(scan, xres, stdin) < 0) {
+		if (freadscolrs(scan, NCSAMP, xres, stdin) < 0) {
 			fprintf(stderr, "%s: read error on input\n", argv[0]);
-			exit(1);
+			return(1);
 		}
 		for (x = xres; x-- > 0; ) {
-			if (scan[x][EXP] > cmax[EXP] ||
-					(scan[x][EXP] == cmax[EXP] &&
-					 normbright(scan[x]) >
-						normbright(cmax))) {
-				copycolr(cmax, scan[x]);
+			const COLRV *	sclr = scan + x*(NCSAMP+1);
+			if (sclr[CNDX[EXP]] > cmax[CNDX[EXP]] ||
+					(sclr[CNDX[EXP]] == cmax[CNDX[EXP]] &&
+					 normpbright(sclr) > normpbright(cmax))) {
+				copyscolr(cmax, sclr);
 				xmax = x; ymax = y;
 			}
-			if (scan[x][EXP] < cmin[EXP] ||
-					(scan[x][EXP] == cmin[EXP] &&
-					 normbright(scan[x]) <
-						normbright(cmin))) {
-				copycolr(cmin, scan[x]);
+			if (sclr[CNDX[EXP]] < cmin[CNDX[EXP]] ||
+				(sclr[CNDX[EXP]] == cmin[CNDX[EXP]] &&
+					 normpbright(sclr) < normpbright(cmin))) {
+				copyscolr(cmin, sclr);
 				xmin = x; ymin = y;
 			}
 		}
 	}
-	free((void *)scan);
+	free(scan);
+	scolr_color(tcol, cmin);
 	printf("%d %d\t%.2e %.2e %.2e\n", xmin, ymin,
-			colrval(cmin,RED)/colval(expos,RED),
-			colrval(cmin,GRN)/colval(expos,GRN),
-			colrval(cmin,BLU)/colval(expos,BLU));
+			colval(tcol,RED)/colval(expos,RED),
+			colval(tcol,GRN)/colval(expos,GRN),
+			colval(tcol,BLU)/colval(expos,BLU));
+	scolr_color(tcol, cmax);
 	printf("%d %d\t%.2e %.2e %.2e\n", xmax, ymax,
-			colrval(cmax,RED)/colval(expos,RED),
-			colrval(cmax,GRN)/colval(expos,GRN),
-			colrval(cmax,BLU)/colval(expos,BLU));
-	exit(0);
+			colval(tcol,RED)/colval(expos,RED),
+			colval(tcol,GRN)/colval(expos,GRN),
+			colval(tcol,BLU)/colval(expos,BLU));
+	return(0);
 }

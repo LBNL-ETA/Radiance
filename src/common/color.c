@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.37 2024/09/11 01:34:40 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.38 2024/09/20 17:39:12 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -101,6 +101,21 @@ setscolor(			/* assign spectral color from RGB */
 			scol[i] = b;
 		cwl += step;
 	}
+}
+
+
+void
+setscolr(			/* assign common-exponent spectral from RGB */
+	SCOLR sclr,
+	double r,
+	double g,
+	double b
+)
+{
+	SCOLOR	scol;
+
+	setscolor(scol, r, g, b);
+	scolor2scolr(sclr, scol, NCSAMP);
 }
 
 

@@ -2728,3 +2728,6 @@ C++ class, but may have its uses.
 Fixed a bug in BSDF sampling of sources pointed out by
 David Geisler-Moroder, which tended to overestimate specular
 contributions for some BSDFs.
+
+Added handling of hyperspectral pictures to pextrem, though
+results are still reported in RGB.
