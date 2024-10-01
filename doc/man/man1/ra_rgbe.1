@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ra_rgbe.1,v 1.3 2024/09/10 20:24:42 greg Exp $"
+.\" RCSid "$Id: ra_rgbe.1,v 1.4 2024/10/01 01:16:26 greg Exp $"
 .TH RA_RGBE 1 1/23/98 RADIANCE
 .SH NAME
 ra_rgbe - convert between different RADIANCE picture types
@@ -98,6 +98,8 @@ converted to approximate RGBE pixels.
 However, the colors may not be very accurate.
 Pass the HSR picture through
 .I rcomb(1)
+or
+.I ra_xyze(1)
 first if greater color fidelity is required.
 .SH AUTHOR
 Greg Ward

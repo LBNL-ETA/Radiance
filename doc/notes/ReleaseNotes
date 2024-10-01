@@ -2731,3 +2731,7 @@ contributions for some BSDFs.
 
 Added handling of hyperspectral pictures to pextrem, though
 results are still reported in RGB.
+
+Added conversion of hyperspectral pictures to ra_xyze, although
+it is even slower than rcomb for this process.  It is more
+accurate than most of the other tools, at least.

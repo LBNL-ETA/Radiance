@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.13 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.14 2024/10/01 01:16:26 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -13,7 +13,8 @@ static const char	RCSid[] = "$Id: ra_xyze.c,v 2.13 2019/12/28 18:05:14 greg Exp 
 #include  "resolu.h"
 #include  "rtio.h"
 
-int  rgbinp = -1;			/* input is RGBE? */
+enum {InpUNK, InpRGB, InpXYZ, InpSPEC};	/* input format */
+int  infmt = InpUNK;
 int  rgbout = 0;			/* output should be RGBE? */
 RGBPRIMS  inprims = STDPRIMS;		/* input primaries */
 RGBPRIMS  outprims = STDPRIMS;		/* output primaries */
@@ -24,6 +25,7 @@ char  *progname;
 
 static gethfunc headline;
 static void quiterr(char *err);
+static void myreadscan(COLOR *scn, int len);
 static void convert(void);
 
 
@@ -38,11 +40,13 @@ headline(				/* process header line */
 
 	if (formatval(fmt, s)) {	/* check if format string */
 		if (!strcmp(fmt,COLRFMT))
-			rgbinp = 1;
+			infmt = InpRGB;
 		else if (!strcmp(fmt,CIEFMT))
-			rgbinp = 0;
+			infmt = InpXYZ;
+		else if (!strcmp(fmt,SPECFMT))
+			infmt = InpSPEC;
 		else
-			rgbinp = -2;
+			infmt = InpUNK;
 		return(0);		/* don't echo */
 	}
 	if (origexp > 0.0 && isexpos(s)) {
@@ -51,6 +55,14 @@ headline(				/* process header line */
 	}
 	if (isprims(s)) {		/* get input primaries */
 		primsval(inprims, s);
+		return(0);		/* don't echo */
+	}
+	if (iswlsplit(s)) {		/* get wavelength limits */
+		wlsplitval(WLPART, s);
+		return(0);		/* don't echo */
+	}
+	if (isncomp(s)) {		/* number of color samples */
+		NCSAMP = ncompval(s);
 		return(0);		/* don't echo */
 	}
 					/* should I grok colcorr also? */
@@ -120,10 +132,8 @@ main(int  argc, char  *argv[])
 		exit(1);
 	}
 	getheader(stdin, headline, NULL);
-	if (rgbinp == -2)
-		quiterr("unrecognized input file format");
-	if (rgbinp == -1)
-		rgbinp = !rgbout;
+	if (infmt == InpUNK)
+		quiterr("unrecognized/missing input file format");
 	printargs(argc, argv, stdout);		/* add to header */
 	convert();				/* convert picture */
 	exit(0);
@@ -148,42 +158,67 @@ quiterr(		/* print message and exit */
 
 
 static void
+myreadscan(COLOR *scn, int len)
+{
+	if (infmt == InpSPEC) {		/* read & convert to XYZ */
+		SCOLR	sclr;
+		SCOLOR	scol;
+		while (len-- > 0) {
+			if (getbinary(sclr, LSCOLR, 1, stdin) != 1)
+				goto readerr;
+			scolr_scolor(scol, sclr);
+			scolor_cie(*scn++, scol);
+		}
+		return;
+	}				/* else read as RGBE/XYZE */
+	if (freadscan(scn, len, stdin) >= 0)
+		return;
+readerr:
+	quiterr("error reading input picture");
+}
+
+
+static void
 convert(void)				/* convert to XYZE or RGBE picture */
 {
 	int	order;
 	int	xmax, ymax;
 	COLORMAT	xfm;
-	register COLOR	*scanin;
-	register COLR	*scanout;
+	COLOR	*scanin;
+	COLR	*scanout;
 	double	exp2do = expcomp;
 	double	exp2report = expcomp;
 	int	y;
-	register int	x;
+	int	x;
 						/* recover original? */
 	if (origexp > 0.0)
 		exp2do /= origexp;
 						/* compute transform */
 	if (rgbout) {
-		if (rgbinp) {			/* RGBE -> RGBE */
+		if (infmt == InpRGB) {		/* RGBE -> RGBE */
 			comprgb2rgbWBmat(xfm, inprims, outprims);
-		} else {			/* XYZE -> RGBE */
+		} else {			/* XYZE/Spectral -> RGBE */
 			compxyz2rgbWBmat(xfm, outprims);
+		}
+		if (infmt == InpXYZ) {
 			if (origexp > 0.0)
 				exp2do /= WHTEFFICACY;
 			else
 				exp2report *= WHTEFFICACY;
 		}
 	} else {
-		if (rgbinp) {			/* RGBE -> XYZE */
+		if (infmt == InpRGB) {		/* RGBE -> XYZE */
 			comprgb2xyzWBmat(xfm, inprims);
-			if (origexp > 0.0)
+		} else {			/* XYZE/Spectral -> XYZE */
+			memset(xfm, 0, sizeof(xfm));
+			for (x = 3; x--; )
+				xfm[x][x] = 1.;
+		}
+		if (infmt != InpXYZ) {
+			if (origexp > 0)
 				exp2do *= WHTEFFICACY;
 			else
 				exp2report /= WHTEFFICACY;
-		} else {			/* XYZE -> XYZE */
-			for (y = 0; y < 3; y++)
-				for (x = 0; x < 3; x++)
-					xfm[y][x] = x==y ? 1. : 0.;
 		}
 	}
 	for (y = 0; y < 3; y++)
@@ -206,11 +241,10 @@ convert(void)				/* convert to XYZE or RGBE picture */
 	scanin = (COLOR *)malloc(xmax*sizeof(COLOR));
 	if (scanin == NULL)
 		quiterr("out of memory in convert");
-	scanout = doflat ? (COLR *)malloc(xmax*sizeof(COLR)) : NULL;
+	scanout = doflat ? (COLR *)malloc(xmax*sizeof(COLR)) : (COLR *)NULL;
 						/* convert image */
 	for (y = 0; y < ymax; y++) {
-		if (freadscan(scanin, xmax, stdin) < 0)
-			quiterr("error reading input picture");
+		myreadscan(scanin, xmax);
 		for (x = 0; x < xmax; x++) {
 			colortrans(scanin[x], xfm, scanin[x]);
 			if (rgbout)
@@ -222,14 +256,14 @@ convert(void)				/* convert to XYZE or RGBE picture */
 				setcolr(scanout[x], colval(scanin[x],RED),
 						colval(scanin[x],GRN),
 						colval(scanin[x],BLU));
-			putbinary((char *)scanout, sizeof(COLR), xmax, stdout);
+			putbinary(scanout, sizeof(COLR), xmax, stdout);
 		} else
 			fwritescan(scanin, xmax, stdout);
 		if (ferror(stdout))
 			quiterr("error writing output picture");
 	}
 						/* free scanline */
-	free((void *)scanin);
+	free(scanin);
 	if (scanout != NULL)
-		free((void *)scanout);
+		free(scanout);
 }

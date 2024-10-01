@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ra_xyze.1,v 1.6 2010/12/16 21:34:41 greg Exp $"
+.\" RCSid "$Id: ra_xyze.1,v 1.7 2024/10/01 01:16:26 greg Exp $"
 .TH RA_XYZE 1 5/30/96 RADIANCE
 .SH NAME
 ra_xyze - convert between RADIANCE RGBE and XYZE formats
@@ -96,6 +96,14 @@ format except for conversion or display, in which case the correct
 primaries for the chosen output device should be specified with the
 .I \-p
 option if they are known.
+.PP
+Similar to the
+.I ra_rgbe(1)
+tool,
+.I ra_xyze
+silently converts hyperspectral pictures (.hsr) on input,
+but does so more accurately (and slowly) than
+.I ra_rgbe.
 .SH EXAMPLES
 To convert RGBE output from
 .I rpict(1)
