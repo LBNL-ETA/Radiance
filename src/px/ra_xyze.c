@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.14 2024/10/01 01:16:26 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.15 2024/10/01 20:04:44 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -134,6 +134,9 @@ main(int  argc, char  *argv[])
 	getheader(stdin, headline, NULL);
 	if (infmt == InpUNK)
 		quiterr("unrecognized/missing input file format");
+	if (infmt == InpSPEC ? (NCSAMP <= 3) | (NCSAMP > MAXCSAMP) :
+			NCSAMP != 3)
+		quiterr("bad number of color components");
 	printargs(argc, argv, stdout);		/* add to header */
 	convert();				/* convert picture */
 	exit(0);
@@ -161,13 +164,31 @@ static void
 myreadscan(COLOR *scn, int len)
 {
 	if (infmt == InpSPEC) {		/* read & convert to XYZ */
-		SCOLR	sclr;
-		SCOLOR	scol;
+		static COLOR	*scomp = NULL;
+		SCOLR		sclr;
+		SCOLOR		scol;
+		COLOR		xyz;
+		int		n;
+		if (scomp == NULL) {	/* initialize conversion */
+			scomp = (COLOR *)malloc(sizeof(COLOR)*NCSAMP);
+			if (scomp == NULL)
+				quiterr("out of memory in myreadscan");
+			for (n = NCSAMP; n--; )
+				spec_cie(scomp[n],
+					WLPART[0] + (WLPART[3] - WLPART[0])*(n+1)/NCSAMP,
+					WLPART[0] + (WLPART[3] - WLPART[0])*n/NCSAMP);
+		}
 		while (len-- > 0) {
 			if (getbinary(sclr, LSCOLR, 1, stdin) != 1)
 				goto readerr;
 			scolr_scolor(scol, sclr);
-			scolor_cie(*scn++, scol);
+			setcolor(*scn, 0, 0, 0);
+			for (n = NCSAMP; n--; ) {
+				copycolor(xyz, scomp[n]);
+				scalecolor(xyz, scol[n]);
+				addcolor(*scn, xyz);
+			}
+			scn++;
 		}
 		return;
 	}				/* else read as RGBE/XYZE */
