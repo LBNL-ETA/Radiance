@@ -2735,3 +2735,6 @@ results are still reported in RGB.
 Added conversion of hyperspectral pictures to ra_xyze, although
 it is even slower than rcomb for this process.  It is more
 accurate than most of the other tools, at least.
+
+Added handling of hyperspectral images to normtiff, a little-used
+but handy program for quickly tone-mapping pictures and TIFFs.

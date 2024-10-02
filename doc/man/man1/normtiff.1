@@ -1,4 +1,4 @@
-.\" RCSid $Id: normtiff.1,v 1.7 2021/04/07 21:13:52 greg Exp $
+.\" RCSid $Id: normtiff.1,v 1.8 2024/10/02 15:58:56 greg Exp $
 .TH NORMTIFF 1 2/25/99 RADIANCE
 .SH NAME
 normtiff - tone-map and convert RADIANCE picture or HDR TIFF to standard TIFF
@@ -36,6 +36,10 @@ as a TIFF if it fails header inspection.
 program.)\0
 If the input is neither a RADIANCE picture nor a high dynamic-range TIFF,
 the program reports an error and exits.
+Hyperspectral radiance pictures are silently converted to RGB, though
+the colors will be more accurate if the HSR picture is passed through
+.I ra_xyze(1),
+first.
 .PP
 The following command line options are understood.
 Since this program is very similar to
@@ -125,9 +129,7 @@ December 1997.
 .PP
 http://positron.cs.berkeley.edu/gwlarson/pixformat/
 .SH AUTHOR
-Greg Ward Larson
-.SH ACKNOWLEDGMENT
-This work was supported by Silicon Graphics, Inc.
+Greg Ward
 .SH "SEE ALSO"
 getinfo(1), pcond(1), pflip(1), 
 pvalue(1), protate(1), ra_xyze(1), rpict(1), ximage(1)

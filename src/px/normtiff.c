@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.16 2021/04/07 21:13:52 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.17 2024/10/02 15:58:56 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -44,7 +44,7 @@ typedef struct {
 
 uint16	comp = COMPRESSION_NONE;	/* TIFF compression mode */
 
-#define closepicture(p)		(fclose((p)->fp),free((void *)(p)))
+#define closepicture(p)		(fclose((p)->fp),free(p))
 
 static gethfunc headline;
 
@@ -148,7 +148,7 @@ headline(				/* process line from header */
 	void *pp
 )
 {
-	register char	*cp;
+	char	*cp;
 
 	for (cp = s; *cp; cp++)
 		if (*cp & 0x80)
@@ -167,8 +167,8 @@ openpicture(			/* open/check Radiance picture file */
 )
 {
 	FILE	*fp;
-	register PICTURE	*pp;
-	register char	*cp;
+	PICTURE	*pp;
+	char	*cp;
 					/* check filename suffix */
 	if (fname == NULL) return(NULL);
 	for (cp = fname; *cp; cp++)
@@ -178,7 +178,7 @@ openpicture(			/* open/check Radiance picture file */
 			cp = fname;
 			break;
 		}
-	if (cp > fname && !strncmp(cp, "tif", 3))
+	if (cp > fname && !strncasecmp(cp, "tif", 3))
 		return(NULL);		/* assume it's a TIFF */
 					/* else try opening it */
 	if ((fp = fopen(fname, "r")) == NULL)
@@ -195,7 +195,8 @@ openpicture(			/* open/check Radiance picture file */
 	}
 	if (!pp->fmt[0])		/* assume RGBE if unspecified */
 		strcpy(pp->fmt, COLRFMT);
-	if (!globmatch(PICFMT, pp->fmt) || !fgetsresolu(&pp->rs, fp)) {
+	if ((!globmatch(PICFMT, pp->fmt) && strcmp(SPECFMT, pp->fmt))
+			|| !fgetsresolu(&pp->rs, fp)) {
 		closepicture(pp);	/* failed test -- close file */
 		return(NULL);
 	}
@@ -207,7 +208,7 @@ openpicture(			/* open/check Radiance picture file */
 static int
 tmap_picture(			/* tone map Radiance picture */
 	char	*fname,
-	register PICTURE	*pp
+	PICTURE	*pp
 )
 {
 	uint16	orient;
@@ -228,7 +229,7 @@ tmap_picture(			/* tone map Radiance picture */
 			72., 72./paspect, 2, pix) != 0)
 		return(-1);
 					/* free data and we're done */
-	free((void *)pix);
+	free(pix);
 	return(0);
 }
 
@@ -261,7 +262,7 @@ tmap_tiff(			/* tone map SGILOG TIFF */
 			xres, yres, resunit, pix) != 0)
 		return(-1);
 					/* free data and we're done */
-	free((void *)pix);
+	free(pix);
 	return(0);
 }
 
@@ -277,7 +278,7 @@ putimage(	/* write out our image */
 	uby8	*pd
 )
 {
-	register int	y;
+	int	y;
 	uint32	rowsperstrip;
 
 	TIFFSetField(tifout, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
