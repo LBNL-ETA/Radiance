@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: rcode2bmp.pl,v 2.5 2024/10/03 18:35:53 greg Exp $
+# RCSid $Id: rcode2bmp.pl,v 2.6 2024/10/03 18:45:27 greg Exp $
 #
 # Convert one or more rtpict outputs into BMP for convenient viewing
 #
@@ -60,9 +60,9 @@ while ($#ARGV >= 0) {
 		$cmd .= "| falsecolor -l '$unit' -m 1 -s $dmax | ra_bmp - '$dest'";
 	} elsif ("$format" =~ /^[1-9][0-9]*-bit_indexed_name *$/) {
 		$cmd = "rcode_ident -r -n '$ARGV[0]' " .
-			"| getinfo +d -c rcalc -e 'cc(x):(.1+.8*rand(x))^2' " .
+			"| getinfo +d -c rcalc -of -e 'cc(x):(.1+.8*rand(x))^2' " .
 			q{-e '$1=cc(.398*$1-11.2);$2=cc(-1.152*$1+41.7);$3=cc(8.571*$1-8.15)' } .
-			"| pvalue -r -d ";
+			"| pvalue -r -df ";
 		$cmd .= "| $pfilt " if ($pfilt);
 		$cmd .= "| ra_bmp - '$dest'";
 	} elsif ("$format" =~ /^32-bit_encoded_normal *$/) {
