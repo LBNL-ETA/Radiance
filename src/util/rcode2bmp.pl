@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: rcode2bmp.pl,v 2.4 2024/01/05 18:23:53 greg Exp $
+# RCSid $Id: rcode2bmp.pl,v 2.5 2024/10/03 18:35:53 greg Exp $
 #
 # Convert one or more rtpict outputs into BMP for convenient viewing
 #
@@ -41,16 +41,12 @@ while ($#ARGV >= 0) {
 	my ($dest) = ("$ARGV[0]" =~ /^([^.]+)/);
 	$dest .= ".bmp";
 	my $cmd="";
-	if ("$format" =~ /^32-bit_rle_(rgb|xyz)e *$/) {
+	if ("$format" =~ /^32-bit_rle_(rgb|xyz)e *$/ || "$format" =~ /^Radiance_spectra *$/) {
 		if ($pfilt) {
 			$cmd = $pfilt . " '$ARGV[0]' | ra_bmp -e auto - '$dest'";
 		} else {
 			$cmd = "ra_bmp -e auto '$ARGV[0]' '$dest'";
 		}
-	} elsif ("$format" =~ /^Radiance_spectra *$/) {
-		$cmd = "rcomb -fc -c RGB '$ARGV[0]' ";
-		$cmd .= "| $pfilt " if ($pfilt);
-		$cmd .=  "| ra_bmp -e auto - '$dest'";
 	} elsif ("$format" =~ /^16-bit_encoded_depth *$/) {
 		$cmd = "rcode_depth -r -ff -ho -Ho '$ARGV[0]' ";
 		$cmd .= q{| rcalc -if -of -e 'cond=9e9-$1;$1=$1' | total -if -u};
