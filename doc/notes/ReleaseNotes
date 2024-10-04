@@ -2738,3 +2738,6 @@ accurate than most of the other tools, at least.
 
 Added handling of hyperspectral images to normtiff, a little-used
 but handy program for quickly tone-mapping pictures and TIFFs.
+
+Added conversion of hyperspectral pictures to ra_ps using
+approximate color method.

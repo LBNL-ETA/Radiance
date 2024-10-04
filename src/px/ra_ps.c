@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.32 2020/07/27 01:25:33 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.33 2024/10/04 01:53:45 greg Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
@@ -81,11 +81,14 @@ headline(		/* check header line */
 {
 	char  fmt[MAXFMTLEN];
 
-	if (isformat(s)) {
-		formatval(fmt, s);
-		wrongformat = strcmp(fmt, COLRFMT);
-	} else if (isaspect(s))
+	if (formatval(fmt, s))
+		wrongformat = strcmp(fmt, COLRFMT) && strcmp(fmt, SPECFMT);
+	else if (isaspect(s))
 		pixaspect *= aspectval(s);
+	else if (isncomp(s))
+		NCSAMP = ncompval(s);
+	else if (iswlsplit(s))
+		wlsplitval(WLPART, s);
 	return(0);
 }
 
@@ -95,7 +98,7 @@ main(int  argc, char  *argv[])
 	int  i;
 	double	d;
 	
-	progname = fixargv0(argv[0]);
+	progname = argv[0];
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')
@@ -473,9 +476,9 @@ ra2ps(void)				/* convert Radiance scanlines to 6-bit */
 		quiterr("out of memory in ra2ps");
 						/* convert image */
 	for (y = ymax-1; y >= 0; y--) {
-		if (freadcolrs(scanin, xmax, stdin) < 0)
+		if (fread2colrs(scanin, xmax, stdin, NCSAMP, WLPART) < 0)
 			quiterr("error reading Radiance picture");
-		if (putprim == Cputprim || devgam != 1.) {
+		if ((putprim == Cputprim) | (devgam != 1.)) {
 			if (bradj)			/* adjust exposure */
 				shiftcolrs(scanin, xmax, bradj);
 			colrs_gambs(scanin, xmax);	/* gamma compression */
