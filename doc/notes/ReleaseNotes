@@ -2741,3 +2741,7 @@ but handy program for quickly tone-mapping pictures and TIFFs.
 
 Added conversion of hyperspectral pictures to ra_ps using
 approximate color method.
+
+Added hyperspectral picture conversion to ra_tiff, with accurate
+color when targeting 16-bit/comp. or LogLuv output, and approximate
+method for 24-bit RGB.

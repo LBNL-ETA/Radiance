@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.37 2024/10/04 18:49:06 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -24,14 +24,15 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.36 2019/07/19 17:37:56 greg Exp 
 #define C_GAMMA		0x4		/* needs gamma correction */
 #define C_GRY		0x8		/* TIFF is greyscale */
 #define C_XYZE		0x10		/* Radiance is XYZE */
-#define C_RFLT		0x20		/* Radiance data is float */
-#define C_TFLT		0x40		/* TIFF data is float */
-#define C_TWRD		0x80		/* TIFF data is 16-bit */
-#define C_PRIM		0x100		/* has assigned primaries */
+#define C_SPEC		0x20		/* Radiance is spectral */
+#define C_RFLT		0x40		/* Radiance data is float */
+#define C_TFLT		0x80		/* TIFF data is float */
+#define C_TWRD		0x100		/* TIFF data is 16-bit */
+#define C_PRIM		0x200		/* has assigned primaries */
 
 typedef void colcvf_t(uint32 y);
 
-struct {
+struct CONVST {
 	uint16	flags;		/* conversion flags (defined above) */
 	char	capdate[20];	/* capture date/time */
 	char	owner[256];	/* content owner */
@@ -43,6 +44,8 @@ struct {
 	uint16	orient;		/* visual orientation (TIFF spec.) */
 	double	stonits;	/* input conversion to nits */
 	float	pixrat;		/* pixel aspect ratio */
+	int	ncc;		/* # color components for spectral */
+	float	wpt[4];		/* wavelength partitions */
 	FILE	*rfp;		/* Radiance stream pointer */
 	TIFF	*tif;		/* TIFF pointer */
 	uint32	xmax, ymax;	/* image dimensions */
@@ -51,18 +54,18 @@ struct {
 	union {
 		COLR	*colrs;		/* 4-byte ???E pointer */
 		COLOR	*colors;	/* float array pointer */
-		char	*p;		/* generic pointer */
+		void	*p;		/* generic pointer */
 	} r;			/* Radiance scanline */
 	union {
 		uint8	*bp;		/* byte pointer */
 		uint16	*wp;		/* word pointer */
 		float	*fp;		/* float pointer */
-		char	*p;		/* generic pointer */
+		void	*p;		/* generic pointer */
 	} t;			/* TIFF scanline */
 	colcvf_t *tf;	/* translation procedure */
 }	cvts = {	/* conversion structure */
 	0, "", "", COMPRESSION_NONE, PHOTOMETRIC_RGB,
-	PLANARCONFIG_CONTIG, GAMCOR, 0, 1, 1., 1.,
+	PLANARCONFIG_CONTIG, GAMCOR, 0, 1, 1., 1., 3,
 };
 
 #define CHK(f)		(cvts.flags & (f))
@@ -81,7 +84,7 @@ static void initfromtif(void);
 static void tiff2ra(int  ac, char  *av[]);
 static void initfromrad(void);
 static void ra2tiff(int  ac, char  *av[]);
-
+static void ReadRadScan(struct CONVST *cvp);
 
 
 #define RfGfBf2Color	Luv2Color
@@ -221,8 +224,8 @@ allocbufs(void)			/* allocate scanline buffers */
 	tsiz = (CHK(C_TFLT) ? sizeof(float) : 
 			CHK(C_TWRD) ? sizeof(uint16) : sizeof(uint8)) *
 			(CHK(C_GRY) ? 1 : 3);
-	cvts.r.p = (char *)malloc(rsiz*cvts.xmax);
-	cvts.t.p = (char *)malloc(tsiz*cvts.xmax);
+	cvts.r.p = malloc(rsiz*cvts.xmax);
+	cvts.t.p = malloc(tsiz*cvts.xmax);
 	if ((cvts.r.p == NULL) | (cvts.t.p == NULL))
 		quiterr("no memory to allocate scanline buffers");
 }
@@ -234,8 +237,6 @@ initfromtif(void)		/* initialize conversion from TIFF input */
 	uint16	hi;
 	char	*cp;
 	float	*fa, f1, f2;
-
-	CLR(C_GRY|C_GAMMA|C_PRIM|C_RFLT|C_TFLT|C_TWRD|C_CXFM);
 
 	TIFFGetFieldDefaulted(cvts.tif, TIFFTAG_PLANARCONFIG, &cvts.pconf);
 
@@ -440,55 +441,63 @@ headline(			/* process Radiance input header line */
 {
 	static int	tmstrlen = 0;
 	static int	ownstrlen = 0;
-	char	fmt[MAXFMTLEN];
+	struct CONVST	*cvp = (struct CONVST *)p;
+	char		fmt[MAXFMTLEN];
 
-	if (!tmstrlen)
+	if (!tmstrlen) {
 		tmstrlen = strlen(TMSTR);
-	if (!ownstrlen)
 		ownstrlen = strlen(OWNSTR);
+	}
 	if (formatval(fmt, s)) {
-		if (!strcmp(fmt, COLRFMT))
-			CLR(C_XYZE);
-		else if (!strcmp(fmt, CIEFMT))
+		CLR(C_XYZE|C_SPEC);
+		if (!strcmp(fmt, CIEFMT))
 			SET(C_XYZE);
-		else
-			quiterr("unrecognized input picture format");
+		else if (!strcmp(fmt, SPECFMT))
+			SET(C_SPEC);
+		else if (strcmp(fmt, COLRFMT))
+			return(-1);
 		return(1);
 	}
 	if (isexpos(s)) {
-		cvts.stonits /= exposval(s);
+		cvp->stonits /= exposval(s);
 		return(1);
 	}
 	if (isaspect(s)) {
-		cvts.pixrat *= aspectval(s);
+		cvp->pixrat *= aspectval(s);
 		return(1);
 	}
 	if (isprims(s)) {
-		primsval(cvts.prims, s);
+		primsval(cvp->prims, s);
 		SET(C_PRIM);
 		return(1);
 	}
 	if (isdate(s)) {
 		if (s[tmstrlen] == ' ')
-			strncpy(cvts.capdate, s+tmstrlen+1, 19);
+			strncpy(cvp->capdate, s+tmstrlen+1, 19);
 		else
-			strncpy(cvts.capdate, s+tmstrlen, 19);
-		cvts.capdate[19] = '\0';
+			strncpy(cvp->capdate, s+tmstrlen, 19);
+		cvp->capdate[19] = '\0';
 		return(1);
 	}
 	if (!strncmp(s, OWNSTR, ownstrlen)) {
-		register char	*cp = s + ownstrlen;
+		char	*cp = s + ownstrlen;
 
 		while (isspace(*cp))
 			++cp;
-		strncpy(cvts.owner, cp, sizeof(cvts.owner));
-		cvts.owner[sizeof(cvts.owner)-1] = '\0';
-		for (cp = cvts.owner; *cp; cp++)
+		strncpy(cvp->owner, cp, sizeof(cvp->owner));
+		cvp->owner[sizeof(cvp->owner)-1] = '\0';
+		for (cp = cvp->owner; *cp; cp++)
 			;
-		while (cp > cvts.owner && isspace(cp[-1]))
+		while (cp > cvp->owner && isspace(cp[-1]))
 			*--cp = '\0';
 		return(1);
 	}
+	if (isncomp(s)) {
+		cvp->ncc = ncompval(s);
+		return((3 <= cvp->ncc) & (cvp->ncc < MAXCSAMP) ? 1 : -1);
+	}
+	if (iswlsplit(s))
+		return(wlsplitval(cvp->wpt, s) ? 1 : -1);
 	return(0);
 }
 
@@ -498,14 +507,9 @@ initfromrad(void)			/* initialize input from a Radiance picture */
 {
 	int	i1, i2, po;
 						/* read Radiance header */
-	CLR(C_RFLT|C_XYZE|C_PRIM|C_GAMMA|C_CXFM);
-	cvts.capdate[0] = '\0';
-	cvts.owner[0] = '\0';
-	cvts.stonits = 1.;
-	cvts.pixrat = 1.;
-	cvts.pconf = PLANARCONFIG_CONTIG;
-	getheader(cvts.rfp, headline, NULL);
-	if ((po = fgetresolu(&i1, &i2, cvts.rfp)) < 0)
+	memcpy(cvts.wpt, WLPART, sizeof(cvts.wpt));
+	if (getheader(cvts.rfp, headline, &cvts) < 0 ||
+			(po = fgetresolu(&i1, &i2, cvts.rfp)) < 0)
 		quiterr("bad Radiance picture");
 	cvts.xmax = i1; cvts.ymax = i2;
 	for (i1 = 0; i1 < 8; i1++)		/* interpret orientation */
@@ -527,7 +531,7 @@ initfromrad(void)			/* initialize input from a Radiance picture */
 	case PHOTOMETRIC_LOGLUV:
 		SET(C_RFLT|C_TFLT);
 		CLR(C_GRY|C_TWRD);
-		if (!CHK(C_XYZE)) {
+		if (!CHK(C_XYZE|C_SPEC)) {
 			comprgb2xyzWBmat(cvts.cmat,
 					CHK(C_PRIM) ? cvts.prims : stdprims);
 			SET(C_CXFM);
@@ -552,7 +556,7 @@ initfromrad(void)			/* initialize input from a Radiance picture */
 		SET(C_GAMMA|C_GAMUT);
 		CLR(C_GRY);
 		setcolrgam(cvts.gamcor);
-		if (CHK(C_XYZE)) {
+		if (CHK(C_XYZE|C_SPEC)) {
 			compxyz2rgbWBmat(cvts.cmat,
 					CHK(C_PRIM) ? cvts.prims : stdprims);
 			SET(C_CXFM);
@@ -650,11 +654,49 @@ ra2tiff(		/* convert Radiance picture to TIFF image */
 
 
 static void
+ReadRadScan(struct CONVST *cvp)
+{
+	static struct CONVST	*lastcvp = NULL;
+	static COLOR		scomp[MAXCSAMP];
+
+	if (cvp->ncc > 3) {			/* convert spectral pixels */
+		SCOLR		sclr;
+		SCOLOR		scol;
+		COLOR		xyz;
+		int		x, n;
+		if (lastcvp != cvp) {
+		    for (n = cvp->ncc; n--; )
+			spec_cie(scomp[n],
+				cvp->wpt[0] + (cvp->wpt[3] - cvp->wpt[0])*(n+1)/cvp->ncc,
+				cvp->wpt[0] + (cvp->wpt[3] - cvp->wpt[0])*n/cvp->ncc);
+		    lastcvp = cvp;
+		}
+		for (x = 0; x < cvp->xmax; x++) {
+			if (getbinary(sclr, cvp->ncc+1, 1, cvp->rfp) != 1)
+				goto readerr;
+			scolr2scolor(scol, sclr, cvp->ncc);
+			setcolor(cvp->r.colors[x], 0, 0, 0);
+			for (n = cvp->ncc; n--; ) {
+				copycolor(xyz, scomp[n]);
+				scalecolor(xyz, scol[n]);
+				addcolor(cvp->r.colors[x], xyz);
+			}
+		}
+		return;
+	}
+	if (freadscan(cvp->r.colors, cvp->xmax, cvp->rfp) >= 0)
+		return;
+readerr:
+	quiterr("error reading Radiance picture");
+}
+
+
+static void
 Luv2Color(			/* read/convert/write Luv->COLOR scanline */
 	uint32	y
 )
 {
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_RFLT|C_TFLT))
 		quiterr("internal error 1 in Luv2Color");
@@ -694,8 +736,8 @@ RRGGBB2Color(			/* read/convert/write RGB16->COLOR scanline */
 )
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
-	register double	d;
-	register int	x;
+	double	d;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_TWRD|C_RFLT))
 		quiterr("internal error 1 in RRGGBB2Color");
@@ -737,7 +779,7 @@ L2Color(			/* read/convert/write Lfloat->COLOR scanline */
 )
 {
 	float	m = pow(2., (double)cvts.bradj);
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_RFLT|C_TFLT|C_GRY))
 		quiterr("internal error 1 in L2Color");
@@ -746,7 +788,7 @@ L2Color(			/* read/convert/write Lfloat->COLOR scanline */
 		quiterr("error reading TIFF input");
 					/* also works for float greyscale */
 	for (x = cvts.xmax; x--; ) {
-		register float	f = cvts.t.fp[x];
+		float	f = cvts.t.fp[x];
 		if (cvts.bradj) f *= m;
 		setcolor(cvts.r.colors[x], f, f, f);
 	}
@@ -761,7 +803,7 @@ RGB2Colr(			/* read/convert/write RGB->COLR scanline */
 )
 {
 	COLOR	ctmp;
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY))
 		quiterr("internal error 1 in RGB2Colr");
@@ -817,7 +859,7 @@ Gry2Colr(			/* read/convert/write G8->COLR scanline */
 	uint32	y
 )
 {
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != C_GRY)
 		quiterr("internal error 1 in Gry2Colr");
@@ -846,8 +888,8 @@ GGry2Color(			/* read/convert/write G16->COLOR scanline */
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	double	m;
-	register double	d;
-	register int	x;
+	double	d;
+	int	x;
 
 	if (CHK(C_TFLT|C_TWRD|C_GRY|C_RFLT) != (C_GRY|C_RFLT|C_TWRD))
 		quiterr("internal error 1 in GGry2Color");
@@ -877,16 +919,15 @@ Color2GGry(			/* read/convert/write COLOR->G16 scanline */
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TWRD|C_GRY))
 		quiterr("internal error 1 in Color2GGry");
 
-	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
-		quiterr("error reading Radiance picture");
+	ReadRadScan(&cvts);
 
 	for (x = cvts.xmax; x--; ) {
-		register float	f = m*( CHK(C_XYZE) ?
+		float	f = m*( CHK(C_XYZE) ?
 						colval(cvts.r.colors[x],CIEY)
 						: bright(cvts.r.colors[x]) );
 		if (f <= 0)
@@ -911,13 +952,12 @@ Color2L(			/* read/convert/write COLOR->Lfloat scanline */
 )
 {
 	float	m = pow(2.,(double)cvts.bradj);
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TFLT|C_GRY))
 		quiterr("internal error 1 in Color2L");
 
-	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
-		quiterr("error reading Radiance picture");
+	ReadRadScan(&cvts);
 
 	for (x = cvts.xmax; x--; )
 		cvts.t.fp[x] = m*( CHK(C_XYZE) ? colval(cvts.r.colors[x],CIEY)
@@ -933,13 +973,12 @@ Color2Luv(			/* read/convert/write COLOR->Luv scanline */
 	uint32	y
 )
 {
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_RFLT|C_TFLT))
 		quiterr("internal error 1 in Color2Luv");
 
-	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
-		quiterr("error reading Radiance picture");
+	ReadRadScan(&cvts);
 
 	if (CHK(C_CXFM))
 		for (x = cvts.xmax; x--; )
@@ -969,13 +1008,12 @@ Color2RRGGBB(			/* read/convert/write COLOR->RGB16 scanline */
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
-	register int	x, i;
+	int	x, i;
 
 	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TWRD))
 		quiterr("internal error 1 in Color2RRGGBB");
 
-	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
-		quiterr("error reading Radiance picture");
+	ReadRadScan(&cvts);
 
 	for (x = cvts.xmax; x--; ) {
 	    if (CHK(C_CXFM)) {
@@ -986,7 +1024,7 @@ Color2RRGGBB(			/* read/convert/write COLOR->RGB16 scanline */
 					CGAMUT_LOWER, cblack, cwhite);
 	    }
 	    for (i = 3; i--; ) {
-		register float	f = m*colval(cvts.r.colors[x],i);
+		float	f = m*colval(cvts.r.colors[x],i);
 		if (f <= 0)
 			cvts.t.wp[3*x + i] = 0;
 		else if (f >= 1)
@@ -1009,12 +1047,13 @@ Colr2Gry(			/* read/convert/write COLR->RGB scanline */
 	uint32	y
 )
 {
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != C_GRY)
 		quiterr("internal error 1 in Colr2Gry");
 
-	if (freadcolrs(cvts.r.colrs, cvts.xmax, cvts.rfp) < 0)
+	if (fread2colrs(cvts.r.colrs, cvts.xmax, cvts.rfp,
+				cvts.ncc, cvts.wpt) < 0)
 		quiterr("error reading Radiance picture");
 
 	if (cvts.bradj)
@@ -1037,12 +1076,13 @@ Colr2RGB(			/* read/convert/write COLR->RGB scanline */
 )
 {
 	COLOR	ctmp;
-	register int	x;
+	int	x;
 
 	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY))
 		quiterr("internal error 1 in Colr2RGB");
 
-	if (freadcolrs(cvts.r.colrs, cvts.xmax, cvts.rfp) < 0)
+	if (fread2colrs(cvts.r.colrs, cvts.xmax, cvts.rfp,
+				cvts.ncc, cvts.wpt) < 0)
 		quiterr("error reading Radiance picture");
 
 	if (cvts.bradj)

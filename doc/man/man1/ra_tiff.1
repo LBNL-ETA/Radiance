@@ -74,6 +74,10 @@ The
 option specifies an exposure compensation in f-stops (powers of two).
 Only integer stops are allowed, for efficiency.
 .PP
+If the Radiance input is a hyperspectral picture, it will be
+converted accurately if the output is anything but 24-bit RGB.
+In the latter case, the converted colors will be approximate.
+.PP
 The
 .I \-r
 option invokes a reverse conversion, from a TIFF image to
@@ -97,7 +101,7 @@ ra_tiff \-r scene1.tif scene1.hdr
 .br
 ximage \-e human scene1.hdr
 .SH AUTHOR
-Greg Ward Larson
+Greg Ward
 .br
 Sam Leffler
 .SH ACKNOWLEDGEMENT
