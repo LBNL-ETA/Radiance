@@ -2714,11 +2714,6 @@ to Mike DiPompeo of LightStanza for reporting the issue.)
 Added rxpict rendering tool based on C++ RpictSimulManager class.
 Multi-processing and spectral output are supported.
 
-Added crude ability to read and convert spectra to RGB in ximage,
-ra_bmp, and ra_rgbe programs.  Also updated fast tone-mapping
-library to handle spectral HSR inputs at the same time.  HSR
-input handling was added in a similar fashion to pcond and pvalue.
-
 Wrote rxpiece tool that will render pictures using tiling and
 can handle different output formats and hyperspectral pictures.
 Only runs on a single machine, however -- now NFS locking on
@@ -2729,19 +2724,21 @@ Fixed a bug in BSDF sampling of sources pointed out by
 David Geisler-Moroder, which tended to overestimate specular
 contributions for some BSDFs.
 
+Added crude ability to read and convert spectra to RGB in ximage,
+ra_bmp, ra_ps, and ra_rgbe programs.  Also updated fast tone-mapping
+library to handle spectral HSR inputs at the same time.  HSR
+input handling was added in a similar fashion to pcond and pvalue
+for convenience.
+
+Added handling of hyperspectral images to normtiff, a handy program
+for quickly tone-mapping Radiance RGBE, XYZE, and now hyperspectral
+pictures, as well as IEEE float or LogLuv TIFFs.
+
 Added handling of hyperspectral pictures to pextrem, though
 results are still reported in RGB.
 
-Added conversion of hyperspectral pictures to ra_xyze, although
-it is even slower than rcomb for this process.  It is more
-accurate than most of the other tools, at least.
-
-Added handling of hyperspectral images to normtiff, a little-used
-but handy program for quickly tone-mapping pictures and TIFFs.
-
-Added conversion of hyperspectral pictures to ra_ps using
-approximate color method.
+Added accurate conversion of hyperspectral pictures to ra_xyze.
 
 Added hyperspectral picture conversion to ra_tiff, with accurate
-color when targeting 16-bit/comp. or LogLuv output, and approximate
-method for 24-bit RGB.
+color when targeting 16-bit/comp., LogLuv, and float utput,
+and the approximate method for 24-bit RGB.
