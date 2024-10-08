@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.82 2024/06/06 17:01:05 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.83 2024/10/08 00:43:57 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -46,7 +46,7 @@ int
 rmx_prepare(RMATRIX *rm)
 {
 	if (!rm) return(0);
-	if (rm->mtx)
+	if (rm->mtx)			/* assume it's right size */
 		return(1);
 	if ((rm->nrows <= 0) | (rm->ncols <= 0) | (rm->ncomp <= 0))
 		return(0);
@@ -61,9 +61,9 @@ rmx_alloc(int nr, int nc, int n)
 {
 	RMATRIX	*dnew = rmx_new(nr, nc, n);
 
-	if (dnew && !rmx_prepare(dnew)) {
+	if (!rmx_prepare(dnew)) {
 		rmx_free(dnew);
-		dnew = NULL;
+		return(NULL);
 	}
 	return(dnew);
 }
@@ -116,13 +116,12 @@ rmx_newtype(int dtyp1, int dtyp2)
 int
 rmx_addinfo(RMATRIX *rm, const char *info)
 {
-	int	oldlen = 0;
+	size_t	oldlen = 0;
 
 	if (!rm || !info || !*info)
 		return(0);
 	if (!rm->info) {
 		rm->info = (char *)malloc(strlen(info)+1);
-		if (rm->info) rm->info[0] = '\0';
 	} else {
 		oldlen = strlen(rm->info);
 		rm->info = (char *)realloc(rm->info,
@@ -141,19 +140,19 @@ get_dminfo(char *s, void *p)
 	char	fmt[MAXFMTLEN];
 	int	i;
 
-	if (headidval(NULL, s))
+	if (isheadid(s))
 		return(0);
 	if (isncomp(s)) {
 		ip->ncomp = ncompval(s);
-		return(0);
+		return(ip->ncomp - 1);
 	}
 	if (!strncmp(s, "NROWS=", 6)) {
 		ip->nrows = atoi(s+6);
-		return(0);
+		return(ip->nrows - 1);
 	}
 	if (!strncmp(s, "NCOLS=", 6)) {
 		ip->ncols = atoi(s+6);
-		return(0);
+		return(ip->ncols - 1);
 	}
 	if ((i = isbigendian(s)) >= 0) {
 		if (nativebigendian() != i)
@@ -165,18 +164,17 @@ get_dminfo(char *s, void *p)
 	if (isexpos(s)) {
 		float	f = exposval(s);
 		scalecolor(ip->cexp, f);
-		return(0);
+		return(f > .0 ? 0 : -1);
 	}
 	if (iscolcor(s)) {
 		COLOR	ctmp;
-		colcorval(ctmp, s);
+		if (!colcorval(ctmp, s)) return(-1);
 		multcolor(ip->cexp, ctmp);
 		return(0);
 	}
-	if (iswlsplit(s)) {
-		wlsplitval(ip->wlpart, s);
-		return(0);
-	}
+	if (iswlsplit(s))
+		return(wlsplitval(ip->wlpart, s) - 1);
+
 	if (!formatval(fmt, s)) {
 		rmx_addinfo(ip, s);
 		return(0);
@@ -186,7 +184,7 @@ get_dminfo(char *s, void *p)
 			ip->dtype = i;
 			return(0);
 		}
-	return(-1);
+	return(-1);		/* bad format */
 }
 
 static int
@@ -293,7 +291,7 @@ rmx_load_header(RMATRIX *rm, FILE *fp)
 	}
 	rm->dtype = DTascii;			/* assumed w/o FORMAT */
 	if (getheader(fp, get_dminfo, rm) < 0) {
-		fputs("Unrecognized matrix format\n", stderr);
+		fputs("Bad matrix header\n", stderr);
 		return(0);
 	}
 	if ((rm->dtype == DTrgbe) | (rm->dtype == DTxyze) &&
@@ -698,14 +696,13 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 		munmap(rdst->mapped, rmx_mapped_size(rdst));
 	else
 #endif
-	if (rdst->pflags & RMF_FREEMEM)
+	if (rdst->pflags & RMF_FREEMEM) {
 		free(rdst->mtx);
+		rdst->pflags &= ~RMF_FREEMEM;
+	}
 	rdst->mapped = rsrc->mapped;
 	rdst->mtx = rsrc->mtx;
-	if (rsrc->pflags & RMF_FREEMEM)
-		rdst->pflags |= RMF_FREEMEM;
-	else
-		rdst->pflags &= ~RMF_FREEMEM;
+	rdst->pflags |= rsrc->pflags & RMF_FREEMEM;
 	rsrc->mapped = NULL; rsrc->mtx = NULL;
 	return(1);
 }
