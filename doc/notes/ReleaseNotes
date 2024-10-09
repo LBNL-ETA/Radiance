@@ -2742,3 +2742,6 @@ Added accurate conversion of hyperspectral pictures to ra_xyze.
 Added hyperspectral picture conversion to ra_tiff, with accurate
 color when targeting 16-bit/comp., LogLuv, and float utput,
 and the approximate method for 24-bit RGB.
+
+Taoning added genssky -L option to specify global and diffuse
+illuminance values for output calibration.
