@@ -1,5 +1,7 @@
+#include "color.h"
 #ifndef lint
-static const char RCSid[] = "$Id: genssky.c,v 2.5 2024/08/19 18:07:44 greg Exp $";
+static const char RCSid[] =
+    "$Id: genssky.c,v 2.6 2024/10/09 17:22:42 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -160,7 +162,7 @@ static inline double wmean(const double a, const double x, const double b,
   return (a * x + b * y) / (a + b);
 }
 
-static double get_zenith_brightness(const double sundir[3]) {
+static double get_overcast_zenith_brightness(const double sundir[3]) {
   double zenithbr;
   if (sundir[2] < 0) {
     zenithbr = 0;
@@ -190,21 +192,15 @@ static void write_header(const int argc, char **argv, const double cloud_cover,
       cloud_cover, grefl, res);
 }
 
-static void write_rad(const double *sun_radiance, const FVECT sundir,
-                      const char *ddir, const char *skyfile) {
+static void write_rad(const double *sun_radiance, const double intensity,
+                      const FVECT sundir, const char *ddir,
+                      const char *skyfile) {
   if (sundir[2] > 0) {
     printf("void spectrum sunrad\n0\n0\n22 380 780 ");
-    /* Normalize to one */
-    double sum = 0.0;
     int i;
     for (i = 0; i < NSSAMP; ++i) {
-      sum += sun_radiance[i];
+      printf("%.3f ", sun_radiance[i]);
     }
-    double mean = sum / NSSAMP;
-    for (i = 0; i < NSSAMP; ++i) {
-      printf("%.3f ", sun_radiance[i] / mean);
-    }
-    double intensity = mean * WVLSPAN;
     printf("\n\nsunrad light solar\n0\n0\n3 %.1f %.1f %.1f\n\n", intensity,
            intensity, intensity);
     printf("solar source sun\n0\n0\n4 %f %f %f 0.533\n\n", sundir[0], sundir[1],
@@ -231,9 +227,8 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
                   DATARRAY *scat1m_clear, DATARRAY *irrad_clear,
                   const double cloud_cover, const FVECT sundir,
                   const double grefl, const int res, const char *outname,
-                  const char *ddir) {
+                  const char *ddir, const double dirnorm, const double difhor) {
   char skyfile[PATH_MAX];
-  char grndfile[PATH_MAX];
   if (!snprintf(skyfile, sizeof(skyfile), "%s%c%s_sky.hsr", ddir, DIRSEP,
                 outname)) {
     fprintf(stderr, "Error setting sky file name\n");
@@ -250,6 +245,23 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
   FVECT view_point = {0, 0, ER + 10};
   const double radius = VLEN(view_point);
   const double sun_ct = fdot(view_point, sundir) / radius;
+
+  double overcast_zenithbr = get_overcast_zenith_brightness(sundir);
+  double overcast_grndbr = overcast_zenithbr * GNORM;
+
+  double dif_ratio = 1;
+  if (difhor > 0) {
+    DATARRAY *indirect_irradiance_clear = get_indirect_irradiance(irrad_clear, radius, sun_ct);
+    double overcast_ghi = overcast_zenithbr * 7.0 * PI / 9.0;
+    double diffuse_irradiance = 0;
+    int l;
+    for (l = 0; l < NSSAMP; ++l) {
+      diffuse_irradiance += indirect_irradiance_clear->arr.d[l] * 20;  /* 20nm interval */
+    }
+    free(indirect_irradiance_clear);
+    diffuse_irradiance = wmean2(diffuse_irradiance, overcast_ghi, cloud_cover);
+    dif_ratio = difhor / WHTEFFICACY / diffuse_irradiance / 1.15;       /* fudge */
+  }
   int i, j, k;
   for (j = 0; j < yres; ++j) {
     for (i = 0; i < xres; ++i) {
@@ -282,12 +294,10 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
       }
 
       if (cloud_cover > 0) {
-        double zenithbr = get_zenith_brightness(sundir);
-        double grndbr = zenithbr * GNORM;
-        double skybr = get_overcast_brightness(rdir[2], zenithbr);
+        double skybr = get_overcast_brightness(rdir[2], overcast_zenithbr);
         if (rdir[2] < 0) {
           for (k = 0; k < NSSAMP; ++k) {
-            radiance[k] = wmean2(radiance[k], grndbr * D6415[k], cloud_cover);
+            radiance[k] = wmean2(radiance[k], overcast_grndbr * D6415[k], cloud_cover);
           }
         } else {
           for (k = 0; k < NSSAMP; ++k) {
@@ -296,7 +306,11 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
         }
       }
 
-      scolor2scolr(sky_sclr, radiance, 20);
+      for (k = 0; k < NSSAMP; ++k) {
+        radiance[k] *= dif_ratio;
+      }
+
+      scolor2scolr(sky_sclr, radiance, NSSAMP);
       putbinary(sky_sclr, LSCOLR, 1, skyfp);
     }
   }
@@ -307,8 +321,7 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
   get_solar_radiance(tau_clear, scat_clear, scat1m_clear, sundir, radius,
                      sun_ct, sun_radiance);
   if (cloud_cover > 0) {
-    double zenithbr = get_zenith_brightness(sundir);
-    double skybr = get_overcast_brightness(sundir[2], zenithbr);
+    double skybr = get_overcast_brightness(sundir[2], overcast_zenithbr);
     int i;
     for (i = 0; i < NSSAMP; ++i) {
       sun_radiance[i] =
@@ -316,7 +329,21 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
     }
   }
 
-  write_rad(sun_radiance, sundir, ddir, skyfile);
+  /* Normalize */
+  double sum = 0.0;
+  for (i = 0; i < NSSAMP; ++i) {
+    sum += sun_radiance[i];
+  }
+  double mean = sum / NSSAMP;
+  for (i = 0; i < NSSAMP; ++i) {
+    sun_radiance[i] /= mean;
+  }
+  double intensity = mean * WVLSPAN;
+  if (dirnorm > 0) {
+    intensity = dirnorm / SOLOMG / WHTEFFICACY;
+  }
+
+  write_rad(sun_radiance, intensity, sundir, ddir, skyfile);
   return 1;
 }
 
@@ -419,6 +446,8 @@ int main(int argc, char *argv[]) {
   char lstag[3];
   char *ddir = ".";
   int i;
+  double dirnorm = 0; /* direct normal illuminance */
+  double difhor = 0;  /* diffuse horizontal illuminance */
 
   if (argc == 2 && !strcmp(argv[1], "-defaults")) {
     printf("-i %d\t\t\t\t#scattering order\n", sorder);
@@ -434,7 +463,8 @@ int main(int argc, char *argv[]) {
   if (argc < 4) {
     fprintf(stderr,
             "Usage: %s month day hour -y year -a lat -o lon -m tz -d aod -r "
-            "res -n nproc -c ccover -l mie -g grefl -f outpath\n",
+            "res -n nproc -c ccover -l mie -L dirnorm_illum difhor_illum "
+	    "-g grefl -f outpath\n",
             argv[0]);
     return 0;
   }
@@ -493,6 +523,10 @@ int main(int argc, char *argv[]) {
         break;
       case 'o':
         s_longitude = atof(argv[++i]) * (PI / 180.0);
+        break;
+      case 'L':
+        dirnorm = atof(argv[++i]);
+        difhor = atof(argv[++i]);
         break;
       case 'p':
         ddir = argv[++i];
@@ -563,8 +597,8 @@ int main(int argc, char *argv[]) {
   write_header(argc, argv, ccover, grefl, res);
 
   if (!gen_spect_sky(tau_clear_dp, scat_clear_dp, scat1m_clear_dp,
-                     irrad_clear_dp, ccover, sundir, grefl, res, outname,
-                     ddir)) {
+                     irrad_clear_dp, ccover, sundir, grefl, res, outname, ddir,
+                     dirnorm, difhor)) {
     fprintf(stderr, "gen_spect_sky failed\n");
     exit(1);
   }

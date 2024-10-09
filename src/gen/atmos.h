@@ -1,4 +1,4 @@
-/* RCSid $Id: atmos.h,v 2.2 2024/07/19 23:38:28 greg Exp $ */
+/* RCSid $Id: atmos.h,v 2.3 2024/10/09 17:22:42 greg Exp $ */
 #ifndef ATMOS_H
 #define ATMOS_H
 
@@ -9,6 +9,10 @@
 #include "rtio.h"
 #include "rtmath.h"
 #include "sun.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define NSSAMP 20
 
@@ -84,5 +88,12 @@ extern int compute_sundir(const int year, const int month, const int day,
 
 extern int precompute(const int sorder, const DpPaths dppaths, const Atmosphere *atmos,
                       int num_threads);
+
+extern DATARRAY *get_indirect_irradiance(DATARRAY *dp, const double radius,
+                                const double mu_s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ATMOS_H */
