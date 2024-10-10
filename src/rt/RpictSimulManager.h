@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.9 2024/09/16 23:49:13 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.10 2024/10/10 21:02:52 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -13,7 +13,6 @@
 #include "RtraceSimulManager.h"
 #include "view.h"
 #include "depthcodec.h"
-#include "abitmap.h"
 
 /// Data type flags for pixel access and output
 enum RenderDataType {

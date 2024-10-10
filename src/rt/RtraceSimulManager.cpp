@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.17 2024/09/16 19:18:32 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.18 2024/10/10 21:02:52 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -288,11 +288,21 @@ RtraceSimulManager::UpdateMode()
 	int	misMatch = rtFlags ^ curFlags;
 				// updates based on toggled flags
 	if (misMatch & RTtraceSources) {
+		int	sn = nsources;
 		if (rtFlags & RTtraceSources) {
-			for (int sn = 0; sn < nsources; sn++)
+			srcFollowed.NewBitMap(nsources);
+			while (sn--) {
+				if (source[sn].sflags & SFOLLOW)
+					continue;
 				source[sn].sflags |= SFOLLOW;
-		} else		// cannot undo this...
-			rtFlags |= RTtraceSources;
+				srcFollowed.Set(sn);
+			}
+		} else {
+			while (sn--)
+				if (srcFollowed.Check(sn))
+					source[sn].sflags &= ~SFOLLOW;
+			srcFollowed.NewBitMap(0);
+		}
 	}
 	if (misMatch & RTdoFIFO && FlushQueue() < 0)
 		return false;

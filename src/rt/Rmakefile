@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.96 2024/09/16 23:49:12 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.97 2024/10/10 21:02:52 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -458,7 +458,8 @@ oocbuild.o: oocbuild.c oocbuild.h oocsort.h oococt.h
 oocnn.o: oocnn.c oocnn.h oococt.h oocsort.h
 
 RtraceSimulManager.o rxpiece.o rxpmain.o \
-rxtmain.o rxtrace.o:	RtraceSimulManager.h
+rxtmain.o rxtrace.o:	RtraceSimulManager.h \
+../common/abitmap.h
 
 RpictSimulManager.o rxpiece.o rxpmain.o:	RpictSimulManager.h \
 ../common/view.h ../common/depthcodec.h ../common/abitmap.h

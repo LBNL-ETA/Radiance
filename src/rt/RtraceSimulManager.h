@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.14 2024/09/16 19:18:32 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.15 2024/10/10 21:02:52 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -13,6 +13,7 @@
 #define RtraceSimulManager_h
 
 #include "ray.h"
+#include "abitmap.h"
 
 extern char *	octname;	// global octree name
 
@@ -40,7 +41,7 @@ public:
 	bool			LoadOctree(const char *octn);
 				/// Prepare header from previous input (or clear)
 				/// Normally called during octree load
-	bool			NewHeader(const char *inspec=NULL);
+	bool			NewHeader(const char *inspec = NULL);
 				/// Add a line to header (adds newline if none)
 	bool			AddHeader(const char *str);
 				/// Append program line to header
@@ -83,6 +84,7 @@ class RtraceSimulManager : public RadSimulManager {
 	RayReportCall *		traceCall;	// call for every ray in tree
 	void *			tcData;		// client data for traced rays
 	int			curFlags;	// current operating flags
+	ABitMap			srcFollowed;	// source flags changed
 				// Call-back for global ray-tracing context
 	static void		RTracer(RAY *r);
 				// Call-back for FIFO
@@ -129,7 +131,7 @@ public:
 					cookedCall = cb;
 					ccData = cb ? cd : NULL;
 				}
-				/// Set/change trace callback
+				/// Set/change trace callback (before threading)
 	void			SetTraceCall(RayReportCall *cb, void *cd = NULL) {
 					traceCall = cb;
 					tcData = cb ? cd : NULL;
