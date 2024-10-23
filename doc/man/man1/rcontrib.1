@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.23 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.24 2024/10/23 23:51:20 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -208,7 +208,11 @@ and
 .I \-o
 options to the left of each
 .I \-m
-setting are the ones used for that modifier.
+name are the ones used for that modifier.
+Any
+.I \-cs
+option changing the number of spectral color
+samples must appear before the first modifier.
 The ordering of other options is unimportant, except for
 .I \-x
 and

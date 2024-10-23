@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.45 2024/08/21 20:42:20 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.46 2024/10/23 23:51:20 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -91,11 +91,17 @@ formstr(				/* return format identifier */
 MODCONT *
 addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 {
-	LUENT	*lep = lu_find(&modconttab,modn);
-	MODCONT	*mp;
-	EPNODE	*ebinv;
-	int	i;
-	
+	static int	lastNCS = 0;
+	LUENT		*lep = lu_find(&modconttab,modn);
+	MODCONT		*mp;
+	EPNODE		*ebinv;
+	int		i;
+
+	if (!lastNCS)
+		lastNCS = NCSAMP;
+	else if (NCSAMP != lastNCS)
+		error(INTERNAL,
+		"number of spectral samples must be set before first modifier");
 	if (lep->data != NULL) {
 		sprintf(errmsg, "duplicate modifier '%s'", modn);
 		error(USER, errmsg);
@@ -111,7 +117,7 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		else
 			modname = (char **)realloc(modname, modasiz*sizeof(char *));
 		if (modname == NULL)
-			error(SYSTEM, "Out of memory in addmodifier()");
+			error(SYSTEM, "out of memory in addmodifier()");
 	}
 	modname[nmods++] = modn;	/* XXX assumes static string */
 	lep->key = modn;		/* XXX assumes static string */
