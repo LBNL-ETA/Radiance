@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.15 2024/10/10 21:02:52 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.16 2024/10/23 23:40:41 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -46,6 +46,10 @@ public:
 	bool			AddHeader(const char *str);
 				/// Append program line to header
 	bool			AddHeader(int ac, char *av[]);
+				/// Get current header length in bytes
+	int			GetHeadLen() const {
+					return hlen;
+				}
 				/// Get header lines or empty string
 	const char *		GetHeadStr() const {
 					return hlen ? header : "";

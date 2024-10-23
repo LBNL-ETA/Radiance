@@ -1,4 +1,4 @@
-/* RCSid $Id: RpictSimulManager.h,v 2.10 2024/10/10 21:02:52 greg Exp $ */
+/* RCSid $Id: RpictSimulManager.h,v 2.11 2024/10/23 23:40:41 greg Exp $ */
 /*
  *  RpictSimulManager.h
  *
@@ -308,6 +308,10 @@ public:
 				/// Append program line to header
 	bool			AddHeader(int ac, char *av[]) {
 					return RtraceSimulManager::AddHeader(ac, av);
+				}
+				/// Get current header length in bytes
+	int			GetHeadLen() const {
+					return RtraceSimulManager::GetHeadLen();
 				}
 				/// Get header lines if any
 	const char *		GetHeadStr() const {
