@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.36 2024/04/05 16:41:17 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.37 2024/10/27 00:01:21 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -88,6 +88,8 @@ printdefaults(void)			/* print default values to stdout */
 			"-h-\t\t\t\t# no header\n");
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inpfmt, outfmt, formstr(inpfmt), formstr(outfmt));
+	if (report_intvl > 0)
+		printf("-t %-9d\t\t\t#  time between reports\n", report_intvl);
 	printf(erract[WARNING].pf != NULL ?
 			"-w+\t\t\t\t# warning messages on\n" :
 			"-w-\t\t\t\t# warning messages off\n");
@@ -388,8 +390,6 @@ main(int argc, char *argv[])
 	setambient();			/* initialize ambient calculation */
 	
 	rcontrib();			/* trace ray contributions (loop) */
-
-	ambsync();			/* flush ambient file */
 
 	/* PMAP: free photon maps */
 	ray_done_pmap();     
