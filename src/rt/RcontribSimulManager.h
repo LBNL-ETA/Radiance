@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.1 2024/10/29 00:36:54 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.2 2024/10/29 19:47:19 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -25,13 +25,14 @@
 
 extern char		RCCONTEXT[];		// global rcontrib context
 
+extern int		contrib;		// computing contributions?
+
 extern int		xres, yres;		// global resolution settings
 
-class RcontribSimulManager;		// need forward decl
+class RcontribSimulManager;			// need forward decl
 
 /// Shared data object for record output (includes header; may be write-only)
 class RcontribOutput {
-protected:
 	RcontribOutput *	next;		// next in sorted list
 	char *			ofname;		// output file name
 	uint32			rowCountPos;	// row count position in header
@@ -164,8 +165,8 @@ typedef RdataShare *	RcreateDataShareF(const char *name, RCOutputOp op, size_t s
 /// Our default data share function
 extern RcreateDataShareF	defDataShare;
 
-/// Call-back used by GetOutputs() method (cd is client data)
-typedef int		RoutputShareF(const RcontribOutput *op, void *cd);
+/// Modifiable ray-tracing flags for rcontrib
+#define RCmask			(RTlimDist|RTimmIrrad)
 
 /// rcontrib-like simulation manager (at most one such object)
 class RcontribSimulManager : protected RtraceSimulManager {
@@ -212,6 +213,17 @@ public:
 				~RcontribSimulManager() {
 					Cleanup();
 				}
+				/// Check modifiable ray-tracing computation flag(s)
+	bool			HasFlag(int fl) const {
+					return ((rtFlags & RCmask & fl) != 0);
+				}
+				/// Set/reset modifiable ray-tracing computation flag(s)
+	bool			SetFlag(int fl, bool val = true) {
+					if (!(fl &= RCmask)) return false;
+					if (val) rtFlags |= fl;
+					else rtFlags &= ~fl;
+					return true;
+				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn) {
 					return RtraceSimulManager::LoadOctree(octn);
@@ -255,8 +267,14 @@ public:
 	bool			AddModFile(const char *modfn, const char *outspec,
 						const char *prms = NULL,
 						const char *binval = NULL, int bincnt = 1);
-				/// Run through current list of output struct's
-	int			GetOutputs(RoutputShareF *osF, void *cd = NULL) const;
+				/// Get named rcontrib output (or list)
+	const RcontribOutput *	GetOutput(const char *nm = NULL) const {
+					if (!nm) return outList;
+					const RcontribOutput *	op = outList;
+					while (op && strcmp(op->GetName(), nm))
+						op = op->next;
+					return op;
+				}
 				/// Open output channels and return # completed rows
 	int			PrepOutput();
 				/// Are we ready to compute some records?

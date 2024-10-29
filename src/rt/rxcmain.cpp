@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.1 2024/10/29 00:36:54 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.2 2024/10/29 19:47:19 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -21,14 +21,6 @@ int	nproc = 1;			/* number of processes requested */
 int	inpfmt = 'a';			/* input format */
 int	outfmt = 'f';			/* output format */
 
-int	contrib = 0;			/* computing contributions? */
-
-int	xres = 0;			/* horizontal (scan) size */
-int	yres = 0;			/* vertical resolution */
-
-int	imm_irrad = 0;			/* compute immediate irradiance? */
-int	lim_dist = 0;			/* limit distance? */
-
 int	report_intvl = 0;		/* reporting interval (seconds) */
 
 extern char *	progname;		// global argv[0]
@@ -38,7 +30,7 @@ RcontribSimulManager	myRCmanager;	// global rcontrib simulation manager
 #define RCONTRIB_FEATURES	"Multiprocessing\n" \
 				"Accumulation\nRecovery\n" \
 				"ImmediateIrradiance\n" \
-				"ProgressReporting?\nDistanceLimiting\n" \
+				"ProgressReporting\nDistanceLimiting\n" \
 				"InputFormats=a,f,d\nOutputFormats=f,d,c\n" \
 				"Outputs=V,W\n" \
 				"OutputCS=RGB,spec\n"
@@ -51,13 +43,14 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-c %-5d\t\t\t# accumulated rays per record\n", myRCmanager.accum);
 	printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
 			contrib ? "contributions" : "coefficients");
-	if (imm_irrad)
+	if (myRCmanager.HasFlag(RTimmIrrad))
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
 	if (xres > 0)
 		printf("-x %-9d\t\t\t# x resolution\n", xres);
 	printf("-y %-9d\t\t\t# y resolution\n", yres);
-	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
+	printf(myRCmanager.HasFlag(RTlimDist) ?
+			"-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inpfmt, outfmt, formstr(inpfmt), formstr(outfmt));
@@ -218,13 +211,13 @@ main(int argc, char *argv[])
 			continue;
 		}
 		switch (argv[i][1]) {
-		case 'n':			/* number of cores */
+		case 'n':			/* number of processes */
 			check(2,"i");
 			nproc = atoi(argv[++i]);
 			if (nproc < 0 && (nproc += RadSimulManager::GetNCores()) <= 0)
 				nproc = 1;
 			break;
-		case 'V':			/* output contributions */
+		case 'V':			/* output contributions? */
 			check_bool(2,contrib);
 			break;
 		case 'x':			/* x resolution */
@@ -235,25 +228,29 @@ main(int argc, char *argv[])
 			check(2,"i");
 			yres = atoi(argv[++i]);
 			break;
-		case 'w':			/* warnings */
+		case 'w':			/* warnings on/off */
 			rval = (erract[WARNING].pf != NULL);
 			check_bool(2,rval);
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
-		case 'e':			/* expression */
+		case 'e':			/* .cal expression */
 			check(2,"s");
 			scompile(argv[++i], NULL, 0);
 			break;
 		case 'l':			/* limit distance */
 			if (argv[i][2] != 'd')
 				goto badopt;
-			check_bool(3,lim_dist);
+			rval = myRCmanager.HasFlag(RTlimDist);
+			check_bool(3,rval);
+			myRCmanager.SetFlag(RTlimDist, rval);
 			break;
 		case 'I':			/* immed. irradiance */
-			check_bool(2,imm_irrad);
+			rval = myRCmanager.HasFlag(RTimmIrrad);
+			check_bool(2,rval);
+			myRCmanager.SetFlag(RTimmIrrad, rval);
 			break;
-		case 'f':			/* file or force or format */
+		case 'f':			/* .cal file or force or format */
 			if (!argv[i][2]) {
 				check(2,"s");
 				loadfunc(argv[++i]);
@@ -266,7 +263,7 @@ main(int argc, char *argv[])
 			setformat(argv[i]+2);
 			myRCmanager.SetDataFormat(outfmt);
 			break;
-		case 'o':			/* output */
+		case 'o':			/* output file */
 			check(2,"s");
 			curout = argv[++i];
 			break;
@@ -294,7 +291,7 @@ main(int argc, char *argv[])
 			check(2,"s");
 			myRCmanager.AddModifier(argv[++i], curout, prms, binval, bincnt);
 			break;
-		case 'M':			/* modifier file */
+		case 'M':			/* file of modifier names */
 			check(2,"s");
 			myRCmanager.AddModFile(argv[++i], curout, prms, binval, bincnt);
 			break;
@@ -308,14 +305,14 @@ main(int argc, char *argv[])
 	}
 	if (i != argc-1)
 		error(USER, "expected single octree argument");
+
+	override_options();		/* override some option settings */
+
+	if (!myRCmanager.GetOutput())	// check that we have work to do
+		error(USER, "missing required modifier argument");
 					// get ready to rock...
 	if (setspectrsamp(CNDX, WLPART) < 0)
 		error(USER, "unsupported spectral sampling");
-
-	if (!myRCmanager.GetOutputs(NULL))	// check that we're ready
-		error(USER, "missing required modifier argument");
-					/* override some option settings */
-	override_options();
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP
@@ -348,7 +345,7 @@ main(int argc, char *argv[])
 		myRCmanager.outOp = RCOnew;
 					// rval = # rows recovered
 	rval = myRCmanager.PrepOutput();
-					// check if all done
+					// check if recovered everything
 	if (recover && rval >= myRCmanager.GetRowMax()) {
 		error(WARNING, "nothing left to compute");
 		quit(0);
@@ -551,7 +548,7 @@ eputs(				/* put string to stderr */
 }
 
 
-/* Quit program */
+/* Exit program */
 void
 quit(
 	int  code

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.1 2024/10/29 00:36:54 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.2 2024/10/29 19:47:19 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -24,8 +24,10 @@ extern const char	HDRSTR[];
 extern const char	BIGEND[];
 extern const char	FMTSTR[];
 
-extern int		contrib;		/* computing contributions? */
-extern int		lim_dist;		/* limit distance? */
+int	contrib = 0;			// computing contributions?
+
+int	xres = 0;			// horizontal (scan) size
+int	yres = 0;			// vertical resolution
 
 // new/exclusive, overwrite if exists, or recover data
 int	RSDOflags[] = {RDSwrite|RDSexcl|RDSextend, RDSwrite|RDSextend,
@@ -49,7 +51,7 @@ struct RcontribMod {
 				}
 };
 
-// used to assign record calc to child
+// Struct used to assign record calculation to child
 struct RowAssignment {
 	uint32			row;		// row to do
 	uint32			ac;		// accumulation count
@@ -287,21 +289,6 @@ RcontribSimulManager::AddModFile(const char *modfn, const char *outspec,
 	return true;
 }
 
-// Run through current list of output struct's
-int
-RcontribSimulManager::GetOutputs(RoutputShareF *osF, void *cd) const
-{
-	int	cnt = 0;
-
-	for (const RcontribOutput *op = outList; op; op = op->next) {
-		int	rv = 1;
-		if (osF && (rv = (*osF)(op, cd)) < 0)
-			return rv;
-		cnt += rv;
-	}
-	return cnt;
-}
-
 // Prepare output channels and return # completed rows
 int
 RcontribSimulManager::PrepOutput()
@@ -341,11 +328,6 @@ RcontribSimulManager::PrepOutput()
 				!op->rData->Resize(op->begData + op->nRows*op->rowBytes))
 			return -1;		// calls error() for us
 	}
-	if (lim_dist)				// XXX where else to put this?
-		rtFlags |= RTlimDist;
-	else
-		rtFlags &= ~RTlimDist;
-
 	rowsDone.NewBitMap(outList->nRows);	// create row completion map
 	rowsDone.ClearBits(0, rInPos, true);
 	return rInPos;
