@@ -1,4 +1,4 @@
-/* RCSid $Id: func.h,v 2.10 2015/05/20 12:58:31 greg Exp $ */
+/* RCSid $Id: func.h,v 2.11 2024/10/29 00:36:54 greg Exp $ */
 /*
  * Header file for modifiers using function files.
  *
@@ -25,11 +25,11 @@ extern XF  unitxf;		/* identity transform */
 extern XF  funcxf;		/* current transform */
 
 extern void	initfunc(void);
-extern void	set_eparams(char *prms);
+extern void	set_eparams(const char *prms);
 extern MFUNC	*getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
 extern void	freefunc(OBJREC *m);
 extern int	setfunc(OBJREC *m, RAY *r);
-extern int	worldfunc(char *ctx, RAY *r);
+extern int	worldfunc(const char *ctx, RAY *r);
 extern void	loadfunc(char *fname);
 
 	/* defined in noise3.c */

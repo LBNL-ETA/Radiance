@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.41 2024/09/16 17:31:14 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.42 2024/10/29 00:36:54 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -65,12 +65,12 @@ initfunc(void)	/* initialize function evaluation */
 
 /* Set parameters for current evaluation */
 void
-set_eparams(char *prms)
+set_eparams(const char *prms)
 {
-	static char	*last_params = NULL;
-	char		vname[RMAXWORD];
-	double		value;
-	char		*cpd;
+	static const char	*last_params = NULL;
+	char			vname[RMAXWORD];
+	double			value;
+	char			*cpd;
 					/* check if already set */
 	if (prms == NULL || !*prms)
 		return;
@@ -96,7 +96,7 @@ set_eparams(char *prms)
 		if (*prms++ != '=')
 			goto bad_params;
 		value = atof(prms);
-		if ((prms = fskip(prms)) == NULL)
+		if ((prms = fskip((char *)prms)) == NULL)
 			goto bad_params;
 		while (isspace(*prms)) prms++;
 		prms += (*prms == ',') | (*prms == ';') | (*prms == ':');
@@ -256,7 +256,7 @@ setfunc(			/* set channels for function call */
 
 int
 worldfunc(			/* special function context sans object */
-	char	*ctx,
+	const char	*ctx,
 	RAY	*r
 )
 {
@@ -265,7 +265,7 @@ worldfunc(			/* special function context sans object */
 	if (rayinitcal[0])		/* initialize on first call */
 		initfunc();
 					/* set evaluator context */
-	calcontext(ctx);
+	calcontext((char *)ctx);
 					/* check if ray already set */
 	if ((fobj == NULL) & (r->rno == lastrno))
 		return(0);
