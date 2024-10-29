@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.50 2024/09/10 20:24:42 greg Exp $ */
+/* RCSid $Id: color.h,v 2.51 2024/10/29 00:35:06 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -359,8 +359,8 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  COLCORSTR		"COLORCORR="
 #define  LCOLCORSTR		10
 #define  iscolcor(hl)		!strncmp(hl,COLCORSTR,LCOLCORSTR)
-#define  colcorval(cc,hl)	sscanf((hl)+LCOLCORSTR,"%f %f %f", \
-					&(cc)[RED],&(cc)[GRN],&(cc)[BLU])
+#define  colcorval(cc,hl)	(sscanf((hl)+LCOLCORSTR,"%f %f %f", \
+					&(cc)[RED],&(cc)[GRN],&(cc)[BLU]) == 3)
 #define  fputcolcor(cc,fp)	fprintf(fp,"%s %f %f %f\n",COLCORSTR, \
 					(cc)[RED],(cc)[GRN],(cc)[BLU])
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: process.c,v 2.12 2024/06/03 18:55:51 greg Exp $";
+static const char	RCSid[] = "$Id: process.c,v 2.13 2024/10/29 00:35:06 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -65,12 +65,12 @@ retry:
 ssize_t
 writebuf(		/* write all of requested buffer */
 int	fd,
-void	*buf,
+const void	*buf,
 ssize_t	siz
 )
 {
-	char	*bpos = (char *)buf;
-	ssize_t	cc = 0, nrem = siz;
+	const char	*bpos = (const char *)buf;
+	ssize_t		cc = 0, nrem = siz;
 retry:
 	while (nrem > 0 && (cc = write(fd, bpos, nrem)) > 0) {
 		bpos += cc;

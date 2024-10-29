@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: savqstr.c,v 2.11 2022/02/01 18:43:26 greg Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.12 2024/10/29 00:35:06 greg Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -18,7 +18,7 @@ static const char RCSid[] = "$Id: savqstr.c,v 2.11 2022/02/01 18:43:26 greg Exp 
 #if 1
 
 char *
-savqstr(char *s)			/* save a private string */
+savqstr(const char *s)			/* save a private string */
 {
 	char  *cp;
 	char  *newp;
@@ -74,7 +74,7 @@ freeqstr(char *s)			/* free a private string */
 
 
 char *
-savqstr(char *s)			/* save a private string */
+savqstr(const char *s)			/* save a private string */
 {
 	static char  *curp = NULL;		/* allocated memory pointer */
 	static unsigned  nrem = 0;		/* bytes remaining in block */
