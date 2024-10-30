@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareFile.cpp,v 2.1 2024/10/29 00:36:54 greg Exp $";
+static const char RCSid[] = "$Id: RdataShareFile.cpp,v 2.2 2024/10/30 01:38:21 greg Exp $";
 #endif
 /*
  *  RdataShareFile.cpp
@@ -84,16 +84,16 @@ RdataShareFile::RdataShareFile(const char *name, int flags, size_t siz)
 	int	oflags = O_CLOEXEC;
 	switch (flags & (RDSread|RDSwrite)) {
 	case RDSread|RDSwrite:
-		oflags |= O_RDWR;
+		oflags |= O_RDWR|O_CREAT;
+		break;
+	case RDSwrite:
+		oflags |= O_WRONLY|O_CREAT;
 		break;
 	case RDSread:
 		oflags |= O_RDONLY;
 		break;
-	case RDSwrite:
-		oflags |= O_WRONLY;
-		break;
 	}
-	if (flags & RDSexcl) oflags |= O_CREAT|O_EXCL;
+	if (flags & RDSexcl) oflags |= O_EXCL;
 	else if (flags & RDSextend && !siz) oflags |= O_TRUNC;
 	fd = open(name, oflags, 0666);
 	if (fd < 0) {

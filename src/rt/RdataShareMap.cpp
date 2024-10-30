@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.1 2024/10/29 00:36:54 greg Exp $";
+static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.2 2024/10/30 01:38:21 greg Exp $";
 #endif
 /*
  *  RdataShareMap.cpp
@@ -36,25 +36,24 @@ RdataShareMap::RdataShareMap(const char *name, int flags, size_t siz)
 		error(CONSISTENCY, "bad RDSextend in RdataShareMap()");
 		return;
 	}
-	int	mmprot = PROT_NONE;
-	int	oflags = 0;
+	int	oflags, mmprot;
 	switch (flags & (RDSread|RDSwrite)) {
 	case RDSread|RDSwrite:
-		mmprot |= PROT_READ|PROT_WRITE;
-		oflags |= O_RDWR;
-		break;
-	case RDSread:
-		mmprot |= PROT_READ;
-		oflags |= O_RDONLY;
+		mmprot = PROT_READ|PROT_WRITE;
+		oflags = O_RDWR|O_CREAT;
 		break;
 	case RDSwrite:
-		mmprot |= PROT_WRITE;
-		oflags |= O_WRONLY;
+		mmprot = PROT_WRITE;
+		oflags = O_RDWR|O_CREAT;	// XXX system limitation
+		break;
+	case RDSread:
+		mmprot = PROT_READ;
+		oflags = O_RDONLY;
 		break;
 	}
 	int	fd = -1;
 	if (name) {			// opening a shared file
-		if (flags & RDSexcl) oflags |= O_CREAT|O_EXCL;
+		if (flags & RDSexcl) oflags |= O_EXCL;
 		else if (flags & RDSextend && !siz) oflags |= O_TRUNC;
 		fd = open(name, oflags, 0666);
 		if (fd < 0) {

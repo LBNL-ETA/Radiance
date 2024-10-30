@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.2 2024/10/29 19:47:19 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.3 2024/10/30 01:38:21 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -154,7 +154,7 @@ extern lut_free_t	FreeRcMod;
  */
 
 /// Output channel opening options: new/exclusive, overwrite if exists, or recover data
-enum RCOutputOp {RCOnew, RCOforce, RCOrecover};
+enum RCOutputOp {RCOnew=0, RCOforce, RCOrecover};
 
 /// Converts above to RdataShare open flags (may be adjusted by calling program)
 extern int	RSDOflags[];

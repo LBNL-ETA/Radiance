@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.2 2024/10/29 19:47:19 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.3 2024/10/30 01:38:21 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -443,7 +443,8 @@ RcontribOutput::CheckHeader(const RcontribSimulManager *rcp)
 		return -1;
 	}
 						// check format
-	if (!(cp = findArgs(hdr, FMTSTR, begData)) || strcmp(cp, formstr(etyp))) {
+	if (!(cp = findArgs(hdr, FMTSTR, begData)) ||
+				strncmp(cp, formstr(etyp), strlen(formstr(etyp)))) {
 		sprintf(errmsg, "expected %s%s in '%s'", FMTSTR, formstr(etyp), GetName());
 		error(USER, errmsg);
 		return -1;
@@ -632,7 +633,8 @@ RcontribSimulManager::GetChild(bool forceWait)
 				FD_ISSET(kid[n].w, &writeset) |
 				FD_ISSET(kid[n].w, &errset)) {
 						// update output row counts
-			UpdateRowsDone(kidRow[n]);
+			if (!FD_ISSET(kid[n].w, &errset))
+				UpdateRowsDone(kidRow[n]);
 			kidRow[n] = -1;		// flag it available
 			pn = n;
 		}
@@ -716,7 +718,6 @@ RcontribSimulManager::StartKids(int n2go)
 				close(kid[nkids].w);
 			free(kid); free(kidRow);
 			kid = NULL; kidRow = NULL;
-			rowsDone.NewBitMap(0);
 			RunChild();		// should never return
 			_exit(1);
 		}
