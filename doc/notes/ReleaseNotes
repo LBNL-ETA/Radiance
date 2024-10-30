@@ -2745,3 +2745,9 @@ and the approximate method for 24-bit RGB.
 
 Taoning added genssky -L option to specify global and diffuse
 illuminance values for output calibration.
+
+Created C++ class for rcontrib and example tool rxcontrib, which
+is an optional compile in the src/rt directory.  The output
+model is more general in some respects and the operations more
+efficient, but standard output is not supported, nor is ASCII
+results data.
