@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.2 2024/10/29 19:47:19 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.3 2024/10/30 02:22:23 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -184,6 +184,7 @@ main(int argc, char *argv[])
 					/* initialize calcomp routines early */
 	initfunc();
 	calcontext(RCCONTEXT);
+	esupport &= ~E_REDEFW;		/* temporary */
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -306,6 +307,7 @@ main(int argc, char *argv[])
 	if (i != argc-1)
 		error(USER, "expected single octree argument");
 
+	esupport |= E_REDEFW;
 	override_options();		/* override some option settings */
 
 	if (!myRCmanager.GetOutput())	// check that we have work to do
@@ -521,6 +523,7 @@ wputs(				/* warning output function */
 	const char	*s
 )
 {
+	if (!erract[WARNING].pf) return;
 	int  lasterrno = errno;
 	eputs(s);
 	errno = lasterrno;
