@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.38 2024/10/30 02:22:23 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.39 2024/10/30 17:26:13 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -213,7 +213,6 @@ main(int argc, char *argv[])
 					/* initialize calcomp routines early */
 	initfunc();
 	calcontext(RCCONTEXT);
-	esupport &= ~E_REDEFW;		/* temporary */
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -333,7 +332,6 @@ main(int argc, char *argv[])
 	}
 	if (nmods <= 0)
 		error(USER, "missing required modifier argument");
-	esupport |= E_REDEFW;
 					/* override some option settings */
 	override_options();
 					/* set/check spectral sampling */
