@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.34 2024/08/21 20:42:20 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.35 2024/10/30 16:47:03 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -432,6 +432,8 @@ wputs(				/* warning output function */
 )
 {
 	int  lasterrno = errno;
+	if (erract[WARNING].pf == NULL)
+		return;		/* called by calcomp or someone */
 	eputs(s);
 	errno = lasterrno;
 }

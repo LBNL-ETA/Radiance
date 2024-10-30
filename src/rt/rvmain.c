@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.21 2024/01/18 00:28:54 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.22 2024/10/30 16:47:03 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -265,6 +265,8 @@ wputs(				/* warning output function */
 )
 {
 	int  lasterrno = errno;
+	if (erract[WARNING].pf == NULL)
+		return;		/* called by calcomp or someone */
 	eputs(s);
 	errno = lasterrno;
 }

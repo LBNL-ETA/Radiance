@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.55 2024/08/21 20:42:20 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.56 2024/10/30 16:47:03 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -508,6 +508,8 @@ wputs(				/* warning output function */
 )
 {
 	int  lasterrno = errno;
+	if (erract[WARNING].pf == NULL)
+		return;		/* called by calcomp or someone */
 	eputs(s);
 	errno = lasterrno;
 }
