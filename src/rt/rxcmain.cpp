@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.4 2024/10/30 17:26:13 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.5 2024/10/30 19:53:37 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -495,7 +495,7 @@ rxcontrib(const int rstart)
 		time_t	tnow;
 		if (!getRayBundle(odarr))
 			goto readerr;
-		if (myRCmanager.ComputeRecord(odarr) < 0)
+		if (myRCmanager.ComputeRecord(odarr) <= 0)
 			return;		// error reported, hopefully...
 		r++;
 		if (report_intvl <= 0)
