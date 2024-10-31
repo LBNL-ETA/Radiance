@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.5 2024/09/17 16:29:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.6 2024/10/31 19:22:36 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -340,6 +340,8 @@ wputs(				/* warning output function */
 	const char	*s
 )
 {
+	if (!erract[WARNING].pf)
+		return;		// warnings were disabled!
 	int  lasterrno = errno;
 	eputs(s);
 	errno = lasterrno;
