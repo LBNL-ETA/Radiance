@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.9 2024/09/16 19:20:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.10 2024/10/31 19:02:38 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -52,7 +52,7 @@ static void onsig(int  signo);
 static void sigdie(int  signo, const char  *msg);
 static void printdefaults(void);
 
-#define RXTRACE_FEATURES	"IrradianceCalc\nIrradianceCalc\nDistanceLimiting\n" \
+#define RXTRACE_FEATURES	"IrradianceCalc\nMultiprocessing\nDistanceLimiting\n" \
 				"HessianAmbientCache\nAmbientAveraging\n" \
 				"AmbientValueSharing\nAdaptiveShadowTesting\n" \
 				"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n" \
