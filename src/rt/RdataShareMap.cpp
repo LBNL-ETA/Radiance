@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.2 2024/10/30 01:38:21 greg Exp $";
+static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.3 2024/10/31 23:55:04 greg Exp $";
 #endif
 /*
  *  RdataShareMap.cpp
@@ -80,7 +80,7 @@ RdataShareMap::RdataShareMap(const char *name, int flags, size_t siz)
 			return;
 		}
 	}
-	mmorg = (void *)mmap(NULL, siz, mmprot,
+	if (siz) mmorg = (void *)mmap(NULL, siz, mmprot,
 				MAP_SHARED|(name ? MAP_FILE : MAP_ANON), fd, 0);
 	close(fd);
 	if (mmorg == MAP_FAILED) {
@@ -107,8 +107,6 @@ RdataShareMap::~RdataShareMap()
 size_t
 RdataShareMap::Resize(size_t new_siz)
 {
-	if (!mmorg)
-		return 0;
 	if (new_siz > 0) {
 		if (new_siz == osiz)
 			return osiz;
@@ -155,7 +153,7 @@ RdataShareMap::Resize(size_t new_siz)
 			close(fd);
 			return 0;
 		}
-		munmap(mmorg, osiz);
+		if (mmorg) munmap(mmorg, osiz);
 		mmorg = mmap(NULL, new_siz,
 				mode&RDSread ? PROT_READ|PROT_WRITE : PROT_WRITE,
 				MAP_SHARED|MAP_FILE, fd, 0);
