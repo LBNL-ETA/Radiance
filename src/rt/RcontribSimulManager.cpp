@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.3 2024/10/30 01:38:21 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.4 2024/11/01 16:17:33 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -40,7 +40,7 @@ static const char	ROWZEROSTR[] = "NROWS=0000000000000000\n";
 struct RcontribMod {
 	RcontribOutput *	opl;		// pointer to first output channel
 	char *			params;		// parameters string
-	EPNODE *		binv;		// bin expression
+	EPNODE *		binv;		// bin expression (NULL if 1 bin)
 	int			nbins;		// bin count this modifier
 	int			coffset;	// column offset in bytes
 	DCOLORV			cbin[1];	// bin accumulator (extends struct)
@@ -70,15 +70,25 @@ NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
 	if (ncbins <= 0) return NULL;
 	if (!prms) prms = "";
-	if (!binexpr | (ncbins == 1))
-		binexpr = "0";
-
+	if (!binexpr & (ncbins > 1)) {
+		error(INTERNAL, "missing bin expression");
+		return NULL;
+	}
+	if (ncbins == 1) {		// shouldn't have bin expression?
+		if (binexpr && strcmp(binexpr, "0"))
+			error(WARNING, "ignoring non-zero expression for single bin");
+		prms = "";
+		binexpr = NULL;
+	}
 	RcontribMod *	mp = (RcontribMod *)ecalloc(1, sizeof(RcontribMod) +
 						sizeof(DCOLORV)*(NCSAMP*ncbins-1) +
 						strlen(prms)+1);
 
 	mp->params = strcpy((char *)(mp->cbin + ncbins*NCSAMP), prms);
-	mp->binv = eparse(const_cast<char *>(binexpr));
+	if (binexpr) {
+		mp->binv = eparse(const_cast<char *>(binexpr));
+		CHECK(mp->binv->type==NUM, WARNING, "constant bin expression");
+	}
 	mp->nbins = ncbins;
 	return mp;
 }
@@ -88,7 +98,8 @@ void
 FreeRcMod(void *p)
 {
 	if (!p) return;
-	epfree((*(RcontribMod *)p).binv, true);
+	EPNODE *	bep = (*(RcontribMod *)p).binv;
+	if (bep) epfree(bep, true);
 	efree(p);
 }
 
@@ -135,14 +146,18 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	if (!mp)
 		return 0;		// not in our modifier list
 
-	worldfunc(RCCONTEXT, r);	// compute bin #
-	set_eparams(mp->params);
-	double		bval = evalue(mp->binv);
-	if (bval <= -.5)
-		return 0;	// silently ignore negative bin index
-	DCOLORV *	dvp = (*mp)[int(bval + .5)];
+	int			bi = 0;	// get bin index
+	if (mp->binv) {
+		worldfunc(RCCONTEXT, r);	// compute bin #
+		set_eparams(mp->params);
+		double		bval = evalue(mp->binv);
+		if (bval <= -.5)
+			return 0;	// silently ignore negative bin index
+		bi = int(bval + .5);
+	}
+	DCOLORV *	dvp = (*mp)[bi];
 	if (!dvp) {
-		sprintf(errmsg, "bad bin number for '%s' (%.1f ignored)", mname, bval);
+		sprintf(errmsg, "bad bin number for '%s' (%d ignored)", mname, bi);
 		error(WARNING, errmsg);
 		return 0;
 	}
@@ -289,6 +304,18 @@ RcontribSimulManager::AddModFile(const char *modfn, const char *outspec,
 	return true;
 }
 
+// call-back to check if modifier has been loaded
+static int
+checkModExists(const LUENT *lp, void *p)
+{
+	if (modifier(lp->key) != OVOID)
+		return 1;
+
+	sprintf(errmsg, "tracked modifier '%s' not found in main scene", lp->key);
+	error(WARNING, errmsg);
+	return 0;
+}
+
 // Prepare output channels and return # completed rows
 int
 RcontribSimulManager::PrepOutput()
@@ -297,6 +324,9 @@ RcontribSimulManager::PrepOutput()
 		error(INTERNAL, "PrepOutput() called before octree & modifiers assigned");
 		return -1;
 	}
+	if (lu_doall(&modLUT, checkModExists, NULL) < 0)
+		return -1;
+
 	int	remWarnings = 20;
 	for (RcontribOutput *op = outList; op; op = op->next) {
 		if (op->rData) {
