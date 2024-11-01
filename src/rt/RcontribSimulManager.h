@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.3 2024/10/30 01:38:21 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.4 2024/11/01 23:05:01 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -279,7 +279,7 @@ public:
 	int			PrepOutput();
 				/// Are we ready to compute some records?
 	bool			Ready() const {
-					return rowsDone.Length();
+					return (rowsDone.Length() > 0) & (accum > 0);
 				}
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0);

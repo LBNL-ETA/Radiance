@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.4 2024/11/01 16:17:33 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.5 2024/11/01 23:05:01 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -148,7 +148,7 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 
 	int			bi = 0;	// get bin index
 	if (mp->binv) {
-		worldfunc(RCCONTEXT, r);	// compute bin #
+		worldfunc(RCCONTEXT, r);
 		set_eparams(mp->params);
 		double		bval = evalue(mp->binv);
 		if (bval <= -.5)
@@ -322,6 +322,10 @@ RcontribSimulManager::PrepOutput()
 {
 	if (!outList || !RtraceSimulManager::Ready()) {
 		error(INTERNAL, "PrepOutput() called before octree & modifiers assigned");
+		return -1;
+	}
+	if (!cdsF) {
+		error(INTERNAL, "missing RdataShare constructor call (*cdsF)");
 		return -1;
 	}
 	if (lu_doall(&modLUT, checkModExists, NULL) < 0)
