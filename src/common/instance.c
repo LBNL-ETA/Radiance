@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: instance.c,v 2.12 2016/03/22 03:56:17 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.13 2024/11/05 00:03:10 greg Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -22,12 +22,13 @@ static SCENE  *slist = NULL;		/* list of loaded octrees */
 
 
 SCENE *
-getscene(sname, flags)			/* get new octree reference */
-char  *sname;
-int  flags;
+getscene(				/* get new octree reference */
+	char  *sname,
+	int  flags
+)
 {
 	char  *pathname;
-	register SCENE  *sc;
+	SCENE  *sc;
 
 	flags &= ~IO_ILLEGAL;		/* not allowed */
 	for (sc = slist; sc != NULL; sc = sc->next)
@@ -66,11 +67,12 @@ int  flags;
 
 
 INSTANCE *
-getinstance(o, flags)			/* get instance structure */
-register OBJREC  *o;
-int  flags;
+getinstance(				/* get instance structure */
+	OBJREC  *o,
+	int  flags
+)
 {
-	register INSTANCE  *ins;
+	INSTANCE  *ins;
 
 	flags &= ~IO_ILLEGAL;		/* not allowed */
 	if ((ins = (INSTANCE *)o->os) == NULL) {
@@ -88,9 +90,9 @@ int  flags;
 		ins->obj = NULL;
 		o->os = (char *)ins;
 	}
-	if (ins->obj == NULL)
+	if (ins->obj == NULL) {
 		ins->obj = getscene(o->oargs.sarg[0], flags);
-	else if ((flags &= ~ins->obj->ldflags)) {
+	} else if ((flags &= ~ins->obj->ldflags)) {
 		if (flags & IO_SCENE)
 			ins->obj->firstobj = nobjects;
 		if (flags)
@@ -105,18 +107,18 @@ int  flags;
 
 
 void
-freescene(sc)		/* release a scene reference */
-SCENE *sc;
+freescene(		/* release a scene reference */
+	SCENE *sc
+)
 {
 	SCENE  shead;
-	register SCENE  *scp;
+	SCENE  *scp;
 
 	if (sc == NULL)
 		return;
 	if (sc->nref <= 0)
 		error(CONSISTENCY, "unreferenced scene in freescene");
-	sc->nref--;
-	if (sc->nref)			/* still in use? */
+	if (--sc->nref)			/* still in use? */
 		return;
 	shead.next = slist;		/* else remove from our list */
 	for (scp = &shead; scp->next != NULL; scp = scp->next)
@@ -131,17 +133,18 @@ SCENE *sc;
 	freestr(sc->name);		/* free memory */
 	octfree(sc->scube.cutree);
 	freeobjects(sc->firstobj, sc->nobjs);
-	free((void *)sc);
+	free(sc);
 }
 
 
 void
-freeinstance(o)		/* free memory associated with instance */
-OBJREC  *o;
+freeinstance(		/* free memory associated with instance */
+	OBJREC  *o
+)
 {
 	if (o->os == NULL)
 		return;
 	freescene((*(INSTANCE *)o->os).obj);
-	free((void *)o->os);
+	free(o->os);
 	o->os = NULL;
 }
