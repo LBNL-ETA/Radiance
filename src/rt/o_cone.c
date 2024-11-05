@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.12 2023/03/16 00:25:24 greg Exp $";
+static const char RCSid[] = "$Id: o_cone.c,v 2.13 2024/11/05 00:20:02 greg Exp $";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -56,13 +56,13 @@ o_cone(			/* intersect ray with cone */
 	multv3(rdx, r->rdir, co->tm);
 					/* compute intersection */
 
-	if (o->otype == OBJ_CONE || o->otype == OBJ_CUP) {
+	if ((o->otype == OBJ_CONE) | (o->otype == OBJ_CUP)) {
 
 		a = rdx[0]*rdx[0] + rdx[1]*rdx[1] - rdx[2]*rdx[2];
 		b = 2.0*(rdx[0]*rox[0] + rdx[1]*rox[1] - rdx[2]*rox[2]);
 		c = rox[0]*rox[0] + rox[1]*rox[1] - rox[2]*rox[2];
 
-	} else if (o->otype == OBJ_CYLINDER || o->otype == OBJ_TUBE) {
+	} else if ((o->otype == OBJ_CYLINDER) | (o->otype == OBJ_TUBE)) {
 
 		a = rdx[0]*rdx[0] + rdx[1]*rdx[1];
 		b = 2.0*(rdx[0]*rox[0] + rdx[1]*rox[1]);
@@ -78,7 +78,7 @@ o_cone(			/* intersect ray with cone */
 		b = root[0]*rdx[0] + rox[0];
 		c = root[0]*rdx[1] + rox[1];
 		a = b*b + c*c;
-		if (a < CO_R0(co)*CO_R0(co) || a > CO_R1(co)*CO_R1(co))
+		if (a > CO_R1(co)*CO_R1(co) || a < CO_R0(co)*CO_R0(co))
 			return(0);			/* outside radii */
 		r->ro = o;
 		r->rot = root[0];
@@ -126,12 +126,12 @@ o_cone(			/* intersect ray with cone */
 		}
 		for (i = 0; i < 3; i++)
 			r->ron[i] = (rdx[i] - b*co->ad[i])/a;
-		if (o->otype == OBJ_CONE || o->otype == OBJ_CUP)
+		if ((o->otype == OBJ_CONE) | (o->otype == OBJ_CUP))
 			for (i = 0; i < 3; i++)
 				r->ron[i] = (co->al*r->ron[i] - c*co->ad[i])
 						/ co->sl;
 		a = DOT(r->ron, r->ron);
-		if (a > 1.+FTINY || a < 1.-FTINY) {
+		if ((a > 1.+FTINY) | (a < 1.-FTINY)) {
 			c = 1./(.5 + .5*a);     /* avoid numerical error */
 			r->ron[0] *= c; r->ron[1] *= c; r->ron[2] *= c;
 		}
