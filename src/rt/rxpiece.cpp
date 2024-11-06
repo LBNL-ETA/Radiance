@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.6 2024/10/31 19:22:36 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.7 2024/11/06 18:28:52 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -37,7 +37,7 @@ double  mblur = 0.;			/* motion blur parameter (unused) */
 
 double  dblur = 0.;			/* depth-of-field blur parameter */
 
-int  nproc = 1;				/* number of processes to run */
+int  nproc = 1;				/* number of processes to run (-1 in child) */
 
 RpictSimulManager	myRPmanager;	// global simulation manager
 
@@ -57,16 +57,15 @@ static RenderDataType rpiece(char *pout, RenderDataType dt, char *zout);
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
 
-// We could call myRPmanager.Cleanup() but why waste time
-// unwinding data structures when the whole frame is going away?
+// Exit program
 void
 quit(int code)				/* quit program */
 {
-	ambsync();			// flush ambient cache
-
-	ray_done_pmap();		/* PMAP: free photon maps */
-
-	exit(code);
+	if (nproc < 0) {
+		ray_pnprocs = -1;	// hack to avoid cleanup in child
+		_exit(code);
+	}
+	exit(code);			// parent still frees everything (*yawn*)
 }
 
 
@@ -323,6 +322,10 @@ main(int  argc, char  *argv[])
 					// render tiles
 	dtype = rpiece(outfile, dtype, zfile);
 
+	ambsync();			// flush ambient cache
+
+	ray_done_pmap();		/* PMAP: free photon maps */
+
 	quit(dtype==RDTnone);		// status is 1 on failure
 
 badopt:
@@ -509,6 +512,7 @@ children_finished()
 
 	if (cpid == 0) {		// children render tiles
 		sleep(nproc - cnt);	// avoid race conditions
+		nproc = -1;		// flag as child
 		return false;
 	}
 	cow_doneshare();		// parent frees memory and waits
@@ -614,7 +618,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 	} else {
 		dt = myRPmanager.ReopenOutput(pdfp, pout, zout);
 		if (dt == RDTnone)
-			quit(1);
+			return RDTnone;
 		if (!fscnresolu(&hresolu, &vresolu, pdfp[0]))
 			error(USER, "missing picture resolution");
 		pixaspect = .0;			// need to leave this as is
@@ -644,7 +648,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		myRPmanager.AddHeader(buf);
 		dt = myRPmanager.NewOutput(pdfp, pout, dt, zout);
 		if (dt == RDTnone)
-			quit(1);
+			return RDTnone;
 		fprtresolu(hresolu, vresolu, pdfp[0]);
 		fflush(pdfp[0]);
 		if (RDTdepthT(dt) == RDTdshort) {

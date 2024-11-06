@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.18 2024/10/10 21:02:52 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.19 2024/11/06 18:28:52 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -239,6 +239,8 @@ RadSimulManager::WaitResult(RAY *r)
 int
 RadSimulManager::Cleanup(bool everything)
 {
+	if (ray_pnprocs < 0)
+		return 0;		// skip in child process
 	NewHeader();
 	if (!ray_pnprocs)
 		ray_done(everything);

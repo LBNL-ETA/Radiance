@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.4 2024/11/01 23:05:01 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.5 2024/11/06 18:28:52 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -317,6 +317,7 @@ public:
 				}
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {
+					if (nkids < 0) return 0;	// skip 4 child
 					if (rowsDone.Length()) {
 						SetThreadCount(1);
 						cow_doneshare();

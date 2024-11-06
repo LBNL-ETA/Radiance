@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.5 2024/11/01 23:05:01 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.6 2024/11/06 18:28:52 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -800,7 +800,7 @@ RcontribSimulManager::SetThreadCount(int nt)
 		return 0;
 	}
 	if (nt < 0)
-		return nkids;
+		return NThreads();
 	if (!nt) nt = GetNCores();
 	int	status = 0;
 	if (nt == 1)
@@ -813,5 +813,5 @@ RcontribSimulManager::SetThreadCount(int nt)
 		sprintf(errmsg, "non-zero (%d) status from child", status);
 		error(WARNING, errmsg);
 	}
-	return nkids;
+	return NThreads();
 }
