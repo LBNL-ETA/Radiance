@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.5 2024/10/30 19:53:37 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.6 2024/11/06 19:45:59 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -41,14 +41,15 @@ static void
 printdefaults(void)			/* print default values to stdout */
 {
 	printf("-c %-5d\t\t\t# accumulated rays per record\n", myRCmanager.accum);
-	printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
-			contrib ? "contributions" : "coefficients");
+	printf(myRCmanager.HasFlag(RCcontrib) ?
+			"-V+\t\t\t\t# output contributions" :
+			"-V-\t\t\t\t# output coefficients");
 	if (myRCmanager.HasFlag(RTimmIrrad))
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
-	if (xres > 0)
-		printf("-x %-9d\t\t\t# x resolution\n", xres);
-	printf("-y %-9d\t\t\t# y resolution\n", yres);
+	if (myRCmanager.xres > 0)
+		printf("-x %-9d\t\t\t# x resolution\n", myRCmanager.xres);
+	printf("-y %-9d\t\t\t# y resolution\n", myRCmanager.yres);
 	printf(myRCmanager.HasFlag(RTlimDist) ?
 			"-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
@@ -218,15 +219,17 @@ main(int argc, char *argv[])
 				nproc = 1;
 			break;
 		case 'V':			/* output contributions? */
-			check_bool(2,contrib);
+			rval = myRCmanager.HasFlag(RCcontrib);
+			check_bool(2,rval);
+			myRCmanager.SetFlag(RCcontrib, rval);
 			break;
 		case 'x':			/* x resolution */
 			check(2,"i");
-			xres = atoi(argv[++i]);
+			myRCmanager.xres = atoi(argv[++i]);
 			break;
 		case 'y':			/* y resolution */
 			check(2,"i");
-			yres = atoi(argv[++i]);
+			myRCmanager.yres = atoi(argv[++i]);
 			break;
 		case 'w':			/* warnings on/off */
 			rval = (erract[WARNING].pf != NULL);

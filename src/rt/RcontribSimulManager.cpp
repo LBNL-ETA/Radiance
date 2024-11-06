@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.6 2024/11/06 18:28:52 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.7 2024/11/06 19:45:59 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -23,11 +23,6 @@ char			RCCONTEXT[] = "RC.";
 extern const char	HDRSTR[];
 extern const char	BIGEND[];
 extern const char	FMTSTR[];
-
-int	contrib = 0;			// computing contributions?
-
-int	xres = 0;			// horizontal (scan) size
-int	yres = 0;			// vertical resolution
 
 // new/exclusive, overwrite if exists, or recover data
 int	RSDOflags[] = {RDSwrite|RDSexcl|RDSextend, RDSwrite|RDSextend,
@@ -163,7 +158,7 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	}
 	SCOLOR		contr;
 	raycontrib(contr, r, PRIMARY);		// compute coefficient
-	if (contrib)
+	if (rcp->HasFlag(RCcontrib))
 		smultscolor(contr, r->rcol);	// -> value contribution
 	for (int i = 0; i < NCSAMP; i++)
 		*dvp++ += contr[i];		// accumulate color/spectrum
@@ -198,6 +193,10 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 		return false;
 	}
 	if (!nChan) {				// initial call?
+		if ((xres < 0) | (yres <= 0)) {
+			error(INTERNAL, "xres, yres must be set before first modifier");
+			return false;
+		}
 		if (!SetDataFormat(dtyp))
 			return false;
 		nChan = NCSAMP;
@@ -392,7 +391,7 @@ RcontribOutput::NewHeader(const RcontribSimulManager *rcp)
 	strcpy(hdr+begData, ROWZEROSTR);
 	rowCountPos = begData+LNROWSTR;
 	begData += sizeof(ROWZEROSTR)-1;
-	if (!xres | (rowBytes > esiz)) {
+	if (!rcp->xres | (rowBytes > esiz)) {
 		sprintf(hdr+begData, "NCOLS=%d\n", int(rowBytes/esiz));
 		begData += strlen(hdr+begData);
 	}
@@ -430,8 +429,8 @@ RcontribOutput::NewHeader(const RcontribSimulManager *rcp)
 			hdr[begData++] = ' ';
 	hdr[begData++] = '\n';		// EOL for data format
 	hdr[begData++] = '\n';		// end of nominal header
-	if ((xres > 0) & (rowBytes == esiz)) {	// tack on resolution string?
-		sprintf(hdr+begData, PIXSTDFMT, yres, xres);
+	if ((rcp->xres > 0) & (rowBytes == esiz)) {	// tack on resolution string?
+		sprintf(hdr+begData, PIXSTDFMT, rcp->yres, rcp->xres);
 		begData += strlen(hdr+begData);
 	}
 	return rData->ReleaseMemory(hdr, RDSwrite);
@@ -485,7 +484,7 @@ RcontribOutput::CheckHeader(const RcontribSimulManager *rcp)
 	}
 						// check #columns
 	if (((cp = findArgs(hdr, "NCOLS=", begData)) && atoi(cp)*esiz != rowBytes) ||
-			!xres | (rowBytes > esiz)) {
+			!rcp->xres | (rowBytes > esiz)) {
 		sprintf(errmsg, "expected NCOLS=%d in '%s'",
 				int(rowBytes/esiz), GetName());
 		error(USER, errmsg);
@@ -500,9 +499,9 @@ RcontribOutput::CheckHeader(const RcontribSimulManager *rcp)
 	rowCountPos = cp - hdr;
 	int	rlast = atoi(cp);
 	begData++;				// advance past closing EOL
-	if ((xres > 0) & (rowBytes == esiz)) {	// check/skip resolution string?
+	if ((rcp->xres > 0) & (rowBytes == esiz)) {	// check/skip resolution string?
 		char	rbuf[64];
-		sprintf(rbuf, PIXSTDFMT, yres, xres);
+		sprintf(rbuf, PIXSTDFMT, rcp->yres, rcp->xres);
 		int	rlen = strlen(rbuf);
 		if (strncmp(rbuf, hdr+begData, rlen)) {
 			sprintf(errmsg, "bad resolution string in '%s'", GetName());

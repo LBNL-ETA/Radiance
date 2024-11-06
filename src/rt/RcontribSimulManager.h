@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.5 2024/11/06 18:28:52 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.6 2024/11/06 19:45:59 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -24,10 +24,6 @@
  */
 
 extern char		RCCONTEXT[];		// global rcontrib context
-
-extern int		contrib;		// computing contributions?
-
-extern int		xres, yres;		// global resolution settings
 
 class RcontribSimulManager;			// need forward decl
 
@@ -125,18 +121,20 @@ extern lut_free_t	FreeRcMod;
  *
  *  1)  Call LoadOctree(), then alter the header as desired
  *  2)  Set number of spectral samples (NCSAMP) and call SetDataFormat()
- *  3)  Call AddModifier() and AddModFile() to indicate tracked modifiers
- *  4)  Set outOp and cdsF according to desired output/recovery
- *  5)  Call PrepOutput() to open output channels
- *  6)  Call SetThreadCount() to fork children if desired
- *  7)  Set accum to the number of ray samples per record
- *  8)  Call ComputeRecord() with accum ray samples
- *  9)  Continue until GetRowMax() records have been sent
- * 10)  Call Cleanup()
+ *  3)  Set xres and yres to desired dimensions (xres>0 for picture output)
+ *  4)  Call AddModifier() and AddModFile() to indicate tracked modifiers
+ *  5)  Set outOp and cdsF according to desired output/recovery
+ *  6)  Set desired computation flags via SetFlag()
+ *  7)  Call PrepOutput() to open output channels
+ *  8)  Call SetThreadCount() to fork children if desired
+ *  9)  Set accum to the number of ray samples per record
+ * 10)  Call ComputeRecord() with accum ray samples
+ * 11)  Continue until GetRowMax() records have been sent
+ * 12)  Call Cleanup()
  *
  * The order of some of these calls may be changed.  Technically, the octree
  * may be loaded anytime before PrepOutput() is called.  Also, SetThreadCount()
- * may be called anytime after PrepOutput() and interleaved with
+ * may be called anytime *after* PrepOutput(), and may be interleaved with
  * calls to ComputeRecord().  The accum setting may be changed at any time.
  * Finally, it is possible to restart the output using ResetRow(), and
  * a zero argument will rewind to the beginning, whence all records
@@ -166,7 +164,8 @@ typedef RdataShare *	RcreateDataShareF(const char *name, RCOutputOp op, size_t s
 extern RcreateDataShareF	defDataShare;
 
 /// Modifiable ray-tracing flags for rcontrib
-#define RCmask			(RTlimDist|RTimmIrrad)
+#define RCcontrib		(RTmask+1)	// compute contributions? (r.t. coefficients)
+#define RCmask			(RTlimDist|RTimmIrrad|RCcontrib)
 
 /// rcontrib-like simulation manager (at most one such object)
 class RcontribSimulManager : protected RtraceSimulManager {
@@ -190,6 +189,7 @@ protected:
 public:
 	RCOutputOp		outOp;		// output operation
 	RcreateDataShareF *	cdsF;		// data share creator
+	int			xres, yres;	// output (picture) size
 	uint32			accum;		// # rays to accumulate per record
 				RcontribSimulManager(const char *octn = NULL)
 						: RtraceSimulManager(NULL, NULL, octn) {
@@ -208,6 +208,7 @@ public:
 					SetTraceCall(&RctCall, this);
 					outOp = RCOnew;
 					cdsF = &defDataShare;
+					xres = yres = 0;
 					accum = 1;
 				}
 				~RcontribSimulManager() {
