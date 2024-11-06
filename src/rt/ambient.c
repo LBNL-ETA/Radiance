@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.123 2024/04/05 01:10:26 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.124 2024/11/06 20:16:58 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -458,15 +458,16 @@ sumambient(		/* get interpolated ambient value */
 		if (delta_r2 >= maxangle*maxangle)
 			continue;
 		/*
-		 *  Modified ray behind test
+		 *  Original ray behind test
 		 */
-		VSUB(ck0, r->rop, av->pos);
-		d = DOT(ck0, uvw[2]);
+		d = 0.0;
+		for (j = 0; j < 3; j++)
+			d += (r->rop[j] - av->pos[j])*(r->ron[j] + uvw[2][j]);
+		d *= 0.5;
 		if (d < -minarad*ambacc)
 			continue;
-		d /= av->rad[0];
-		delta_t2 = d*d;
-		if (delta_t2 >= ambacc*ambacc)
+		/* Pre-empt following test if we can */
+		if (fabs(d) >= av->rad[0]*ambacc)
 			continue;
 		/*
 		 *  Elliptical radii test based on Hessian
