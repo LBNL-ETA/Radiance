@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.6 2024/11/06 19:45:59 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.7 2024/11/07 18:09:39 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -42,8 +42,8 @@ printdefaults(void)			/* print default values to stdout */
 {
 	printf("-c %-5d\t\t\t# accumulated rays per record\n", myRCmanager.accum);
 	printf(myRCmanager.HasFlag(RCcontrib) ?
-			"-V+\t\t\t\t# output contributions" :
-			"-V-\t\t\t\t# output coefficients");
+			"-V+\t\t\t\t# output contributions\n" :
+			"-V-\t\t\t\t# output coefficients\n");
 	if (myRCmanager.HasFlag(RTimmIrrad))
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
