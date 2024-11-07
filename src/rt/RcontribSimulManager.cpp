@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.7 2024/11/06 19:45:59 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.8 2024/11/07 18:07:43 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -63,17 +63,17 @@ defDataShare(const char *name, RCOutputOp op, size_t siz)
 RcontribMod *
 NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
-	if (ncbins <= 0) return NULL;
 	if (!prms) prms = "";
 	if (!binexpr & (ncbins > 1)) {
-		error(INTERNAL, "missing bin expression");
+		error(USER, "missing bin expression");
 		return NULL;
 	}
-	if (ncbins == 1) {		// shouldn't have bin expression?
+	if (ncbins <= 1) {		// shouldn't have bin expression?
 		if (binexpr && strcmp(binexpr, "0"))
 			error(WARNING, "ignoring non-zero expression for single bin");
 		prms = "";
 		binexpr = NULL;
+		ncbins = 1;
 	}
 	RcontribMod *	mp = (RcontribMod *)ecalloc(1, sizeof(RcontribMod) +
 						sizeof(DCOLORV)*(NCSAMP*ncbins-1) +
@@ -188,20 +188,20 @@ bool
 RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 				const char *prms, const char *binval, int bincnt)
 {
-	if (!modn | !outspec | (bincnt <= 0) || !*modn | !*outspec) {
+	if (!modn | !outspec || !*modn | !*outspec) {
 		error(WARNING, "ignoring bad call to AddModifier()");
 		return false;
 	}
 	if (!nChan) {				// initial call?
 		if ((xres < 0) | (yres <= 0)) {
-			error(INTERNAL, "xres, yres must be set before first modifier");
+			error(USER, "xres, yres must be set before first modifier");
 			return false;
 		}
 		if (!SetDataFormat(dtyp))
 			return false;
 		nChan = NCSAMP;
 	} else if (nChan != NCSAMP) {
-		error(INTERNAL, "number of spectral channels must be fixed");
+		error(USER, "number of spectral channels must be fixed");
 		return false;
 	}
 	if (Ready()) {
@@ -224,7 +224,7 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 	const int	binndx = hasFormat(outspec, "diouxX");
 	int		bin0 = 0;
 	char		fnbuf[512];
-	if (!modndx | (modndx > binndx))
+	if (!modndx || (binndx > 0) & (modndx > binndx))
 		sprintf(fnbuf, outspec, bin0, modn);
 	else
 		sprintf(fnbuf, outspec, modn, bin0);
@@ -253,11 +253,11 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 	mp->opl = op;			// first (maybe only) output channel
 	if (modndx)			// remember modifier if part of name
 		op->omod = lp->key;
-	if (binndx > 0) {		// append output image/bin list
+	if (binndx) {			// append output image/bin list
 		op->rowBytes += dsiz;
 		op->obin = bin0;
 		for (bincnt = 1; bincnt < mp->nbins; bincnt++) {
-			if (!modndx | (modndx > binndx))
+			if (!modndx || (binndx > 0) &  (modndx > binndx))
 				sprintf(fnbuf, outspec, bin0+bincnt, modn);
 			else
 				sprintf(fnbuf, outspec, modn, bin0+bincnt);
@@ -276,7 +276,7 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 			op->rowBytes += dsiz;
 		}
 	} else				// else send all results to this channel
-		op->rowBytes += bincnt*dsiz;
+		op->rowBytes += mp->nbins*dsiz;
 	return true;
 }
 
