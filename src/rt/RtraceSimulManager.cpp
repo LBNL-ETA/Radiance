@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.19 2024/11/06 18:28:52 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.20 2024/11/07 18:37:11 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -279,7 +279,6 @@ RtraceSimulManager::Rfifout(RAY *r)
 bool
 RtraceSimulManager::UpdateMode()
 {
-	rtFlags &= RTmask;
 	if (!cookedCall)
 		rtFlags &= ~RTdoFIFO;
 	if (!traceCall)
@@ -287,7 +286,7 @@ RtraceSimulManager::UpdateMode()
 	if (rtFlags & RTimmIrrad)
 		rtFlags &= ~RTlimDist;
 
-	int	misMatch = rtFlags ^ curFlags;
+	int	misMatch = (rtFlags ^ curFlags) & RTmask;
 				// updates based on toggled flags
 	if (misMatch & RTtraceSources) {
 		int	sn = nsources;
