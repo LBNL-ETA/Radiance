@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.59 2024/02/23 03:47:57 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.60 2024/11/07 20:07:08 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -240,13 +240,15 @@ main(
 		fprintview(commvp, stdout);
 		fputc('\n', stdout);
 	}
-	if (outfloat) {				/* print format if known */
+	if (outfloat) {				/* print output format */
 		printf("NROWS=%d\nNCOLS=%d\n", yres, xres);
 		fputncomp(outfloat, stdout);
 		fputendian(stdout);
 		fputformat("float", stdout);
 	} else if (strcmp(ourfmt, PICFMT))
 		fputformat(ourfmt, stdout);
+	else
+		fputformat(COLRFMT, stdout);
 	fputc('\n', stdout);			/* end header */
 	if (!outfloat)
 		fprtresolu(xres, yres, stdout);
