@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.7 2024/11/07 18:09:39 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.8 2024/11/07 20:56:09 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -349,7 +349,7 @@ main(int argc, char *argv[])
 					// rval = # rows recovered
 	rval = myRCmanager.PrepOutput();
 					// check if recovered everything
-	if (recover && rval >= myRCmanager.GetRowMax()) {
+	if (rval >= myRCmanager.GetRowMax()) {
 		error(WARNING, "nothing left to compute");
 		quit(0);
 	}				// add processes as requested
@@ -494,7 +494,7 @@ rxcontrib(const int rstart)
 		}
 		last_report = tstart = time(0);
 	}
-	while (r < totRows) {		// getting to work...
+	while (r < totRows) {		// loop until done
 		time_t	tnow;
 		if (!getRayBundle(odarr))
 			goto readerr;
@@ -503,10 +503,14 @@ rxcontrib(const int rstart)
 		r++;
 		if (report_intvl <= 0)
 			continue;
-		if ((r < totRows) & ((tnow = time(0)) < last_report+report_intvl))
+		tnow = time(0);		// time to report progress?
+		if (r == totRows)
+			myRCmanager.FlushQueue();
+		else if (tnow < last_report+report_intvl)
 			continue;
 		sprintf(errmsg, "%.2f%% done after %.3f hours\n",
-				100.*r/totRows, (1./3600.)*(tnow - tstart));
+				100.*myRCmanager.GetRowFinished()/totRows,
+				(1./3600.)*(tnow - tstart));
 		eputs(errmsg);
 		last_report = tnow;
 	}
