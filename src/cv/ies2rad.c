@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.36 2022/11/16 01:59:43 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.37 2024/11/07 17:09:18 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -744,7 +744,7 @@ int
 iesversion(char *buf) {
 	IESversions *v;
 
-	for(v = IESFILEVERSIONS; v != NULL; v++)
+	for(v = IESFILEVERSIONS; v->tag != NULL; v++)
 		if (streq(v->tag,buf))
 			return v->yr;
 	return v->yr;
