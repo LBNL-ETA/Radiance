@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.25 2024/08/21 01:09:25 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.26 2024/11/08 17:52:26 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -852,7 +852,7 @@ resize_inparr(int n2alloc)
 
 	if (n2alloc == nall)
 		return;
-	for (i = nall; i > n2alloc; i--) {
+	for (i = nall; i-- > n2alloc; ) {
 		rmx_reset(&mop[i].imx);
 		if (mop[i].rmp != &mop[i].imx)
 			rmx_free(mop[i].rmp);

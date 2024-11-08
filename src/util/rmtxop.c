@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.34 2024/08/21 01:09:25 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.35 2024/11/08 17:52:26 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -34,7 +34,7 @@ typedef struct {
 int	verbose = 0;			/* verbose reporting? */
 
 /* Load matrix */
-static int
+int
 loadmatrix(ROPMAT *rop)
 {
 	if (rop->mtx != NULL)		/* already loaded? */
@@ -45,10 +45,10 @@ loadmatrix(ROPMAT *rop)
 	return(!rop->mtx ? -1 : 1);
 }
 
-static int	checksymbolic(ROPMAT *rop);
+extern int	checksymbolic(ROPMAT *rop);
 
 /* Check/set transform based on a reference input file */
-static int
+int
 checkreffile(ROPMAT *rop)
 {
 	static const char	*curRF = NULL;
@@ -107,7 +107,7 @@ checkreffile(ROPMAT *rop)
 }
 
 /* Compute conversion row from spectrum to one channel of RGB */
-static void
+void
 rgbrow(ROPMAT *rop, int r, int p)
 {
 	const int	nc = rop->mtx->ncomp;
@@ -124,7 +124,7 @@ rgbrow(ROPMAT *rop, int r, int p)
 }
 
 /* Compute conversion row from spectrum to one channel of XYZ */
-static void
+void
 xyzrow(ROPMAT *rop, int r, int p)
 {
 	const int	nc = rop->mtx->ncomp;
@@ -141,7 +141,7 @@ xyzrow(ROPMAT *rop, int r, int p)
 }
 
 /* Use the spectral sensitivity function to compute matrix coefficients */
-static void
+void
 sensrow(ROPMAT *rop, int r, double (*sf)(const SCOLOR sc, int ncs, const float wlpt[4]))
 {
 	const int	nc = rop->mtx->ncomp;
@@ -156,7 +156,7 @@ sensrow(ROPMAT *rop, int r, double (*sf)(const SCOLOR sc, int ncs, const float w
 }
 
 /* Check/set symbolic transform */
-static int
+int
 checksymbolic(ROPMAT *rop)
 {
 	const int	nc = rop->mtx->ncomp;
@@ -267,7 +267,7 @@ checksymbolic(ROPMAT *rop)
 }
 
 /* Get matrix and perform unary operations */
-static RMATRIX *
+RMATRIX *
 loadop(ROPMAT *rop)
 {
 	int	outtype = 0;
@@ -367,7 +367,7 @@ failure:
 }
 
 /* Execute binary operation, free matrix arguments and return new result */
-static RMATRIX *
+RMATRIX *
 binaryop(const char *inspec, RMATRIX *mleft, int op, RMATRIX *mright)
 {
 	RMATRIX	*mres = NULL;
@@ -444,7 +444,7 @@ binaryop(const char *inspec, RMATRIX *mleft, int op, RMATRIX *mright)
 }
 
 /* Perform matrix operations from left to right */
-static RMATRIX *
+RMATRIX *
 op_left2right(ROPMAT *mop)
 {
 	RMATRIX	*mleft = loadop(mop);
@@ -460,7 +460,7 @@ op_left2right(ROPMAT *mop)
 }
 
 /* Perform matrix operations from right to left */
-static RMATRIX *
+RMATRIX *
 op_right2left(ROPMAT *mop)
 {
 	RMATRIX	*mright;
@@ -489,7 +489,7 @@ op_right2left(ROPMAT *mop)
 						: (mop)->mtx->ncols)
 
 /* Should we prefer concatenating from rightmost matrix towards left? */
-static int
+int
 prefer_right2left(ROPMAT *mop)
 {
 	int	mri = 0;
@@ -516,7 +516,7 @@ prefer_right2left(ROPMAT *mop)
 	return(t_ncols(mop+mri) < t_nrows(mop));
 }
 
-static int
+int
 get_factors(double da[], int n, char *av[])
 {
 	int	ac;
@@ -526,7 +526,7 @@ get_factors(double da[], int n, char *av[])
 	return(ac);
 }
 
-static ROPMAT *
+ROPMAT *
 resize_moparr(ROPMAT *mop, int n2alloc)
 {
 	int	nmats = 0;
@@ -534,7 +534,7 @@ resize_moparr(ROPMAT *mop, int n2alloc)
 
 	while (mop[nmats++].binop)
 		;
-	for (i = nmats; i > n2alloc; i--)
+	for (i = nmats; i >= n2alloc; i--)
 		rmx_free(mop[i].mtx);
 	mop = (ROPMAT *)realloc(mop, n2alloc*sizeof(ROPMAT));
 	if (mop == NULL) {
