@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.6 2024/11/06 19:45:59 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.7 2024/11/08 15:49:34 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -141,7 +141,10 @@ extern lut_free_t	FreeRcMod;
  * may be recalculated.  The previous output rows are not zeroed or deleted,
  * but are overwritten as the calculation proceeds from the new starting point.
  * However, the output file(s) will indicate in the NROWS= line in the header
- * that only the newly calculated rows are present.
+ * that only the newly calculated rows are present.  If you wish to start over
+ * with a different set of modifiers or outputs, call ClearModifiers() instead,
+ * which keeps the current octree in memory.  This call also returns to single
+ * process mode if any children were running.
  *
  * It is not possible to write to standard output, but the output
  * model is quite flexible thanks to the RdataShare polymorphic class.
@@ -212,7 +215,7 @@ public:
 					accum = 1;
 				}
 				~RcontribSimulManager() {
-					Cleanup();
+					if (nkids >= 0) ClearModifiers();
 				}
 				/// Check modifiable ray-tracing computation flag(s)
 	bool			HasFlag(int fl) const {
@@ -305,8 +308,6 @@ public:
 						return rowsDone.Length();
 					return nDone;
 				}
-				/// Rewind calculation (previous results unchanged)
-	bool			ResetRow(int r);
 				/// Add a ray/bundle to compute next record (n=accum)
 	int			ComputeRecord(const FVECT orig_direc[]);
 				/// Finish pending rays if multi-processing
@@ -316,9 +317,10 @@ public:
 						;
 					return true;
 				}
-				/// Close octree, free data, return status
-	int			Cleanup(bool everything = false) {
-					if (nkids < 0) return 0;	// skip 4 child
+				/// Rewind calculation (previous results unchanged)
+	bool			ResetRow(int r);
+				/// Clear the modifiers and close all outputs
+	void			ClearModifiers() {
 					if (rowsDone.Length()) {
 						SetThreadCount(1);
 						cow_doneshare();
@@ -327,6 +329,10 @@ public:
 					lu_done(&modLUT);
 					delete outList; outList = NULL;
 					nChan = 0;
+				}
+				/// Close octree, free data, return status
+	int			Cleanup(bool everything = false) {
+					ClearModifiers();
 					return RtraceSimulManager::Cleanup(everything);
 				}
 };
