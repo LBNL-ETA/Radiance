@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.20 2019/06/11 17:00:59 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.21 2024/11/09 15:21:32 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -16,26 +16,28 @@ static const char	RCSid[] = "$Id: srcsamp.c,v 2.20 2019/06/11 17:00:59 greg Exp 
 #include  "random.h"
 
 
-static int
-srcskip(			/* pre-emptive test for out-of-range glow */
-	SRCREC  *sp,
-	FVECT  orig
+int
+srcskip(			/* pre-emptive test for source to skip */
+	int  sn,
+	RAY  *r
 )
 {
+	SRCREC  *sp = source + sn;
+
 	if (sp->sflags & SSKIP)
 		return(1);
 
 	if ((sp->sflags & (SPROX|SDISTANT)) != SPROX)
 		return(0);
 
-	return(dist2(orig, sp->sloc) >
+	return(dist2(r->rorg, sp->sloc) >
 			(sp->sl.prox + sp->srad)*(sp->sl.prox + sp->srad));
 }
 
 double
 nextssamp(			/* compute sample for source, rtn. distance */
 	RAY  *r,		/* origin is read, direction is set */
-	SRCINDEX  *si		/* source index (modified to current) */\
+	SRCINDEX  *si		/* source index (modified to current) */
 )
 {
 	int  cent[3], size[3], parr[2];
@@ -47,7 +49,7 @@ nextsample:
 	while (++si->sp >= si->np) {	/* get next sample */
 		if (++si->sn >= nsources)
 			return(0.0);	/* no more */
-		if (srcskip(source+si->sn, r->rorg))
+		if (srcskip(si->sn, r))
 			si->np = 0;
 		else if (srcsizerat <= FTINY)
 			nopart(si, r);

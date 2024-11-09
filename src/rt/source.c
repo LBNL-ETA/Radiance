@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.82 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.83 2024/11/09 15:21:32 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -596,13 +596,15 @@ srcscatter(			/* compute source scattering into ray */
 			setcolor(cvext,	re > 92. ? 0. : exp(-re),
 					ge > 92. ? 0. : exp(-ge),
 					be > 92. ? 0. : exp(-be));
-			if (intens(cvext) <= FTINY)
+			if (intens(cvext) <= FTINY*FTINY)
 				break;			/* too far away */
 			sr.rorg[0] = r->rorg[0] + r->rdir[0]*t;
 			sr.rorg[1] = r->rorg[1] + r->rdir[1]*t;
 			sr.rorg[2] = r->rorg[2] + r->rdir[2]*t;
 			
 			if (!volumePhotonMapping) {
+				if (srcskip(r->slights[i], r))
+					continue;
 				initsrcindex(&si);	/* sample ray to this source */
 				si.sn = r->slights[i];
 				nopart(&si, &sr);

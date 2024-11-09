@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.24 2023/11/15 18:02:53 greg Exp $ */
+/* RCSid $Id: source.h,v 2.25 2024/11/09 15:21:32 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -163,6 +163,7 @@ extern int      srcblocked(RAY *r);
 extern void     freeobscache(SRCREC *s);
 extern void	markclip(OBJREC *m);
 					/* defined in srcsamp.c */
+extern int	srcskip(int sn, RAY *r);
 extern double	nextssamp(RAY *r, SRCINDEX *si);
 extern int	skipparts(int ct[3], int sz[3], int pp[2], unsigned char *pt);
 extern void	nopart(SRCINDEX *si, RAY *r);
