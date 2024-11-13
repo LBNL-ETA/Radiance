@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.21 2024/11/09 00:10:49 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.22 2024/11/13 02:43:51 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -196,18 +196,8 @@ RadSimulManager::SetThreadCount(int nt)
 	return NThreads();
 }
 
-// Assign ray to subthread (fails if NThreads()<2)
-bool
-RadSimulManager::SplitRay(RAY *r)
-{
-	if (!ray_pnprocs || ThreadsAvailable() < 1)
-		return false;
-
-	return (ray_psend(r) > 0);
-}
-
 // Process a ray (in subthread), optional result
-bool
+int
 RadSimulManager::ProcessRay(RAY *r)
 {
 	if (!Ready()) return false;
@@ -215,14 +205,9 @@ RadSimulManager::ProcessRay(RAY *r)
 	if (!ray_pnprocs) {	// single-threaded mode?
 		samplendx++;
 		rayvalue(r);
-		return true;
+		return 1;
 	}
-	int	rv = ray_pqueue(r);
-	if (rv < 0) {
-		error(WARNING, "ray tracing process(es) died");
-		return false;
-	}
-	return (rv > 0);
+	return ray_pqueue(r);
 }
 
 // Wait for next result (or fail)
@@ -247,15 +232,6 @@ RadSimulManager::Cleanup(bool everything)
 	else
 		ray_pdone(everything);
 	return 0;
-}
-
-// How many threads are currently unoccupied?
-int
-RadSimulManager::ThreadsAvailable() const
-{
-	if (!ray_pnprocs) return 1;
-
-	return ray_pnidle;
 }
 
 // Global pointer to simulation manager for trace call-back (only one)
@@ -405,8 +381,12 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 				if (ray_fifo_in(&res) < 0)
 					return -1;
 				sendRes = false;
-			} else
-				sendRes &= ProcessRay(&res);
+			} else {
+				int	rv = ProcessRay(&res);
+				if (rv < 0)
+					return -1;
+				sendRes &= (rv > 0);
+			}
 		} else if (ThreadsAvailable() < NThreads() &&
 				FlushQueue() < 0)
 			return -1;

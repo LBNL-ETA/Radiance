@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.16 2024/10/23 23:40:41 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.17 2024/11/13 02:43:51 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -27,8 +27,9 @@ class RadSimulManager {
 	char *			header;			// header (less intro and format)
 	int			hlen;			// header string length
 protected:
-				// Assign ray to subthread (fails if NThreads()<2)
-	bool			SplitRay(RAY *r);
+	bool			SplitRay(RAY *r) {
+					return (ray_pnprocs && ray_psend(r) > 0);
+				}
 public:
 				RadSimulManager(const char *octn = NULL) {
 					header = NULL; hlen = 0;
@@ -65,13 +66,15 @@ public:
 					return ray_pnprocs + !ray_pnprocs;
 				}
 				/// How many threads are currently unoccupied?
-	int			ThreadsAvailable() const;
+	int			ThreadsAvailable() const {
+					return ray_pnprocs ? ray_pnidle : 1;
+				}
 				/// Are we ready?
 	bool			Ready() const {
 					return (octname && nobjects > 0);
 				}
 				/// Process a ray (in subthread), optional result
-	bool			ProcessRay(RAY *r);
+	int			ProcessRay(RAY *r);
 				/// Wait for next result (or fail)
 	bool			WaitResult(RAY *r);
 				/// Close octree, free data, return status
@@ -120,13 +123,13 @@ public:
 	int			EnqueueBundle(const FVECT orig_direc[], int n,
 						RNUMBER rID0 = 0);
 				/// Enqueue a single ray w/ optional ray ID
-	bool			EnqueueRay(const FVECT org, const FVECT dir,
+	int			EnqueueRay(const FVECT org, const FVECT dir,
 						RNUMBER rID = 0) {
 					if (dir == org+1)
 						return(EnqueueBundle((const FVECT *)org, 1, rID) > 0);
 					FVECT	orgdir[2];
 					VCOPY(orgdir[0], org); VCOPY(orgdir[1], dir);
-					return(EnqueueBundle(orgdir, 1, rID) > 0);
+					return EnqueueBundle(orgdir, 1, rID);
 				}
 				/// Set/change cooked ray callback
 	void			SetCookedCall(RayReportCall *cb, void *cd = NULL) {
