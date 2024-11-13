@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.22 2024/11/13 02:43:51 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.23 2024/11/13 18:47:01 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -181,8 +181,7 @@ RadSimulManager::GetNCores()
 int
 RadSimulManager::SetThreadCount(int nt)
 {
-	if (!Ready())
-		return 0;
+	if (!Ready()) return 0;
 
 	if (nt <= 0) nt = castonly ? 1 : GetNCores();
 
@@ -200,7 +199,7 @@ RadSimulManager::SetThreadCount(int nt)
 int
 RadSimulManager::ProcessRay(RAY *r)
 {
-	if (!Ready()) return false;
+	if (!Ready()) return -1;
 
 	if (!ray_pnprocs) {	// single-threaded mode?
 		samplendx++;
@@ -349,8 +348,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 	int	nqueued = 0;
 	RAY	res;
 
-	if (!Ready())
-		return -1;
+	if (!Ready()) return -1;
 
 	if (castonly && !cookedCall)
 		error(INTERNAL, "EnqueueBundle() called in castonly mode without cookedCall");
