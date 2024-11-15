@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.95 2024/04/19 01:52:50 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.96 2024/11/15 20:47:42 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -112,6 +112,10 @@ ambsample(				/* initial ambient division sample */
 	if (rayorigin(&ar, hp->atyp, hp->rp, ar.rcoef) < 0)
 		return(0);
 	if (ambacc > FTINY) {
+#ifdef SSKIPOPT
+		ar.rsrc = -1;		/* protect cache from source opt. */
+		ar.scorr = 1.f;
+#endif
 		smultscolor(ar.rcoef, hp->acoef);
 		scalescolor(ar.rcoef, 1./AVGREFL);
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.35 2024/10/30 16:47:03 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.36 2024/11/15 20:47:42 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -31,7 +31,10 @@ char  *progname;			/* argv[0] */
 char  *octname;				/* octree name */
 char  *sigerr[NSIG];			/* signal error messages */
 char  *errfile = NULL;			/* error output file */
-
+#ifdef SSKIPOPT
+int  *ssndx_map = NULL;			/* loaded source index map */
+float  *scorr_map = NULL;		/* loaded source correction map */
+#endif
 extern time_t  time();
 extern time_t  tstart;			/* start time */
 
@@ -95,6 +98,10 @@ main(int  argc, char  *argv[])
 	char  *recover = NULL;
 	char  *outfile = NULL;
 	char  *zfile = NULL;
+#ifdef SSKIPOPT
+	char  *sskipspec = NULL;
+	char  *scorrfile = NULL;
+#endif
 	int  loadflags = ~IO_FILES;
 	int  seqstart = 0;
 	int  persist = 0;
@@ -241,10 +248,22 @@ main(int  argc, char  *argv[])
 				check(2,"s");
 			recover = argv[++i];
 			break;
-		case 't':				/* timer */
-			check(2,"i");
-			ralrm = atoi(argv[++i]);
+#ifdef SSKIPOPT
+		case 'd':
+			switch (argv[i][2]) {
+			case 'S':			/* direct skip */
+				check(3,"s");
+				sskipspec = argv[++i];
+				break;
+			case 'C':			/* direct correction */
+				check(3,"s");
+				scorrfile = argv[++i];
+				break;
+			default:
+				goto badopt;
+			}
 			break;
+#endif
 #ifdef  PERSIST
 		case 'P':				/* persist file */
 			if (argv[i][2] == 'P') {
@@ -257,6 +276,10 @@ main(int  argc, char  *argv[])
 			persistfile(argv[++i]);
 			break;
 #endif
+		case 't':				/* timer */
+			check(2,"i");
+			ralrm = atoi(argv[++i]);
+			break;
 		case 'w':				/* warnings */
 			rval = erract[WARNING].pf != NULL;
 			check_bool(2,rval);
@@ -354,7 +377,21 @@ main(int  argc, char  *argv[])
 	ray_init_pmap();     /* PMAP: set up & load photon maps */
 
 	marksources();			/* find and mark sources */
-
+#ifdef SSKIPOPT
+	if (sskipspec != NULL) {	/* load source skip maps? */
+		if ((seqstart > 0) | (persist > 0))
+			error(USER,
+			"source skip map incompatible with -S/-P/-PP");
+		if (srcskip_open(sskipspec, scorrfile) <= 0)
+			quit(1);
+		if ((ssndx_map = srcskip_ndxmap()) == NULL)
+			quit(1);
+		if (scorrfile != NULL &&
+				(scorr_map = srcskip_corrmap()) == NULL)
+			quit(1);
+		srcskip_close();	/* leaves maps loaded */
+	}
+#endif
 	setambient();			/* initialize ambient calculation */
 	
 	fflush(stdout);			/* in case we're duplicating header */
@@ -425,6 +462,27 @@ badopt:
 #undef	check_bool
 }
 
+#ifdef SSKIPOPT
+void				/* source skip parameters for primary */
+sskip_ray(RAY *r, double h, double v)
+{
+	size_t	ssi;
+
+	if (ssndx_map == NULL)
+		return;		/* nothing to do */
+
+				/* rows counted from the top! */
+	ssi = (size_t)((1.-v)*sskip_dim[1])*sskip_dim[0] +
+			(size_t)(h*sskip_dim[0]);
+
+	if (ssi >= sskip_dim[0]*sskip_dim[1])
+		error(CONSISTENCY, "bad index in sskip_ray()");
+
+	r->rsrc = ssndx_map[ssi];
+	if (scorr_map != NULL)
+		r->scorr = scorr_map[ssi];
+}
+#endif
 
 void
 wputs(				/* warning output function */

@@ -2751,3 +2751,10 @@ is an optional compile in the src/rt directory.  The output
 model is more general in some respects and the operations more
 efficient, but standard output is not supported, nor is ASCII
 results data.
+
+Added experimental source-skipping method to rpict for scenes
+with large number of light sources.  Currently works with
+rcontrib and separate srcsamp image-processing tool.  Controlling
+rpict options are -dS for skip bitmap specification and -dC
+for correction coefficient image.  Compile using -DSSKIPOPT
+to include this option.

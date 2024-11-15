@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.25 2024/11/09 15:21:32 greg Exp $ */
+/* RCSid $Id: source.h,v 2.26 2024/11/15 20:47:42 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -145,6 +145,19 @@ extern int  nsources;			/* the number of sources */
 #define  getmaxdisk(c,o)	(*sfun[(o)->otype].of->getdisk)(c,o)
 #define  setsource(s,o)		(*sfun[(o)->otype].of->setsrc)(s,o)
 
+#define  SSKIPFLSIZ		((nsources+7) >> 3)
+
+extern uby8	*ssf_select;		/* sources we may skip */
+
+#define  sskip_new()		((uby8 *)ecalloc(1,SSKIPFLSIZ))
+#define  sskip_free(fl)		(efree(fl), fl=NULL)
+#define  sskip_eq(fl1,fl2)	!memcmp(fl1, fl2, SSKIPFLSIZ)
+#define  sskip_cpy(dfl,sfl)	memcpy(dfl,sfl,SSKIPFLSIZ)
+#define  sskip_op(fl,op,sn)	((fl)[(sn)>>3] op (1<<((sn)&7)))
+#define  sskip_chk(fl,sn)	sskip_op(fl,&,sn)
+#define  sskip_set(fl,sn)	sskip_op(fl,|=,sn)
+#define  sskip_clr(fl,sn)	sskip_op(fl,&=~,sn)
+
 					/* defined in source.c */
 extern void	marksources(void);
 extern void	distantsources(void);
@@ -163,6 +176,9 @@ extern int      srcblocked(RAY *r);
 extern void     freeobscache(SRCREC *s);
 extern void	markclip(OBJREC *m);
 					/* defined in srcsamp.c */
+extern int	sskip_rsi(uby8 *flags);
+extern uby8	*sskip_flags(int rsi);
+extern void	sskip_addflags(uby8 *dfl, const uby8 *sfl);
 extern int	srcskip(int sn, RAY *r);
 extern double	nextssamp(RAY *r, SRCINDEX *si);
 extern int	skipparts(int ct[3], int sz[3], int pp[2], unsigned char *pt);
@@ -170,6 +186,14 @@ extern void	nopart(SRCINDEX *si, RAY *r);
 extern void	cylpart(SRCINDEX *si, RAY *r);
 extern void	flatpart(SRCINDEX *si, RAY *r);
 extern double	scylform(int sn, FVECT dir);
+					/* defined in srcskipload.c */
+extern int	sskip_dim[2];		/* source skip image size */
+extern int	srcskip_open(char *bmpspec, char *scorrimg);
+extern int	srcskip_getrow(int row, int *sndx, float *scorr);
+extern int	*srcskip_ndxmap(void);
+extern float	*srcskip_corrmap(void);
+extern void	srcskip_close(void);
+extern void	srcskip_free_maps(void);
 					/* defined in srcsupp.c */
 extern void	initstypes(void);
 extern int	newsource(void);

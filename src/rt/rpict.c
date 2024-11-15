@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.104 2024/08/14 20:05:23 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.105 2024/11/15 20:47:42 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -118,6 +118,8 @@ time_t  tstart;				/* starting time */
 #define	 pixjitter()	(.5+dstrpix*(.5-frandom()))
 
 int  hres, vres;			/* resolution for this frame */
+
+extern void	sskip_ray(RAY *r, double h, double v);
 
 static VIEW	lastview;		/* the previous view input */
 
@@ -699,7 +701,9 @@ pixvalue(		/* compute pixel value */
 		return(0.0);
 
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
-
+#ifdef SSKIPOPT
+	sskip_ray(&thisray, hpos, vpos);	/* source skip hack */
+#endif
 	rayvalue(&thisray);			/* trace ray */
 						/* -> color */
 	scolor_out(col, out_prims, thisray.rcol);
