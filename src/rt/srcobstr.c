@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.20 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.21 2024/11/17 19:36:09 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -51,7 +51,7 @@ castshadow(int sn, FVECT rorg, FVECT rdir)
 		if (srcblocker(&rt1))
 			return(1);
 					/* move past failed blocker */
-		VSUM(rt.rorg, rt.rop, rt.rdir, FTINY);
+		VSUM(rt.rorg, rt.rop, rt.rdir, 10.*FTINY);
 		rayclear(&rt);		/* & try again... */
 	}
 	return(0);			/* found no blockers */
