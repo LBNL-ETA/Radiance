@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.5 2024/05/02 22:10:43 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.6 2024/11/19 16:28:18 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -68,12 +68,14 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 extern void tranotify(OBJECT obj);
 static void tabin(RAY *r);
 static RayReportCall ourtrace;
-static RayReportCall printvals;
 
-static void  putscolor(COLORV *scol);
+RayReportCall printvals;		/* print selected ray values */
+
+void  putscolor(COLORV *scol);		/* convert/print spectral color */
 
 static oputf_t *ray_out[32], *every_out[32];
-static putf_t *putreal;
+
+putf_t *putreal;			/* put out real vector */
 
 void
 quit(			/* quit program */
