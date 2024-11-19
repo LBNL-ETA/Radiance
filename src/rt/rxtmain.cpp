@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.10 2024/10/31 19:02:38 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.11 2024/11/19 16:27:21 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -142,7 +142,7 @@ main(int  argc, char  *argv[])
 			break;
 		case 'I':				/* immed. irradiance */
 			rval = myRTmanager.rtFlags & RTimmIrrad;
-			check_bool(3,rval);
+			check_bool(2,rval);
 			if (rval) myRTmanager.rtFlags |= RTimmIrrad;
 			else myRTmanager.rtFlags &= ~RTimmIrrad;
 			break;
