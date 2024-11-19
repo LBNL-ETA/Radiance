@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.6 2024/11/19 16:28:18 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.7 2024/11/19 16:29:44 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -413,7 +413,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 	return(ncomp);
 }
 
-static int
+int
 printvals(			/* print requested ray values */
 	RAY  *r, void *cd
 )
@@ -768,7 +768,7 @@ putrgbe(RREAL *v, int n)	/* output RGBE color */
 	putbinary(cout, sizeof(cout), 1, stdout);
 }
 
-static void
+void
 putscolor(COLORV *scol)		/* output (spectral) color */
 {
 	static COLORMAT	xyz2myrgbmat;
