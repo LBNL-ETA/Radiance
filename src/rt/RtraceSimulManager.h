@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.17 2024/11/13 02:43:51 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.18 2024/11/19 20:39:40 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -138,10 +138,17 @@ public:
 					cookedCall = cb;
 					ccData = cb ? cd : NULL;
 				}
-				/// Set/change trace callback (before threading)
+				/// Set/change trace callback
 	void			SetTraceCall(RayReportCall *cb, void *cd = NULL) {
+					if (cb == traceCall) {
+						if (cb) tcData = cd;
+						return;
+					}
+					int	nt = NThreads();
+					if (nt > 1) SetThreadCount(1);
 					traceCall = cb;
 					tcData = cb ? cd : NULL;
+					if (nt > 1) SetThreadCount(nt);
 				}
 				/// Are we ready?
 	bool			Ready() const {
