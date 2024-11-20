@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.23 2024/11/13 18:47:01 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.24 2024/11/20 17:46:25 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -315,13 +315,19 @@ extern "C" int	m_normal(OBJREC *m, RAY *r);
 static void
 rayirrad(RAY *r)
 {
-					/* pretend we hit surface */
-	r->rxt = r->rot = 1e-5;
-	VSUM(r->rop, r->rorg, r->rdir, r->rot);
-	r->ron[0] = -r->rdir[0];
-	r->ron[1] = -r->rdir[1];
-	r->ron[2] = -r->rdir[2];
+					/* orientation -> normal */
+	VCOPY(r->ron, r->rdir);
+					/* pretend normal incidence */
+	r->rdir[0] = -r->ron[0];
+	r->rdir[1] = -r->ron[1];
+	r->rdir[2] = -r->ron[2];
 	r->rod = 1.0;
+					/* counterfeit other params */
+	r->rxt = r->rot = 1e-4;
+					/* move comfortably above sample pos. */
+	VSUM(r->rop, r->rorg, r->ron, r->rot);
+					/* leap-frog for pretend origin */
+	VSUM(r->rorg, r->rop, r->ron, r->rot);
 					/* compute result */
 	r->revf = raytrace;
 	m_normal(&Lamb, r);
