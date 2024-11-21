@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.38 2024/09/10 20:24:42 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.39 2024/11/21 17:15:54 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -245,7 +245,7 @@ FILE	*fp
 	else
 		info.expos /= WHTEFFICACY;
 						/* prepare library */
-	if ((err = tmSetSpace(tms, info.primp, 1./info.expos, NULL)) != TM_E_OK)
+	if ((err = tmSetSpace(tms, info.primp, 1./info.expos)) != TM_E_OK)
 		goto done;
 	err = TM_E_NOMEM;			/* allocate arrays */
 	*lpp = (TMbright *)malloc(sizeof(TMbright) * *xp * *yp);

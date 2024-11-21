@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.77 2024/09/10 20:24:42 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.78 2024/11/21 17:15:54 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -1073,7 +1073,7 @@ make_tonemap(void)			/* initialize tone mapping */
 		tmGlobal = tmInit(flags, stdprims, gamcor);
 		if (tmGlobal == NULL)
 			goto memerr;
-		if (tmSetSpace(tmGlobal, stdprims, WHTEFFICACY/exposure, NULL))
+		if (tmSetSpace(tmGlobal, stdprims, WHTEFFICACY/exposure))
 			goto tmerr;
 						/* compute picture histogram */
 		for (y = 0; y < ymax; y++) {

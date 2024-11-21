@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.32 2022/01/15 16:57:46 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.33 2024/11/21 17:15:54 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -83,7 +83,6 @@ typedef struct {
 	int		cdiv[3];	/* computed color divisors */
 	RGBPRIMP	inppri;		/* current input primaries */
 	double		inpsf;		/* current input scalefactor */
-	void		*inpdat;	/* current input client data */
 	COLORMAT	cmat;		/* color conversion matrix */
 	TMbright	hbrmin, hbrmax;	/* histogram brightness limits */	
 	HIST_TYP	*histo;		/* input histogram */
@@ -154,14 +153,13 @@ tmInit(int flags, RGBPRIMP monpri, double gamval);
 */
 
 extern int
-tmSetSpace(TMstruct *tms, RGBPRIMP pri, double sf, void *dat);
+tmSetSpace(TMstruct *tms, RGBPRIMP pri, double sf);
 /*
 	Set color primaries and scale factor for incoming scanlines.
 
 	tms	-	tone mapping structure pointer.
 	pri	-	RGB color input primaries (Note 1).
 	sf	-	scale factor to get to luminance in cd/m^2.
-	dat	-	application-specific data (NULL if not needed)
 
 	returns	-	0 on success, TM_E_* code on failure.
 */

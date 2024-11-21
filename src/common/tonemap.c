@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.54 2022/01/15 16:57:46 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.55 2024/11/21 17:15:54 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -75,7 +75,6 @@ double	gamval
 			tmnew->inpsf = WHTEFFICACY;
 	tmnew->cmat[0][1] = tmnew->cmat[0][2] = tmnew->cmat[1][0] =
 	tmnew->cmat[1][2] = tmnew->cmat[2][0] = tmnew->cmat[2][1] = 0.;
-	tmnew->inpdat = NULL;
 	tmnew->hbrmin = 10; tmnew->hbrmax = -10;
 	tmnew->histo = NULL;
 	tmnew->mbrmin = 10; tmnew->mbrmax = -10;
@@ -94,8 +93,7 @@ int
 tmSetSpace(			/* set input color space for conversions */
 TMstruct	*tms,
 RGBPRIMP	pri,
-double	sf,
-void	*dat
+double	sf
 )
 {
 	static const char funcName[] = "tmSetSpace";
@@ -106,11 +104,10 @@ void	*dat
 	if (sf <= 1e-12)
 		returnErr(TM_E_ILLEGAL);
 						/* check if no change */
-	if (pri == tms->inppri && FEQ(sf, tms->inpsf) && dat == tms->inpdat)
+	if (pri == tms->inppri && FEQ(sf, tms->inpsf))
 		returnOK;
 	tms->inppri = pri;			/* let's set it */
 	tms->inpsf = sf;
-	tms->inpdat = dat;
 
 	if (tms->flags & TM_F_BW) {		/* color doesn't matter */
 		tms->monpri = tms->inppri;		/* eliminate xform */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.12 2022/01/15 16:57:46 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.13 2024/11/21 17:15:54 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -134,28 +134,28 @@ tmLoadTIFF(TMstruct *tms, TMbright **lpp, uby8 **cpp,
 	case TC_LOGLUV24:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_RAW);
 		sl.l = (uint32 *)malloc(width*sizeof(uint32));
-		tmSetSpace(tms, TM_XYZPRIM, stonits, NULL);
+		tmSetSpace(tms, TM_XYZPRIM, stonits);
 		break;
 	case TC_LOGL16:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_16BIT);
 		sl.w = (uint16 *)malloc(width*sizeof(uint16));
-		tmSetSpace(tms, tms->monpri, stonits, NULL);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	case TC_RGBFLOAT:
 		sl.f = (float *)malloc(width*3*sizeof(float));
-		tmSetSpace(tms, inppri, stonits, NULL);
+		tmSetSpace(tms, inppri, stonits);
 		break;
 	case TC_GRYFLOAT:
 		sl.f = (float *)malloc(width*sizeof(float));
-		tmSetSpace(tms, tms->monpri, stonits, NULL);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	case TC_RGBSHORT:
 		sl.w = (uint16 *)malloc(width*3*sizeof(uint16));
-		tmSetSpace(tms, inppri, stonits, NULL);
+		tmSetSpace(tms, inppri, stonits);
 		break;
 	case TC_GRYSHORT:
 		sl.w = (uint16 *)malloc(width*sizeof(uint16));
-		tmSetSpace(tms, tms->monpri, stonits, NULL);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	default:
 		err = TM_E_CODERR1;
