@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.8 2024/11/07 18:07:43 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.9 2024/12/03 17:39:42 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -51,6 +51,19 @@ struct RowAssignment {
 	uint32			row;		// row to do
 	uint32			ac;		// accumulation count
 };
+
+// Get format identifier
+const char *
+formstr(int f)
+{
+	switch (f) {
+	case 'a': return("ascii");
+	case 'f': return("float");
+	case 'd': return("double");
+	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
+	}
+	return("unknown");
+}
 
 // Our default data share function
 RdataShare *

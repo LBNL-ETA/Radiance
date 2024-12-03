@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.8 2024/11/07 20:56:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.9 2024/12/03 17:39:42 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -94,18 +94,6 @@ sigdie(			/* set fatal signal */
 	if (signal(signo, onsig) == SIG_IGN)
 		signal(signo, SIG_IGN);
 	sigerr[signo] = msg;
-}
-
-const char *
-formstr(int f)				// return format identifier
-{
-	switch (f) {
-	case 'a': return("ascii");
-	case 'f': return("float");
-	case 'd': return("double");
-	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
-	}
-	return("unknown");
 }
 
 /* set input/output format */

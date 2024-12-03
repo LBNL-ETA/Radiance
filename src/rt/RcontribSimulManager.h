@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.7 2024/11/08 15:49:34 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.8 2024/12/03 17:39:42 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -336,5 +336,7 @@ public:
 					return RtraceSimulManager::Cleanup(everything);
 				}
 };
+
+extern const char *	formstr(int f);		// string from format
 
 #endif /* RcontribSimulManager_h */
