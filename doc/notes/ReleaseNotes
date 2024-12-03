@@ -2758,3 +2758,6 @@ rcontrib and separate srcsamp image-processing tool.  Controlling
 rpict options are -dS for skip bitmap specification and -dC
 for correction coefficient image.  Compile using -DSSKIPOPT
 to include this option.
+
+Added strnstr.c compatibility module in ray/src/common, since
+it isn't present on Linux-derivatives.

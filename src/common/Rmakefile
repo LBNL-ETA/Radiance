@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.92 2024/08/14 20:05:23 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.93 2024/12/03 01:11:43 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -10,7 +10,7 @@ CC = cc
 AR = ar
 SPECIAL =
 
-COMPAT = erf.o strcmp.o strlcpy.o
+COMPAT = erf.o strcmp.o strnstr.o strlcpy.o
 
 LIBDIR = /usr/local/lib/ray
 
