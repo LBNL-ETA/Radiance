@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.37 2024/08/05 21:54:01 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.38 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -256,7 +256,7 @@ x11_clear(			/* clear our display */
 	if (yres < MINHEIGHT)
 		yres = MINHEIGHT;
 						/* resize window */
-	if (xres != gwidth || yres != gheight) {
+	if ((xres != gwidth) | (yres != gheight)) {
 		XSelectInput(ourdisplay, gwind, 0);
 		XResizeWindow(ourdisplay, gwind, xres, yres+comheight);
 		gwidth = xres;
@@ -267,7 +267,7 @@ x11_clear(			/* clear our display */
 	}
 	XClearWindow(ourdisplay, gwind);
 						/* reinitialize color table */
-	if (ourvinfo.class == PseudoColor || ourvinfo.class == GrayScale) {
+	if ((ourvinfo.class == PseudoColor) | (ourvinfo.class == GrayScale)) {
 		if (getpixels() == 0)
 			eputs("cannot allocate colors\n");
 		else
@@ -375,7 +375,7 @@ x11_comout(		/* output a string to command line */
 	const char  *outp
 )
 {
-	if (comline == NULL || outp == NULL || !outp[0])
+	if ((comline == NULL) | (outp == NULL) || !outp[0])
 		return;
 	xt_puts(outp, comline);
 	if (outp[strlen(outp)-1] == '\n')

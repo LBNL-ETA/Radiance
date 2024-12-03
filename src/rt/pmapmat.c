@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.24 2021/02/22 13:27:49 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.25 2024/12/03 19:36:58 greg Exp $";
 #endif
 /* 
 
@@ -497,7 +497,7 @@ static void getacoords (ANISODAT *nd)
    for (i = 0; i < 3; i++)
       nd -> u [i] = evalue(mf -> ep [i]);
    
-   if (errno == EDOM || errno == ERANGE)
+   if ((errno == EDOM) | (errno == ERANGE))
       nd -> u [0] = nd -> u [1] = nd -> u [2] = 0.0;
       
    if (mf -> fxp != &unitxf)
@@ -1546,7 +1546,7 @@ static int brdfPhotonScatter (OBJREC *mat, RAY *rayIn)
             evalue(mf->ep[0]), evalue(mf->ep[1]), evalue(mf->ep[2]));
    setcolor(tspecCol, 
             evalue(mf->ep[3]), evalue(mf->ep[4]), evalue(mf->ep[5]));
-   if (errno == EDOM || errno == ERANGE)
+   if ((errno == EDOM) | (errno == ERANGE))
       objerror(mat, WARNING, "compute error");
    else {
       /* Set up probz */

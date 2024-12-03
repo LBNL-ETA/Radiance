@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_data.c,v 2.11 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: mx_data.c,v 2.12 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  mx_data.c - routine for stored mixtures.
@@ -73,13 +73,13 @@ mx_data(			/* interpolate mixture data */
 	errno = 0;
 	for (i = 0; i < dp->nd; i++) {
 		pt[i] = evalue(mf->ep[i]);
-		if (errno == EDOM || errno == ERANGE)
+		if ((errno == EDOM) | (errno == ERANGE))
 			goto computerr;
 	}
 	coef = datavalue(dp, pt);
 	errno = 0;
 	coef = funvalue(m->oargs.sarg[2], 1, &coef);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
 	if (raymixture(r, mod[0], mod[1], coef)) {
 		if (m->omod != OVOID)
@@ -124,13 +124,13 @@ mx_pdata(			/* interpolate mixture picture */
 	errno = 0;
 	pt[1] = evalue(mf->ep[0]);	/* y major ordering */
 	pt[0] = evalue(mf->ep[1]);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
 	for (i = 0; i < 3; i++)		/* get pixel from picture */
 		col[i] = datavalue(dp+i, pt);
 	errno = 0;			/* evaluate function on pixel */
 	coef = funvalue(m->oargs.sarg[2], 3, col);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
 	if (raymixture(r, mod[0], mod[1], coef)) {
 		if (m->omod != OVOID)

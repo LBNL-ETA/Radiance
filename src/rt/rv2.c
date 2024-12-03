@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.75 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.76 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -459,7 +459,7 @@ getexposure(				/* get new exposure */
 					return;
 			}
 		}
-		if (*cp == '+' || *cp == '-')	/* f-stops */
+		if ((*cp == '+') | (*cp == '-'))	/* f-stops */
 			e *= pow(2.0, atof(cp));
 		else				/* multiplier */
 			e *= atof(cp);

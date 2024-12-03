@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_func.c,v 2.10 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: t_func.c,v 2.11 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  t_func.c - routine for procedural textures.
@@ -46,7 +46,7 @@ t_func(			/* compute texture for ray */
 	errno = 0;
 	for (i = 0; i < 3; i++) {
 		disp[i] = evalue(mf->ep[i]);
-		if (errno == EDOM || errno == ERANGE) {
+		if ((errno == EDOM) | (errno == ERANGE)) {
 			objerror(m, WARNING, "compute error");
 			return(0);
 		}

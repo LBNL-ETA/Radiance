@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11twind.c,v 2.11 2024/05/23 22:49:20 greg Exp $";
+static const char	RCSid[] = "$Id: x11twind.c,v 2.12 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  x11twind.c - routines for X11 text windows.
@@ -70,7 +70,7 @@ char  *fontname
 		Width(t->f);		/* number of columns */
 	t->nr = height /
 		Height(t->f);		/* number of rows */
-	if (t->nc < 1 || t->nr < 1)
+	if ((t->nc < 1) | (t->nr < 1))
 		return(NULL);
 	if ((t->lp = (char **)calloc(t->nr, sizeof(char *))) == NULL)
 		return(NULL);
@@ -143,7 +143,7 @@ int  r
 	char  *cp;
 	int  i;
 
-	if (r < 0 || r >= t->nr)
+	if ((r < 0) | (r >= t->nr))
 		return;
 	checkcurs(t);
 					/* move lines */
@@ -172,7 +172,7 @@ int  r
 	char  *cp;
 	int  i;
 
-	if (r < 0 || r >= t->nr)
+	if ((r < 0) | (r >= t->nr))
 		return;
 	checkcurs(t);
 					/* move lines */
@@ -225,7 +225,7 @@ TEXTWIND  *t,
 int  r, int c
 )
 {
-	if (r < 0 || c < 0 || r >= t->nr || c >= t->nc)
+	if ((r < 0) | (c < 0) | (r >= t->nr) | (c >= t->nc))
 		return;
 	checkcurs(t);
 	t->r = r;

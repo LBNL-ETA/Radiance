@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.29 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.30 2024/12/03 19:36:58 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -294,7 +294,7 @@ intext(			/* check to see if p is in text glyph */
 		x *= 255.;
 	h = x;
 	i = y = DOT(v, tp->down);
-	if (x < 0.0 || y < 0.0)
+	if ((x < 0.0) | (y < 0.0))
 		return(0);
 	x -= (double)h;
 	y = ((i+1) - y)*255.;
@@ -328,8 +328,8 @@ inglyph(		/* (x,y) within font glyph gl? */
 		return(0);
 	xlb = x;
 	ylb = y;
-	if (gl->left > xlb || gl->right <= xlb ||	/* check extent */
-			gl->bottom > ylb || gl->top <= ylb)
+	if ((gl->left > xlb) | (gl->right <= xlb) |	/* check extent */
+			(gl->bottom > ylb) | (gl->top <= ylb))
 		return(0);
 	xlb = xlb<<1 | 1;		/* add 1/2 to test points... */
 	ylb = ylb<<1 | 1;		/* ...so no equal comparisons */
