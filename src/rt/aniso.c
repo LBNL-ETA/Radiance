@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.64 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.65 2024/12/05 19:23:43 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -49,7 +49,6 @@ typedef struct {
 	short  specfl;		/* specularity flags, defined above */
 	SCOLOR  mcolor;		/* color of this material */
 	SCOLOR  scolor;		/* color of specular component */
-	FVECT  vrefl;		/* vector in reflected direction */
 	FVECT  prdir;		/* vector in transmitted direction */
 	FVECT  u, v;		/* u and v vectors orienting anisotropy */
 	double  u_alpha;	/* u roughness */
@@ -237,10 +236,6 @@ m_aniso(			/* shade ray that hit something anisotropic */
 						/* check threshold */
 		if (specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
-						/* compute refl. direction */
-		VSUM(nd.vrefl, r->rdir, nd.pnorm, 2.0*nd.pdot);
-		if (DOT(nd.vrefl, r->ron) <= FTINY)	/* penetration? */
-			VSUM(nd.vrefl, r->rdir, r->ron, 2.0*r->rod);
 	}
 						/* compute transmission */
 	if (m->otype == MAT_TRANS2) {
@@ -321,7 +316,7 @@ getacoords(		/* set up coordinate system */
 		np->u[i] = evalue(mf->ep[i]);
 	if ((errno == EDOM) | (errno == ERANGE))
 		np->u[0] = np->u[1] = np->u[2] = 0.0;
-	if (mf->fxp != &unitxf)
+	else if (mf->fxp != &unitxf)
 		multv3(np->u, np->u, mf->fxp->xfm);
 	fcross(np->v, np->pnorm, np->u);
 	if (normalize(np->v) == 0.0) {
@@ -345,12 +340,12 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	FVECT  h;
 	double  rv[2];
 	double  d, sinp, cosp;
-	SCOLOR	scol;
 	int  maxiter, ntrials, nstarget, nstaken;
 	int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
 			rayorigin(&sr, RSPECULAR, np->rp, np->scolor) == 0) {
+		SCOLOR	scol;
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
 			nstarget = specjitter*np->rp->rweight + .5;
@@ -366,8 +361,8 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 		scolorblack(scol);
 		dimlist[ndims++] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
-		for (nstaken = ntrials = 0; nstaken < nstarget &&
-						ntrials < maxiter; ntrials++) {
+		for (nstaken = ntrials = 0; (nstaken < nstarget) &
+						(ntrials < maxiter); ntrials++) {
 			if (ntrials)
 				d = frandom();
 			else
@@ -381,12 +376,9 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			sinp *= d;
 			if ((0. <= specjitter) & (specjitter < 1.))
 				rv[1] = 1.0 - specjitter*rv[1];
-			if (rv[1] <= FTINY)
-				d = 1.0;
-			else
-				d = sqrt(-log(rv[1]) /
+			d = (rv[1] <= FTINY) ? 1.0 : sqrt( -log(rv[1]) /
 					(cosp*cosp/(np->u_alpha*np->u_alpha) +
-					 sinp*sinp/(np->v_alpha*np->v_alpha)));
+					 sinp*sinp/(np->v_alpha*np->v_alpha)) );
 			for (i = 0; i < 3; i++)
 				h[i] = np->pnorm[i] +
 					d*(cosp*np->u[i] + sinp*np->v[i]);
@@ -436,8 +428,8 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 		}
 		dimlist[ndims++] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
-		for (nstaken = ntrials = 0; nstaken < nstarget &&
-						ntrials < maxiter; ntrials++) {
+		for (nstaken = ntrials = 0; (nstaken < nstarget) &
+						(ntrials < maxiter); ntrials++) {
 			if (ntrials)
 				d = frandom();
 			else
@@ -460,8 +452,8 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			for (i = 0; i < 3; i++)
 				sr.rdir[i] = np->prdir[i] +
 						d*(cosp*np->u[i] + sinp*np->v[i]);
-			if (DOT(sr.rdir, np->rp->ron) >= -FTINY)
-				continue;
+			if (DOT(sr.rdir,np->rp->ron) >= -FTINY)
+				continue;	/* reject sample */
 			normalize(sr.rdir);	/* OK, normalize */
 			if (nstaken)		/* multi-sampling */
 				rayclear(&sr);

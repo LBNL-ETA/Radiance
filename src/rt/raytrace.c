@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.91 2024/11/21 23:24:33 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.92 2024/12/05 19:23:43 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -461,7 +461,7 @@ raynormal(		/* compute perturbed normal for ray */
 		return(r->rod);
 	}
 	newdot = -DOT(norm, r->rdir);
-	if ((newdot > 0.0) != (r->rod > 0.0)) {		/* fix orientation */
+	if ((newdot > 0.0) ^ (r->rod > 0.0)) {		/* fix orientation */
 		for (i = 0; i < 3; i++)
 			norm[i] += 2.0*newdot*r->rdir[i];
 		newdot = -newdot;

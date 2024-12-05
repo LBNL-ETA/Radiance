@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.41 2024/04/05 01:10:26 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.42 2024/12/05 19:23:43 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -208,7 +208,6 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	RAY  *r
 )
 {
-	int  hitfront = 1;
 	BRDFDAT  nd;
 	RAY  sr;
 	int  hasrefl, hastrans;
@@ -254,7 +253,6 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			nd.pnorm[i] = -nd.pnorm[i];
 			r->pert[i] = -r->pert[i];
 		}
-		hitfront = 0;
 	}
 	copyscolor(nd.mcolor, r->pcol);		/* get pattern color */
 	smultscolor(nd.rdiff, nd.mcolor);	/* modify diffuse values */
@@ -263,7 +261,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	hastrans = (sintens(nd.tdiff) > FTINY);
 						/* load cal file */
 	nd.dp = NULL;
-	mf = getfunc(m, 9, 0x3f, 0);
+	mf = getfunc(m, 9, 0x3F, 0);
 						/* compute transmitted ray */
 	setbrdfunc(&nd);
 	errno = 0;

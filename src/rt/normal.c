@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.84 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.85 2024/12/05 19:23:43 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -56,7 +56,6 @@ typedef struct {
 	short  specfl;		/* specularity flags, defined above */
 	SCOLOR  mcolor;		/* color of this material */
 	SCOLOR  scolor;		/* color of specular component */
-	FVECT  vrefl;		/* vector in direction of reflected ray */
 	FVECT  prdir;		/* vector in transmitted direction */
 	double  alpha2;		/* roughness squared */
 	double  rdiff, rspec;	/* reflected specular, diffuse */
@@ -304,18 +303,17 @@ m_normal(			/* color a ray that hit something normal */
 						/* check threshold */
 		if (!(nd.specfl & SP_PURE) && specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
-						/* compute reflected ray */
-		VSUM(nd.vrefl, r->rdir, nd.pnorm, 2.*nd.pdot);
-						/* penetration? */
-		if (hastexture && DOT(nd.vrefl, r->ron) <= FTINY)
-			VSUM(nd.vrefl, r->rdir, r->ron, 2.*r->rod);
-		checknorm(nd.vrefl);
 	}
 						/* reflected ray */
 	if ((nd.specfl&(SP_REFL|SP_PURE|SP_RBLT)) == (SP_REFL|SP_PURE)) {
 		RAY  lr;
 		if (rayorigin(&lr, REFLECTED, r, nd.scolor) == 0) {
-			VCOPY(lr.rdir, nd.vrefl);
+						/* compute reflected ray */
+			VSUM(lr.rdir, r->rdir, nd.pnorm, 2.*nd.pdot);
+						/* penetration? */
+			if (hastexture && DOT(lr.rdir, r->ron) <= FTINY)
+				VSUM(lr.rdir, r->rdir, r->ron, 2.*r->rod);
+			checknorm(lr.rdir);
 			rayvalue(&lr);
 			smultscolor(lr.rcol, lr.rcoef);
 			copyscolor(r->mcol, lr.rcol);
