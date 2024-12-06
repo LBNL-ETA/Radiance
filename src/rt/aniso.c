@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.65 2024/12/05 19:23:43 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.66 2024/12/06 01:34:21 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -160,17 +160,18 @@ diraniso(		/* compute source contribution */
 		if (dtmp > FTINY*FTINY) {
 			dtmp1 = DOT(h,np->pnorm);
 			dtmp = 1.0 - dtmp1*dtmp1/dtmp;
-			if (dtmp > FTINY*FTINY) {
-				dtmp1 = DOT(h,np->u);
-				dtmp1 *= dtmp1 / au2;
-				dtmp2 = DOT(h,np->v);
-				dtmp2 *= dtmp2 / av2;
-				dtmp = (dtmp1 + dtmp2) / dtmp;
-			}
+		}
+		if (dtmp > FTINY*FTINY) {
+			dtmp1 = DOT(h,np->u);
+			dtmp1 *= dtmp1 / au2;
+			dtmp2 = DOT(h,np->v);
+			dtmp2 *= dtmp2 / av2;
+			dtmp = (dtmp1 + dtmp2) / dtmp;
+			dtmp = exp(-dtmp);
 		} else
-			dtmp = 0.0;
+			dtmp = 1.0;
 						/* Gaussian */
-		dtmp = exp(-dtmp) * (1.0/PI) * sqrt(-ldot/(np->pdot*au2*av2));
+		dtmp *= (1.0/PI) * sqrt(-ldot/(np->pdot*au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copyscolor(sctmp, np->mcolor);
