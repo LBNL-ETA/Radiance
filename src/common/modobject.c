@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.21 2024/12/06 20:30:15 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.22 2024/12/06 20:54:23 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -17,8 +17,8 @@ static const char RCSid[] = "$Id: modobject.c,v 2.21 2024/12/06 20:30:15 greg Ex
 
 
 static struct ohtab {
-	int  hsiz;			/* current table size */
-	OBJECT  *htab;			/* table, if allocated */
+	int	hsiz;			/* current table size */
+	OBJECT	*htab;			/* table, if allocated */
 }  modtab = {100, NULL}, objtab = {1000, NULL};	/* modifiers and objects */
 
 static int  otndx(char *, struct ohtab *);
@@ -48,15 +48,15 @@ lastmod(			/* find modifier definition before obj */
 )
 {
 	OBJREC  *op;
-	int  i;
+	OBJECT  i;
 
 	i = modifier(mname);		/* try hash table first */
 	if ((obj == OVOID) | (i < obj))
 		return(i);
 	for (i = obj; i-- > 0; ) {	/* need to search */
 		op = objptr(i);
-		if (ismodifier(op->otype) && op->oname[0] == mname[0] &&
-					!strcmp(op->oname, mname))
+		if ((ismodifier(op->otype) != 0) & (op->oname[0] == mname[0])
+				&& !strcmp(op->oname, mname))
 			return(i);
 	}
 	return(OVOID);
@@ -196,12 +196,12 @@ truncobjndx(void)		/* remove bogus table entries past end */
 
 	if (nobjects <= 0) {
 		if (modtab.htab != NULL) {
-			free((void *)modtab.htab);
+			free(modtab.htab);
 			modtab.htab = NULL;
 			modtab.hsiz = 100;
 		}
 		if (objtab.htab != NULL) {
-			free((void *)objtab.htab);
+			free(objtab.htab);
 			objtab.htab = NULL;
 			objtab.hsiz = 100;
 		}
@@ -278,6 +278,6 @@ tryagain:
 			i = otndx(onm, tab);
 			tab->htab[i] = oldhtab[ndx];
 		}
-	free((void *)oldhtab);
+	free(oldhtab);
 	goto tryagain;			/* should happen only once! */
 }
