@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.20 2021/02/01 17:36:45 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.21 2024/12/06 20:30:15 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -30,14 +30,14 @@ objndx(				/* get object number from pointer */
 )
 {
 	int	i;
-	long	j;
+	ssize_t	j;
 
 	for (i = (nobjects-1)>>OBJBLKSHFT; i >= 0; i--) {
 		j = op - objblock[i];
-		if ((j >= 0) & (j < OBJBLKSIZ))
+		if ((0 <= j) & (j < OBJBLKSIZ))
 			return(((OBJECT)i<<OBJBLKSHFT) + (OBJECT)j);
 	}
-	return(OVOID);
+	return(OVOID);		/* not in our array -- may still be valid */
 }
 
 
