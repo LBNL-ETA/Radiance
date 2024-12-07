@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.25 2023/02/07 20:28:16 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.26 2024/12/07 02:05:30 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -128,17 +128,21 @@ getobject(				/* read the next object */
 	objp->oname = savqstr(sbuf);
 					/* get arguments */
 	if (objp->otype == MOD_ALIAS) {
-		OBJECT  alias;
+		OBJECT  ref;
+		OBJREC  *rfp;
 		strcpy(sbuf, "EOF");
 		fgetword(sbuf, MAXSTR, fp);
-		if ((alias = modifier(sbuf)) == OVOID) {
+		if ((ref = modifier(sbuf)) == OVOID) {
 			sprintf(errmsg, "(%s): bad reference \"%s\"",
 					name, sbuf);
 			objerror(objp, USER, errmsg);
-		}
-		if (objp->omod == OALIAS || 
-				objp->omod == objptr(alias)->omod) {
-			objp->omod = alias;
+		}			/* skip pass-thru aliases */
+		while ((rfp=objptr(ref))->otype == MOD_ALIAS &&
+				!rfp->oargs.nsargs & (rfp->omod != OVOID))
+			ref = rfp->omod;
+
+		if ((objp->omod == OALIAS) | (objp->omod == rfp->omod)) {
+			objp->omod = ref;
 		} else {
 			objp->oargs.sarg = (char **)malloc(sizeof(char *));
 			if (objp->oargs.sarg == NULL)
