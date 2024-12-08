@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.91 2024/01/05 18:04:28 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.92 2024/12/08 17:36:32 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -163,7 +163,8 @@ if ( !defined $recovery ) {
 			($tensortree==3 && !($doforw && $doback));
 	# Get scene description
 	if ( $mgfin ) {
-		system "mgf2rad @ARGV > $radscn";
+		my $mgfcv = $docolor ? "mgf2rad -s" : "mgf2rad";
+		system "$mgfcv @ARGV > $radscn";
 		die "Could not load MGF input\n" if ( $? );
 	} else {
 		system "xform -e @ARGV > $radscn";
