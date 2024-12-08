@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.8 2018/12/01 19:45:43 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.9 2024/12/08 18:33:23 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -63,11 +63,11 @@ geomBSDF(const SDData *bsp)
 	close(fd);
 					/* set up command */
 	if (do_instance) {
-		sprintf(command, "mgf2rad %s | oconv -f - > %s.oct",
+		sprintf(command, "mgf2rad -s %s | oconv -f - > %s.oct",
 					tmpfile, bsp->name);
 	} else {
 		fflush(stdout);
-		sprintf(command, "mgf2rad %s", tmpfile);
+		sprintf(command, "mgf2rad -s %s", tmpfile);
 	}
 	if (system(command)) {
 		fprintf(stderr, "Error running: %s\n", command);
