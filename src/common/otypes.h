@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.21 2023/12/13 23:26:16 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.22 2024/12/08 18:19:40 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 typedef struct {
-	char  *funame;			/* function name */
+	char  funame[12];		/* function name */
 	int  flags;			/* type flags */
 #ifdef FUN_ARGLIST
 	int  (*funp)(FUN_ARGLIST);	/* pointer to function */
@@ -63,28 +63,29 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MAT_BRTDF	35		/* BRTD function */
 #define  MAT_BSDF	36		/* BSDF data file */
 #define  MAT_ABSDF	37		/* aperture BSDF data file */
-#define  MAT_PDATA	38		/* plastic brdf data */
-#define  MAT_MDATA	39		/* metal brdf data */
-#define  MAT_TDATA	40		/* trans brdf data */
-#define  PAT_CFUNC	41		/* color function */
-#define  MAT_CLIP	42		/* clipping surface */
-#define  PAT_CDATA	43		/* color data */
-#define  PAT_CTEXT	44		/* colored text */
-#define  TEX_DATA	45		/* surface texture data */
-#define  MIX_FUNC	46		/* mixing function */
-#define  MIX_DATA	47		/* mixing data */
-#define  MIX_TEXT	48		/* mixing text */
-#define  MIX_PICT	49		/* mixing picture */
-#define  MAT_DIRECT1	50		/* unidirecting material */
-#define  MAT_DIRECT2	51		/* bidirecting material */
-#define  MAT_ASHIKHMIN	52		/* Ashikhmin-Shirley BRDF material */
-#define  PAT_SPECTRUM	53		/* constant spectrum */
-#define  PAT_SPECFILE	54		/* spectrum file */
-#define  PAT_SPECFUNC	55		/* spectral function */
-#define  PAT_SPECDATA	56		/* spectral data file */
-#define  PAT_SPECPICT	57		/* hyperspectral picture */
+#define  MAT_WGMDF	38		/* programmable WGMD material */
+#define  MAT_PDATA	39		/* plastic brdf data */
+#define  MAT_MDATA	40		/* metal brdf data */
+#define  MAT_TDATA	41		/* trans brdf data */
+#define  PAT_CFUNC	42		/* color function */
+#define  MAT_CLIP	43		/* clipping surface */
+#define  PAT_CDATA	44		/* color data */
+#define  PAT_CTEXT	45		/* colored text */
+#define  TEX_DATA	46		/* surface texture data */
+#define  MIX_FUNC	47		/* mixing function */
+#define  MIX_DATA	48		/* mixing data */
+#define  MIX_TEXT	49		/* mixing text */
+#define  MIX_PICT	50		/* mixing picture */
+#define  MAT_DIRECT1	51		/* unidirecting material */
+#define  MAT_DIRECT2	52		/* bidirecting material */
+#define  MAT_ASHIKHMIN	53		/* Ashikhmin-Shirley BRDF material */
+#define  PAT_SPECTRUM	54		/* constant spectrum */
+#define  PAT_SPECFILE	55		/* spectrum file */
+#define  PAT_SPECFUNC	56		/* spectral function */
+#define  PAT_SPECDATA	57		/* spectral data file */
+#define  PAT_SPECPICT	58		/* hyperspectral picture */
 				/* number of object types */
-#define  NUMOTYPE	58
+#define  NUMOTYPE	59
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -161,6 +162,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "BRTDfunc",	T_M|T_F,	o_default }, \
 				{ "BSDF",	T_M|T_D|T_F,	o_default }, \
 				{ "aBSDF",	T_M|T_D|T_F,	o_default }, \
+				{ "WGMDfunc",	T_M|T_F,	o_default }, \
 				{ "plasdata",	T_M|T_D|T_F,	o_default }, \
 				{ "metdata",	T_M|T_D|T_F,	o_default }, \
 				{ "transdata",	T_M|T_D|T_F,	o_default }, \
@@ -182,7 +184,6 @@ extern FUN  ofun[];			/* our type list */
 				{ "specdata",	T_P|T_D|T_F,	o_default }, \
 				{ "specpict",	T_P|T_I|T_F,	o_default }, \
 			}
-
 
 #ifdef __cplusplus
 }
