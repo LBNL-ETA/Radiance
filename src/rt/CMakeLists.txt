@@ -20,6 +20,7 @@ add_library(radiance
   m_alias.c
   m_brdf.c
   m_bsdf.c
+  m_wgmdf.c
   m_clip.c
   m_direct.c
   m_mirror.c

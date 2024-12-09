@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.125 2024/11/11 19:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.126 2024/12/09 00:44:29 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -382,7 +382,7 @@ plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang)
 	rtst.rmax = normalize(rtst.rdir);	/* short ray test */
 	while (localhit(&rtst, &thescene)) {	/* check for occluder */
 		OBJREC	*m = findmaterial(rtst.ro);
-		if (m != NULL && !istransp(m->otype) && !isBSDFproxy(m) &&
+		if (m != NULL && !istransp(m) && !isBSDFproxy(m) &&
 				(rtst.clipset == NULL ||
 					!inset(rtst.clipset, rtst.ro->omod)))
 			return(1);		/* plug light leak */

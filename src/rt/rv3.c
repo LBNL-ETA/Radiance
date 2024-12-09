@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.46 2024/12/03 19:36:58 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.47 2024/12/09 00:44:29 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -123,11 +123,11 @@ getinterest(		/* get area of interest */
 							    thisray.ro->omod))
 					m = findmaterial(thisray.ro);
 				if ((m != NULL) & !weakhit &&
-						istransp(m->otype) &&
+						istransp(m) &&
 						m->otype != MAT_MIST) {
 					weakhit = 1;
 					VCOPY(weakpt, thisray.rop);
-				} else if (m != NULL && !istransp(m->otype) &&
+				} else if (m != NULL && !istransp(m) &&
 						!isBSDFproxy(m))
 					break;		/* something solid */
 				VCOPY(thisray.rorg, thisray.rop);

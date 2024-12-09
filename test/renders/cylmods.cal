@@ -1,0 +1,22 @@
+{ RCSid $Id: cylmods.cal,v 1.1 2024/12/09 00:44:29 greg Exp $ }
+{
+	Unit cylinder functions (centered on Z-axis)
+	for testing
+}
+posAngle(a):if(a,a,a+2*PI);
+
+Cx = posAngle(atan2(Py,Px));
+Cy = Pz;
+Rx(n) = n/(2*PI) * Cx;
+Ry(n) = n/(2*PI) * Cy;
+Sx(n) = .5*(Rx(n) - Ry(n));
+Sy(n) = .5*(Rx(n) + Ry(n));
+
+			{ Checkerboard pattern }
+Check(n) = xor(frac(Rx(n))-.5, frac(Ry(n))-.5);
+
+			{ Pyramid texture }
+Pyramid_dxy(n) = if(frac(Rx(2*n))-.5, .2, -.2);
+Pyramid_dx(n) = -Py*Pyramid_dxy(n);
+Pyramid_dy(n) = Px*Pyramid_dxy(n);
+Pyramid_dz(n) = if(frac(Ry(2*n))-.5, .2, -.2);

@@ -1,0 +1,92 @@
+# RCSid $Id: gymbal2.rad,v 1.1 2024/12/09 00:44:29 greg Exp $
+#
+# Tests of WGMDfunc material
+#
+
+void colorfunc check1
+6 if(Check(12),.5,.1) if(Check(12),.1,.7) if(Check(12),.4,.9)
+	cylmods.cal -ry 90
+0
+0
+
+void WGMDfunc wgmd_mat1
+15
+	void .08 if(Check(8),.005,.07) if(Check(8),.07,.005)
+	check1 .2 0 0
+	void
+	0 0 1
+	cylmods.cal -ry 90
+0
+9
+	.05	.01	.05
+	.05	.2	.05
+	0	0	0
+
+void texfunc pyramid2
+8 Pyramid_dx(13) Pyramid_dy(13) Pyramid_dz(13)
+	cylmods.cal -s .9 -rx 90
+0
+0
+
+void colorfunc check2
+8 if(Check(9),.9,.1) .1 if(Check(9),.3,.1)
+	cylmods.cal -s .9 -rx 90
+0
+0
+
+void WGMDfunc wgmd_mat2
+13
+	pyramid2 .08 0 0
+	check2 .2 .02 .02
+	void
+	0 0 0
+	.
+0
+9
+	0 0 0
+	0 0 0
+	0 0 0
+
+void colorfunc check3
+6 if(Check(7),.9,.1) .1 if(Check(7),.3,.1)
+	cylmods.cal -s .8
+0
+0
+
+check3 WGMDfunc wgmd_mat3
+13
+	void .03 .08 .03
+	void 0 0 0
+	inherit
+	0 0 1
+	.
+0
+9
+	0 0 0
+	.4 .1 .1
+	.3 .3 .4
+
+
+wgmd_mat1 cylinder cyl1
+0
+0
+7
+	-4.4	2.5	1.1
+	-3.6	2.5	1.1
+	1
+
+wgmd_mat2 tube tube2
+0
+0
+7
+	-4	2.1	1.1
+	-4	2.9	1.1
+	.9
+
+wgmd_mat3 cylinder cyl3
+0
+0
+7
+	-4	2.5	0.7
+	-4	2.5	1.5
+	.8

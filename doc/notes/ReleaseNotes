@@ -2761,3 +2761,6 @@ to include this option.
 
 Added strnstr.c compatibility module in ray/src/common, since
 it isn't present on Linux-derivatives.
+
+Added WGMDfunc material type with programmable roughness and
+separate modifier paths for the different components.

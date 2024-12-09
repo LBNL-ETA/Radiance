@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.99 2024/11/15 20:47:42 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.100 2024/12/09 00:44:29 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -95,10 +95,10 @@ SURFSRC = sphere.c source.c srcobstr.c srcsupp.c srcsamp.c virtuals.c \
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
 	m_mirror.o m_direct.o m_mist.o fprism.o m_alias.o m_bsdf.o \
-	ashikhmin.o
+	m_wgmdf.o ashikhmin.o
 MATSRC = aniso.c normal.c dielectric.c m_clip.c glass.c m_brdf.c \
 	m_mirror.c m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c \
-	ashikhmin.c
+	m_wgmdf.c ashikhmin.c
 
 MODOBJS = p_func.o t_func.o p_data.o t_data.o text.o mx_func.o mx_data.o
 MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c
@@ -233,13 +233,14 @@ rtrace.o rvmain.o rv2.o rv3.o:	../common/octree.h
 o_instance.o:	../common/instance.h
 
 ambient.o aniso.o ashikhmin.o dielectric.o freeobjmem.o func.o glass.o \
-initotypes.o m_brdf.o m_bsdf.o m_direct.o m_mirror.o normal.o o_cone.o \
-preload.o raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o \
-srcsupp.o text.o srcdraw.o srcobstr.o virtuals.o:	../common/otypes.h
+initotypes.o m_brdf.o m_bsdf.o m_wgmdf.o m_direct.o m_mirror.o normal.o \
+o_cone.o preload.o raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o \
+m_wgmdf.o srcsupp.o text.o srcdraw.o srcobstr.o \
+virtuals.o:	../common/otypes.h
 
 ambient.o ambcomp.o aniso.o ashikhmin.o normal.o p_func.o raycalls.o raytrace.o \
 rpict.o rvmain.o rtmain.o rpmain.o rcmain.o rxpiece.o persist.o source.o rv3.o \
-srcsamp.o virtuals.o:	../common/random.h
+srcsamp.o virtuals.o m_wgmdf.o:	../common/random.h
 
 ambcomp.o ambient.o aniso.o ashikhmin.o dielectric.o freeobjmem.o func.o \
 glass.o m_bsdf.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o \
@@ -248,7 +249,7 @@ raycalls.o raypcalls.o rayfifo.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
 text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o rcmain.o \
 rcontrib.o rc2.o rc3.o RtraceSimulManager.o RpictSimulManager.o \
-rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o \
+rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o m_wgmdf.o \
 RcontribSimulManager.o RpictSimulManager.o RtraceSimulManager.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/octree.h \
@@ -256,7 +257,7 @@ RcontribSimulManager.o RpictSimulManager.o RtraceSimulManager.o:	ray.h \
 
 rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
 
-m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
+m_direct.o m_mirror.o m_mist.o raycalls.o \
 rpict.o rpmain.o rtmain.o rvmain.o source.o srcdraw.o \
 srcobstr.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
@@ -308,7 +309,11 @@ aniso.o ashikhmin.o dielectric.o freeobjmem.o glass.o initotypes.o \
 m_alias.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o \
 mx_data.o mx_func.o normal.o o_cone.o o_face.o o_instance.o \
 o_mesh.o p_data.o p_func.o source.o sphere.o t_data.o t_func.o \
-srcobstr.o text.o:		rtotypes.h
+m_wgmdf.o srcobstr.o text.o:		rtotypes.h
+
+aniso.o ashikhmin.o dielectric.o glass.o m_brdf.o \
+m_direct.o m_mirror.o m_mist.o normal.o m_wgmdf.o \
+srcobstr.o:	source.h
 
 m_bsdf.o:	ambient.h source.h func.h \
 ../common/calcomp.h ../common/bsdf.h ../common/random.h
@@ -319,9 +324,11 @@ func.h ../common/calcomp.h ../common/rtprocess.h
 
 ambient.o rcmain.o:	ambient.h
 
-rcmain.o:	source.h
+rcmain.o rpmain.o rtmain.o rvmain.o rtrace.o \
+rcontrib.o source.o srcdraw.o srcobstr.o \
+srcsamp.o srcsupp.o srcskipload.o virtuals.o:	source.h
 
-rcontrib.o:	source.h ../common/otypes.h
+rcontrib.o:	../common/otypes.h
 
 rc2.o:	../common/resolu.h
 
@@ -332,8 +339,9 @@ rc3.o:	../common/selcall.h
 #
 ambient.o: pmapparm.h pmaptype.h pmapamb.h pmapdata.h
 
-dielectric.o glass.o normal.o m_brdf.o m_bsdf.o ashikhmin.o aniso.o: \
-   pmapparm.h pmaptype.h pmapmat.h pmap.h pmapdata.h
+dielectric.o glass.o normal.o m_brdf.o m_bsdf.o \
+m_wgmdf.o ashikhmin.o aniso.o:	pmapparm.h pmaptype.h \
+pmapmat.h pmap.h pmapdata.h
    
 raycalls.o rpmain.o rcmain.o rtmain.o rvmain.o: \
    pmapparm.h pmaptype.h pmapray.h

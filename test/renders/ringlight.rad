@@ -1,0 +1,32 @@
+# RCSid $Id: ringlight.rad,v 1.1 2024/12/09 00:44:29 greg Exp $
+#
+# A single, point-like ceiling source to generate sharp shadows
+#
+# Patterns around perimeter make rings on walls
+#
+
+void brightfunc ringing
+2 if(Dz-.75,1,.5+.5*cos(40*(acos(Dz)-acos(.75)))) .
+0
+0
+
+ringing light superbright
+0
+0
+3 7500 7500 7500
+
+superbright ring recessed_fixture
+0
+0
+8
+	-4	2.5	2.99
+	0	0	-1
+	0	.02
+
+black_outside cylinder mount
+0
+0
+7
+	-4	2.5	2.99
+	-4	2.5	3.01
+	.02

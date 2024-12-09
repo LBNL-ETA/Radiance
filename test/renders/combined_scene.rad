@@ -1,4 +1,4 @@
-# RCSid $Id: combined_scene.rad,v 1.12 2023/11/17 21:22:27 greg Exp $
+# RCSid $Id: combined_scene.rad,v 1.13 2024/12/09 00:44:29 greg Exp $
 #
 # A collection of all our scene bits without the front caps
 #
@@ -22,7 +22,7 @@
 !xform -m gold -n prism1 -t 0 10.2 3.2 ./vase.rad
 !xform -n prism2 -t 0 15.6 3.2 diorama_walls.rad rect_opening.rad prism2.rad
 !xform -m gold -n prism2 -t 0 15.3 3.2 ./vase.rad
-!xform -n tfunc -t 0 0 6.4 basic.mat diorama_walls.rad \
+!xform -n tfunc -t 0 0 6.4 diorama_walls.rad \
 	rect_opening.rad ball_in_cube.rad illum_tfunc.rad
 !xform -n trans -t 0 5.2 6.4 diorama_walls.rad rect_opening.rad \
 	ballcompare.rad spotlights.rad rect_fixture.rad trans_pane.rad
@@ -32,5 +32,7 @@
 	closed_end.rad disks.rad rect_fixture.rad
 !xform -n mixtex -t 0 0 9.6 mixtex.mat diorama_walls.rad \
 	glass_pane.rad blinds.rad rect_opening.rad disks.rad constellation.rad
-!xform -n spectra -t 0 5.2 9.6 basic.mat spectral.mat gold.mat \
+!xform -n spectra -t 0 5.2 9.6 spectral.mat gold.mat \
 	diorama_walls.rad closed_end.rad rect_fixture.rad spectral_objs.rad
+!xform -n wgmdf -t 0 10.4 9.6 \
+	diorama_walls.rad closed_end.rad ringlight.rad gymbal2.rad

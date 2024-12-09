@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.40 2024/03/12 15:49:18 greg Exp $
+# RCSid $Id: Makefile,v 1.41 2024/12/09 00:44:29 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -27,7 +27,7 @@ test-dielectric-def test-dielectric-fish test-trans-def \
 test-glass-def test-glass-fish test-glass-up \
 test-trans-fish test-patterns-def test-patterns-plan \
 test-rtrace test-mirror-fish test-obj2mesh \
-test-prism1-fish test-prism2-fish test-spectra-fish
+test-prism1-fish test-prism2-fish test-spectra-fish test-wgmdf-def
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
@@ -40,7 +40,7 @@ batch1:	test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-xform test-oconv test-rad test-obj2mesh
 
 batch2:	test-rfluxmtx test-mist-def test-glass-def test-glass-fish test-glass-up \
-test-spectra-fish
+test-spectra-fish test-wgmdf-def
 
 batch3:	test-inst-def test-inst-fish test-trans2-def test-trans2-fish test-trans2-win \
 test-dielectric-def test-dielectric-fish
@@ -528,3 +528,21 @@ spectra_fish.hdr:	spectra.oct
 	rad -v fish spectra.rif
 
 ### End spectra-fish tests
+
+### Octree for wgmdf
+
+wgmdf.oct:	wgmdf.rif
+	rad -v 0 wgmdf.rif
+
+### Reference and test for wgmdf def ###
+
+test-wgmdf-def:	wgmdf_def.hdr
+	$(RDU_PFILT) wgmdf_def.hdr | $(IMG_CMP) ref/wgmdf_def.hdr -
+
+ref/wgmdf_def.hdr:	wgmdf_def.hdr
+	$(RDU_PFILT) wgmdf_def.hdr > ref/wgmdf_def.hdr
+
+wgmdf_def.hdr:	wgmdf.oct
+	rad -v def wgmdf.rif
+
+### End of wgmdf-def tests

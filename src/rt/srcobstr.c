@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.21 2024/11/17 19:36:09 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.22 2024/12/09 00:44:29 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -309,7 +309,7 @@ srcblocker(RAY *r)
 	m = findmaterial(r->ro);
 	if (m == NULL)
 		return(0);		/* no material?! */
-	if (!isopaque(m->otype))
+	if (!isopaque(m))
 		return(0);		/* material not a reliable blocker */
 	*srcobstructp(r) = r->robj;     /* else record obstructor */
 	return(1);

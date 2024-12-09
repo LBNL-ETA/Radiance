@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.92 2024/12/05 19:23:43 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.93 2024/12/09 00:44:29 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -220,7 +220,7 @@ raytirrad(			/* irradiance hack */
 )
 {
 	if (m->otype != MAT_CLIP && ismaterial(m->otype)) {
-		if (istransp(m->otype) || isBSDFproxy(m)) {
+		if (istransp(m) || isBSDFproxy(m)) {
 			raytrans(r);
 			return(1);
 		}
@@ -550,10 +550,10 @@ rayreject(		/* check if candidate hit is worse than current */
 			return(1);	/* old has material, new does not */
 	} else if (mray == NULL) {
 		return(0);		/* new has material, old does not */
-	} else if (istransp(mnew->otype)) {
-		if (!istransp(mray->otype))
+	} else if (istransp(mnew)) {
+		if (!istransp(mray))
 			return(1);	/* new is transparent, old is not */
-	} else if (istransp(mray->otype)) {
+	} else if (istransp(mray)) {
 		return(0);		/* old is transparent, new is not */
 	}
 	if (rod <= 0) {			/* check which side we hit */

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtotypes.h,v 1.7 2023/12/13 23:26:16 greg Exp $ */
+/* RCSid $Id: rtotypes.h,v 1.8 2024/12/09 00:44:29 greg Exp $ */
 /*
  * External functions implementing Radiance object types
  */
@@ -16,7 +16,7 @@ extern otype_implf o_sphere, o_face, o_cone, o_instance, o_mesh;
 
 extern otype_implf m_aniso, m_dielectric, m_glass, m_alias, m_light,
 	m_normal, m_mist, m_mirror, m_direct, m_clip, m_brdf, m_brdf2,
-	m_bsdf, m_ashikhmin;
+	m_bsdf, m_ashikhmin, m_wgmdf;
 
 extern otype_implf t_func, t_data;
 

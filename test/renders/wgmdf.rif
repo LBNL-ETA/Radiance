@@ -1,0 +1,28 @@
+# RCSid $Id: wgmdf.rif,v 1.1 2024/12/09 00:44:29 greg Exp $
+#
+# Test of WGMDfunc material
+#
+
+OCTREE = wgmdf.oct
+
+materials = basic.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = ringlight.rad
+scene = gymbal2.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +4
+
+RES = 1024
+QUAL = Med
+AMB = wgmdf.amb
+IND = 1
+VAR = High
+DET = High
+PEN = False
+
+render = @render.opt
+
+view= def -vp -2.60899 4.62728 2.52391 -vd -1.11057 -1.64932 -1.10768 \
+	-vh 46.6777 -vv 46.6777

@@ -2598,26 +2598,6 @@ gold mesh prism2.12.vase
 0
 0
 
-void plastic wall_mat
-0
-0
-5                0.5                0.5                0.5                  0                  0
-
-void plastic ceil_mat
-0
-0
-5                0.7                0.7                0.7                  0                  0
-
-void plastic floor_mat
-0
-0
-5                0.3                0.2                0.1               0.02               0.04
-
-void plastic black_outside
-0
-0
-5               0.05               0.05               0.05                  0                  0
-
 black_outside polygon tfunc.13.wall.b
 0
 0
@@ -12748,26 +12728,6 @@ bright sphere mixtex.17.bulb9
 0
 4     -2.30106431181      1.26565097019               12.4               0.03
 
-void plastic wall_mat
-0
-0
-5                0.5                0.5                0.5                  0                  0
-
-void plastic ceil_mat
-0
-0
-5                0.7                0.7                0.7                  0                  0
-
-void plastic floor_mat
-0
-0
-5                0.3                0.2                0.1               0.02               0.04
-
-void plastic black_outside
-0
-0
-5               0.05               0.05               0.05                  0                  0
-
 void spectrum gold_spec
 0
 0
@@ -13093,3 +13053,244 @@ mini_me_mat polygon spectra.18.mini_me
                  -4               8.45               9.65
                  -4               6.95               9.65
                  -3               6.95               9.65
+
+black_outside polygon wgmdf.19.wall.b
+0
+0
+30
+ -6.12323399574e-18               10.3                9.5
+ -6.12323399574e-18               15.5                9.5
+  1.89820253868e-16               15.5               12.7
+  1.89820253868e-16               10.3               12.7
+ -6.12323399574e-18               10.3                9.5
+                  0               10.4                9.6
+  1.83697019872e-16               10.4               12.6
+  1.83697019872e-16               15.4               12.6
+                  0               15.4                9.6
+                  0               10.4                9.6
+
+black_outside polygon wgmdf.19.wall.t
+0
+0
+30
+                 -8               10.4                9.6
+                 -8               15.4                9.6
+                 -8               15.4               12.6
+                 -8               10.4               12.6
+                 -8               10.4                9.6
+                 -8               10.3                9.5
+                 -8               10.3               12.7
+                 -8               15.5               12.7
+                 -8               15.5                9.5
+                 -8               10.3                9.5
+
+black_outside polygon wgmdf.19.wall.1
+0
+0
+12
+ -6.12323399574e-18               10.3                9.5
+                 -8               10.3                9.5
+                 -8               15.5                9.5
+ -6.12323399574e-18               15.5                9.5
+
+black_outside polygon wgmdf.19.wall.2
+0
+0
+12
+ -6.12323399574e-18               15.5                9.5
+                 -8               15.5                9.5
+                 -8               15.5               12.7
+  1.89820253868e-16               15.5               12.7
+
+black_outside polygon wgmdf.19.wall.3
+0
+0
+12
+  1.89820253868e-16               15.5               12.7
+                 -8               15.5               12.7
+                 -8               10.3               12.7
+  1.89820253868e-16               10.3               12.7
+
+black_outside polygon wgmdf.19.wall.4
+0
+0
+12
+  1.89820253868e-16               10.3               12.7
+                 -8               10.3               12.7
+                 -8               10.3                9.5
+ -6.12323399574e-18               10.3                9.5
+
+wall_mat polygon wgmdf.19.wall.6
+0
+0
+12
+                  0               10.4                9.6
+                 -8               10.4                9.6
+                 -8               10.4               12.6
+  1.83697019872e-16               10.4               12.6
+
+ceil_mat polygon wgmdf.19.wall.7
+0
+0
+12
+  1.83697019872e-16               10.4               12.6
+                 -8               10.4               12.6
+                 -8               15.4               12.6
+  1.83697019872e-16               15.4               12.6
+
+wall_mat polygon wgmdf.19.wall.8
+0
+0
+12
+  1.83697019872e-16               15.4               12.6
+                 -8               15.4               12.6
+                 -8               15.4                9.6
+                  0               15.4                9.6
+
+floor_mat polygon wgmdf.19.wall.9
+0
+0
+12
+                  0               15.4                9.6
+                 -8               15.4                9.6
+                 -8               10.4                9.6
+                  0               10.4                9.6
+
+wall_mat polygon wgmdf.19.end_wall.1540
+0
+0
+12
+                 -8               10.3                9.5
+                 -8               10.3               12.7
+               -8.2               10.3               12.7
+               -8.2               10.3                9.5
+
+wall_mat polygon wgmdf.19.end_wall.4620
+0
+0
+12
+               -8.2               10.3               12.7
+               -8.2               15.5               12.7
+               -8.2               15.5                9.5
+               -8.2               10.3                9.5
+
+wall_mat polygon wgmdf.19.end_wall.2310
+0
+0
+12
+               -8.2               15.5                9.5
+                 -8               15.5                9.5
+                 -8               10.3                9.5
+               -8.2               10.3                9.5
+
+wall_mat polygon wgmdf.19.end_wall.3267
+0
+0
+12
+                 -8               15.5                9.5
+               -8.2               15.5                9.5
+               -8.2               15.5               12.7
+                 -8               15.5               12.7
+
+wall_mat polygon wgmdf.19.end_wall.5137
+0
+0
+12
+                 -8               10.3               12.7
+                 -8               10.3                9.5
+                 -8               15.5                9.5
+                 -8               15.5               12.7
+
+wall_mat polygon wgmdf.19.end_wall.6457
+0
+0
+12
+               -8.2               15.5               12.7
+               -8.2               10.3               12.7
+                 -8               10.3               12.7
+                 -8               15.5               12.7
+
+void brightfunc ringing
+8 if(Dz-.75,1,.5+.5*cos(40*(acos(Dz)-acos(.75)))) . -i 1 -t 0 10.4 9.6
+0
+0
+
+ringing light superbright
+0
+0
+3               7500               7500               7500
+
+superbright ring wgmdf.19.recessed_fixture
+0
+0
+8
+                 -4               12.9              12.59
+                  0                  0                 -1
+                  0               0.02
+
+black_outside cylinder wgmdf.19.mount
+0
+0
+7
+                 -4               12.9              12.59
+                 -4               12.9              12.61
+               0.02
+
+void colorfunc check1
+12 if(Check(12),.5,.1) if(Check(12),.1,.7) if(Check(12),.4,.9) cylmods.cal -ry 90 -i 1 -t 0 10.4 9.6
+0
+0
+
+void WGMDfunc wgmd_mat1
+21 void .08 if(Check(8),.005,.07) if(Check(8),.07,.005) check1 .2 0 0 void 0 0 1 cylmods.cal -ry 90 -i 1 -t 0 10.4 9.6
+0
+9               0.05               0.01               0.05               0.05                0.2               0.05                  0                  0                  0
+
+void texfunc pyramid2
+14 Pyramid_dx(13) Pyramid_dy(13) Pyramid_dz(13) cylmods.cal -s .9 -rx 90 -i 1 -t 0 10.4 9.6
+0
+0
+
+void colorfunc check2
+14 if(Check(9),.9,.1) .1 if(Check(9),.3,.1) cylmods.cal -s .9 -rx 90 -i 1 -t 0 10.4 9.6
+0
+0
+
+void WGMDfunc wgmd_mat2
+19 pyramid2 .08 0 0 check2 .2 .02 .02 void 0 0 0 . -i 1 -t 0 10.4 9.6
+0
+9                  0                  0                  0                  0                  0                  0                  0                  0                  0
+
+void colorfunc check3
+12 if(Check(7),.9,.1) .1 if(Check(7),.3,.1) cylmods.cal -s .8 -i 1 -t 0 10.4 9.6
+0
+0
+
+check3 WGMDfunc wgmd_mat3
+19 void .03 .08 .03 void 0 0 0 inherit 0 0 1 . -i 1 -t 0 10.4 9.6
+0
+9                  0                  0                  0                0.4                0.1                0.1                0.3                0.3                0.4
+
+wgmd_mat1 cylinder wgmdf.19.cyl1
+0
+0
+7
+               -4.4               12.9               10.7
+               -3.6               12.9               10.7
+                  1
+
+wgmd_mat2 tube wgmdf.19.tube2
+0
+0
+7
+                 -4               12.5               10.7
+                 -4               13.3               10.7
+                0.9
+
+wgmd_mat3 cylinder wgmdf.19.cyl3
+0
+0
+7
+                 -4               12.9               10.3
+                 -4               12.9               11.1
+                0.8
