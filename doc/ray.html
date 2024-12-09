@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.38 2023/12/13 23:26:16 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.39 2024/12/09 19:21:38 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -830,6 +830,62 @@ unless the line integrals consider enclosed geometry.
 	0
 	8 dred dgrn dblu sred sgrn sblu u-power v-power
 </pre>
+
+<p>
+
+<dt>
+	<a NAME="WGMDfunc">
+	<b>WGMDfunc</b>
+	</a>
+
+<dd>
+	WGMDfunc is a more programmable version of <a HREF="#Trans2">trans2</a>,
+	with separate modifier paths and variables to control each component.
+	(WGMD stands for Ward-Geisler-Moroder-Duer, which is the basis for
+	this empirical model, similar to previous ones beside Ashik2.)
+	The specification of this material is given below.
+<pre>
+	mod WGMDfunc id
+	13+ rs_mod  rs  rs_urough rs_vrough
+	    ts_mod  ts  ts_urough ts_vrough
+	    td_mod
+	    ux uy uz  funcfile  transform
+	0
+	9+  rfdif gfdif bfdif
+	    rbdif gbdif bbdif
+	    rtdif gtdif btdif
+	    A10 ..
+</pre>
+
+The sum of specular reflectance (<I>rs</I>), specular transmittance (<I>ts</I>),
+diffuse reflectance (<I>rfdif gfdif bfdif</I> for front and <I>rbdif gbdif bbdif</I> for back)
+and diffuse transmittance (<I>rtdif gtdif btdif</I>) should be less than 1 for each
+channel.
+
+<p>
+
+Unique to this material, separate modifier channels are
+provided for each component.
+The main modifier is used on the diffuse reflectance, both
+front and back.
+The <I>rs_mod</I> modifier is used for specular reflectance.
+If "void" is given for <I>rs_mod</I>,
+then the specular reflection color will be white.
+The special "inherit" keyword may also be given, in which case
+specular reflectance will share the main modifier.
+This behavior is replicated for the specular transmittance modifier
+<I>ts_mod</I>, which also has its own independent roughness expressions.
+Finally, the diffuse transmittance modifier is given as
+<I>td_mod</I>, which may also be "void" or "inherit".
+Note that any spectra or color for specular components must be
+carried by the named modifier(s).
+
+<p>
+
+The main advantage to this material over
+<a HREF="#BRTDfunc">BRTDfunc</a> and
+other programmable types described below is that the specular sampling is
+well-defined, so that all components are fully computed.
 
 <p>
 
