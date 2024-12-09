@@ -1,4 +1,4 @@
-# RCSid $Id: gymbal2.rad,v 1.1 2024/12/09 00:44:29 greg Exp $
+# RCSid $Id: gymbal2.rad,v 1.2 2024/12/09 03:10:36 greg Exp $
 #
 # Tests of WGMDfunc material
 #
@@ -10,37 +10,37 @@ void colorfunc check1
 0
 
 void WGMDfunc wgmd_mat1
-15
-	void .08 if(Check(8),.005,.07) if(Check(8),.07,.005)
+19
+	void if(Px,.08,0) 0 0
 	check1 .2 0 0
 	void
 	0 0 1
-	cylmods.cal -ry 90
+	cylmods.cal -ry 90 -t -4 2.5 1.1
 0
 9
-	.05	.01	.05
+	.01	.01	.01
 	.05	.2	.05
 	0	0	0
 
 void texfunc pyramid2
-8 Pyramid_dx(13) Pyramid_dy(13) Pyramid_dz(13)
-	cylmods.cal -s .9 -rx 90
+12 Pyramid_dx(13) Pyramid_dy(13) Pyramid_dz(13)
+	cylmods.cal -s .9 -rx 90 -t -4 2.5 1.1
 0
 0
 
 void colorfunc check2
-8 if(Check(9),.9,.1) .1 if(Check(9),.3,.1)
-	cylmods.cal -s .9 -rx 90
+12 if(Check(9),.9,.1) .1 if(Check(9),.3,.1)
+	cylmods.cal -s .9 -rx 90 -t -4 2.5 1.1
 0
 0
 
 void WGMDfunc wgmd_mat2
-13
+17
 	pyramid2 .08 0 0
 	check2 .2 .02 .02
 	void
 	0 0 0
-	.
+	. -t -4 2.5 1.1
 0
 9
 	0 0 0
@@ -48,18 +48,18 @@ void WGMDfunc wgmd_mat2
 	0 0 0
 
 void colorfunc check3
-6 if(Check(7),.9,.1) .1 if(Check(7),.3,.1)
-	cylmods.cal -s .8
+10 if(Check(7),.9,.1) .1 if(Check(7),.3,.1)
+	cylmods.cal -s .8 -t -4 2.5 1.1
 0
 0
 
 check3 WGMDfunc wgmd_mat3
-13
-	void .03 .08 .03
+17
+	void .03 .08*max(Pz,0) .03*max(Pz,0)
 	void 0 0 0
 	inherit
 	0 0 1
-	.
+	. -t -4 2.5 1.1
 0
 9
 	0 0 0
