@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.12 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.13 2024/12/10 17:22:39 greg Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -82,7 +82,7 @@ char  *argv[];
 
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
-	eclock = 0;
+	eclock = 1;
 
 	for (i = 0; i <= nseg; i++) {
 		t = (double)i/nseg;
