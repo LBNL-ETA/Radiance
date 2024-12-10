@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.9 2024/12/03 17:39:42 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.10 2024/12/10 00:38:59 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -77,26 +77,35 @@ RcontribMod *
 NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
 	if (!prms) prms = "";
-	if (!binexpr & (ncbins > 1)) {
+	if ((ncbins > 1) & !binexpr) {
 		error(USER, "missing bin expression");
 		return NULL;
 	}
-	if (ncbins <= 1) {		// shouldn't have bin expression?
-		if (binexpr && strcmp(binexpr, "0"))
-			error(WARNING, "ignoring non-zero expression for single bin");
-		prms = "";
-		binexpr = NULL;
-		ncbins = 1;
-	}
+	if (ncbins < 1) ncbins = 1;
+	
 	RcontribMod *	mp = (RcontribMod *)ecalloc(1, sizeof(RcontribMod) +
 						sizeof(DCOLORV)*(NCSAMP*ncbins-1) +
 						strlen(prms)+1);
 
-	mp->params = strcpy((char *)(mp->cbin + ncbins*NCSAMP), prms);
-	if (binexpr) {
+	if (binexpr) {				// check bin expression
 		mp->binv = eparse(const_cast<char *>(binexpr));
-		CHECK(mp->binv->type==NUM, WARNING, "constant bin expression");
+		if (mp->binv->type == NUM) {	// constant expression (0)?
+			if ((int)(evalue(mp->binv) + .5) > 0) {
+				sprintf(errmsg, "illegal positive constant for bin (%s)",
+						binexpr);
+				error(USER, errmsg);
+			}
+			if (ncbins > 1) {
+				sprintf(errmsg, "bad bin count (%d should be 1)", ncbins);
+				error(USER, errmsg);
+			}
+			epfree(mp->binv, true);
+			mp->binv = NULL;
+			prms = "";
+			ncbins = 1;
+		}
 	}
+	mp->params = strcpy((char *)(mp->cbin + ncbins*NCSAMP), prms);
 	mp->nbins = ncbins;
 	return mp;
 }
