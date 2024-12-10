@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.1 2024/12/09 00:44:29 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.2 2024/12/10 03:16:13 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -510,10 +510,14 @@ m_wgmdf(OBJREC *m, RAY *r)
 	}
 	if ((m->oargs.nsargs < 13) | (m->oargs.nfargs < 9))
 		objerror(m, USER, "bad number of arguments");
+
+	if (r->crtype & SHADOW && !strcmp(m->oargs.sarg[5], "0"))
+		return(1);		/* first shadow test */
 	clr_comps(&wd);
 	wd.rp = r;
 	wd.mtp = m;
 	wd.mf = getfunc(m, 12, 0xEEE, 1);
+	set_dcomp(&wd, 0);		/* calls main modifier */
 	setfunc(m, r);			/* get local u vector */
 	errno = 0;
 	for (i = 0; i < 3; i++)
@@ -523,11 +527,10 @@ m_wgmdf(OBJREC *m, RAY *r)
 	else if (wd.mf->fxp != &unitxf)
 		multv3(wd.ulocal, wd.ulocal, wd.mf->fxp->xfm);
 
-	set_dcomp(&wd, 0);		/* call this first */
-	set_dcomp(&wd, 1);		/* call this second */
 	set_scomp(&wd, 1);		/* sets SP_TPURE */
 	if (r->crtype & SHADOW && !(wd.specfl & SP_TPURE))
-		return(1);		/* early shadow test */
+		return(1);		/* second shadow test */
+	set_dcomp(&wd, 1);
 	set_scomp(&wd, 0);
 	wd.specfl |= SP_FLAT*(r->ro != NULL && isflat(r->ro->otype));
 					/* apply Fresnel adjustments? */
