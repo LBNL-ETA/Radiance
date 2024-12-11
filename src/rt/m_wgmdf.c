@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.3 2024/12/11 17:34:03 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.4 2024/12/11 18:32:26 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -538,7 +538,7 @@ m_wgmdf(OBJREC *m, RAY *r)
 		const double	fest = FRESNE(fabs(wd.rs.mo.pdot));
 		for (i = NCSAMP; i--; )
 			wd.rs.scol[i] += fest*(1. - wd.rs.scol[i]);
-		scalecolor(wd.rd.scol, 1.-fest);
+		scalescolor(wd.rd.scol, 1.-fest);
 		scalescolor(wd.ts.scol, 1.-fest);
 		scalescolor(wd.td.scol, 1.-fest);
 	}
