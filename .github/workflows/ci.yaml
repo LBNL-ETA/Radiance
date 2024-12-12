@@ -97,17 +97,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Strawberry Perl
-        run: choco install strawberryperl
-
-      - name: Install cpanm
-        run: |
-          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install CPAN" 
-          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install App::cpanminus"
-
-      - name: Install PAR Packer
-        run: |
-          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install PAR::Packer"
+      - name: Install Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: "5.32"
 
       - name: Install cpanminus
         run: cpan App::cpanminus
