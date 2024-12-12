@@ -100,13 +100,14 @@ jobs:
       - name: Install Strawberry Perl
         run: choco install strawberryperl
 
-      - name: Install cpanm 
-        run: | 
+      - name: Install cpanm
+        run: |
           "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install CPAN" 
-          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install App::cpanminus" 
+          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install App::cpanminus"
 
-      - name: Install PAR Packer 
-        run: "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install PAR::Packer"
+      - name: Install PAR Packer
+        run: |
+          "C:/Strawberry/perl/bin/perl.exe" -MCPAN -e "install PAR::Packer"
 
       - name: Install cpanminus
         run: cpan App::cpanminus
