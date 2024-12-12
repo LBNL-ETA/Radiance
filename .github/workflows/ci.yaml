@@ -106,6 +106,13 @@ jobs:
       - name: Install PAR::Packer
         run: cpanm PAR::Packer --force
 
+      - name: Upload artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Radiance_Windows_Failed
+          path: C:/Users/RUNNER~1/.cpanm/work/
+
       - name: check perl
         run: |
           perl -version
