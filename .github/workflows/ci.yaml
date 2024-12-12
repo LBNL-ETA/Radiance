@@ -107,7 +107,7 @@ jobs:
         run: cpan App::cpanminus
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer
+        run: cpanm PAR::Packer --force
 
       - name: check perl
         run: |
