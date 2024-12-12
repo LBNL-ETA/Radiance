@@ -100,14 +100,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Strawberry Perl
-        run: choco install strawberryperl
+      - name: Install Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: "5.32"
 
       - name: Install cpanminus
         run: cpan App::cpanminus
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer
+        run: cpanm PAR::Packer --force
 
       - name: check perl
         run: |
@@ -116,8 +118,8 @@ jobs:
 
       - name: check perl packer
         run: |
-          pp --version
           ls c:\strawberry\perl\site\bin
+          pp --version
 
       - name: override update version
         run: |
