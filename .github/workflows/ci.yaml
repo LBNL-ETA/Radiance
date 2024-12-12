@@ -93,9 +93,6 @@ jobs:
   build_Windows:
     name: "Build for Windows"
     runs-on: windows-latest
-    timeout-minutes: 20
-    needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
