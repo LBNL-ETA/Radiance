@@ -93,6 +93,9 @@ jobs:
   build_Windows:
     name: "Build for Windows"
     runs-on: windows-latest
+    timeout-minutes: 20
+    needs: cvs_import
+    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -108,13 +111,6 @@ jobs:
       - name: Install PAR::Packer
         run: cpanm PAR::Packer --force
 
-      - name: Upload artifact
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: Radiance_Windows_Failed
-          path: C:/Users/RUNNER~1/.cpanm/work/
-
       - name: check perl
         run: |
           perl -version
@@ -122,8 +118,8 @@ jobs:
 
       - name: check perl packer
         run: |
-          pp --version
           ls c:\strawberry\perl\site\bin
+          pp --version
 
       - name: override update version
         run: |
