@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: instance.c,v 2.13 2024/11/05 00:03:10 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.14 2024/12/12 20:04:46 greg Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -34,26 +34,22 @@ getscene(				/* get new octree reference */
 	for (sc = slist; sc != NULL; sc = sc->next)
 		if (!strcmp(sname, sc->name))
 			break;
-	if (sc == NULL) {
-		sc = (SCENE *)malloc(sizeof(SCENE));
+	if (sc == NULL) {		/* new instance? */
+		sc = (SCENE *)calloc(1, sizeof(SCENE));
 		if (sc == NULL)
 			error(SYSTEM, "out of memory in getscene");
 		sc->name = savestr(sname);
-		sc->nref = 0;
-		sc->ldflags = 0;
 		sc->scube.cutree = EMPTY;
-		sc->scube.cuorg[0] = sc->scube.cuorg[1] =
-				sc->scube.cuorg[2] = 0.;
-		sc->scube.cusize = 0.;
-		sc->firstobj = sc->nobjs = 0;
 		sc->next = slist;
 		slist = sc;
 	}
+	sc->nref++;			/* bump reference count */
+	if (!(flags &= ~sc->ldflags))	/* nothing to load? */
+		return(sc);
 	if ((pathname = getpath(sname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find octree file \"%s\"", sname);
 		error(SYSTEM, errmsg);
 	}
-	flags &= ~sc->ldflags;		/* skip what's already loaded */
 	if (flags & IO_SCENE)
 		sc->firstobj = nobjects;
 	if (flags)
@@ -61,7 +57,6 @@ getscene(				/* get new octree reference */
 	if (flags & IO_SCENE)
 		sc->nobjs = nobjects - sc->firstobj;
 	sc->ldflags |= flags;
-	sc->nref++;			/* increase reference count */
 	return(sc);
 }
 
