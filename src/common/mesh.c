@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.35 2021/06/10 00:27:25 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.36 2024/12/12 19:55:57 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -86,7 +86,7 @@ getmesh(				/* get new mesh data reference */
 			ms->nref++;	/* increase reference count */
 			break;
 		}
-	if (ms == NULL) {		/* load first time */
+	if (ms == NULL) {		/* new mesh entry? */
 		ms = (MESH *)calloc(1, sizeof(MESH));
 		if (ms == NULL)
 			error(SYSTEM, "out of memory in getmesh");
@@ -96,13 +96,13 @@ getmesh(				/* get new mesh data reference */
 		ms->next = mlist;
 		mlist = ms;
 	}
+	if (!(flags &= ~ms->ldflags))	/* nothing to load? */
+		return(ms);
 	if ((pathname = getpath(mname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find mesh file \"%s\"", mname);
 		error(SYSTEM, errmsg);
 	}
-	flags &= ~ms->ldflags;
-	if (flags)
-		readmesh(ms, pathname, flags);
+	readmesh(ms, pathname, flags);
 	return(ms);
 }
 
