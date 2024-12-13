@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.42 2024/12/05 19:23:43 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.43 2024/12/13 19:05:03 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -346,10 +346,6 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 						/* always a shadow */
 	if (r->crtype & SHADOW)
 		return(1);
-						/* check arguments */
-	if ((m->oargs.nsargs < (hasdata(m->otype)?4:2)) | (m->oargs.nfargs <
-			((m->otype==MAT_TFUNC)|(m->otype==MAT_TDATA)?6:4)))
-		objerror(m, USER, "bad # arguments");
 						/* check for back side */
 	if (r->rod < 0.0) {
 		if (!backvis) {
@@ -360,6 +356,10 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		flipsurface(r);			/* reorient if backvis */
 	} else
 		raytexture(r, m->omod);
+						/* check arguments */
+	if ((m->oargs.nsargs < (hasdata(m->otype)?4:2)) | (m->oargs.nfargs <
+			((m->otype==MAT_TFUNC)|(m->otype==MAT_TDATA)?6:4)))
+		objerror(m, USER, "bad # arguments");
 
 	nd.mp = m;
 	nd.pr = r;

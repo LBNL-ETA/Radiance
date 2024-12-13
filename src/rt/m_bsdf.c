@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.74 2024/09/18 19:52:35 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.75 2024/12/13 19:05:03 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -626,19 +626,22 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 int
 m_bsdf(OBJREC *m, RAY *r)
 {
-	int	hasthick = (m->otype == MAT_BSDF);
-	int	hitfront;
+	const int	hasthick = (m->otype == MAT_BSDF);
+	const int	hitfront = (r->rod > 0);
 	SCOLOR	sctmp;
 	SDError	ec;
 	FVECT	upvec, vtmp;
 	MFUNC	*mf;
 	BSDFDAT	nd;
+						/* check backface visibility */
+	if (!hitfront & !backvis) {
+		raytrans(r);
+		return(1);
+	}
 						/* check arguments */
 	if ((m->oargs.nsargs < hasthick+5) | (m->oargs.nfargs > 9) |
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
-						/* record surface struck */
-	hitfront = (r->rod > 0);
 						/* load cal file */
 	mf = hasthick	? getfunc(m, 5, 0x1d, 1)
 			: getfunc(m, 4, 0xe, 1) ;
@@ -648,11 +651,6 @@ m_bsdf(OBJREC *m, RAY *r)
 		nd.thick = evalue(mf->ep[0]);
 		if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
 			nd.thick = 0;
-	}
-						/* check backface visibility */
-	if (!hitfront & !backvis) {
-		raytrans(r);
-		return(1);
 	}
 						/* check other rays to pass */
 	if (nd.thick != 0 && (r->crtype & SHADOW ||
