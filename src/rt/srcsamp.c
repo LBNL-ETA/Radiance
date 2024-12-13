@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.22 2024/11/15 20:47:42 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.23 2024/12/13 00:50:55 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -50,8 +50,6 @@ sskip_rsi(uby8 *flags)
 			return(-2-i);	/* found it! */
 					/* else tack on new entry */
 	if (ssf_count >= ssf_max) {	/* need more space? */
-fprintf(stderr, "DEBUG: skip flag array > %d entries (%.2f MBytes)\n",
-ssf_count, SSKIPFLSIZ/1024./1024.*ssf_count);
 		ssf_max = ssf_count + (ssf_count>>2) + 64;
 		if (ssf_max <= ssf_count &&
 				(ssf_max = ssf_count+1024) <= ssf_count)
