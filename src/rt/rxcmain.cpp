@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.9 2024/12/03 17:39:42 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.10 2024/12/13 21:12:40 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -132,6 +132,23 @@ fmterr:
 	error(USER, errmsg);
 }
 
+/* Set default options */
+static void
+default_options(void)
+{
+	rand_samp = 1;
+	dstrsrc = 0.9;
+	directrelay = 3;
+	vspretest = 512;
+	srcsizerat = .2;
+	specthresh = .02;
+	specjitter = 1.;
+	maxdepth = -10;
+	minweight = 2e-3;
+	ambres = 256;
+	ambdiv = 350;
+	ambounce = 1;
+}
 
 /* Set overriding options */
 static void
@@ -141,7 +158,6 @@ override_options(void)
 	ambssamp = 0;
 	ambacc = 0;
 }
-
 
 int
 main(int argc, char *argv[])
@@ -173,6 +189,8 @@ main(int argc, char *argv[])
 					/* initialize calcomp routines early */
 	initfunc();
 	calcontext(RCCONTEXT);
+					/* set rcontrib defaults */
+	default_options();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
