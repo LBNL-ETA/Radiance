@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.4 2024/11/06 18:28:52 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.5 2024/12/13 22:13:24 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -57,7 +57,6 @@ static void printdefaults(void);
 		"AdaptiveShadowTesting\nOutputs=v,l\n" \
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
-
 void
 quit(int code)			/* quit program */
 {
@@ -67,6 +66,20 @@ quit(int code)			/* quit program */
 	exit(code);
 }
 
+/* Set default options */
+static void
+default_options(void)
+{
+	shadthresh = .05;
+	shadcert = .5;
+	srcsizerat = .25;
+	directrelay = 1;
+	ambacc = 0.2;
+	ambres = 64;
+	ambdiv = 512;
+	ambssamp = 128;
+	maxdepth = 7;
+}
 
 int
 main(int  argc, char  *argv[])
@@ -97,6 +110,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXPICT_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* set defaults */
+	default_options();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
