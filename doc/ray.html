@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.39 2024/12/09 19:21:38 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.40 2024/12/13 18:17:17 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -147,6 +147,8 @@ It is stored as ASCII  text,  with  the  following basic format:
 
          ...
 </pre>
+
+<p>
 
 A comment line begins with a pound sign, `#'.
 
@@ -394,6 +396,7 @@ The basic types are given below.
         0
 </pre>
 
+<p>
 	If the modifier is &quot;void&quot;, then surfaces will
 	use the modifiers  given  in  the  original  description.  
 	Otherwise, the modifier specified is used in their  place.   
@@ -437,6 +440,8 @@ The basic types are given below.
         0
         0
 </pre>
+
+<p>
 
 	If the modifier is &quot;void&quot;, then surfaces will
 	use the modifiers  given  in  the  original  mesh description.  
@@ -532,6 +537,7 @@ A material defines the way light interacts with a  surface.  The basic types are
         4 red green blue maxrad
 </pre>
 
+<p>
 	If maxrad is zero, then the surface will never be tested for shadow,  although  it  may participate in an interreflection calculation.  
 	If maxrad is negative, then the  surface  will never  contribute  to scene illumination.  
 	Glow sources will never illuminate objects on the other side of an illum  surface.   
@@ -603,6 +609,8 @@ This is only appropriate if the surface hides other (more detailed) geometry wit
         n A1 A2 .. An
 </pre>
 
+<p>
+
 	The new direction variables dx, dy and dz need not produce a normalized  vector.  
 	For convenience, the variables DxA, DyA and DzA are defined as the normalized direction to the  target  light  source.  
 	See <a HREF="#Function">section 2.2.1</a> on function files for further information.
@@ -646,6 +654,7 @@ This is only appropriate if the surface hides other (more detailed) geometry wit
 	3  source1  mirror1&gt;source10  mirror2&gt;mirror1&gt;source3
 </pre>
 
+<p>
 Normally, only one source is given per mist material, and there is an
 upper limit of 32 to the total number of active scattering sources.
 The extinction coefficient, if given, is added the the global
@@ -666,6 +675,8 @@ forward direction, as fit by the Henyey-Greenstein function:
 	P(theta) = (1 - g*g) / (1 + g*g - 2*g*cos(theta))^1.5
 </pre>
 
+<p>
+
 A perfectly isotropic scattering medium has a g parameter of 0, and
 a highly directional material has a g parameter close to 1.
 Fits to the g parameter may be found along with typical extinction
@@ -679,6 +690,8 @@ cloud types in USGS meteorological tables.
 	0
 	0|3|6|7 [ rext gext bext [ ralb galb balb [ g ] ] ]
 </pre>
+
+<p>
 
 There are two usual uses of the mist type.
 One is to surround a beam from a spotlight or laser so that it is
@@ -857,6 +870,8 @@ unless the line integrals consider enclosed geometry.
 	    A10 ..
 </pre>
 
+<p>
+
 The sum of specular reflectance (<I>rs</I>), specular transmittance (<I>ts</I>),
 diffuse reflectance (<I>rfdif gfdif bfdif</I> for front and <I>rbdif gbdif bbdif</I> for back)
 and diffuse transmittance (<I>rtdif gtdif btdif</I>) should be less than 1 for each
@@ -950,6 +965,8 @@ well-defined, so that all components are fully computed.
         tn = (sqrt(.8402528435+.0072522239*Tn*Tn)-.9166530661)/.0036261119/Tn
 </pre>
 
+<p>
+
 	Standard 88% transmittance glass  has  a  transmissivity  of 0.96.   
 	(A <a HREF="#Patterns">pattern</a> modifying glass will affect the transmissivity.) 
 	If a fourth real argument is given,  it  is  interpreted as the index of refraction to use instead of 1.52.
@@ -980,6 +997,8 @@ well-defined, so that all components are fully computed.
         0
         4+ red green blue spec A5 ..
 </pre>
+
+<p>
 
 	The function refl takes four arguments, the x, y and z
 	direction towards the incident light, and the solid angle
@@ -1022,6 +1041,8 @@ well-defined, so that all components are fully computed.
         6+ red green blue rspec trans tspec A7 ..
 </pre>
 
+<p>
+
 	Where trans is the total light transmitted and tspec is  the non-Lambertian  fraction of transmitted light.  
 	The function brtd should integrate to 1 over each projected hemisphere.
 
@@ -1048,6 +1069,8 @@ well-defined, so that all components are fully computed.
              rtdif gtdif btdif
              A10 ..
 </pre>
+
+<p>
 
 	The variables rrefl, grefl and brefl specify the color coefficients  for  the ideal specular (mirror) reflection of the surface.  
 	The variables rtrns, gtrns and btrns  specify  the color coefficients for the ideal specular transmission.  
@@ -1092,6 +1115,8 @@ well-defined, so that all components are fully computed.
         0
         4+ red green blue spec A5 ..
 </pre>
+
+<p>
 
 	The coordinate indices (x1, x2, etc.) are  themselves  functions  of  the  x,  y and z direction to the incident light, plus the solid angle
 	subtended by the light source (usually ignored).
@@ -1259,6 +1284,8 @@ well-defined, so that all components are fully computed.
         0
 </pre>
 
+<p>
+
 	The first modifier will also be used to shade  the  area  leaving the  antimatter  volume and entering the regular volume.  
 	If mod1 is void, the antimatter volume is completely invisible.
 	Antimatter  does  not  work  properly with the material type <a HREF="#Trans">&quot;trans&quot;</a>, 
@@ -1312,6 +1339,8 @@ A texture is a perturbation of the surface normal,  and is given by either a fun
         0
         n A1 A2 .. An
 </pre>
+
+<p>
 
 </dl>
 
@@ -1452,6 +1481,8 @@ A colorfunc is a procedurally  defined  color  pattern.  It is specified as foll
                 [spacing]
 </pre>
 
+<p>
+
 or:
 
 <pre>
@@ -1488,6 +1519,8 @@ or:
                 foreground background
                 [spacing]
 </pre>
+
+<p>
 
 or:
 
@@ -1696,6 +1729,8 @@ A mixfunc mixes  two  modifiers  procedurally.   It  is specified as follows:
         n A1 A2 .. An
 </pre>
 
+<p>
+
 	Foreground and background are modifier names that must be
 	defined earlier in the scene description.
 	If one of these is a material, then
@@ -1723,6 +1758,8 @@ A mixfunc mixes  two  modifiers  procedurally.   It  is specified as follows:
         0
         m A1 A2 .. Am
 </pre>
+
+<p>
 
 <dt>
 	<a NAME="Mixpict">
@@ -1768,6 +1805,8 @@ A mixfunc mixes  two  modifiers  procedurally.   It  is specified as follows:
                 [spacing]
 </pre>
 
+<p>
+
 or:
 
 <pre>
@@ -1782,6 +1821,8 @@ or:
                 Dx Dy Dz
                 [spacing]
 </pre>
+
+<p>
 
 </dl>
 
@@ -1827,6 +1868,8 @@ An example function file is given below:
         cfunc(x) : 10*x / sqrt(x) ;
 </pre>
 
+<p>
+
 Many variables and functions are already defined by the program, and they are listed in the file rayinit.cal.  
 The following variables are particularly important:
 
@@ -1841,11 +1884,15 @@ The following variables are particularly important:
                 arg(i)                  - i'th real argument
 </pre>
 
+<p>
+
 For mesh objects, the local surface coordinates are available:
 
 <pre>
         	Lu, Lv                  - local (u,v) coordinates
 </pre>
+
+<p>
 
 For BRDF types, the following variables are defined as well:
 
@@ -1854,6 +1901,8 @@ For BRDF types, the following variables are defined as well:
                 RdotP                   - perturbed dot product
                 CrP, CgP, CbP           - perturbed material color
 </pre>
+
+<p>
 
 A unique context is set up for each file so
 that  the  same variable may appear in different
@@ -1909,6 +1958,8 @@ The basic data file format is as follows:
         DATA, later dimensions changing faster.
 </pre>
 
+<p>
+
 N is the number of  dimensions.   
 For  each  dimension,  the beginning  and  ending  coordinate  values and the dimension size is given.  
 Alternatively, individual coordinate  values can  be  given when the points are not evenly spaced.  
@@ -1936,6 +1987,8 @@ All numbers are decimal integers:
                 xn yn
          ...
 </pre>
+
+<p>
 
 The ASCII codes can appear in any order.  N is the number of vertices,  and  the  last  is automatically connected to the first.  
 Separate polygonal sections are joined by coincident sides.   
@@ -2124,6 +2177,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 </pre>
+
+<p>
 
 <hr>
 
