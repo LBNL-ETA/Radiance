@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcskipload.c,v 2.1 2024/11/15 20:47:42 greg Exp $";
+static const char RCSid[] = "$Id: srcskipload.c,v 2.2 2024/12/13 00:48:19 greg Exp $";
 #endif
 /*
  * Load source exclusion maps (BMP and MTX)
@@ -330,6 +330,7 @@ srcskip_getrow(int row, int *sndx, float *scorr)
 	}
 inpclosed:
 	error(CONSISTENCY, "call to srcskip_getrow() on closed input");
+	return(EOF);
 badargum:
 	error(CONSISTENCY, "bad argument in srcskip_readrow()");
 	return(EOF);	/* pro forma */
