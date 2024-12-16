@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.19 2024/11/19 20:50:36 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.20 2024/12/16 20:18:36 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -145,12 +145,8 @@ public:
 					if (nt > 1) SetThreadCount(1);
 					traceCall = cb;
 					tcData = cb ? cd : NULL;
+					UpdateMode();
 					if (nt > 1) SetThreadCount(nt);
-				}
-				/// Are we ready?
-	bool			Ready() const {
-					return (cookedCall != NULL) | (traceCall != NULL) &&
-						RadSimulManager::Ready();
 				}
 				/// Finish pending rays and complete callbacks (return #sent)
 	int			FlushQueue();
