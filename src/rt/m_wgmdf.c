@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.4 2024/12/11 18:32:26 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.5 2024/12/17 20:03:13 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -158,6 +158,29 @@ fill_modval(MODVAL *mp, const WGMDDAT *wp)
 	return(set_modval(mp, lastmod(objndx(wp->mtp), mp->nam), wp->rp));
 }
 
+static int
+setWGMDfunc(MODVAL *mp, const WGMDDAT *wp)
+{
+	static char	lastMod[MAXSTR] = "";
+	double		sf;
+	FVECT		vec;
+
+	if (setfunc(wp->mtp, wp->rp) == 0 &&
+			!strcmp(mp->nam, lastMod))
+		return(0);	/* already set */
+				/* else (re)assign special variables */
+	strcpy(lastMod, mp->nam);
+	sf = (wp->rp->rod > 0) ? 1. : -1.;
+	varset("RdotP`", '=', (-1. < mp->pdot) & (mp->pdot < 1.)
+				? sf*mp->pdot : 1.);
+	sf /= funcxf.sca;
+	multv3(vec, mp->pnorm, funcxf.xfm);
+	varset("NxP`", '=', vec[0]*sf);
+	varset("NyP`", '=', vec[1]*sf);
+	varset("NzP`", '=', vec[2]*sf);
+	return(1);
+}
+
 /* assign indicated diffuse component (do !trans first) */
 static void
 set_dcomp(WGMDDAT *wp, int trans)
@@ -193,8 +216,19 @@ set_scomp(WGMDDAT *wp, int trans)
 	SCOMP		*sp = trans ? &wp->ts : &wp->rs;
 	const int	eoff = 3*(trans != 0);
 	double		coef;
-
-	setfunc(wp->mtp, wp->rp);	/* get coefficient, first */
+					/* constant zero check */
+	if (wp->mf->ep[eoff]->type == NUM &&
+			wp->mf->ep[eoff]->v.num <= FTINY) {
+		scolorblack(sp->scol);
+		return;
+	}				/* need modifier */
+	sp->mo.nam = wp->mtp->oargs.sarg[4*(trans != 0)];
+	if (!fill_modval(&sp->mo, wp)) {
+		sprintf(errmsg, "unknown specular %s modifier '%s'",
+			trans ? "transmission" : "reflection", sp->mo.nam);
+		objerror(wp->mtp, USER, errmsg);
+	}
+	setWGMDfunc(&sp->mo, wp);
 	errno = 0;
 	coef = evalue(wp->mf->ep[eoff]);
 	if ((errno == EDOM) | (errno == ERANGE)) {
@@ -205,12 +239,6 @@ set_scomp(WGMDDAT *wp, int trans)
 	if (coef <= FTINY) {		/* negligible value? */
 		scolorblack(sp->scol);
 		return;
-	}				/* else get modifier */
-	sp->mo.nam = wp->mtp->oargs.sarg[4*(trans != 0)];
-	if (!fill_modval(&sp->mo, wp)) {
-		sprintf(errmsg, "unknown specular %s modifier '%s'",
-			trans ? "transmission" : "reflection", sp->mo.nam);
-		objerror(wp->mtp, USER, errmsg);
 	}
 	copyscolor(sp->scol, sp->mo.pcol);
 	scalescolor(sp->scol, coef);
@@ -218,8 +246,7 @@ set_scomp(WGMDDAT *wp, int trans)
 		scolorblack(sp->scol);
 		return;			/* got black pattern */
 	}
-	setfunc(wp->mtp, wp->rp);	/* else get roughness */
-	errno = 0;
+	errno = 0;			/* else get roughness */
 	sp->u_alpha = evalue(wp->mf->ep[eoff+1]);
 	sp->v_alpha = (sp->u_alpha > FTINY) ? evalue(wp->mf->ep[eoff+2]) : 0.0;
 	if ((errno == EDOM) | (errno == ERANGE)) {
@@ -517,8 +544,8 @@ m_wgmdf(OBJREC *m, RAY *r)
 	wd.rp = r;
 	wd.mtp = m;
 	wd.mf = getfunc(m, 12, 0xEEE, 1);
-	set_dcomp(&wd, 0);		/* calls main modifier */
-	setfunc(m, r);			/* get local u vector */
+	set_dcomp(&wd, 0);		/* gets main modifier */
+	setWGMDfunc(&wd.rd.mo, &wd);	/* get local u vector */
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		wd.ulocal[i] = evalue(wd.mf->ep[6+i]);
