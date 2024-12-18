@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.5 2024/12/17 20:03:13 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.6 2024/12/18 17:57:06 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -158,23 +158,23 @@ fill_modval(MODVAL *mp, const WGMDDAT *wp)
 	return(set_modval(mp, lastmod(objndx(wp->mtp), mp->nam), wp->rp));
 }
 
+/* set calculation context for given component of MAT_WGMDF */
 static int
 setWGMDfunc(MODVAL *mp, const WGMDDAT *wp)
 {
-	static char	lastMod[MAXSTR] = "";
+	static char	lastMod[MAXSTR];
 	double		sf;
 	FVECT		vec;
 
 	if (setfunc(wp->mtp, wp->rp) == 0 &&
 			!strcmp(mp->nam, lastMod))
 		return(0);	/* already set */
-				/* else (re)assign special variables */
 	strcpy(lastMod, mp->nam);
-	sf = (wp->rp->rod > 0) ? 1. : -1.;
-	varset("RdotP`", '=', (-1. < mp->pdot) & (mp->pdot < 1.)
-				? sf*mp->pdot : 1.);
-	sf /= funcxf.sca;
+				/* else (re)assign special variables */
+	sf = 1 - 2*(wp->rp->rod < 0);
+	varset("RdotP`", '=', mp->pdot*sf);
 	multv3(vec, mp->pnorm, funcxf.xfm);
+	sf /= funcxf.sca;
 	varset("NxP`", '=', vec[0]*sf);
 	varset("NyP`", '=', vec[1]*sf);
 	varset("NzP`", '=', vec[2]*sf);
@@ -213,12 +213,11 @@ set_dcomp(WGMDDAT *wp, int trans)
 static void
 set_scomp(WGMDDAT *wp, int trans)
 {
-	SCOMP		*sp = trans ? &wp->ts : &wp->rs;
-	const int	eoff = 3*(trans != 0);
-	double		coef;
+	SCOMP	*sp = trans ? &wp->ts : &wp->rs;
+	EPNODE  **exa = wp->mf->ep + 3*(trans != 0);
+	double	coef;
 					/* constant zero check */
-	if (wp->mf->ep[eoff]->type == NUM &&
-			wp->mf->ep[eoff]->v.num <= FTINY) {
+	if (exa[0]->type == NUM && exa[0]->v.num <= FTINY) {
 		scolorblack(sp->scol);
 		return;
 	}				/* need modifier */
@@ -230,7 +229,7 @@ set_scomp(WGMDDAT *wp, int trans)
 	}
 	setWGMDfunc(&sp->mo, wp);
 	errno = 0;
-	coef = evalue(wp->mf->ep[eoff]);
+	coef = evalue(exa[0]);
 	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(wp->mtp, WARNING, "specular compute error");
 		scolorblack(sp->scol);
@@ -247,8 +246,8 @@ set_scomp(WGMDDAT *wp, int trans)
 		return;			/* got black pattern */
 	}
 	errno = 0;			/* else get roughness */
-	sp->u_alpha = evalue(wp->mf->ep[eoff+1]);
-	sp->v_alpha = (sp->u_alpha > FTINY) ? evalue(wp->mf->ep[eoff+2]) : 0.0;
+	sp->u_alpha = evalue(exa[1]);
+	sp->v_alpha = (sp->u_alpha > FTINY) ? evalue(exa[2]) : 0.0;
 	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(wp->mtp, WARNING, "roughness compute error");
 		scolorblack(sp->scol);

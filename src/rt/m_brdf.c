@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.43 2024/12/13 19:05:03 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.44 2024/12/18 17:57:06 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -432,8 +432,7 @@ setbrdfunc(			/* set up brdf function and variables */
 	varset("NxP`", '=', vec[0]/funcxf.sca);
 	varset("NyP`", '=', vec[1]/funcxf.sca);
 	varset("NzP`", '=', vec[2]/funcxf.sca);
-	varset("RdotP`", '=', np->pdot <= -1.0 ? -1.0 :
-			np->pdot >= 1.0 ? 1.0 : np->pdot);
+	varset("RdotP`", '=', np->pdot);
 	scolor_color(ctmp, np->mcolor);		/* should use scolor_rgb()? */
 	varset("CrP", '=', colval(ctmp,RED));
 	varset("CgP", '=', colval(ctmp,GRN));
