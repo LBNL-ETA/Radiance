@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.6 2024/12/18 17:57:06 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.7 2024/12/18 18:34:13 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -217,49 +217,41 @@ set_scomp(WGMDDAT *wp, int trans)
 	EPNODE  **exa = wp->mf->ep + 3*(trans != 0);
 	double	coef;
 					/* constant zero check */
-	if (exa[0]->type == NUM && exa[0]->v.num <= FTINY) {
-		scolorblack(sp->scol);
-		return;
-	}				/* need modifier */
+	if (exa[0]->type == NUM && exa[0]->v.num <= FTINY)
+		goto blackout;
+					/* need modifier */
 	sp->mo.nam = wp->mtp->oargs.sarg[4*(trans != 0)];
 	if (!fill_modval(&sp->mo, wp)) {
 		sprintf(errmsg, "unknown specular %s modifier '%s'",
 			trans ? "transmission" : "reflection", sp->mo.nam);
 		objerror(wp->mtp, USER, errmsg);
 	}
-	setWGMDfunc(&sp->mo, wp);
+	if (sintens(sp->mo.pcol) <= FTINY)
+		goto blackout;		/* got black pattern */
+	setWGMDfunc(&sp->mo, wp);	/* else compute coefficient */
 	errno = 0;
 	coef = evalue(exa[0]);
 	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(wp->mtp, WARNING, "specular compute error");
-		scolorblack(sp->scol);
-		return;
+		goto blackout;
 	}
-	if (coef <= FTINY) {		/* negligible value? */
-		scolorblack(sp->scol);
-		return;
-	}
+	if (coef <= FTINY)		/* negligible value? */
+		goto blackout;
 	copyscolor(sp->scol, sp->mo.pcol);
 	scalescolor(sp->scol, coef);
-	if (sintens(sp->scol) <= FTINY) {
-		scolorblack(sp->scol);
-		return;			/* got black pattern */
-	}
 	errno = 0;			/* else get roughness */
 	sp->u_alpha = evalue(exa[1]);
 	sp->v_alpha = (sp->u_alpha > FTINY) ? evalue(exa[2]) : 0.0;
 	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(wp->mtp, WARNING, "roughness compute error");
-		scolorblack(sp->scol);
-		return;
+		goto blackout;
 	}				/* we have something... */
 	wp->specfl |= trans ? SP_TRAN : SP_REFL;
 	if (sp->v_alpha <= FTINY) {	/* is it pure specular? */
 		wp->specfl |= trans ? SP_TPURE : SP_RPURE;
 		sp->u_alpha = sp->v_alpha = 0.0;
 		return;
-	}
-					/* get anisotropic coordinates */
+	}				/* else get aniso coordinates */
 	fcross(sp->v, sp->mo.pnorm, wp->ulocal);
 	if (normalize(sp->v) == 0.0) {	/* orientation vector==normal? */
 		if (fabs(sp->u_alpha - sp->v_alpha) > 0.001)
@@ -270,6 +262,9 @@ set_scomp(WGMDDAT *wp, int trans)
 			(sp->u_alpha*sp->u_alpha + sp->v_alpha*sp->v_alpha) );
 	} else
 		fcross(sp->u, sp->v, sp->mo.pnorm);
+	return;
+blackout:
+	scolorblack(sp->scol);		/* zero out component */
 }
 
 /* sample anisotropic Gaussian specular */
