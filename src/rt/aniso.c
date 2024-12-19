@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.66 2024/12/06 01:34:21 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.67 2024/12/19 23:25:28 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -265,7 +265,8 @@ m_aniso(			/* shade ray that hit something anisotropic */
 						/* diffuse reflection */
 	nd.rdiff = 1.0 - nd.trans - nd.rspec;
 
-	if (r->ro != NULL && isflat(r->ro->otype))
+	if (r->ro != NULL && isflat(r->ro->otype) &&
+			DOT(r->pert,r->pert) <= FTINY*FTINY)
 		nd.specfl |= SP_FLAT;
 
 	getacoords(&nd);			/* set up coordinates */

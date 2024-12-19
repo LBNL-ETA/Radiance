@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.85 2024/12/05 19:23:43 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.86 2024/12/19 23:25:28 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -225,7 +225,7 @@ m_normal(			/* color a ray that hit something normal */
 		VCOPY(nd.pnorm, r->ron);
 		nd.pdot = r->rod;
 	}
-	if (r->ro != NULL && isflat(r->ro->otype))
+	if (!hastexture && r->ro != NULL && isflat(r->ro->otype))
 		nd.specfl |= SP_FLAT;
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for dirnorm() */
@@ -319,8 +319,7 @@ m_normal(			/* color a ray that hit something normal */
 			copyscolor(r->mcol, lr.rcol);
 			saddscolor(r->rcol, lr.rcol);
 			r->rmt = r->rot;
-			if (nd.specfl & SP_FLAT &&
-					!hastexture | (r->crtype & AMBIENT))
+			if (nd.specfl & SP_FLAT && r->crtype & AMBIENT)
 				r->rmt += raydistance(&lr);
 		}
 	}

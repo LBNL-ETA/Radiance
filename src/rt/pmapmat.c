@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.25 2024/12/03 19:36:58 greg Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.26 2024/12/19 23:25:28 greg Exp $";
 #endif
 /* 
 
@@ -335,9 +335,6 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
    if ((nd.alpha2 *= nd.alpha2) <= FTINY) 
       nd.specfl |= SP_PURE;
       
-   if (rayIn -> ro != NULL && isflat(rayIn -> ro -> otype)) 
-      nd.specfl |= SP_FLAT;  
-      
    /* Perturb normal */
    if ((hastexture = (DOT(rayIn -> pert, rayIn -> pert) > sqr(FTINY)) ))
       nd.pdot = raynormal(nd.pnorm, rayIn);
@@ -346,7 +343,10 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
       nd.pdot = rayIn -> rod;
    }
    
-   nd.pdot = max(nd.pdot, .001);
+    if (!hastexture && rayIn -> ro != NULL && isflat(rayIn -> ro -> otype))
+      nd.specfl |= SP_FLAT;
+
+  nd.pdot = max(nd.pdot, .001);
       
    /* Modify material color */
    multcolor(nd.mcolor, rayIn -> pcol);

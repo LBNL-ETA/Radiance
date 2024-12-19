@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.7 2024/12/18 18:34:13 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.8 2024/12/19 23:25:28 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -553,7 +553,8 @@ m_wgmdf(OBJREC *m, RAY *r)
 		return(1);		/* second shadow test */
 	set_dcomp(&wd, 1);
 	set_scomp(&wd, 0);
-	wd.specfl |= SP_FLAT*(r->ro != NULL && isflat(r->ro->otype));
+	wd.specfl |= SP_FLAT*(!wd.rs.mo.hastexture &&
+				r->ro != NULL && isflat(r->ro->otype));
 					/* apply Fresnel adjustments? */
 	if (wd.specfl & SP_RPURE && pbright(wd.rs.scol) >= FRESTHRESH) {
 		const double	fest = FRESNE(fabs(wd.rs.mo.pdot));
@@ -612,8 +613,7 @@ m_wgmdf(OBJREC *m, RAY *r)
 		copyscolor(r->mcol, lr.rcol);
 		saddscolor(r->rcol, lr.rcol);
 		r->rmt = r->rot;
-		if (wd.specfl & SP_FLAT &&
-				!wd.rs.mo.hastexture | (r->crtype & AMBIENT))
+		if (wd.specfl & SP_FLAT && r->crtype & AMBIENT)
 			r->rmt += raydistance(&lr);
 	}
 	if (wd.specfl & (SP_REFL|SP_TRAN))	/* specularly scattered rays */
