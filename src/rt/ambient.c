@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.127 2024/12/19 17:43:47 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.128 2024/12/19 19:34:31 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -630,6 +630,7 @@ initambfile(		/* initialize ambient file */
 {
 	extern char  *progname, *octname;
 	static char  *mybuf = NULL;
+	int  ntries = 3;
 
 #ifdef	F_SETLKW
 	aflock(cre8 ? F_WRLCK : F_RDLCK);
@@ -665,8 +666,7 @@ retry:
 		fputc('\n', ambfp);
 		putambmagic(ambfp);
 	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp)) {
-		int	ntries = 2;
-		if (ntries-- > 0 && ftell(ambfp) == 0) {
+		if (--ntries > 0 && ftell(ambfp) == 0) {
 #ifdef	F_SETLKW
 			aflock(F_UNLCK);
 			clearerr(ambfp);
