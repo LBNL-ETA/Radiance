@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.126 2024/12/09 00:44:29 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.127 2024/12/19 17:43:47 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -665,14 +665,19 @@ retry:
 		fputc('\n', ambfp);
 		putambmagic(ambfp);
 	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp)) {
-#ifndef  F_SETLKW
-		static int	ntries = 3;
-		if (--ntries > 0 && ftell(ambfp) == 0) {
+		int	ntries = 2;
+		if (ntries-- > 0 && ftell(ambfp) == 0) {
+#ifdef	F_SETLKW
+			aflock(F_UNLCK);
 			clearerr(ambfp);
 			sleep(2);
+			aflock(F_RDLCK);
+#else
+			clearerr(ambfp);
+			sleep(2);
+#endif
 			goto retry;
 		}
-#endif
 		error(USER, "bad/incompatible ambient file");
 	}
 	if ((AMB_CNDX != CNDX) | (AMB_WLPART != WLPART)) {
