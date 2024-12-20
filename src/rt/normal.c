@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.86 2024/12/19 23:25:28 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.87 2024/12/20 16:29:50 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -134,7 +134,7 @@ dirnorm(		/* compute source contribution */
 		dtmp = np->alpha2;
 						/* + source if flat */
 		if (np->specfl & SP_FLAT)
-			dtmp += omega * (0.25/PI);
+			dtmp += (1. - dstrsrc) * omega * (0.25/PI);
 						/* half vector */
 		VSUB(vtmp, ldir, np->rp->rdir);
 		d2 = DOT(vtmp, np->pnorm);

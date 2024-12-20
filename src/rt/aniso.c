@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.67 2024/12/19 23:25:28 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.68 2024/12/20 16:29:50 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -118,7 +118,7 @@ diraniso(		/* compute source contribution */
 		 */
 						/* add source width if flat */
 		if (np->specfl & SP_FLAT)
-			au2 = av2 = omega * (0.25/PI);
+			au2 = av2 = (1. - dstrsrc) * omega * (0.25/PI);
 		else
 			au2 = av2 = 0.0;
 		au2 += np->u_alpha*np->u_alpha;
