@@ -1,4 +1,4 @@
-# RCSid $Id: spectral.mat,v 1.3 2024/01/17 18:57:54 greg Exp $
+# RCSid $Id: spectral.mat,v 1.4 2024/12/20 00:41:17 greg Exp $
 #
 # Spectral material definitions
 #
@@ -40,7 +40,7 @@ void specdata gold+copper_alloy_spec
 0
 
 void specpict mini_me_spec
-5 clip spfish.hsr . 3.25-Py -3-Px
+5 clip spfish.hsr . 3.25-Py 4+Px
 0
 0
 
