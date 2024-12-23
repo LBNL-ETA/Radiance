@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.132 2023/11/16 23:37:29 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.133 2024/12/23 01:39:27 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -131,6 +131,7 @@ char	*viewselect = NULL;	/* specific view only */
 
 #define DEF_RPICT_PATH	"rpict"		/* default rpict path */
 
+#define R_CMDMAX	(5*PATH_MAX+512)
 				/* command paths */
 char	c_oconv[256] = "oconv";
 char	c_mkillum[256] = "mkillum";
@@ -528,7 +529,7 @@ static void
 oconv(void)				/* run oconv and mkillum if necessary */
 {
 	static char	illumtmp[] = "ilXXXXXX";
-	char	combuf[PATH_MAX], ocopts[64], mkopts[1024];
+	char	combuf[R_CMDMAX], ocopts[64], mkopts[1024];
 
 	oconvopts(ocopts);		/* get options */
 	if (octreedate < scenedate) {	/* check date on original octree */
@@ -1415,7 +1416,7 @@ rvu(				/* run rvu with first view */
 )
 {
 	char	*vw;
-	char	combuf[PATH_MAX];
+	char	combuf[R_CMDMAX];
 					/* build command */
 	if (touchonly || (vw = getview(0, NULL)) == NULL)
 		return;
