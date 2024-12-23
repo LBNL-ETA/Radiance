@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.10 2024/12/13 21:12:40 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.11 2024/12/23 16:15:38 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -415,7 +415,7 @@ getRayBundle(FVECT *orig_dir = NULL)
 	int	n2go = myRCmanager.accum;
 
 	switch (inpfmt) {
-	case 'a':				// ASCII input
+	case 'a':			// ASCII input
 		if (!orig_dir)
 			return skipWords(6*n2go);
 		while (n2go-- > 0) {
@@ -428,12 +428,13 @@ getRayBundle(FVECT *orig_dir = NULL)
 			orig_dir += 2;
 		}
 		break;
-	case 'f':				// float input
+	case 'f':			// float input
 		if (!orig_dir)
 			return skipBytes(6*sizeof(float)*n2go);
 #ifdef SMLFLT
 		if (getbinary(orig_dir, sizeof(FVECT), 2*n2go, stdin) != 2*n2go)
 			return false;
+		orig_dir += 2*n2go;
 #else
 		while (n2go-- > 0) {
 			float	fvecs[6];
@@ -445,12 +446,13 @@ getRayBundle(FVECT *orig_dir = NULL)
 		}
 #endif
 		break;
-	case 'd':				// double input
+	case 'd':			// double input
 		if (!orig_dir)
 			return skipBytes(6*sizeof(double)*n2go);
 #ifndef SMLFLT
 		if (getbinary(orig_dir, sizeof(FVECT), 2*n2go, stdin) != 2*n2go)
 			return false;
+		orig_dir += 2*n2go;
 #else
 		while (n2go-- > 0) {
 			double	dvecs[6];
@@ -466,13 +468,10 @@ getRayBundle(FVECT *orig_dir = NULL)
 		error(INTERNAL, "unsupported format in getRayBundle()");
 		return false;
 	}
-	int	warned = 0;		// normalize directions
-	n2go = myRCmanager.accum;
+	n2go = myRCmanager.accum;	// normalize directions
 	while (n2go-- > 0) {
 		orig_dir -= 2;
-		if (normalize(orig_dir[1]) == 0)
-			if (!warned++)
-				error(WARNING, "zero ray direction on input");
+		normalize(orig_dir[1]);
 	}
 	return true;
 }
