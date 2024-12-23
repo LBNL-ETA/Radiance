@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.11 2024/12/23 16:15:38 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.12 2024/12/23 18:14:20 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -358,9 +358,7 @@ main(int argc, char *argv[])
 	if (rval >= myRCmanager.GetRowMax()) {
 		error(WARNING, "nothing left to compute");
 		quit(0);
-	}				// add processes as requested
-	myRCmanager.SetThreadCount(nproc);
-
+	}
 	rxcontrib(rval);		/* trace ray contributions (loop) */
 
 	quit(0);	/* exit clean */
@@ -499,6 +497,9 @@ rxcontrib(const int rstart)
 		}
 		last_report = tstart = time(0);
 	}
+					// start children as requested
+	myRCmanager.SetThreadCount(nproc);
+
 	while (r < totRows) {		// loop until done
 		time_t	tnow;
 		if (!getRayBundle(odarr))
@@ -509,8 +510,8 @@ rxcontrib(const int rstart)
 		if (report_intvl <= 0)
 			continue;
 		tnow = time(0);		// time to report progress?
-		if (r == totRows)
-			myRCmanager.FlushQueue();
+		if (r == totRows)	// finished?
+			myRCmanager.SetThreadCount(1);
 		else if (tnow < last_report+report_intvl)
 			continue;
 		sprintf(errmsg, "%.2f%% done after %.3f hours\n",
