@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.12 2024/12/23 18:14:20 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.13 2024/12/24 16:58:13 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -56,7 +56,7 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inpfmt, outfmt, formstr(inpfmt), formstr(outfmt));
 	if (report_intvl > 0)
-		printf("-t %-9d\t\t\t#  time between reports\n", report_intvl);
+		printf("-t %-9d\t\t\t# time between reports\n", report_intvl);
 	printf(erract[WARNING].pf != NULL ?
 			"-w+\t\t\t\t# warning messages on\n" :
 			"-w-\t\t\t\t# warning messages off\n");
@@ -509,10 +509,10 @@ rxcontrib(const int rstart)
 		r++;
 		if (report_intvl <= 0)
 			continue;
-		tnow = time(0);		// time to report progress?
-		if (r == totRows)	// finished?
+		if (r == totRows)	// need to finish up?
 			myRCmanager.SetThreadCount(1);
-		else if (tnow < last_report+report_intvl)
+		tnow = time(0);
+		if ((r < totRows) & (tnow < last_report+report_intvl))
 			continue;
 		sprintf(errmsg, "%.2f%% done after %.3f hours\n",
 				100.*myRCmanager.GetRowFinished()/totRows,
