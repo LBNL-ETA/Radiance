@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.8 2024/12/03 17:39:42 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.9 2024/12/24 20:57:13 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -323,7 +323,6 @@ public:
 	void			ClearModifiers() {
 					if (rowsDone.Length()) {
 						SetThreadCount(1);
-						cow_doneshare();
 						rowsDone.NewBitMap(0);
 					}
 					lu_done(&modLUT);
@@ -333,6 +332,7 @@ public:
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {
 					ClearModifiers();
+					cow_doneshare();
 					return RtraceSimulManager::Cleanup(everything);
 				}
 };
