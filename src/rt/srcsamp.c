@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.23 2024/12/13 00:50:55 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.24 2024/12/25 17:40:27 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -97,16 +97,15 @@ srcskip(			/* pre-emptive test for source to skip */
 
 	if (sp->sflags & SSKIP)
 		return(1);
-#ifdef SSKIPOPT
-	if (r->rsrc < -1 &&	/* ray has custom skip flags? */
-			sskip_chk(sskip_flags(r->rsrc), sn))
+#ifdef SSKIPOPT			/* parent ray has custom skip flags? */
+	if (r->parent != NULL && r->parent->rsrc < -1 &&
+			sskip_chk(sskip_flags(r->parent->rsrc), sn))
 		return(1);
 #endif
-	if ((sp->sflags & (SPROX|SDISTANT)) != SPROX)
-		return(0);
-
-	return(dist2(r->rorg, sp->sloc) >
+	if ((sp->sflags & (SPROX|SDISTANT)) == SPROX)
+		return(dist2(r->rorg, sp->sloc) >
 			(sp->sl.prox + sp->srad)*(sp->sl.prox + sp->srad));
+	return(0);
 }
 
 double
