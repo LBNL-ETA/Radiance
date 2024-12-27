@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.5 2024/12/13 22:13:24 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.6 2024/12/27 19:44:53 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -524,7 +524,7 @@ progReporter(double pct)
 void
 rpict(int seq, char *pout, char *zout, char *prvr)
 /*
- * If seq is greater than zero, then we will render a sequence of
+ * If seq is greater than zero, we will render a sequence of
  * images based on view parameter strings read from the standard input.
  * If pout is NULL, then all images will be sent to the standard ouput.
  * If seq is greater than zero and prvr is an integer, then it is the
@@ -570,7 +570,7 @@ rpict(int seq, char *pout, char *zout, char *prvr)
 		if (!dtype)
 			error(USER, "ResumeFrame() failed");
 		if (!seq)
-			return;		// all done if we're running a sequence
+			return;		// all done if not a sequence
 	}
 	do {
 		if (prvr)		// have view from sequence recovery?
@@ -622,5 +622,5 @@ rpict(int seq, char *pout, char *zout, char *prvr)
 							zout ? dbuf : zout)
 					&& !seq | (errno != EEXIST))
 			error(USER, "RenderFrame() failed");
-	} while (seq++);		// all done if we're running a sequence
+	} while (seq++);		// all done if not a sequence
 }
