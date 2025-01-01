@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.40 2024/09/16 17:31:14 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.41 2025/01/01 19:02:08 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -291,7 +291,7 @@ qualname(		/* get qualified name */
 	int  lvl
 )
 {
-    static char	 nambuf[RMAXWORD+1];
+    static char	 nambuf[MAXCNTX+RMAXWORD+1];
     char  *cp = nambuf, *cpp;
 				/* check for explicit local */
     if (*nam == CNTXMARK) {
@@ -302,7 +302,7 @@ qualname(		/* get qualified name */
 	return(lvl > 0 ? NULL : nam);
 				/* copy name to static buffer */
     while (*nam) {
-	if (cp >= nambuf+RMAXWORD)
+	if (cp >= nambuf+(MAXCNTX+RMAXWORD))
 		goto toolong;
 	*cp++ = *nam++;
     }
@@ -321,7 +321,7 @@ qualname(		/* get qualified name */
 	    ;
     }
     while (*cpp) {		/* add remaining context to name */
-	if (cp >= nambuf+RMAXWORD)
+	if (cp >= nambuf+(MAXCNTX+RMAXWORD))
 	    goto toolong;
 	*cp++ = *cpp++;
     }
