@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.6 2024/12/27 19:44:53 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.7 2025/01/02 20:19:48 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -60,10 +60,7 @@ static void printdefaults(void);
 void
 quit(int code)			/* quit program */
 {
-	if (!code)
-		code = myRPmanager.Cleanup();
-
-	exit(code);
+	exit(code);		// don't bother about freeing anything
 }
 
 /* Set default options */

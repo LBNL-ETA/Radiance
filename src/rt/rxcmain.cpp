@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.14 2025/01/02 16:16:49 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.15 2025/01/02 20:19:48 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -567,8 +567,7 @@ quit(
 	int  code
 )
 {
-	if (!code && myRCmanager.Ready())	// clean up on normal exit
-		code = myRCmanager.Cleanup();
+	myRCmanager.FlushQueue();	// leave nothing in queue
 
 	exit(code);
 }

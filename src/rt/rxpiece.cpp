@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.8 2024/12/13 22:17:33 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.9 2025/01/02 20:19:48 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -64,7 +64,7 @@ quit(int code)				/* quit program */
 		ray_pnprocs = -1;	// hack to avoid cleanup in child
 		_exit(code);
 	}
-	exit(code);			// parent still frees everything (*yawn*)
+	exit(code);			// don't bother to free data structs
 }
 
 /* Set default options */
