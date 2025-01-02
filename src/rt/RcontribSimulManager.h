@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.9 2024/12/24 20:57:13 greg Exp $ */
+/* RCSid $Id: RcontribSimulManager.h,v 2.10 2025/01/02 16:16:49 greg Exp $ */
 /*
  *  RcontribSimulManager.h
  *
@@ -207,12 +207,15 @@ public:
 					modLUT.freek = efree;
 					modLUT.freed = FreeRcMod;
 					kid = NULL; kidRow = NULL; nkids = 0;
-					rtFlags = RTtraceSources;
-					SetTraceCall(&RctCall, this);
 					outOp = RCOnew;
 					cdsF = &defDataShare;
 					xres = yres = 0;
 					accum = 1;
+					if (octname) {
+						SetTraceCall(&RctCall, this);
+						rtFlags |= RTtraceSources;
+						UpdateMode();
+					}
 				}
 				~RcontribSimulManager() {
 					if (nkids >= 0) ClearModifiers();
@@ -230,7 +233,12 @@ public:
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn) {
-					return RtraceSimulManager::LoadOctree(octn);
+					if (octname) Cleanup(false);
+					if (!RtraceSimulManager::LoadOctree(octn))
+						return false;
+					SetTraceCall(&RctCall, this);
+					rtFlags |= RTtraceSources;
+					return UpdateMode();
 				}
 				/// Prepare header from previous input (or clear)
 	bool			NewHeader(const char *inspec=NULL) {
@@ -324,6 +332,7 @@ public:
 					if (rowsDone.Length()) {
 						SetThreadCount(1);
 						rowsDone.NewBitMap(0);
+						rInPos = 0;
 					}
 					lu_done(&modLUT);
 					delete outList; outList = NULL;
@@ -333,6 +342,14 @@ public:
 	int			Cleanup(bool everything = false) {
 					ClearModifiers();
 					cow_doneshare();
+					if (everything) {
+						dtyp = 'f';
+						outOp = RCOnew;
+						cdsF = &defDataShare;
+						xres = yres = 0;
+						accum = 1;
+						rtFlags &= ~RCmask;
+					}
 					return RtraceSimulManager::Cleanup(everything);
 				}
 };

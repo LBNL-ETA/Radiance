@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.13 2024/12/24 16:58:13 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.14 2025/01/02 16:16:49 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -47,8 +47,7 @@ printdefaults(void)			/* print default values to stdout */
 	if (myRCmanager.HasFlag(RTimmIrrad))
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
-	if (myRCmanager.xres > 0)
-		printf("-x %-9d\t\t\t# x resolution\n", myRCmanager.xres);
+	printf("-x %-9d\t\t\t# x resolution\n", myRCmanager.xres);
 	printf("-y %-9d\t\t\t# y resolution\n", myRCmanager.yres);
 	printf(myRCmanager.HasFlag(RTlimDist) ?
 			"-ld+\t\t\t\t# limit distance on\n" :
@@ -75,7 +74,7 @@ onsig(				/* fatal signal */
 		_exit(signo);
 
 #ifdef SIGALRM
-	alarm(180);			/* allow 3 minutes to clean up */
+	alarm(600);			/* allow 10 minutes to clean up */
 	signal(SIGALRM, SIG_DFL);	/* make certain we do die */
 #endif
 	eputs("signal - ");

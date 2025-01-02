@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.10 2024/12/10 00:38:59 greg Exp $";
+static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.11 2025/01/02 16:16:49 greg Exp $";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -87,11 +87,11 @@ NewRcMod(const char *prms, const char *binexpr, int ncbins)
 						sizeof(DCOLORV)*(NCSAMP*ncbins-1) +
 						strlen(prms)+1);
 
-	if (binexpr) {				// check bin expression
+	if (binexpr) {				// get/check bin expression
 		mp->binv = eparse(const_cast<char *>(binexpr));
 		if (mp->binv->type == NUM) {	// constant expression (0)?
-			if ((int)(evalue(mp->binv) + .5) > 0) {
-				sprintf(errmsg, "illegal positive constant for bin (%s)",
+			if ((int)evalue(mp->binv) != 0) {
+				sprintf(errmsg, "illegal non-zero constant for bin (%s)",
 						binexpr);
 				error(USER, errmsg);
 			}
@@ -182,6 +182,7 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	raycontrib(contr, r, PRIMARY);		// compute coefficient
 	if (rcp->HasFlag(RCcontrib))
 		smultscolor(contr, r->rcol);	// -> value contribution
+
 	for (int i = 0; i < NCSAMP; i++)
 		*dvp++ += contr[i];		// accumulate color/spectrum
 	return 1;
@@ -223,7 +224,7 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 			return false;
 		nChan = NCSAMP;
 	} else if (nChan != NCSAMP) {
-		error(USER, "number of spectral channels must be fixed");
+		error(USER, "# spectral channels must be fixed in AddModifier()");
 		return false;
 	}
 	if (Ready()) {
@@ -319,8 +320,10 @@ RcontribSimulManager::AddModFile(const char *modfn, const char *outspec,
 	}
 	char		mod[MAXSTR];
 	while (fgetword(mod, sizeof(mod), fp))
-		if (!AddModifier(mod, outspec, prms, binval, bincnt))
+		if (!AddModifier(mod, outspec, prms, binval, bincnt)) {
+			fclose(fp);
 			return false;
+		}
 	fclose(fp);
 	return true;
 }
@@ -329,7 +332,9 @@ RcontribSimulManager::AddModFile(const char *modfn, const char *outspec,
 static int
 checkModExists(const LUENT *lp, void *p)
 {
-	if (modifier(lp->key) != OVOID)
+	OBJECT	mod = modifier(lp->key);
+
+	if ((mod != OVOID) & (mod < nsceneobjs))
 		return 1;
 
 	sprintf(errmsg, "tracked modifier '%s' not found in main scene", lp->key);
@@ -342,23 +347,24 @@ int
 RcontribSimulManager::PrepOutput()
 {
 	if (!outList || !RtraceSimulManager::Ready()) {
-		error(INTERNAL, "PrepOutput() called before octree & modifiers assigned");
+		error(INTERNAL, "PrepOutput() called before octree & modifiers set");
 		return -1;
 	}
 	if (!cdsF) {
-		error(INTERNAL, "missing RdataShare constructor call (*cdsF)");
+		error(INTERNAL, "missing RdataShare constructor call (cdsF)");
 		return -1;
 	}
 	if (lu_doall(&modLUT, checkModExists, NULL) < 0)
 		return -1;
 
+	outList->nRows = yres * (xres + !xres);	// all outputs have same #rows
 	int	remWarnings = 20;
 	for (RcontribOutput *op = outList; op; op = op->next) {
 		if (op->rData) {
 			error(INTERNAL, "output channel already open in PrepOutput()");
 			return -1;
 		}
-		op->nRows = yres * (xres + !xres);
+		op->nRows = outList->nRows;
 		op->rData = (*cdsF)(op->ofname, outOp,
 					GetHeadLen()+1024 + op->nRows*op->rowBytes);
 		freeqstr(op->ofname); op->ofname = NULL;
@@ -368,10 +374,9 @@ RcontribSimulManager::PrepOutput()
 				return -1;
 			if (rd >= op->nRows) {
 				if (remWarnings >= 0) {
-					sprintf(errmsg, "recovered output '%s' already done",
+					sprintf(errmsg, "recovered output '%s' is complete",
 							op->GetName());
-					error(WARNING, remWarnings ? errmsg : "etc...");
-					remWarnings--;
+					error(WARNING, --remWarnings ? errmsg : "etc...");
 				}
 				rd = op->nRows;
 			}
