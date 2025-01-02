@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.8 2025/01/02 01:54:49 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.9 2025/01/02 02:59:15 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -85,9 +85,8 @@ quit(			/* quit program */
 	if (ray_pnprocs < 0)
 		_exit(code);		/* avoid flush in child */
 
-	int	ec = myRTmanager.Cleanup();
-
-	if (ec) code = ec;
+	if (ray_pnprocs > 1)
+		myRTmanager.SetThreadCount(1);
 
 	exit(code);
 }
