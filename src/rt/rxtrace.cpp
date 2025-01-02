@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.7 2024/11/19 16:29:44 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.8 2025/01/02 01:54:49 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -71,7 +71,7 @@ static RayReportCall ourtrace;
 
 RayReportCall printvals;		/* print selected ray values */
 
-void  putscolor(COLORV *scol);		/* convert/print spectral color */
+void  putscolor(COLORV *scol, double sf = 1.);		/* convert/print spectral color */
 
 static oputf_t *ray_out[32], *every_out[32];
 
@@ -511,7 +511,7 @@ oputr(				/* print mirrored contribution */
 	RAY  *r
 )
 {
-	putscolor(r->mcol);
+	putscolor(r->mcol, out_scalefactor);
 }
 
 static void
@@ -532,7 +532,7 @@ oputx(				/* print unmirrored contribution */
 	copyscolor(cdiff, r->rcol);
 	sopscolor(cdiff, -=, r->mcol);
 
-	putscolor(cdiff);
+	putscolor(cdiff, out_scalefactor);
 }
 
 static void
@@ -548,7 +548,7 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	putscolor(r->rcol);
+	putscolor(r->rcol, out_scalefactor);
 }
 
 static void
@@ -560,7 +560,7 @@ oputV(				/* print value contribution */
 
 	raycontrib(contr, r, PRIMARY);
 	smultscolor(contr, r->rcol);
-	putscolor(contr);
+	putscolor(contr, out_scalefactor);
 }
 
 static void
@@ -769,20 +769,20 @@ putrgbe(RREAL *v, int n)	/* output RGBE color */
 }
 
 void
-putscolor(COLORV *scol)		/* output (spectral) color */
+putscolor(COLORV *scol, double sf)		/* output (spectral) color */
 {
 	static COLORMAT	xyz2myrgbmat;
 	SCOLOR		my_scol;
 	COLOR		col;
 					/* single channel output? */
 	if (sens_curve != NULL) {
-		RREAL	v = (*sens_curve)(scol) * out_scalefactor;
+		RREAL	v = (*sens_curve)(scol) * sf;
 		(*putreal)(&v, 1);
 		return;
 	}
-	if (out_scalefactor != 1.) {	/* apply scalefactor if any */
+	if (sf != 1.) {			/* apply scalefactor if any */
 		copyscolor(my_scol, scol);
-		scalescolor(my_scol, out_scalefactor);
+		scalescolor(my_scol, sf);
 		scol = my_scol;
 	}
 	if (out_prims == NULL) {	/* full spectral reporting */

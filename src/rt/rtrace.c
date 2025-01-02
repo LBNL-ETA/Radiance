@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.112 2024/01/06 01:21:34 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.113 2025/01/02 01:54:49 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -87,7 +87,7 @@ static double nextray(FVECT org, FVECT dir);
 static void tabin(RAY *r);
 static void ourtrace(RAY *r);
 
-static void  putscolor(COLORV *scol);
+static void  putscolor(COLORV *scol, double sf);
 
 static oputf_t *ray_out[32], *every_out[32];
 static putf_t *putreal;
@@ -684,7 +684,7 @@ oputr(				/* print mirrored contribution */
 	RAY  *r
 )
 {
-	putscolor(r->mcol);
+	putscolor(r->mcol, out_scalefactor);
 }
 
 
@@ -708,7 +708,7 @@ oputx(				/* print unmirrored contribution */
 	copyscolor(cdiff, r->rcol);
 	sopscolor(cdiff, -=, r->mcol);
 
-	putscolor(cdiff);
+	putscolor(cdiff, out_scalefactor);
 }
 
 
@@ -726,7 +726,7 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	putscolor(r->rcol);
+	putscolor(r->rcol, out_scalefactor);
 }
 
 
@@ -739,7 +739,7 @@ oputV(				/* print value contribution */
 
 	raycontrib(contr, r, PRIMARY);
 	smultscolor(contr, r->rcol);
-	putscolor(contr);
+	putscolor(contr, out_scalefactor);
 }
 
 
@@ -856,7 +856,7 @@ oputW(				/* print coefficient */
 	else
 		raycontrib(contr, r, PRIMARY);
 
-	putscolor(contr);
+	putscolor(contr, 1.);
 }
 
 
@@ -954,20 +954,20 @@ putf(RREAL *v, int n)		/* output binary float(s) */
 
 
 static void
-putscolor(COLORV *scol)		/* output (spectral) color */
+putscolor(COLORV *scol, double sf)	/* output (spectral) color */
 {
 	static COLORMAT	xyz2myrgbmat;
 	SCOLOR		my_scol;
 	COLOR		col;
 					/* single channel output? */
 	if (sens_curve != NULL) {
-		RREAL	v = (*sens_curve)(scol) * out_scalefactor;
+		RREAL	v = (*sens_curve)(scol) * sf;
 		(*putreal)(&v, 1);
 		return;
 	}
-	if (out_scalefactor != 1.) {	/* apply scalefactor if any */
+	if (sf != 1.) {			/* apply scalefactor if any */
 		copyscolor(my_scol, scol);
-		scalescolor(my_scol, out_scalefactor);
+		scalescolor(my_scol, sf);
 		scol = my_scol;
 	}
 	if (out_prims == NULL) {	/* full spectral reporting */
