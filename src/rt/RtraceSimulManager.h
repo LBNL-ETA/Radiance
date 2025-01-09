@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.21 2025/01/02 16:16:49 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.22 2025/01/09 17:25:37 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -37,6 +37,7 @@ public:
 				}
 				~RadSimulManager() {
 					// Cleanup();
+					if (ray_pnprocs > 0) ray_pclose(0);
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn);

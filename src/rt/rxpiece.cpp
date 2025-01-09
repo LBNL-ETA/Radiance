@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.9 2025/01/02 20:19:48 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.10 2025/01/09 17:25:37 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -60,10 +60,6 @@ static RenderDataType rpiece(char *pout, RenderDataType dt, char *zout);
 void
 quit(int code)				/* quit program */
 {
-	if (nproc < 0) {
-		ray_pnprocs = -1;	// hack to avoid cleanup in child
-		_exit(code);
-	}
 	exit(code);			// don't bother to free data structs
 }
 
