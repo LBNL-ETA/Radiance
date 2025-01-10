@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.6 2021/03/23 00:07:13 rschregle Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.7 2025/01/10 21:43:22 greg Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.6 2021/03/23 00:07:13 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.6 2021/03/23 00:07:13 rschregle Exp $
+   $Id: pmutil.c,v 2.7 2025/01/10 21:43:22 greg Exp $
 */
 
 #include "pmap.h"
@@ -127,6 +127,7 @@ void cleanUpPmaps (PhotonMap **pmaps)
       if (pmaps [t]) {
          deletePhotons(pmaps [t]);
          free(pmaps [t]);
+         pmaps [t] = NULL;
       }
    }
 }
