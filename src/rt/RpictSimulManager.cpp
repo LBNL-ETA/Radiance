@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.12 2024/09/16 23:49:13 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.13 2025/01/10 19:09:12 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -418,8 +418,11 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 			doneSamples |= doneMap;
 		}			// compute required ray samples
 		for (x = y = 0; sampMap.Find(&x, &y); x++)
-			if (!ComputePixel(x, y))
+			if (!ComputePixel(x, y)) {
+				sprintf(errmsg, "ComputePixel(%d,%d) failed", x, y);
+				error(WARNING, errmsg);
 				return false;
+			}
 		doneSamples |= sampMap;	// samples now done or at least queued
 		sp2 -= layer++ & 1;	// next denser sampling
 	}
@@ -819,7 +822,6 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	if (!RenderBelow(GetHeight(), vstep, pdfp[0], dt, pdfp[1])) {
 		fclose(pdfp[0]);
 		if (pdfp[1]) (dfname[0] == '!') ? pclose(pdfp[1]) : fclose(pdfp[1]);
-		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// clean up and return
@@ -1188,7 +1190,6 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 	if (!RenderBelow(GetHeight()-doneScans, vstep, pdfp[0], dt, pdfp[1])) {
 		fclose(pdfp[0]);
 		if (pdfp[1]) fclose(pdfp[1]);
-		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// close up and return success
