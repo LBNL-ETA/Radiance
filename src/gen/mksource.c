@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.11 2023/11/17 20:02:07 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.12 2025/01/18 20:23:15 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -185,7 +185,7 @@ branchsample(TRITREE *node, int depth)
 
 /* Sample sphere using triangular geodesic mesh */
 TRITREE	*
-geosample(int nsamps)
+geosample(long nsamps)
 {
 	int	depth;
 	TRITREE	*tree;
@@ -194,7 +194,7 @@ geosample(int nsamps)
 					/* figure out depth */
 	if ((nsamps -= 4) < 0)
 		error(USER, "minimum number of samples is 4");
-	nsamps = nsamps*3/NTRUNKBR;	/* round up */
+	nsamps = nsamps*(NTRUNKBR-1)/NTRUNKBR;	/* round up */
 	for (depth = 0; nsamps > 1; depth++)
 		nsamps >>= 2;
 					/* make base tetrahedron */
