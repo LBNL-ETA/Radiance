@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.93 2024/12/09 00:44:29 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.94 2025/01/18 03:49:00 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -61,9 +61,6 @@ rayorigin(		/* start new ray from old one */
 		r->rweight = rw;
 		r->crtype = r->rtype = rt;
 		r->rsrc = -1;
-#ifdef SSKIPOPT
-		r->scorr = 1.f;
-#endif
 		r->clipset = NULL;
 		r->revf = raytrace;
 		copycolor(r->cext, cextinction);
@@ -77,9 +74,6 @@ rayorigin(		/* start new ray from old one */
 		}
 		r->rlvl = ro->rlvl;
 		r->rsrc = ro->rsrc;
-#ifdef SSKIPOPT
-		r->scorr = ro->scorr;
-#endif
 		if (rt & RAYREFL) {
 			r->rlvl++;
 			if (r->rsrc >= 0)	/* malfunctioning material? */

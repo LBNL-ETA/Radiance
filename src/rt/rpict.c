@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.105 2024/11/15 20:47:42 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.106 2025/01/18 03:49:00 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -701,9 +701,7 @@ pixvalue(		/* compute pixel value */
 		return(0.0);
 
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
-#ifdef SSKIPOPT
-	sskip_ray(&thisray, hpos, vpos);	/* source skip hack */
-#endif
+
 	rayvalue(&thisray);			/* trace ray */
 						/* -> color */
 	scolor_out(col, out_prims, thisray.rcol);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.85 2024/12/25 17:40:27 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.86 2025/01/18 03:49:00 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -199,9 +199,6 @@ freesources(void)			/* free all source structures */
 #if SHADCACHE
 		while (nsources--)
 			freeobscache(&source[nsources]);
-#endif
-#ifdef SSKIPOPT
-		sskip_rsi(NULL);
 #endif
 		free(source);
 		source = NULL;
@@ -451,10 +448,6 @@ direct(					/* add direct component */
 		cntord[sn].brt = sintens(scp->coef);
 		if (cntord[sn].brt <= 0.0)
 			continue;
-#ifdef SSKIPOPT
-		if (ssf_select != NULL && sskip_chk(ssf_select, scp->sno))
-			scalescolor(scp->coef, r->scorr);
-#endif
 		VCOPY(scp->dir, sr.rdir);
 		copyscolor(sr.rcoef, scp->coef);
 						/* compute potential */
@@ -643,10 +636,6 @@ srcscatter(			/* compute source scattering into ray */
 				}
 							/* other factors */
 				d *= si.dom * r->rot / (4.*PI*nsamps);
-#ifdef SSKIPOPT
-				if (ssf_select != NULL && sskip_chk(ssf_select, sr.rsrc))
-					d *= r->scorr;
-#endif
 				scalescolor(sr.rcol, d);
 			} else {
 				/* PMAP: Add ambient inscattering from

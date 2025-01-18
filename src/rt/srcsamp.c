@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.24 2024/12/25 17:40:27 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.25 2025/01/18 03:49:00 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -15,77 +15,6 @@ static const char	RCSid[] = "$Id: srcsamp.c,v 2.24 2024/12/25 17:40:27 greg Exp 
 
 #include  "random.h"
 
-#ifdef SSKIPOPT
-/* The following table is used for skipping sources */
-static uby8	*srcskipflags = NULL;		/* source inclusion lookup */
-static int	ssf_count = 0;			/* number of flag entries */
-static int	ssf_max = 0;			/* current array size */
-static uby8	*ssf_noskip = NULL;		/* set of zero flags */
-
-uby8		*ssf_select = NULL;		/* sources we may skip */
-
-/* Find/allocate source skip flag entry (free all if NULL) */
-int
-sskip_rsi(uby8 *flags)
-{
-	uby8	*flp;
-	int	i;
-
-	if (flags == NULL) {		/* means clear all */
-		efree(srcskipflags); srcskipflags = NULL;
-		ssf_count = ssf_max = 0;
-		sskip_free(ssf_noskip);
-		sskip_free(ssf_select);
-		return(0);
-	}
-	if (ssf_noskip == NULL)		/* first call? */
-		ssf_noskip = sskip_new();
-
-	if (sskip_eq(flags, ssf_noskip))
-		return(-1);		/* nothing to skip */
-					/* search recent entries */
-	flp = srcskipflags + ssf_count*SSKIPFLSIZ;
-	for (i = ssf_count; i-- > 0; )
-		if (sskip_eq(flp -= SSKIPFLSIZ, flags))
-			return(-2-i);	/* found it! */
-					/* else tack on new entry */
-	if (ssf_count >= ssf_max) {	/* need more space? */
-		ssf_max = ssf_count + (ssf_count>>2) + 64;
-		if (ssf_max <= ssf_count &&
-				(ssf_max = ssf_count+1024) <= ssf_count)
-			error(SYSTEM, "out of space in sskip_rsi()");
-
-		srcskipflags = (uby8 *)erealloc(srcskipflags,
-						ssf_max*SSKIPFLSIZ);
-	}
-	sskip_cpy(srcskipflags + ssf_count*SSKIPFLSIZ, flags);
-
-	return(-2 - ssf_count++);	/* return index (< -1) */
-}
-
-/* Get skip flags associated with RAY rsrc index (or NULL) */
-uby8 *
-sskip_flags(int rsi)
-{
-	if (rsi >= -1)
-		return(ssf_noskip);
-
-	if ((rsi = -2 - rsi) >= ssf_count)
-		error(CONSISTENCY, "bad index to sskip_flags()");
-
-	return(srcskipflags + rsi*SSKIPFLSIZ);
-}
-
-/* OR in a second set of flags into a first */
-void
-sskip_addflags(uby8 *dfl, const uby8 *sfl)
-{
-	int	nb = SSKIPFLSIZ;
-
-	while (nb--)
-		*dfl++ |= *sfl++;
-}
-#endif
 
 int
 srcskip(			/* pre-emptive test for source to skip */
@@ -97,11 +26,6 @@ srcskip(			/* pre-emptive test for source to skip */
 
 	if (sp->sflags & SSKIP)
 		return(1);
-#ifdef SSKIPOPT			/* parent ray has custom skip flags? */
-	if (r->parent != NULL && r->parent->rsrc < -1 &&
-			sskip_chk(sskip_flags(r->parent->rsrc), sn))
-		return(1);
-#endif
 	if ((sp->sflags & (SPROX|SDISTANT)) == SPROX)
 		return(dist2(r->rorg, sp->sloc) >
 			(sp->sl.prox + sp->srad)*(sp->sl.prox + sp->srad));

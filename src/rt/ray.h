@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.57 2024/11/15 20:47:42 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.58 2025/01/18 03:49:00 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -65,9 +65,6 @@ typedef struct ray {
 	RNUMBER	rno;		/* unique ray number */
 	OBJECT	robj;		/* intersected object number */
 	int	rsrc;		/* source we're aiming for (or ones to skip) */
-#ifdef SSKIPOPT
-	float	scorr;		/* correction factor for included sources */
-#endif
 	float	rweight;	/* cumulative weight (for termination) */
 	float	gecc;		/* scattering eccentricity coefficient */
 	SCOLOR	rcoef;		/* contribution coefficient w.r.t. parent */

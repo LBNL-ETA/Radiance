@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.100 2024/12/09 00:44:29 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.101 2025/01/18 03:49:00 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -52,8 +52,8 @@ DLIBS = -lX11
 RTOBJS = rtmain.o rtrace.o duphead.o persist.o
 RTSRC = rtmain.c rtrace.c duphead.c persist.c
 
-RPOBJS = rpmain.o rpict.o srcdraw.o duphead.o persist.o srcskipload.o
-RPSRC = rpmain.c rpict.c srcdraw.c duphead.c persist.c srcskipload.c
+RPOBJS = rpmain.o rpict.o srcdraw.o duphead.o persist.o
+RPSRC = rpmain.c rpict.c srcdraw.c duphead.c persist.c
 
 RVOBJS = rvmain.o rview.o rv2.o rv3.o $(DOBJS)
 RVSRC = rvmain.c rview.c rv2.c rv3.c $(DSRC)
@@ -326,7 +326,7 @@ ambient.o rcmain.o:	ambient.h
 
 rcmain.o rpmain.o rtmain.o rvmain.o rtrace.o \
 rcontrib.o source.o srcdraw.o srcobstr.o \
-srcsamp.o srcsupp.o srcskipload.o virtuals.o:	source.h
+srcsamp.o srcsupp.o virtuals.o:	source.h
 
 rcontrib.o:	../common/otypes.h
 
