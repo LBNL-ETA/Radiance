@@ -1,4 +1,4 @@
-.\" RCSid "$Id: gensurf.1,v 1.8 2021/04/15 23:51:04 greg Exp $"
+.\" RCSid "$Id: gensurf.1,v 1.9 2025/01/21 01:56:27 greg Exp $"
 .TH GENSURF 1 11/15/93 RADIANCE
 .SH NAME
 gensurf - generate a RADIANCE or Wavefront description of a curved surface
@@ -11,6 +11,8 @@ gensurf - generate a RADIANCE or Wavefront description of a curved surface
 ][
 .B \-s
 ][
+.B \-i
+][
 .B \-o
 ]
 .br
@@ -22,12 +24,16 @@ gensurf - generate a RADIANCE or Wavefront description of a curved surface
 ][
 .B \-s
 ][
+.B \-i
+][
 .B \-o
 ]
 .br
 .B "gensurf mat name dfile dfile dfile m n"
 [
 .B \-s
+][
+.B \-i
 ][
 .B \-o
 ]
@@ -66,6 +72,10 @@ file are read and compiled from the RADIANCE library where it is found.
 The
 .I \-s
 option adds smoothing (surface normal interpolation) to the surface.
+The
+.I \-i
+option reverses surface normal directions from the standard
+clockwise-from-front orientation.
 The
 .I \-o
 option produces a Wavefront .OBJ file rather than a RADIANCE

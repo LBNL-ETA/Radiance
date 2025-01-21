@@ -2764,3 +2764,7 @@ it isn't present on Linux-derivatives.
 
 Added WGMDfunc material type with programmable roughness and
 separate modifier paths for the different components.
+
+Added gensurf -i option at the request of Peter Apian-Bennewitz
+to reverse surface normals, mostly for data input when it is
+a bit more difficult to adjust.
