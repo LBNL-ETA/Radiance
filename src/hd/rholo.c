@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.83 2023/02/09 21:54:11 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.84 2025/01/21 22:30:01 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -229,7 +229,6 @@ resfmode(		/* restrict open file access mode */
 static void
 initrholo(void)			/* get our holodeck running */
 {
-	extern int	global_packet();
 	int	i;
 						/* close holodeck on exec() */
 	fcntl(hdlist[0]->fd, F_SETFD, FD_CLOEXEC);
@@ -394,7 +393,6 @@ setdefaults(			/* set default values */
 	HDGRID	*gp
 )
 {
-	extern char	*atos();
 	int	i;
 	int	n;
 	double	len[3], d;

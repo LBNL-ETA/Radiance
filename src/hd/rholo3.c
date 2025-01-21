@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.44 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.45 2025/01/21 22:30:01 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
@@ -274,7 +274,8 @@ beamvolume(	/* compute approximate volume of a beam */
 static void
 ambient_list(void)			/* compute ambient beam list */
 {
-	int32	wtotal, minrt;
+	unsigned long   wtotal;
+	int32	minrt;
 	double	frac;
 	int	i;
 	int	j, k;
@@ -304,7 +305,7 @@ ambient_list(void)			/* compute ambient beam list */
 		frac = 1024.*1024.*vflt(DISKSPACE) / (wtotal*sizeof(RAYVAL));
 	else
 		frac = 1024.*1024.*MAXADISK / (wtotal*sizeof(RAYVAL));
-	minrt = .02*frac*wtotal/complen + .5;	/* heuristic mimimum */
+	minrt = .02*frac*wtotal/complen + 1.1;	/* heuristic mimimum */
 	if (minrt > RPACKSIZ)
 		minrt = RPACKSIZ;
 	for (k = complen; k--; )
