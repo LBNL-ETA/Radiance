@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.21 2024/08/02 18:46:27 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.22 2025/01/22 17:41:10 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -23,9 +23,9 @@ int	nprocs = 0;				/* running process count */
 
 static char	pfile[] = TEMPLATE;		/* persist file name */
 
-static SUBPROC	rtpd[MAXPROC];		/* process descriptors */
+static SUBPROC	rtpd[MAXPROC];			/* process descriptors */
 static float	*rtbuf = NULL;			/* allocated i/o buffer */
-static int	maxqlen = 0;			/* maximum packets per queue */
+static int	maxqlen;			/* maximum packets per queue */
 
 static PACKET	*pqueue[MAXPROC];		/* packet queues */
 static int	pqlen[MAXPROC];			/* packet queue lengths */
@@ -79,8 +79,8 @@ start_rtrace(void)			/* start rtrace process */
 		psiz = open_process(&rtpd[nprocs], rtargv);
 		if (psiz <= 0)
 			error(SYSTEM, "cannot start rtrace process");
-		n = psiz/(RPACKSIZ*6*sizeof(float));
-		if (maxqlen == 0) {
+		n = psiz/(RPACKSIZ*6*sizeof(float)) + 1;
+		if (!maxqlen) {
 			if (!(maxqlen = n))
 				error(INTERNAL,
 					"bad pipe buffer size assumption");
