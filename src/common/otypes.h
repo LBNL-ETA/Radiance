@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.22 2024/12/08 18:19:40 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.23 2025/01/22 18:09:59 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -150,7 +150,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "brightfunc",	T_P|T_F,	o_default }, \
 				{ "brightdata",	T_P|T_D|T_F,	o_default }, \
 				{ "brighttext",	T_P|T_E,	o_default }, \
-				{ "colorpict",	T_P|T_I,	o_default }, \
+				{ "colorpict",	T_P|T_I|T_F,	o_default }, \
 				{ "glow",	T_M|T_L,	o_default }, \
 				{ "source",	T_S,		o_default }, \
 				{ "light",	T_M|T_L,	o_default }, \
@@ -174,7 +174,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "mixfunc",	T_X|T_F,	o_default }, \
 				{ "mixdata",	T_X|T_D|T_F,	o_default }, \
 				{ "mixtext",	T_X|T_E,	o_default }, \
-				{ "mixpict",	T_X|T_I,	o_default }, \
+				{ "mixpict",	T_X|T_I|T_F,	o_default }, \
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
 				{ "prism2",	T_M|T_F|T_LV,	o_default }, \
 				{ "ashik2",	T_M|T_F,	o_default }, \
