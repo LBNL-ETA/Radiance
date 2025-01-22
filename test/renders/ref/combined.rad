@@ -268,7 +268,7 @@ wall_mat polygon dielectric.1.end_wall.9
                  -8                  1                  1
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 0 0
 0
 3        0.318558228        0.196044229       0.0860372415
 
@@ -2342,7 +2342,7 @@ prism1mat polygon prism1.9.prism1_window
                -8.1               11.4                5.2
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 10.2 3.2
 0
 3        0.318558228        0.196044229       0.0860372415
 
@@ -2584,7 +2584,7 @@ prism2mat polygon prism2.11.prism2_window
                -8.1               16.6                5.2
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 15.3 3.2
 0
 3        0.318558228        0.196044229       0.0860372415
 
@@ -7809,7 +7809,7 @@ void mixdata mat7
 0
 
 void mixpict mat8
-7 white brushed_gold grey flower.hdr . (Py-2.2)/.6 (-Px-2.2)/.6
+13 white brushed_gold grey flower.hdr . (Py-2.2)/.6 (-Px-2.2)/.6 -i 1 -t 0 0 9.6
 0
 0
 
@@ -12959,7 +12959,7 @@ lum_bright polygon spectra.18.luminaire
      -3.42215031167      7.97304985272             12.599
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 -1 0 -i 1 -t 0 5.2 9.6
 0
 3        0.318558228        0.196044229       0.0860372415
 
@@ -12974,7 +12974,7 @@ gold mesh spectra.18.vase
 0
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 1 0 -i 1 -t 0 5.2 9.6
 0
 3        0.318558228        0.196044229       0.0860372415
 
@@ -12989,7 +12989,7 @@ gold_smat mesh spectra.18.vase
 0
 
 void colorpict vase_pat
-7 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv
+19 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 1 0 0 -i 1 -t 0 5.2 9.6
 0
 3        0.318558228        0.196044229       0.0860372415
 
