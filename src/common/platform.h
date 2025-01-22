@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.17 2024/05/22 15:37:31 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.18 2025/01/22 19:41:55 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -10,6 +10,10 @@
   #include <io.h>     /* _setmode() and stuff from unistd.h */
   #include <stdio.h>
   typedef long off_t;
+  #undef ftello
+  #define ftello _ftelli64
+  #undef fseeko
+  #define fseeko _fseeki64
   #undef fdopen
   #define fdopen _fdopen
   #undef read
