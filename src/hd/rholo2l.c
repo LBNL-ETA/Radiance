@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.22 2025/01/22 17:41:10 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.23 2025/01/22 18:28:32 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -81,9 +81,7 @@ start_rtrace(void)			/* start rtrace process */
 			error(SYSTEM, "cannot start rtrace process");
 		n = psiz/(RPACKSIZ*6*sizeof(float)) + 1;
 		if (!maxqlen) {
-			if (!(maxqlen = n))
-				error(INTERNAL,
-					"bad pipe buffer size assumption");
+			maxqlen = n;
 			sleep(2);
 		} else if (n != maxqlen)
 			error(INTERNAL, "varying pipe buffer size!");
