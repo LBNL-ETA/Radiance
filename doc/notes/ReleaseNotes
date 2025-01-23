@@ -2769,11 +2769,5 @@ Added gensurf -i option at the request of Peter Apian-Bennewitz
 to reverse surface normals, mostly for data input when it is
 a bit more difficult to adjust.
 
-Simplified synchronization between processes sharing indirect
-irradiance values via an ambient file. Removed file locking
-operations in favor of simpler operation relying on O_APPEND flag.
-Not sure if this will have any affect on shared filesystems, but
-it should reduce overhead for massively parallel machines.
-
 Added rad -N option to rholo run for multiprocessing when
 mkillum and/or mkpmap are involved in octree prep.
