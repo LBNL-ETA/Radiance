@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.31 2022/04/21 22:31:42 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.32 2025/01/23 19:07:35 greg Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -316,7 +316,8 @@ new_rtrace(void)			/* restart rtrace calculation */
 	if (vdef(TIME))			/* reset end time */
 		endtime = starttime + vflt(TIME)*3600. + .5;
 	if (vdef(RIF)) {		/* rerun rad to update octree */
-		sprintf(combuf, "rad -v 0 -s -w %s", vval(RIF));
+		sprintf(combuf, "rad -v 0 -s -w -N %d %s",
+				ncprocs, vval(RIF));
 		if (system(combuf))
 			error(WARNING, "error running rad");
 	}
@@ -346,8 +347,8 @@ getradfile(void)			/* run rad and get needed variables */
 	mktemp(tf1);
 	sprintf(tf2, "%s.rif", tf1);
 	sprintf(combuf,
-		"rad -v 0 -s -e -w %s OPTFILE=%s | egrep '^[ \t]*(NOMATCH",
-			vval(RIF), tf1);
+		"rad -v 0 -s -e -w -N %d %s OPTFILE=%s | egrep '^[ \t]*(NOMATCH",
+			ncprocs, vval(RIF), tf1);
 	cp = combuf;
 	while (*cp){
 		if (*cp == '|') pippt = cp;
