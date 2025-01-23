@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.128 2024/12/19 19:34:31 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.129 2025/01/23 02:15:33 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -33,14 +33,13 @@ double	minarad;		/* minimum ambient radius */
 static AMBTREE	atrunk;		/* our ambient trunk node */
 
 static FILE  *ambfp = NULL;	/* ambient file pointer */
-static int  nunflshed = 0;	/* number of unflushed ambient values */
+static int  nunflshed;		/* number of unflushed ambient values */
+static FILE  *ambinp = NULL;	/* input pointer for ambient i/o */
 
 static double  avsum = 0.;		/* computed ambient value sum (log) */
 static unsigned int  navsum = 0;	/* number of values in avsum */
 static unsigned int  nambvals = 0;	/* total number of indirect values */
-static unsigned int  nambshare = 0;	/* number of values from file */
-static FILE  *ambinp = NULL;		/* auxiliary file for input */
-static long  lastpos = -1;		/* last flush position */
+static off_t  lastpos = -1;		/* last flush position */
 
 #define	 AMBFLUSH	(BUFSIZ/AMBVALSIZ)
 
@@ -68,10 +67,6 @@ static double	sumambient(SCOLOR acol, RAY *r, FVECT rn, int al,
 static int	makeambient(SCOLOR acol, RAY *r, FVECT rn, int al);
 static int	extambient(SCOLOR cr, AMBVAL *ap, FVECT pv, FVECT nv,
 				FVECT uvw[3]);
-
-#ifdef  F_SETLKW
-static void aflock(int  typ);
-#endif
 
 
 void
@@ -116,8 +111,8 @@ setambacc(				/* set ambient accuracy */
 void
 setambient(void)				/* initialize calculation */
 {
-	int	readonly = 0;
-	long	flen;
+	int	exists;
+	off_t	flen;
 	AMBVAL	amb;
 						/* make sure we're fresh */
 	ambdone();
@@ -132,46 +127,54 @@ setambient(void)				/* initialize calculation */
 		error(WARNING, errmsg);
 		return;
 	}
-						/* open ambient file */
-	if ((ambfp = fopen(ambfile, "r+")) == NULL)
-		readonly = (ambfp = fopen(ambfile, "r")) != NULL;
-	if (ambfp != NULL) {
-		initambfile(0);			/* file exists */
+	exists = access(ambfile, F_OK) == 0;	/* check existence, first */
+	ambfp = fopen(ambfile, "a+");		/* try read/append */
+	if (!exists & (ambfp == NULL)) {
+		sprintf(errmsg, "cannot create ambient file \"%s\"", ambfile);
+		error(SYSTEM, errmsg);
+	}
+	if (ambfp == NULL) {			/* try opening read-only? */
+		if ((ambfp = fopen(ambfile, "r")) == NULL) {
+			sprintf(errmsg,
+			"cannot open ambient file \"%s\" for reading",
+					ambfile);
+			error(SYSTEM, errmsg);
+		}
+		exists = -1;			/* flag read-only */
+	} else if (exists)
+		rewind(ambfp);	/* XXX not necessary? */
+
+	if (exists) {
+		initambfile(0);			/* file already exists */
 		lastpos = ftell(ambfp);
 		while (readambval(&amb, ambfp))
-			avstore(&amb);
-		nambshare = nambvals;		/* share loaded values */
-		if (readonly) {
+			avstore(&amb);		/* load what we can */
+		if (exists < 0) {		/* read-only? */
 			sprintf(errmsg,
 				"loaded %u values from read-only ambient file",
 					nambvals);
 			error(WARNING, errmsg);
 			fclose(ambfp);		/* close file so no writes */
 			ambfp = NULL;
-			return;			/* avoid ambsync() */
+			return;
 		}
 						/* align file pointer */
-		lastpos += (long)nambvals*AMBVALSIZ;
-		flen = lseek(fileno(ambfp), (off_t)0, SEEK_END);
+		lastpos += (off_t)nambvals*AMBVALSIZ;
+		flen = lseek(fileno(ambfp), 0, SEEK_END);
 		if (flen != lastpos) {
 			sprintf(errmsg,
-			"ignoring last %ld values in ambient file (corrupted)",
-					(flen - lastpos)/AMBVALSIZ);
+			"ignoring last %lu values in ambient file (corrupted)",
+				(unsigned long)((flen - lastpos)/AMBVALSIZ));
 			error(WARNING, errmsg);
-			fseek(ambfp, lastpos, SEEK_SET);
-			ftruncate(fileno(ambfp), (off_t)lastpos);
+						/* fseek() not needed? */
+			fseeko(ambfp, lastpos, SEEK_SET);
+			ftruncate(fileno(ambfp), lastpos);
 		}
-	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
-		initambfile(1);			/* else create new file */
+	} else {
+		initambfile(1);			/* else start new file */
 		fflush(ambfp);
 		lastpos = ftell(ambfp);
-	} else {
-		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
-		error(SYSTEM, errmsg);
 	}
-#ifdef  F_SETLKW
-	aflock(F_UNLCK);			/* release file */
-#endif
 }
 
 
@@ -179,14 +182,13 @@ void
 ambdone(void)			/* close ambient file and free memory */
 {
 	if (ambfp != NULL) {		/* close ambient file */
-		ambsync();
-		fclose(ambfp);
+		fclose(ambfp);		/* don't call ambsync() */
 		ambfp = NULL;
-		if (ambinp != NULL) {	
+		lastpos = -1;
+		if (ambinp != NULL) {
 			fclose(ambinp);
 			ambinp = NULL;
 		}
-		lastpos = -1;
 	}
 					/* free ambient tree */
 	unloadatree(&atrunk, avfree);
@@ -194,7 +196,6 @@ ambdone(void)			/* close ambient file and free memory */
 	avsum = 0.;
 	navsum = 0;
 	nambvals = 0;
-	nambshare = 0;
 }
 
 
@@ -632,13 +633,13 @@ initambfile(		/* initialize ambient file */
 	static char  *mybuf = NULL;
 	int  ntries = 3;
 
-#ifdef	F_SETLKW
-	aflock(cre8 ? F_WRLCK : F_RDLCK);
-#endif
+	if (!AMBFLUSH)
+		error(INTERNAL, "BUFSIZ too small in initambfile");
 	SET_FILE_BINARY(ambfp);
 	if (mybuf == NULL)
-		mybuf = (char *)bmalloc(BUFSIZ+8);
+		mybuf = (char *)bmalloc(BUFSIZ);
 	setbuf(ambfp, mybuf);
+	nunflshed = 0;
 retry:
 	if (cre8) {			/* new file */
 		newheader("RADIANCE", ambfp);
@@ -667,15 +668,8 @@ retry:
 		putambmagic(ambfp);
 	} else if (getheader(ambfp, amb_headline, NULL) < 0 || !hasambmagic(ambfp)) {
 		if (--ntries > 0 && ftell(ambfp) == 0) {
-#ifdef	F_SETLKW
-			aflock(F_UNLCK);
 			clearerr(ambfp);
 			sleep(2);
-			aflock(F_RDLCK);
-#else
-			clearerr(ambfp);
-			sleep(2);
-#endif
 			goto retry;
 		}
 		error(USER, "bad/incompatible ambient file");
@@ -813,84 +807,55 @@ sortambvals(void)			/* resort ambient values */
 }
 
 
-#ifdef	F_SETLKW
-
-static void
-aflock(			/* lock/unlock ambient file */
-	int  typ
-)
-{
-	static struct flock  fls;	/* static so initialized to zeroes */
-
-	if (typ == fls.l_type)		/* already called? */
-		return;
-
-	fls.l_type = typ;
-	do
-		if (fcntl(fileno(ambfp), F_SETLKW, &fls) != -1)
-			return;
-	while (errno == EINTR);
-	
-	error(SYSTEM, "cannot (un)lock ambient file");
-}
-
-
 int
 ambsync(void)			/* synchronize ambient file */
 {
-	long  flen;
+	off_t	newpos;
+	int	n;
 	AMBVAL	avs;
-	int  n;
 
 	if (ambfp == NULL)	/* no ambient file? */
 		return(0);
-				/* gain appropriate access */
-	aflock(nunflshed ? F_WRLCK : F_RDLCK);
-				/* see if file has grown */
-	if ((flen = lseek(fileno(ambfp), (off_t)0, SEEK_END)) < 0)
+
+	if (nunflshed > 0) {	/* append new values? */
+		if (fflush(ambfp) < 0)
+			return(EOF);
+	} else if (fseeko(ambfp, 0, SEEK_END) < 0)
 		goto seekerr;
-	if ((n = flen - lastpos) > 0) {		/* file has grown */
-		if (ambinp == NULL) {		/* get new file pointer */
-			ambinp = fopen(ambfile, "rb");
-			if (ambinp == NULL)
-				error(SYSTEM, "fopen failed in ambsync");
-		}
-		if (fseek(ambinp, lastpos, SEEK_SET) < 0)
-			goto seekerr;
-		while (n >= AMBVALSIZ) {	/* load contributed values */
-			if (!readambval(&avs, ambinp)) {
-				sprintf(errmsg,
-			"ambient file \"%s\" corrupted near character %ld",
-						ambfile, flen - n);
-				error(WARNING, errmsg);
-				break;
-			}
-			avstore(&avs);
-			n -= AMBVALSIZ;
-		}
-		lastpos = flen - n;		/* check alignment */
-		if (n && lseek(fileno(ambfp), (off_t)lastpos, SEEK_SET) < 0)
-			goto seekerr;
-	}
-	n = fflush(ambfp);			/* calls write() at last */
-	lastpos += (long)nunflshed*AMBVALSIZ;
-	aflock(F_UNLCK);			/* release file */
+
+	if ((newpos = ftello(ambfp)) < 0)
+		goto seekerr;
+				/* how many others added? */
+	n = (newpos - lastpos)/AMBVALSIZ - nunflshed;
 	nunflshed = 0;
-	return(n);
+	if (n <= 0) {		/* no one helping this time? */
+		lastpos = newpos;
+		return(0);
+	}
+	if (ambinp == NULL) {	/* else need to open for input? */
+		ambinp = fopen(ambfile, "r");
+		if (ambinp == NULL) {
+			sprintf(errmsg, "cannot reopen ambient file \"%s\"",
+					ambfile);
+			error(SYSTEM, errmsg);
+		}
+		SET_FILE_BINARY(ambinp);
+	}
+				/* read from last endpoint */
+	if (fseeko(ambinp, lastpos, SEEK_SET) < 0)
+		goto seekerr;
+	while (n-- > 0) {	/* load new contributed values */
+		if (!readambval(&avs, ambinp)) {
+			sprintf(errmsg, "ambient file \"%s\" corrupted",
+					ambfile);
+			error(WARNING, errmsg);
+			break;
+		}
+		avstore(&avs);
+	}
+	lastpos = newpos;	/* update endpoint */
+	return(0);
 seekerr:
 	error(SYSTEM, "seek failed in ambsync");
 	return(EOF);	/* pro forma return */
 }
-
-#else	/* ! F_SETLKW */
-
-int
-ambsync(void)			/* flush ambient file */
-{
-	if (ambfp == NULL)
-		return(0);
-	nunflshed = 0;
-	return(fflush(ambfp));
-}
-
-#endif	/* ! F_SETLKW */
