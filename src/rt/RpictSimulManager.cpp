@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.13 2025/01/10 19:09:12 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.14 2025/01/24 19:08:01 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -426,15 +426,8 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 		doneSamples |= sampMap;	// samples now done or at least queued
 		sp2 -= layer++ & 1;	// next denser sampling
 	}
-	if (FlushQueue() < 0)		// make sure we got everyone
+	if (FlushQueue() < 0)		// compute stragglers
 		return false;
-	x = y = 0;
-	if (doneMap.Find(&x, &y, false)) {
-		sprintf(errmsg, "missed %.4f%% of pixels in rectangle\n",
-				100. - 100.*doneMap.SumTotal() /
-					doneMap.Width() / doneMap.Height());
-		error(WARNING, errmsg);
-	}
 	if ((prCB != NULL) & (barPix == NULL))
 		(*prCB)(100.);
 	return true;
