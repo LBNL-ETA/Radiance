@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.14 2025/01/24 19:08:01 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.15 2025/01/25 04:57:27 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -589,7 +589,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 		error(WARNING, "spectral range incompatible with color output");
 	COLORV **	parr = NULL;		// set up tiny source drawing
 	float **	zarr = NULL;
-	if (!ptvw.type && directvis && dblur <= FTINY) {
+	if (!ptvw.type && directvis && (dblur <= FTINY) & (mblur <= FTINY)) {
 		parr = new COLORV * [THeight()];
 		zarr = new float * [THeight()];
 		for (int n = THeight(); n-- > 0; ) {
@@ -605,7 +605,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 			(*prCB)(100.*(GetHeight()-ytop)/GetHeight());
 		if (!RenderRect(0, THeight()-ytop))	// render this bar
 			return false;
-		int	nlines = lastOut - ytop + THeight();
+		int	nlines = lastOut - ytop + vstep;
 		if (nlines > ytop)
 			nlines = ytop;
 		else if (parr)			// drawing sources?
