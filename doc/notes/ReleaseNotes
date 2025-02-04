@@ -2716,7 +2716,7 @@ Multi-processing and spectral output are supported.
 
 Wrote rxpiece tool that will render pictures using tiling and
 can handle different output formats and hyperspectral pictures.
-Only runs on a single machine, however -- now NFS locking on
+Only runs on a single machine, however -- no NFS locking on
 shared volumes.  Mainly a demonstration tool for RpictSimulManager
 C++ class, but may have its uses.
 
@@ -2752,22 +2752,15 @@ model is more general in some respects and the operations more
 efficient, but standard output is not supported, nor is ASCII
 results data.
 
-Added experimental source-skipping method to rpict for scenes
-with large number of light sources.  Currently works with
-rcontrib and separate srcsamp image-processing tool.  Controlling
-rpict options are -dS for skip bitmap specification and -dC
-for correction coefficient image.  Compile using -DSSKIPOPT
-to include this option.
-
 Added strnstr.c compatibility module in ray/src/common, since
-it isn't present on Linux-derivatives.
+it isn't present on Linux derivatives.
 
 Added WGMDfunc material type with programmable roughness and
 separate modifier paths for the different components.
 
 Added gensurf -i option at the request of Peter Apian-Bennewitz
-to reverse surface normals, mostly for data input when it is
+to reverse surface normals, mostly for data input, when it is
 a bit more difficult to adjust.
 
-Added rad -N option to rholo run for multiprocessing when
+Added rad -N option to rholo call for multiprocessing when
 mkillum and/or mkpmap are involved in octree prep.
