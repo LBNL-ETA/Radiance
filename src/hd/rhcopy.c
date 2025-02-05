@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.38 2023/12/19 20:49:05 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.39 2025/02/05 22:33:51 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -534,12 +534,18 @@ writerays(FILE *fp)
 			hdbcoord(gc, hp, bq[bi]);
 			rv = hdbray(bp);
 			for (k = bp->nrm; k--; rv++) {
+				RREAL	hitd = hddepth(hp, rv->d);
 				ryp.d = hdray(ryp.ro, ryp.rd, hp, gc, rv->r);
 				if (*(int *)hp->priv & H_OBSF)
 					VSUM(ryp.ro, ryp.ro, ryp.rd, ryp.d);
-				else
-					ryp.d = 0.;
-				ryp.d = hddepth(hp, rv->d) - ryp.d;
+				else if (*(int *)hp->priv & H_OBST)
+					ryp.d = 0;
+				else if (hitd < ryp.d) {
+					ryp.d = 0.97*hitd;
+					VSUM(ryp.ro, ryp.ro, ryp.rd, ryp.d);
+				} else
+					ryp.d = 0;
+				ryp.d = hitd - ryp.d;
 				copycolr(ryp.cv, rv->v);
 				if (!write_ray(&ryp, fp)) {
 					free(bq);
