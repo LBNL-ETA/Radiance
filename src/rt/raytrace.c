@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.94 2025/01/18 03:49:00 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.95 2025/02/06 02:17:33 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -284,9 +284,9 @@ rayparticipate(			/* compute ray medium participation */
 	/* PMAP: indirect inscattering accounted for by volume photons? */
 	if (!volumePhotonMapping) {
 		setscolor(ca,
-			colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
-			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
-			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
+			colval(r->albedo,RED)*colval(ambval,RED)*(1.-scolval(ce,RED)),
+			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-scolval(ce,GRN)),
+			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-scolval(ce,BLU)));
 		saddscolor(r->rcol, ca);		/* ambient in scattering */
 	}
 	
@@ -417,8 +417,17 @@ raycontrib(		/* compute (cumulative) ray contribution */
 	while (r != NULL && r->crtype&flags) {
 		smultscolor(rc, r->rcoef);
 					/* check for participating medium */
-		if (!warnedPM && (bright(r->cext) > FTINY) |
-				(bright(r->albedo) > FTINY)) {
+		if (bright(r->cext) > FTINY) {
+			double	re = r->rot*colval(r->cext,RED),
+				ge = r->rot*colval(r->cext,GRN),
+				be = r->rot*colval(r->cext,BLU);
+			SCOLOR	ce;
+			setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+					ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
+					be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
+			smultscolor(rc, ce);
+		}
+		if (!warnedPM && bright(r->albedo) > FTINY) {
 			error(WARNING,
 	"ray contribution calculation does not support participating media");
 			warnedPM++;
