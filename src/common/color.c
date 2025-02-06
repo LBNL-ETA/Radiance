@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.38 2024/09/20 17:39:12 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.39 2025/02/06 02:15:45 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -88,10 +88,15 @@ setscolor(			/* assign spectral color from RGB */
 	double b
 )
 {
-	const double	step = (WLPART[3] - WLPART[0])/(double)NCSAMP;
-	double		cwl = WLPART[0] + .5*step;
+	double		step, cwl;
 	int		i;
 
+	if (NCSAMP == 3) {
+		setcolor(scol, r, g, b);
+		return;
+	}
+	step = (WLPART[3] - WLPART[0])/(double)NCSAMP;
+	cwl = WLPART[0] + .5*step;
 	for (i = 0; i < NCSAMP; i++) {
 		if (cwl >= WLPART[1])
 			scol[i] = r;
