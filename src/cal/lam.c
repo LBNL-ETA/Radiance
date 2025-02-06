@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.26 2024/06/07 18:19:22 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.27 2025/02/06 19:52:05 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -48,15 +48,15 @@ main(int argc, char *argv[])
 			case 't':
 				curtab = argv[i]+2;
 				if (!*curtab) curtab = "\n";
-				break;
+				continue;
 			case 'u':
 				unbuff = !unbuff;
-				break;
+				continue;
 			case 'i':
 				switch (argv[i][2]) {
 				case 'n':
 					incnt = atol(argv[++i]);
-					break;
+					continue;
 				case 'f':
 				case 'F':
 					curbytes = sizeof(float);
@@ -94,21 +94,24 @@ main(int argc, char *argv[])
 					curtab = "";
 					++binout;
 				}
-				break;
+				continue;
 			case '\0':
 				rifile[nfiles].tabc = curtab;
 				rifile[nfiles].input = stdin;
 				if (curbytes > 0)
 					SET_FILE_BINARY(rifile[nfiles].input);
 				rifile[nfiles++].bytsiz = curbytes;
-				break;
+				continue;
 			badopt:;
 			default:
 				fputs(argv[0], stderr);
-				fputs(": bad option\n", stderr);
+				fputs(": unknown option '", stderr);
+				fputs(argv[i], stderr);
+				fputs("'\n", stderr);
 				return(1);
 			}
-		} else if (argv[i][0] == '!') {
+		}
+		if (argv[i][0] == '!') {
 			rifile[nfiles].tabc = curtab;
 			if ((rifile[nfiles].input = popen(argv[i]+1, "r")) == NULL) {
 				fputs(argv[i], stderr);
