@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.21 2023/06/10 20:20:51 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.22 2025/02/06 21:07:07 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -322,7 +322,7 @@ printvars(				/* print variable values */
 	for (i = 0; i < NVARS; i++)		/* print each variable */
 	    for (j = 0; j < vdef(i); j++) {	/* print each assignment */
 		fputs(vnam(i), fp);
-		fputs("= ", fp);
+		fputc('=', fp);
 		k = clipline = ( vv[i].fixval == catvalues ? 64 : 236 )
 				- strlen(vnam(i)) ;
 		cp = nvalue(i, j);
