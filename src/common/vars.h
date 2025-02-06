@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.10 2023/06/10 15:49:55 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.11 2025/02/06 21:45:00 greg Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -57,6 +57,7 @@ extern void	qualvalue(VARIABLE *vp);
 extern void	strvalue(VARIABLE *vp);
 extern void	intvalue(VARIABLE *vp);
 extern void	fltvalue(VARIABLE *vp);
+extern int	singlevar(VARIABLE *vp);
 extern void	printvars(FILE *fp);
 
 #ifdef __cplusplus

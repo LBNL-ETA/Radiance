@@ -1,4 +1,4 @@
-/* RCSid: $Id: rholo.h,v 3.26 2016/03/21 19:06:08 greg Exp $ */
+/* RCSid: $Id: rholo.h,v 3.27 2025/02/06 21:45:00 greg Exp $ */
 /*
  * Header file for rholo program
  */
@@ -72,11 +72,11 @@ typedef struct {
 	{"geometry",	3,	0,	NULL,	NULL}, \
 	{"GRID",	2,	0,	NULL,	fltvalue}, \
 	{"OBSTRUCTIONS",3,	0,	NULL,	boolvalue}, \
-	{"OCTREE",	3,	0,	NULL,	onevalue}, \
+	{"OCTREE",	3,	0,	NULL,	strvalue}, \
 	{"portals",	3,	0,	NULL,	NULL}, \
 	{"render",	3,	0,	NULL,	catvalues}, \
-	{"REPORT",	3,	0,	NULL,	onevalue}, \
-	{"RIF",		3,	0,	NULL,	onevalue}, \
+	{"REPORT",	3,	0,	NULL,	strvalue}, \
+	{"RIF",		3,	0,	NULL,	strvalue}, \
 	{"section",	3,	0,	NULL,	NULL}, \
 	{"TIME",	2,	0,	NULL,	fltvalue}, \
 	{"VDISTANCE",	2,	0,	NULL,	boolvalue}, \
