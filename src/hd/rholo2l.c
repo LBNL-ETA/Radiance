@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.23 2025/01/22 18:28:32 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.24 2025/02/06 03:54:32 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -59,7 +59,7 @@ start_rtrace(void)			/* start rtrace process */
 		rtargv[rtargc++] = "-I-";
 		rtargv[rtargc++] = "-h-";
 		rtargv[rtargc++] = "-ld-";
-		rtargv[rtargc++] = "-co-";
+		rtargv[rtargc++] = "-pRGB";
 		sprintf(buf1, "%d", RPACKSIZ);
 		rtargv[rtargc++] = "-x"; rtargv[rtargc++] = buf1;
 		rtargv[rtargc++] = "-y"; rtargv[rtargc++] = "0";
