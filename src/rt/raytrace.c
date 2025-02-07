@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.95 2025/02/06 02:17:33 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.96 2025/02/07 16:32:56 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -411,29 +411,33 @@ raycontrib(		/* compute (cumulative) ray contribution */
 )
 {
 	static int	warnedPM = 0;
+	double		re, ge, be;
+	SCOLOR		ce;
 
 	setscolor(rc, 1., 1., 1.);
+	re = ge = be = 0.;
 
 	while (r != NULL && r->crtype&flags) {
+					/* include this ray coefficient */
 		smultscolor(rc, r->rcoef);
-					/* check for participating medium */
-		if (bright(r->cext) > FTINY) {
-			double	re = r->rot*colval(r->cext,RED),
-				ge = r->rot*colval(r->cext,GRN),
-				be = r->rot*colval(r->cext,BLU);
-			SCOLOR	ce;
-			setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
-					ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
-					be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
-			smultscolor(rc, ce);
-		}
+					/* check participating medium */
 		if (!warnedPM && bright(r->albedo) > FTINY) {
 			error(WARNING,
 	"ray contribution calculation does not support participating media");
 			warnedPM++;
 		}
+					/* sum PM extinction */
+		re += r->rot*colval(r->cext,RED);
+		ge += r->rot*colval(r->cext,GRN);
+		be += r->rot*colval(r->cext,BLU);
+					/* descend the tree */
 		r = r->parent;
 	}
+					/* cumulative extinction */
+	setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+			ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
+			be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
+	smultscolor(rc, ce);
 }
 
 
