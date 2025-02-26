@@ -26,7 +26,7 @@ target_link_libraries(gensdaymtx rtrad ${LIB_M} Threads::Threads)
 add_executable(gendaylit gendaylit.c sun.c)
 target_link_libraries(gendaylit rtrad ${LIB_M})
 
-add_executable(gendaymtx gendaymtx.c sun.c)
+add_executable(gendaymtx gendaymtx.c sun.c loadEPW.c)
 target_link_libraries(gendaymtx rtrad ${LIB_M})
 
 add_executable(genblinds genblinds.c)

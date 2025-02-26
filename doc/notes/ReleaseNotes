@@ -2764,3 +2764,10 @@ a bit more difficult to adjust.
 
 Added rad -N option to rholo call for multiprocessing when
 mkillum and/or mkpmap are involved in octree prep.
+
+Added ability of gendaymtx to read EPW as well as WEA files.
+When EPW input is provided, the 3-hour average dew point is
+used to compute a more accurate precipitable water content
+value.  It currently does not use these data directly from
+the EPW input, relying instead on a dew-point-to-W calculation.
+This follows the request and recommendations of David G-M.

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.47 2024/09/16 17:01:53 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.48 2025/02/26 20:39:28 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -49,8 +49,8 @@ gensky:	gensky.o sun.o
 gendaylit:	gendaylit.o sun.o
 	$(CC) $(CFLAGS) -o gendaylit gendaylit.o sun.o -lrtrad $(MLIB)
 
-gendaymtx:	gendaymtx.o sun.o
-	$(CC) $(CFLAGS) -o gendaymtx gendaymtx.o sun.o -lrtrad $(MLIB)
+gendaymtx:	gendaymtx.o sun.o loadEPW.o
+	$(CC) $(CFLAGS) -o gendaymtx gendaymtx.o sun.o loadEPW.o -lrtrad $(MLIB)
 
 genblinds:	genblinds.o
 	$(CC) $(CFLAGS) -o genblinds genblinds.o -lrtrad $(MLIB)
@@ -125,6 +125,8 @@ mkillum.o mkillum2.o mkillum3.o:	mkillum.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h ../common/random.h
 
+loadEPW.o:	../common/rtio.h loadEPW.h
+
 mkillum2.o:	../rt/source.h ../common/face.h ../common/cone.h
 
 mkillum2.o mkillum3.o:	../common/paths.h
@@ -136,7 +138,7 @@ gensurf.o genworm.o genrev.o:	../common/calcomp.h
 gendaylit.o gensky.o sun.o:	sun.h
 
 gendaymtx.o:	../common/platform.h ../common/rtmath.h \
-../common/mat4.h ../common/fvect.h ../common/color.h
+../common/mat4.h ../common/fvect.h ../common/color.h loadEPW.h
 
 genssky.o:	../common/rtio.h ../common/rtmath.h \
 ../common/paths.h ../common/color.h

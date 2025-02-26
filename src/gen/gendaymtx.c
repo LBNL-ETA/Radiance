@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.40 2024/04/26 23:10:59 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.41 2025/02/26 20:39:28 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -88,6 +88,7 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.40 2024/04/26 23:10:59 greg Ex
 #include "rtio.h"
 #include "color.h"
 #include "sun.h"
+#include "loadEPW.h"
 
 char *progname;					/* Program name */
 const double DC_SolarConstantE = 1367.0;	/* Solar constant W/m^2 */
@@ -309,7 +310,10 @@ getfmtname(int fmt)
 int
 main(int argc, char *argv[])
 {
-	char	buf[256];
+	EPWheader	*epw = NULL;	/* EPW/WEA input file */
+	EPWrecord	erec;		/* current EPW/WEA input record */
+	float	dpthist[2];		/* previous dew point temps */
+	double	dir, dif;
 	int	doheader = 1;		/* output header? */
 	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
@@ -324,9 +328,6 @@ main(int argc, char *argv[])
 	int	tstorage = 0;		/* number of allocated time steps */
 	int	nstored = 0;		/* number of time steps in matrix */
 	int	last_monthly = 0;	/* month of last report */
-	int	mo, da;			/* month (1-12) and day (1-31) */
-	double	hr;			/* hour (local standard time) */
-	double	dir, dif;		/* direct and diffuse values */
 	int	mtx_offset;
 	int	i, j;
 	double	timeinterval = 0;
@@ -437,13 +438,11 @@ main(int argc, char *argv[])
 		default:
 			goto userr;
 		}
-	if (i < argc-1)
+	if ((i < argc-1) | (i > argc))
 		goto userr;
-	if (i == argc-1 && freopen(argv[i], "r", stdin) == NULL) {
-		fprintf(stderr, "%s: cannot open '%s' for input\n",
-				progname, argv[i]);
+	epw = EPWopen(argv[i]);
+	if (epw == NULL)
 		exit(1);
-	}
 	if ((modsfp != NULL) & (sunsfp == NULL))
 		fprintf(stderr, "%s: warning -M output will be empty without -D\n",
 				progname);
@@ -456,28 +455,21 @@ main(int argc, char *argv[])
 					progname);
 	}
 					/* read weather tape header */
-	if (scanf("place %[^\r\n] ", buf) != 1)
-		goto fmterr;
-	if (scanf("latitude %lf\n", &s_latitude) != 1)
-		goto fmterr;
-	if (scanf("longitude %lf\n", &s_longitude) != 1)
-		goto fmterr;
-	if (scanf("time_zone %lf\n", &s_meridian) != 1)
-		goto fmterr;
-	if (scanf("site_elevation %lf\n", &elevation) != 1)
-		goto fmterr;
-	if (scanf("weather_data_file_units %d\n", &input) != 1)
-		goto fmterr;
-	switch (input) {		/* translate units */
-	case 1:
+	s_latitude = epw->loc.latitude;
+	s_longitude = -epw->loc.longitude;
+	s_meridian = -15.*epw->loc.timezone;
+	elevation = epw->loc.elevation;
+	switch (epw->isWEA) {		/* translate units */
+	case WEAnot:
+	case WEAradnorm:
 		input = 1;		/* radiometric quantities */
 		dir_is_horiz = 0;	/* direct is perpendicular meas. */
 		break;
-	case 2:
+	case WEAradhoriz:
 		input = 1;		/* radiometric quantities */
 		dir_is_horiz = 1;	/* solar measured horizontally */
 		break;
-	case 3:
+	case WEAphotnorm:
 		input = 2;		/* photometric quantities */
 		dir_is_horiz = 0;	/* direct is perpendicular meas. */
 		break;
@@ -486,7 +478,8 @@ main(int argc, char *argv[])
 	}
 	rh_init();			/* initialize sky patches */
 	if (verbose) {
-		fprintf(stderr, "%s: location '%s'\n", progname, buf);
+		fprintf(stderr, "%s: location '%s, %s'\n", progname,
+				epw->loc.city, epw->loc.country);
 		fprintf(stderr, "%s: (lat,long)=(%.1f,%.1f) degrees north, west\n",
 				progname, s_latitude, s_longitude);
 		if (avgSky >= 0)
@@ -505,8 +498,12 @@ main(int argc, char *argv[])
 	s_meridian = DegToRad(s_meridian);
 					/* initial allocation */
 	mtx_data = resize_dmatrix(mtx_data, tstorage=2, nskypatch);
+	dpthist[0] = -100;
 					/* process each time step in tape */
-	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
+	while ((j = EPWread(epw, &erec)) > 0) {
+		int		mo = erec.date.month+1;
+		int		da = erec.date.day;
+		double		hr = erec.date.hour;
 		double		sda, sta, st;
 		int		sun_in_sky;
 					/* compute solar position */
@@ -531,6 +528,33 @@ main(int argc, char *argv[])
 			continue;	/* skipping nighttime points */
 		azimuth = sazi(sda, st) + PI - DegToRad(rotation);
 
+		switch (epw->isWEA) {		/* translate units */
+		case WEAnot:
+		case WEAradnorm:
+			if (!EPWisset(&erec,dirirrad) |
+					!EPWisset(&erec,horizdiffirrad)) {
+				fprintf(stderr, "%s: missing required irradiances at line %d\n",
+						progname, epw->lino);
+				exit(1);
+			}
+			dir = erec.dirirrad;
+			dif = erec.horizdiffirrad;
+			break;
+		case WEAradhoriz:
+			dir = erec.globhorizirrad - erec.horizdiffirrad;
+			dif = erec.horizdiffirrad;
+			break;
+		case WEAphotnorm:
+			dir = erec.dirillum;
+			dif = erec.diffillum;
+			break;
+		}
+		if (EPWisset(&erec,dptemp)) {	/* 3-hour dew point temp */
+			if (dpthist[0] < -99)
+				dpthist[0] = dpthist[1] = erec.dptemp;
+			dew_point = (1./3.)*(dpthist[0] + dpthist[1] + erec.dptemp);
+			dpthist[0] = dpthist[1]; dpthist[1] = erec.dptemp;
+		}
 		mtx_offset = 3*nskypatch*nstored;
 		nstored += !avgSky | !nstored;
 					/* make space for next row */
@@ -584,21 +608,15 @@ main(int argc, char *argv[])
 						progname, last_monthly=mo);
 					/* note whether leap-day was given */
 	}
+	if (j != EOF) {
+		fprintf(stderr, "%s: error on input\n", progname);
+		exit(1);
+	}
+	EPWclose(epw); epw = NULL;
 	if (!ntsteps) {
 		fprintf(stderr, "%s: no valid time steps on input\n", progname);
 		exit(1);
 	}
-					/* check for junk at end */
-	while ((i = fgetc(stdin)) != EOF)
-		if (!isspace(i)) {
-			fprintf(stderr, "%s: warning - unexpected data past EOT: ",
-					progname);
-			buf[0] = i; buf[1] = '\0';
-			fgets(buf+1, sizeof(buf)-1, stdin);
-			fputs(buf, stderr); fputc('\n', stderr);
-			break;
-		}
-
 	if (avgSky < 0)			/* no matrix output? */
 		goto alldone;
 
