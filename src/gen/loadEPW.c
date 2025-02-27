@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadEPW.c,v 2.1 2025/02/26 20:39:28 greg Exp $";
+static const char RCSid[] = "$Id: loadEPW.c,v 2.2 2025/02/27 19:00:00 greg Exp $";
 #endif
 /*
  * Load an EPW (or WEA) file, one data point at a time
@@ -149,7 +149,7 @@ static int
 scan_date(EPWheader *epw)
 {
 	int	hour;
-	float	minute;
+	int	minute;
 
 	++epw->lino;
 	if (epw->isWEA) {		/* simpler for WEA input */
@@ -160,10 +160,14 @@ scan_date(EPWheader *epw)
 		epw->dtpos.month--;
 	} else {
 					/* EPW input line */
-		if (fscanf(epw->fp, "%hd,%hd,%hd,%d,%f,", &epw->dtpos.year,
+		if (fscanf(epw->fp, "%hd,%hd,%hd,%d,%d,", &epw->dtpos.year,
 				&epw->dtpos.month, &epw->dtpos.day, &hour, &minute) != 5)
 			goto scanerr;
-		epw->dtpos.hour = hour - minute*(0.5/60.);
+		epw->dtpos.hour = hour-1;
+		if (epw->period[0].nperhour == 1)
+			epw->dtpos.hour += .5;
+		else
+			epw->dtpos.hour += minute*(1./60.);
 		epw->dtpos.month--;
 	}
 					/* check date/time */

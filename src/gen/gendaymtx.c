@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.41 2025/02/26 20:39:28 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.42 2025/02/27 19:00:00 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -501,11 +501,19 @@ main(int argc, char *argv[])
 	dpthist[0] = -100;
 					/* process each time step in tape */
 	while ((j = EPWread(epw, &erec)) > 0) {
-		int		mo = erec.date.month+1;
-		int		da = erec.date.day;
-		double		hr = erec.date.hour;
+		const int	mo = erec.date.month+1;
+		const int	da = erec.date.day;
+		const double	hr = erec.date.hour;
 		double		sda, sta, st;
 		int		sun_in_sky;
+					/* 3-hour dew point temp */
+		if (EPWisset(&erec,dptemp)) {
+			if (dpthist[0] < -99)
+				dpthist[0] = dpthist[1] = erec.dptemp;
+			dew_point = (1./3.)*(dpthist[0] + dpthist[1] + erec.dptemp);
+			dpthist[0] = dpthist[1]; dpthist[1] = erec.dptemp;
+		} else
+			dpthist[0] = -100;
 					/* compute solar position */
 		if ((mo == 2) & (da == 29)) {
 			julian_date = 60;
@@ -524,7 +532,7 @@ main(int argc, char *argv[])
 		}
 		altitude = salt(sda, st);
 		sun_in_sky = (altitude > -DegToRad(SUN_ANG_DEG/2.));
-		if (sun_hours_only && !sun_in_sky)
+		if (sun_hours_only & !sun_in_sky)
 			continue;	/* skipping nighttime points */
 		azimuth = sazi(sda, st) + PI - DegToRad(rotation);
 
@@ -548,12 +556,6 @@ main(int argc, char *argv[])
 			dir = erec.dirillum;
 			dif = erec.diffillum;
 			break;
-		}
-		if (EPWisset(&erec,dptemp)) {	/* 3-hour dew point temp */
-			if (dpthist[0] < -99)
-				dpthist[0] = dpthist[1] = erec.dptemp;
-			dew_point = (1./3.)*(dpthist[0] + dpthist[1] + erec.dptemp);
-			dpthist[0] = dpthist[1]; dpthist[1] = erec.dptemp;
 		}
 		mtx_offset = 3*nskypatch*nstored;
 		nstored += !avgSky | !nstored;
@@ -710,7 +712,7 @@ ComputeSky(float *parr)
 	int index;			/* Category index */
 	double norm_diff_illum;		/* Normalized diffuse illuimnance */
 	int i;
-	
+
 	/* Calculate atmospheric precipitable water content */
 	apwc = CalcPrecipWater(dew_point);
 
