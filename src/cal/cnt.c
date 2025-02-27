@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cnt.c,v 1.8 2022/04/22 15:52:50 greg Exp $";
+static const char	RCSid[] = "$Id: cnt.c,v 1.9 2025/02/27 20:00:35 greg Exp $";
 #endif
 /*
  *  cnt.c - simple counting program.
@@ -287,7 +287,9 @@ main(int argc, char *argv[])
 	n[a] = 0;
 	if (!a)
 		goto userr;
-
+#ifdef getc_unlocked
+	flockfile(stdout);		/* avoid overhead */
+#endif
 	if (doshuffle)
 		shuffle(n);
 	else
