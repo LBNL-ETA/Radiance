@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.2 2024/08/19 18:06:14 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.3 2025/02/28 21:07:18 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -462,7 +462,7 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 		c0 = 1./(i-1 - x);
 		c1 = -2.*c0;
 	} else if (x < i-1) {
-		c1 = 1./(i - x);
+		c1 = 1./(x - i);
 		c0 = -2.*c1;
 	} else {
 		c0 = i+1 - x;
