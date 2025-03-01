@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.38 2023/11/21 01:30:20 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.39 2025/03/01 04:50:13 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -495,6 +495,9 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 
 	if (!cm)
 		return(0);
+#ifdef getc_unlocked
+	flockfile(fp);
+#endif
 	mp = cm->cmem;
 	switch (dtype) {
 	case DTascii:
@@ -546,5 +549,8 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 		fputs("Unsupported data type in cm_write()!\n", stderr);
 		return(0);
 	}
+#ifdef getc_unlocked
+	funlockfile(fp);
+#endif
 	return(fflush(fp) == 0);
 }
