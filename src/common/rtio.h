@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.32 2024/12/03 01:11:43 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.33 2025/03/01 00:51:26 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -136,6 +136,9 @@ extern void	freelamps(void);
 #ifndef strlcpy				/* defined in option strlcpy.c */
 extern size_t	strlcpy(char *dst, const char *src, size_t siz);
 extern size_t	strlcat(char *dst, const char *src, size_t siz);
+#endif
+#ifndef strncasecmp			/* defined in option strncasecmp.c */
+extern int	strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 #ifndef strnstr				/* defined in option strnstr.c */
 extern char *	strnstr(const char *haystack,

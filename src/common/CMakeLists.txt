@@ -108,7 +108,7 @@ if(UNIX)
     list(APPEND rtrad_SOURCES strnstr.c strlcpy.c)
   endif()
 else()
-  list(APPEND rtrad_SOURCES win_process.c win_popen.c win_usleep.c strnstr.c strlcpy.c)
+  list(APPEND rtrad_SOURCES win_process.c win_popen.c win_usleep.c strnstr.c strlcpy.c strncasecmp.c)
 endif()
 
 add_library(rtrad ${rtrad_SOURCES})
