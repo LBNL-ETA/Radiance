@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadEPW.c,v 2.2 2025/02/27 19:00:00 greg Exp $";
+static const char RCSid[] = "$Id: loadEPW.c,v 2.3 2025/03/04 17:45:41 greg Exp $";
 #endif
 /*
  * Load an EPW (or WEA) file, one data point at a time
@@ -18,7 +18,7 @@ const char	WDname[7][10] = {
 };
 
 const char	MOname[12][10] = {
-	"January", "February", "March", "April", "June", "July",
+	"January", "February", "March", "April", "May", "June", "July",
 	"August", "September", "October", "November", "December"
 };
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: loadEPW.h,v 2.1 2025/02/26 20:39:28 greg Exp $ */
+/* RCSid $Id: loadEPW.h,v 2.2 2025/03/04 17:45:41 greg Exp $ */
 /*
  * Header for EPW (or WEA) file loader
  *
@@ -17,7 +17,7 @@ enum {Sunday, Monday, Tuesday, Wednesday,
 
 extern const char	WDname[7][10];
 
-enum {January, February, March, April, June, July,
+enum {January, February, March, April, May, June, July,
 	August, September, October, November, December};
 
 extern const char	MOname[12][10];
