@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.15 2025/01/02 20:19:48 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.16 2025/03/05 17:29:57 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -344,6 +344,11 @@ main(int argc, char *argv[])
 	myRCmanager.LoadOctree(argv[argc-1]);
 					// add to header
 	myRCmanager.AddHeader(argc-1, argv);
+	{
+		char	buf[128] = "SOFTWARE= ";
+		strcpy(buf+10, VersionID);
+		myRCmanager.AddHeader(buf);
+	}
 					// prepare output files
 	if (recover)
 		myRCmanager.outOp = RCOrecover;
