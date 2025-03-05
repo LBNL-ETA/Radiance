@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: dcglare.c,v 2.8 2025/03/05 02:59:58 greg Exp $";
+#endif
 /*
  * Compute time-step glare using imageless DGP calculation method.
  *
