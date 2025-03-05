@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.11 2024/11/19 16:27:21 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.12 2025/03/05 18:56:28 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -303,7 +303,9 @@ main(int  argc, char  *argv[])
 	rval = setspectrsamp(CNDX, WLPART);
 	if (rval < 0)
 		error(USER, "unsupported spectral sampling");
-	if (out_prims != NULL) {
+	if (sens_curve != NULL)
+		out_prims = NULL;
+	else if (out_prims != NULL) {
 		if (!rval)
 			error(WARNING, "spectral range incompatible with color output");
 	} else if (NCSAMP == 3)
@@ -357,7 +359,11 @@ main(int  argc, char  *argv[])
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
-			printf("NCOMP=%d\n", rval);
+			fputncomp(rval, stdout);
+		if (NCSAMP > 3)
+			fputwlsplit(WLPART, stdout);
+		if ((out_prims != stdprims) & (out_prims != NULL))
+			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
 		fputformat(formstr(outform), stdout);
