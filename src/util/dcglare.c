@@ -93,7 +93,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		}
 							/* flat file check */
 		if ((data_start = ftell(fp)) > 0 && fseek(fp, 0L, SEEK_END) == 0) {
-			flat_file = (ftell(fp) == data_start + sizeof(COLR)*xr*yr);
+			flat_file = (ftell(fp) >= data_start + sizeof(COLR)*xr*yr);
 			if (fseek(fp, data_start, SEEK_SET) < 0) {
 				sprintf(errmsg, "cannot seek on picture '%s'", fname);
 				error(SYSTEM, errmsg);
