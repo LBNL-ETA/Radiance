@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.27 2025/02/06 19:52:05 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.28 2025/03/06 20:19:03 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -13,7 +13,9 @@ static const char	RCSid[] = "$Id: lam.c,v 1.27 2025/02/06 19:52:05 greg Exp $";
 #include "platform.h"
 #include "paths.h"
 
-#define MAXLINE		262144		/* maximum input line */
+#ifndef MAXLINE
+#define MAXLINE		(1L<<20)	/* maximum input line per stream */
+#endif
 
 struct instream {		/* structure to hold input stream info */
 	FILE		*input;		/* input stream */
