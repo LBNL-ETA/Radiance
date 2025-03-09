@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.51 2024/10/29 00:35:06 greg Exp $ */
+/* RCSid $Id: color.h,v 2.52 2025/03/09 19:11:51 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color and spectral values
  *		(Notes by Randolph Fritz)
@@ -154,6 +154,8 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 
 #define  scolval(sc,pri)	(sc)[CNDX[pri]]
 
+#define  cx2real(m,e)		(((m)+.5f)*cxponent[e])
+
 #define  copyscolor(sc1,sc2)	memcpy(sc1,sc2,sizeof(COLORV)*NCSAMP)
 
 #define  scalescolor(sc,sf)	{const float _f=sf; int _i=NCSAMP; \
@@ -288,13 +290,9 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 				? (col)[0] > (col)[2] ? (col)[0] : (col)[2] \
 				: (col)[1] > (col)[2] ? (col)[1] : (col)[2] )
 
-#define  colrval(c,p)		( (c)[EXP] ? \
-				ldexp((c)[p]+.5,(int)(c)[EXP]-(COLXS+8)) : \
-				0. )
+#define  colrval(c,p)		cx2real((c)[p],(c)[EXP])
 
-#define  scolrval(c,p)		( (c)[CNDX[EXP]] ? \
-				ldexp((c)[CNDX[p]]+.5,(int)(c)[CNDX[EXP]]-(COLXS+8)) : \
-				0. )
+#define  scolrval(c,p)		cx2real((c)[CNDX[p]],(c)[CNDX[EXP]])
 
 #define  WHTCOLOR		{1.0,1.0,1.0}
 #define  BLKCOLOR		{0.0,0.0,0.0}
@@ -370,6 +368,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
  * converting from radiance (watts/sr/m^2).
  */
 
+extern const float  cxponent[256];	/* exponent look-up */
 extern int  CNDX[4];		/* RGBE indices for SCOLOR, SCOLR */
 extern float  WLPART[4];	/* RGB wavelength limits+partitions (nm) */
 extern RGBPRIMS  stdprims;	/* standard primary chromaticities */
@@ -386,6 +385,10 @@ extern const SCOLOR scblack;	/* black spectral color (all 0's) */
 #define  rgb_cie(xyz,rgb)	colortrans(xyz,rgb2xyzmat,rgb)
 
 #define  cpcolormat(md,ms)	memcpy((void *)md,(void *)ms,sizeof(COLORMAT))
+
+#define  colr_color(col,clr)	((col)[RED]=colrval(clr,RED),\
+				(col)[GRN]=colrval(clr,GRN),\
+				(col)[BLU]=colrval(clr,BLU))
 
 					/* defined in color.c */
 extern void	*tempbuffer(size_t len);
@@ -414,7 +417,6 @@ extern void	scolor2color(COLOR col, const SCOLOR scol, int ncs, const float wlpt
 extern void	scolor2colr(COLR clr, const SCOLOR scol, int ncs, const float wlpt[4]);
 extern void	scolr2colr(COLR clr, const SCOLR sclr, int ncs, const float wlpt[4]);
 extern void	scolor2scolr(SCOLR sclr, const SCOLOR scol, int ncs);
-extern void	colr_color(COLOR col, const COLR clr);
 extern void	scolr2scolor(SCOLOR scol, const SCOLR sclr, int ncs);
 extern void	scolr2color(COLOR col, const SCOLR sclr, int ncs, const float wlpt[4]);
 extern void	setcolr(COLR clr, double r, double g, double b);

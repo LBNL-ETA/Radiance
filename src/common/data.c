@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.3 2025/02/28 21:07:18 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.4 2025/03/09 19:11:51 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -481,13 +481,13 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			double	f;
 			sd.arr.s = dp->arr.s + i*stride;
 			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c0)|(c0>FTINY))) {
-				f = ldexp(c0, (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				f = c0 * cxponent[sd.arr.s[sd.dim[0].ne]];
 				for (i = sd.dim[0].ne; i--; )
 					rvec[i] += f*(sd.arr.s[i] + .5);
 			}
 			sd.arr.s += stride;
 			if ((sd.arr.s[sd.dim[0].ne] > 0) & ((-FTINY>c1)|(c1>FTINY))) {
-				f = ldexp(c1, (int)sd.arr.s[sd.dim[0].ne]-(COLXS+8));
+				f = c1 * cxponent[sd.arr.s[sd.dim[0].ne]];
 				for (i = sd.dim[0].ne; i--; )
 					rvec[i] += f*(sd.arr.s[i] + .5);
 			}
@@ -520,15 +520,9 @@ data_interp(DATARRAY *dp, double *pt, double coef, DATATYPE *rvec)
 			y0 = dp->arr.d[i];
 			y1 = dp->arr.d[i+1];
 		} else if (dp->type == SPECTY) {
-			if (dp->arr.s[dp->dim[0].ne]) {
-				double	f = dp->arr.s[dp->dim[0].ne]
-					? ldexp(1., -(COLXS+8) +
-						(int)dp->arr.s[dp->dim[0].ne])
-					: 0.;
-				y0 = f*(dp->arr.s[i] + 0.5);
-				y1 = f*(dp->arr.s[i+1] + 0.5);
-			} else
-				y0 = y1 = 0.;
+			double	f = cxponent[dp->arr.s[dp->dim[0].ne]];
+			y0 = f*(dp->arr.s[i] + 0.5);
+			y1 = f*(dp->arr.s[i+1] + 0.5);
 		} else {
 			y0 = colrval(dp->arr.c[i],dp->type);
 			y1 = colrval(dp->arr.c[i+1],dp->type);
