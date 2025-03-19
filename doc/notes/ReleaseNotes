@@ -2771,3 +2771,7 @@ used to compute a more accurate precipitable water content
 value.  It currently does not use these data directly from
 the EPW input, relying instead on a dew-point-to-W calculation.
 This follows the request and recommendations of David G-M.
+
+Removed limitation in rfluxmtx, which was disallowing distant
+and local receivers. Found this to be a perfectly valid approach
+for some annual daylighting scenarios.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.57 2024/03/19 10:48:05 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.58 2025/03/19 01:18:20 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1104,12 +1104,6 @@ add_recv_object(FILE *fp)
 	}
 					/* is it a new receiver? */
 	if ((st = surf_type(otype)) != ST_NONE) {
-		if (curparams.slist != NULL && (st == ST_SOURCE) ^
-				(curparams.slist->styp == ST_SOURCE)) {
-			fputs(progname, stderr);
-			fputs(": cannot mix source/non-source receivers!\n", stderr);
-			return(-1);
-		}
 		if (strcmp(thismod, curmod)) {
 			if (curmod[0]) {	/* output last receiver? */
 				finish_receiver();
