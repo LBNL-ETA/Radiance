@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.3 2024/10/31 23:55:04 greg Exp $";
+static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.4 2025/03/20 17:59:10 greg Exp $";
 #endif
 /*
  *  RdataShareMap.cpp
@@ -68,7 +68,7 @@ RdataShareMap::RdataShareMap(const char *name, int flags, size_t siz)
 			else if (fstat(fd, &sbuf) >= 0)
 				siz = sbuf.st_size;
 			else {
-				sprintf(errmsg, "cannot stat '%s'", chName);
+				sprintf(errmsg, "cannot stat '%s'", name);
 				error(SYSTEM, errmsg);
 				close(fd);
 				return;
