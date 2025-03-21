@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.40 2025/03/09 19:11:51 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.41 2025/03/21 20:04:15 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -327,17 +327,11 @@ scolr2scolor(			/* common exponent to float spectrum */
 	int ncs
 )
 {
-	double	f;
-	int	i;
+	const COLORV	f = cxponent[sclr[ncs]];
+	int		i = ncs;
 
-	if (sclr[ncs] == 0) {
-		memset(scol, 0, sizeof(COLORV)*ncs);
-		return;
-	}
-	f = cxponent[sclr[ncs]];
-
-	for (i = ncs; i--; )
-		scol[i] = (sclr[i] + 0.5)*f;
+	while (i--)
+		scol[i] = (sclr[i] + (COLORV)0.5)*f;
 }
 
 
@@ -745,12 +739,14 @@ int
 freadsscan(COLORV *sscanline, int nc, int len, FILE *fp)
 {
 	COLRV	*tscn = (COLRV *)tempbuffer((nc+1)*len);
-	int	i;
+	int	i, j;
 
 	if (tscn == NULL || freadscolrs(tscn, nc, len, fp) < 0)
 		return(-1);
-	for (i = len; i-- > 0; ) {
-		scolr2scolor(sscanline, tscn, nc);
+	for (i = len; i-- > 0; ) {	/* inline scolr2scolor() */
+		const COLORV	f = cxponent[tscn[nc]];
+		for (j = nc; j--; )
+			sscanline[j] = (tscn[j] + (COLORV)0.5)*f;
 		sscanline += nc;
 		tscn += nc+1;
 	}
