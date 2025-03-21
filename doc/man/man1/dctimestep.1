@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.20 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.21 2025/03/21 17:33:49 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -137,6 +137,7 @@ on the number of rows in the result vectors.
 A header will normally be produced on the output, unless the
 .I \-h
 option is specified.
+Default output format is ASCII text.
 The
 .I \-of,
 .I \-od,
@@ -144,6 +145,9 @@ or
 .I \-oc
 option may be used to specify IEEE float, double, or RGBE (picture) output
 data, respectively.
+The
+.I \-oc
+option is set automatically if input is a collection of RGBE or XYZE pictures.
 .SH EXAMPLES
 To compute workplane illuminances at 3:30pm on Feb 10th:
 .IP "" .2i
@@ -196,8 +200,10 @@ output option with
 since matrix operations are carried out using 32-bit "float" values.
 This take less memory, but can also be less accurate than an
 equivalent invocation of
-.I rmtxop(1),
-which performs all operations on 64-bit "double" values.
+.I rmtxop(1)
+or
+.I rcomb(1),
+which perform all operations on 64-bit "double" values.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
