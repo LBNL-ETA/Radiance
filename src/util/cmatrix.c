@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.39 2025/03/01 04:50:13 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.40 2025/03/22 01:27:22 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -96,7 +96,7 @@ get_cminfo(char *s, void *p)
 	char	fmt[MAXFMTLEN];
 	int	i;
 
-	if (!strncmp(s, "NCOMP=", 6) && atoi(s+6) != 3) {
+	if (isncomp(s) && ncompval(s) != 3) {
 		ip->err = "unexpected # components (must be 3)";
 		return(-1);
 	}

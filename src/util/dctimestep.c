@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.51 2025/03/05 02:54:58 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.52 2025/03/22 01:27:22 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -247,7 +247,7 @@ main(int argc, char *argv[])
 		nsteps = smtx->ncols;
 						/* load BSDF */
 		if (argv[a+1][0] != '!' &&
-				(ccp = strrchr(argv[a+1], '.')) != NULL &&
+				(ccp = strrchr(argv[a+1], '.')) > argv[a+1] &&
 				!strcasecmp(ccp+1, "XML"))
 			Tmat = cm_loadBTDF(argv[a+1]);
 		else
@@ -267,7 +267,7 @@ main(int argc, char *argv[])
 	}
 						/* prepare output stream */
 	if ((ofspec != NULL) & (nsteps == 1) && hasNumberFormat(ofspec)) {
-		sprintf(fnbuf, ofspec, 1);
+		sprintf(fnbuf, ofspec, 0);
 		ofspec = fnbuf;
 	}
 	if (ofspec != NULL && !hasNumberFormat(ofspec)) {
@@ -278,7 +278,7 @@ main(int argc, char *argv[])
 		}
 		ofspec = NULL;			/* only need to open once */
 	}
-	if (hasNumberFormat(argv[a])) {		/* generating image(s) */
+	if (hasNumberFormat(argv[a])) {		/* loading image vector(s) */
 		if (outfmt != DTrgbe) {
 			error(WARNING, "changing output type to -oc");
 			outfmt = DTrgbe;
@@ -320,7 +320,7 @@ main(int argc, char *argv[])
 			}
 		else if (!sum_images(argv[a], cmtx, ofp))
 			return(1);
-	} else {				/* generating vector/matrix */
+	} else {				/* loading view matrix */
 		CMATRIX	*Vmat = cm_load(argv[a], 0, cmtx->nrows, DTfromHeader);
 		CMATRIX	*rmtx = cm_multiply(Vmat, cmtx);
 		cm_free(Vmat);
@@ -348,7 +348,7 @@ main(int argc, char *argv[])
 					if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
 						fprintf(ofp, "NROWS=%d\n", rvec->nrows);
 						fprintf(ofp, "NCOLS=%d\n", rvec->ncols);
-						fputs("NCOMP=3\n", ofp);
+						fputncomp(3, ofp);
 					}
 					if ((outfmt == DTfloat) | (outfmt == DTdouble))
 						fputendian(ofp);
@@ -380,7 +380,7 @@ main(int argc, char *argv[])
 				if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
 					fprintf(ofp, "NROWS=%d\n", rmtx->nrows);
 					fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
-					fputs("NCOMP=3\n", ofp);
+					fputncomp(3, ofp);
 				}
 				if ((outfmt == DTfloat) | (outfmt == DTdouble))
 					fputendian(ofp);
