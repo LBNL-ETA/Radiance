@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.84 2025/03/22 01:27:22 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.85 2025/03/24 18:55:57 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -498,7 +498,7 @@ rmx_write_spec(const rmx_dtype *dp, int nc, int len, FILE *fp)
 	SCOLOR	scol;
 	int	j, k;
 
-	if (nc < 3) return(0);
+	if ((nc < 3) | (nc > MAXCSAMP)) return(0);
 	scan = (uby8 *)tempbuffer((nc+1)*len);
 	if (!scan) return(0);
 	for (j = 0; j < len; j++, dp += nc) {
@@ -944,7 +944,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 	int	i, j;
 	CMATRIX	*cnew;
 
-	if (!rm || !rm->mtx | (rm->ncomp == 2))
+	if (!rm || !rm->mtx | (rm->ncomp == 2) | (rm->ncomp > MAXCSAMP))
 		return(NULL);
 	cnew = cm_alloc(rm->nrows, rm->ncols);
 	if (!cnew)
