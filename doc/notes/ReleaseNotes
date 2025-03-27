@@ -2775,3 +2775,8 @@ This follows the request and recommendations of David G-M.
 Removed limitation in rfluxmtx, which was disallowing distant
 and local receivers. Found this to be a perfectly valid approach
 for some annual daylighting scenarios.
+
+Wrote new pvsum tool to handle cases dctimestep can't, like
+spectral input pictures.  It also adds a -N option for multi-
+processing on Unix machines, which utilizes memory-mapped
+inputs for efficient i/o sharing.
