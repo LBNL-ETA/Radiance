@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.1 2025/03/27 01:26:55 greg Exp $";
+static const char RCSid[] = "$Id: pvsum.c,v 2.2 2025/03/27 16:35:00 greg Exp $";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: pvsum.c,v 2.1 2025/03/27 01:26:55 greg Exp $";
 #include "resolu.h"
 #include "platform.h"
 #include "paths.h"
+#include "random.h"
 #include "rmatrix.h"
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/mman.h>
@@ -239,7 +240,10 @@ open_output(char *ospec, int fno)
 		return(NULL);
 	}
 	newheader("RADIANCE", fp);
-	fputnow(fp);
+	if (cmtx->info)			/* prepend matrix metadata */
+		fputs(cmtx->info, fp);
+	else
+		fputnow(fp);
 	if (fno >= 0)
 		fprintf(fp, "FRAME=%d\n", fno);
 	switch (out_type) {
@@ -377,6 +381,29 @@ writerr:
 	return(0);
 }
 
+/* allocate a scrambled index array of the specified length */
+int *
+scramble(int n)
+{
+	int	*scarr = (int *)malloc(sizeof(int)*n);
+	int	i;
+
+	if (!scarr) {
+		fprintf(stderr, "Out of memory in scramble(%d)\n", n);
+		exit(1);
+	}
+	for (i = n; i--; )
+		scarr[i] = i;
+					/* perform Fisher-Yates shuffle */
+	for (i = 0; i < n-1; i++) {
+		int	ix = irandom(n-i) + i;
+		int	ndx = scarr[i];
+		scarr[i] = scarr[ix];
+		scarr[ix] = ndx;
+	}
+	return(scarr);
+}
+
 /* run calculation on multiple processes, using memory maps and fork() */
 int
 multi_process(void)
@@ -389,6 +416,7 @@ multi_process(void)
 	int	odd = 0;
 	char	fbuf[512];
 	float	*osum;
+	int	*syarr;
 	int	c;
 					/* sanity check */
 	if (sizeof(float) != sizeof(COLORV)) {
@@ -409,6 +437,8 @@ multi_process(void)
 				xres, yres, ncomp);
 		return(0);
 	}
+	srandom(113*coff + 5669);	/* randomize row access for this process */
+	syarr = scramble(yres);
 					/* run through our unique set of columns */
 	for (c = coff; c < cmtx->ncols; c += nprocs) {
 		FILE	*fout;
@@ -419,12 +449,12 @@ multi_process(void)
 		while (rc-- > 0) {	/* map & sum each input file */
 			const int	r = odd ? rc : cmtx->nrows-1 - rc;
 			const rmx_dtype	*cval = rmx_val(cmtx, r, c);
-			long		dstart, n;
+			long		dstart;
 			size_t		maplen;
 			void		*imap;
 			FILE		*finp;
 			float		*dst;
-			int		i;
+			int		i, x;
 			for (i = ncomp; i--; )
 				if (cval[i] != 0) break;
 			if (i < 0)	/* this coefficient is zero, skip */
@@ -446,27 +476,31 @@ multi_process(void)
 			maplen = dstart + yres*xres*i;
 			imap = mmap(NULL, maplen, PROT_READ,
 					MAP_FILE|MAP_SHARED, fileno(finp), 0);
-			fclose(finp);		/* will load from map */
+			fclose(finp);		/* will load from map (randomly) */
 			if (imap == MAP_FAILED) {
 				fprintf(stderr, "%s: unable to map input file\n", fbuf);
 				return(0);
 			}
-			dst = osum;		/* -> weighted image sum */
-			if (in_type == DTfloat) {
-			    const float	*fvp = (float *)((char *)imap + dstart);
-			    for (n = (long)yres*xres; n-- > 0;
-			    				dst += ncomp, fvp += ncomp)
-				for (i = ncomp; i--; )
-				    dst[i] += cval[i]*fvp[i];
-			} else {
-			    const COLRV	*cvp = (COLRV *)((char *)imap + dstart);
-			    for (n = (long)yres*xres; n-- > 0;
-			    				dst += ncomp, cvp += ncomp+1) {
-			    	const rmx_dtype	fe = cxponent[cvp[ncomp]];
-				for (i = ncomp; i--; )
-				    dst[i] += cval[i]*(cvp[i]+(rmx_dtype).5)*fe;
+			if (in_type == DTfloat)
+			    for (y = yres; y-- > 0; ) {
+			    	const float	*fvp = (float *)((char *)imap + dstart) +
+			    				(size_t)ncomp*xres*syarr[y];
+				dst = osum + (size_t)ncomp*xres*syarr[y];
+				for (x = xres; x-- > 0; dst += ncomp, fvp += ncomp)
+				    for (i = ncomp; i--; )
+					dst[i] += cval[i]*fvp[i];
 			    }
-			}
+			else
+			    for (y = yres; y-- > 0; ) {
+				const COLRV	*cvp = (COLRV *)((char *)imap + dstart) +
+							(ncomp+1L)*xres*syarr[y];
+				dst = osum + (size_t)ncomp*xres*syarr[y];
+				for (x = xres; x-- > 0; dst += ncomp, cvp += ncomp+1) {
+			    	    const rmx_dtype	fe = cxponent[cvp[ncomp]];
+				    for (i = ncomp; i--; )
+					dst[i] += cval[i]*(cvp[i]+(rmx_dtype).5)*fe;
+				}
+			    }
 			munmap(imap, maplen);
 		}			/* write out accumulated column result */
 		sprintf(fbuf, out_spec, c);
@@ -492,6 +526,7 @@ multi_process(void)
 		odd = !odd;		/* go back & forth to milk page cache */
 	}
 	free(osum);
+	free(syarr);
 	if (coff)			/* children return here... */
 		return(1);
 	c = 0;				/* ...but parent waits for children */
