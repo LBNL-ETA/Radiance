@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.52 2025/03/22 01:27:22 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.53 2025/03/27 16:34:23 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -20,6 +20,7 @@ char	*progname;			/* global argv[0] */
 static int
 sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 {
+	static int	runcnt = 0;
 	int	myDT = DTfromHeader;
 	COLR	*scanline = NULL;
 	CMATRIX	*pmat = NULL;
@@ -28,8 +29,9 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 
 	if (cv->ncols != 1)
 		error(INTERNAL, "expected vector in sum_images()");
-	for (i = 0; i < cv->nrows; i++) {
-		const COLORV	*scv = cv_lval(cv,i);
+	for (i = cv->nrows; i-- > 0; ) {
+		const int	r = runcnt&1 ? i : cv->nrows-1 - i;
+		const COLORV	*scv = cv_lval(cv,r);
 		int		flat_file = 0;
 		char		fname[1024];
 		FILE		*fp;
@@ -39,10 +41,10 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		char		*err;
 							/* check for zero */
 		if ((scv[RED] == 0) & (scv[GRN] == 0) & (scv[BLU] == 0) &&
-				(myDT != DTfromHeader) | (i < cv->nrows-1))
+				(myDT != DTfromHeader) | (i > 0))
 			continue;
 							/* open next picture */
-		sprintf(fname, fspec, i);
+		sprintf(fname, fspec, r);
 		if ((fp = fopen(fname, "rb")) == NULL) {
 			sprintf(errmsg, "cannot open picture '%s'", fname);
 			error(SYSTEM, errmsg);
@@ -107,6 +109,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 	free(scanline);
 	i = cm_write(pmat, myDT, fout);			/* write picture */
 	cm_free(pmat);					/* free data */
+	++runcnt;					/* for zig-zagging */
 	return(i);
 }
 
