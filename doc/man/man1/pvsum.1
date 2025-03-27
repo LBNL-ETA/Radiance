@@ -1,4 +1,4 @@
-.\" RCSid $Id: pvsum.1,v 1.1 2025/03/27 01:26:55 greg Exp $"
+.\" RCSid $Id: pvsum.1,v 1.2 2025/03/27 17:03:41 greg Exp $"
 .TH PVSUM 1 12/09/09 RADIANCE
 .SH NAME
 pvsum - sum component Radiance pictures based on vector or matrix
@@ -85,11 +85,12 @@ gensky 6 21 12 | genskyvec | rmtxop Blinds30.xml
 Window2.dmx - | pvsum view%03d.hdr > view_6-21-12.hdr
 .PP
 To compute a set of hourly spectral pictures at SFO airport
-from a weather tape and set of Tregenza component pictures:
+from a weather tape and set of Tregenza component pictures using
+10 processes:
 .IP "" .2i
-gensdaymtx sfo.epw | pvsum -o timestep%04d.hsr tregcomp%03d.hsr
+gensdaymtx -of sfo.epw | pvsum -o timestep%04d.hsr -N 10 tregcomp%03d.hsr
 .SH NOTES
-This tool is annoyingly similar to
+This tool overlaps with
 .I dctimestep,
 but provides some important capabilities.
 First,
@@ -109,15 +110,11 @@ memory and processint ability.
 Second, operation was simplified by focusing on the Daylight Coefficient
 command form, where the DC matrix is represented as a collection of
 pictures.
-By excluding the three or four other operation modes of
+By excluding the other operation modes of
 .I dctimestep,
-new features could be explored in
-.I pvsum.
-For example, 
-.I pvsum
-can write picture data to a series of commands, which
-.I dctimestep
-does not support.
+new functionality could be explored and optimized,
+such as floating-point support and
+sending output to commands as well as files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
