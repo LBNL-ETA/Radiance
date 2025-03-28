@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.85 2025/03/24 18:55:57 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.86 2025/03/28 00:06:36 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -14,6 +14,10 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.85 2025/03/24 18:55:57 greg Exp 
 #include "rmatrix.h"
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/mman.h>
+#endif
+
+#ifndef MAXCOMP
+#define MAXCOMP		MAXCSAMP	/* #components we support */
 #endif
 
 static const char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
@@ -203,9 +207,9 @@ static int
 rmx_load_float(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
 	int	j, k;
-	float	val[100];
+	float	val[MAXCOMP];
 
-	if (rm->ncomp > 100) {
+	if (rm->ncomp > MAXCOMP) {
 		fputs("Unsupported # components in rmx_load_float()\n", stderr);
 		exit(1);
 	}
@@ -256,13 +260,13 @@ rmx_load_rgbe(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 static int
 rmx_load_spec(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
-	uby8	*scan;
-	SCOLOR	scol;
+	COLRV	*scan;
+	COLORV	scol[MAXCOMP];
 	int	j, k;
 
-	if ((rm->ncomp < 3) | (rm->ncomp > MAXCSAMP))
+	if ((rm->ncomp < 3) | (rm->ncomp > MAXCOMP))
 		return(0);
-	scan = (uby8 *)tempbuffer((rm->ncomp+1)*rm->ncols);
+	scan = (COLRV *)tempbuffer((rm->ncomp+1)*rm->ncols);
 	if (!scan)
 		return(0);
 	if (freadscolrs(scan, rm->ncomp, rm->ncols, fp) < 0)
@@ -428,9 +432,9 @@ rmx_load(const char *inspec, RMPref rmp)
 						/* undo exposure? */
 	if ((dnew->cexp[0] != 1.f) |
 			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
-		double	cmlt[MAXCSAMP];
+		double	cmlt[MAXCOMP];
 		int	i;
-		if (dnew->ncomp > MAXCSAMP) {
+		if (dnew->ncomp > MAXCOMP) {
 			fprintf(stderr, "Excess spectral components in: %s\n",
 					inspec);
 			rmx_free(dnew);
@@ -494,12 +498,12 @@ rmx_write_rgbe(const rmx_dtype *dp, int nc, int len, FILE *fp)
 static int
 rmx_write_spec(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
-	uby8	*scan;
-	SCOLOR	scol;
+	COLRV	*scan;
+	COLORV	scol[MAXCOMP];
 	int	j, k;
 
-	if ((nc < 3) | (nc > MAXCSAMP)) return(0);
-	scan = (uby8 *)tempbuffer((nc+1)*len);
+	if ((nc < 3) | (nc > MAXCOMP)) return(0);
+	scan = (COLRV *)tempbuffer((nc+1)*len);
 	if (!scan) return(0);
 	for (j = 0; j < len; j++, dp += nc) {
 	    	for (k = nc; k--; )
@@ -944,7 +948,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 	int	i, j;
 	CMATRIX	*cnew;
 
-	if (!rm || !rm->mtx | (rm->ncomp == 2) | (rm->ncomp > MAXCSAMP))
+	if (!rm || !rm->mtx | (rm->ncomp == 2) | (rm->ncomp > MAXCOMP))
 		return(NULL);
 	cnew = cm_alloc(rm->nrows, rm->ncols);
 	if (!cnew)
@@ -961,7 +965,7 @@ cm_from_rmatrix(const RMATRIX *rm)
 		    setcolor(cv, dp[0], dp[0], dp[0]);
 		    break;
 		default: {
-			SCOLOR	scol;
+			COLORV	scol[MAXCOMP];
 			int	k;
 			for (k = rm->ncomp; k--; )
 				scol[k] = dp[k];

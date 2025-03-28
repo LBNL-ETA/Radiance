@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.27 2025/03/01 01:37:49 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.28 2025/03/28 00:06:36 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -21,7 +21,9 @@ static const char RCSid[] = "$Id: rcomb.c,v 2.27 2025/03/01 01:37:49 greg Exp $"
 #define M_PI	3.14159265358979323846
 #endif
 
+#ifndef MAXCOMP
 #define MAXCOMP		MAXCSAMP	/* #components we support */
+#endif
 
 /* Unary matrix operation(s) */
 typedef struct {
