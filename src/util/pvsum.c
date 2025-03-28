@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.2 2025/03/27 16:35:00 greg Exp $";
+static const char RCSid[] = "$Id: pvsum.c,v 2.3 2025/03/28 21:36:31 greg Exp $";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -66,11 +66,6 @@ iheadline(char *s, void *p)
 	}
 	if (isncomp(s)) {
 		ncomp = ncompval(s);
-		return(1);
-	}
-	if (isexpos(s)) {
-		if (fabs(1. - exposval(s)) > 0.04)
-			fputs("Warning - ignoring EXPOSURE setting\n", stderr);
 		return(1);
 	}
 	if (formatval(fmt, s)) {
@@ -155,8 +150,9 @@ get_iotypes(void)
 int
 checkline(char *s, void *p)
 {
-	int	*xyres = (int *)p;
-	char	fmt[MAXFMTLEN];
+	static int	exposWarned = 0;
+	int		*xyres = (int *)p;
+	char		fmt[MAXFMTLEN];
 
 	if (!strncmp(s, "NCOLS=", 6)) {
 		xyres[0] = atoi(s+6);
@@ -176,8 +172,11 @@ checkline(char *s, void *p)
 		return(1);
 	}
 	if (isexpos(s)) {
-		if (fabs(1. - exposval(s)) > 0.04)
-			fputs("Warning - ignoring EXPOSURE setting\n", stderr);
+		if (!exposWarned && fabs(1. - exposval(s)) > 0.04) {
+			fputs("Warning - ignoring EXPOSURE setting(s)\n",
+					stderr);
+			exposWarned++;
+		}
 		return(1);
 	}
 	if (formatval(fmt, s)) {
@@ -228,17 +227,16 @@ open_output(char *ospec, int fno)
 	if (!ospec) {
 		ospec = "<stdout>";
 		fp = stdout;
-		SET_FILE_BINARY(fp);
 	} else if (ospec[0] == '!') {
 		if (!(fp = popen(ospec+1, "w"))) {
 			fprintf(stderr, "Cannot start: %s\n", ospec);
 			return(NULL);
 		}
-		SET_FILE_BINARY(fp);
-	} else if (!(fp = fopen(ospec, "wb"))) {
+	} else if (!(fp = fopen(ospec, "w"))) {
 		fprintf(stderr, "%s: cannot open for writing\n", ospec);
 		return(NULL);
 	}
+	SET_FILE_BINARY(fp);
 	newheader("RADIANCE", fp);
 	if (cmtx->info)			/* prepend matrix metadata */
 		fputs(cmtx->info, fp);
@@ -476,7 +474,7 @@ multi_process(void)
 			maplen = dstart + yres*xres*i;
 			imap = mmap(NULL, maplen, PROT_READ,
 					MAP_FILE|MAP_SHARED, fileno(finp), 0);
-			fclose(finp);		/* will load from map (randomly) */
+			fclose(finp);		/* will read from map (randomly) */
 			if (imap == MAP_FAILED) {
 				fprintf(stderr, "%s: unable to map input file\n", fbuf);
 				return(0);
@@ -502,7 +500,7 @@ multi_process(void)
 				}
 			    }
 			munmap(imap, maplen);
-		}			/* write out accumulated column result */
+		}			/* write accumulated column picture/matrix */
 		sprintf(fbuf, out_spec, c);
 		fout = open_output(fbuf, c);
 		if (!fout)
@@ -527,7 +525,7 @@ multi_process(void)
 	}
 	free(osum);
 	free(syarr);
-	if (coff)			/* children return here... */
+	if (coff)			/* child processes return here... */
 		return(1);
 	c = 0;				/* ...but parent waits for children */
 	while (++coff < nprocs) {
@@ -579,17 +577,17 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	if ((argc-a < 1) | (argc-a > 2) || argv[a][0] == '-')
 		goto userr;
 	in_spec = argv[a];
-	cmtx = rmx_load(argv[a+1], RMPnone);	/* may load from stdin */
+	cmtx = rmx_load(argv[a+1], RMPnone);	/* loads from stdin if a+1==argc */
 	if (cmtx == NULL)
 		return(1);		/* error reported */
+	if (nprocs > cmtx->ncols)
+		nprocs = cmtx->ncols;
 #if defined(_WIN32) || defined(_WIN64)
 	if (nprocs > 1) {
 		fprintf(stderr, "%s: warning - Windows only allows -N 1\n", argv[0]);
 		nprocs = 1;
 	}
 #else
-	if (nprocs > cmtx->ncols)
-		nprocs = cmtx->ncols;
 	if ((nprocs > 1) & !out_spec) {
 		fprintf(stderr, "%s: multi-processing result cannot go to stdout\n",
 				argv[0]);
