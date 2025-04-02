@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.23 2023/12/12 16:31:45 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.24 2025/04/02 00:55:27 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -72,11 +72,17 @@ is recommended when rays will be impinging from either side.
 .PP
 The
 .I \+C
-option specifies that the output XML should include color information,
-which is interpreted by the rendering programs.
+option specifies that the output XML should include tristimulus
+color information, which is interpreted by the rendering programs.
 The default option
 .I \-C
 reduces all BSDF data to grayscale.
+If the input is spectral and a
+.I \-cs
+parameter of 9 or more is specified as part of the rendering
+.I \-r
+option list, then full spectral result will be 
+reduced to an XYZ-equivalent CIE color space in the XML output.
 .PP
 The
 .I \-a

@@ -2780,3 +2780,6 @@ Wrote new pvsum tool to handle cases dctimestep can't, like
 spectral input pictures.  It also adds a -N option for multi-
 processing on Unix machines, which utilizes memory-mapped
 inputs for efficient i/o sharing.
+
+Made it so genBSDF can use spectral rendering for a
+more accurate photometric result.

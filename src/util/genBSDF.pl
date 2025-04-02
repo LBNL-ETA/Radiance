@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.93 2024/12/08 18:16:28 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.94 2025/04/02 00:55:27 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -163,7 +163,7 @@ if ( !defined $recovery ) {
 			($tensortree==3 && !($doforw && $doback));
 	# Get scene description
 	if ( $mgfin ) {
-		system "mgf2rad @ARGV > $radscn";
+		system "mgf2rad -s @ARGV > $radscn";
 		die "Could not load MGF input\n" if ( $? );
 	} else {
 		system "xform -e @ARGV > $radscn";
@@ -184,10 +184,7 @@ $wrapper .= ' -f "t=' . (-$dim[4]) . ';w=' . ($dim[1] - $dim[0]) .
 		';h=' . ($dim[3] - $dim[2]) . '"';
 $wrapper .= " -g $mgfscn" if ( $geout );
 # Calculate CIE (u',v') from Radiance RGB:
-my $CIEuv =	'Xi=.5141*Ri+.3239*Gi+.1620*Bi;' .
-		'Yi=.2651*Ri+.6701*Gi+.0648*Bi;' .
-		'Zi=.0241*Ri+.1229*Gi+.8530*Bi;' .
-		'den=Xi+15*Yi+3*Zi;' .
+my $CIEuv =	'den=Xi+15*Yi+3*Zi;' .
 		'uprime=if(Yi,4*Xi/den,4/19);' .
 		'vprime=if(Yi,9*Yi/den,9/19);' ;
 my $FEPS = 1e-5;
@@ -195,7 +192,7 @@ my $ns = 2**$ttlog2;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
 my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
-$rfluxmtx .= " -n $nproc -c $nsamp -cs 3";
+$rfluxmtx .= " -n $nproc -c $nsamp";
 if ( !defined $recovery ) {
 	open(MYAVH, "> $td/savedARGV.txt");
 	foreach (@savedARGV) {
@@ -348,7 +345,7 @@ sub do_ttree_dir {
 				qq{-e 'zp=$dim[5-$forw]' -e 'myDz=Dz*($forw*2-1)' } .
 				qq{-e '\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz' } .
 				qq{-e '\$4=Dx;\$5=Dy;\$6=myDz' -of } .
-				"| $rfluxmtx$r -h -ff -y $ns2 - $receivers -i $octree";
+				"| $rfluxmtx$r -ff -y $ns2 - $receivers -i $octree";
 		}
 	} else {
 		# Anisotropic BSDF
@@ -356,7 +353,7 @@ sub do_ttree_dir {
 		if ($windoz) {
 			$cmd = "$rfluxmtx$r -fa $sender $receivers -i $octree";
 		} else {
-			$cmd = "$rfluxmtx$r -h -ff $sender $receivers -i $octree";
+			$cmd = "$rfluxmtx$r -ff $sender $receivers -i $octree";
 		}
 	}
 	if ( $dop ) {
@@ -404,33 +401,29 @@ sub ttree_comp {
 	my $dest = shift;
 	my $cmd;
 	if ($windoz) {
+		$cmd = "rcomb -fa -c xyz $src | rcollate -ho -oc 1" .
+				q{ | rcalc -e "Xi=$1;Yi=$2;Zi=$3" };
 		if ("$spec" eq "Visible") {
-			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-				q{-e "Ri=$1;Gi=$2;Bi=$3" } .
-				qq{-e "$CIEuv" } .
+			$cmd .= qq{-e "Omega:PI/($ns*$ns)" } .
 				q{-e "$1=Yi/Omega"};
 		} elsif ("$spec" eq "CIE-u") {
-			$cmd = q{rcalc -e "Ri=$1;Gi=$2;Bi=$3" } .
-				qq{-e "$CIEuv" } .
+			$cmd .= qq{-e "$CIEuv" } .
 				q{-e "$1=uprime"};
 		} elsif ("$spec" eq "CIE-v") {
-			$cmd = q{rcalc -e "Ri=$1;Gi=$2;Bi=$3" } .
-				qq{-e "$CIEuv" } .
+			$cmd .= qq{-e "$CIEuv" } .
 				q{-e "$1=vprime"};
 		}
 	} else {
+		$cmd = "rcomb -ff -c xyz $src | getinfo -" .
+				q{ | rcalc -if3 -of -e 'Xi=$1;Yi=$2;Zi=$3' };
 		if ("$spec" eq "Visible") {
-			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-				q{-e 'Ri=$1;Gi=$2;Bi=$3' } .
-				"-e '$CIEuv' " .
+			$cmd .= "-e 'Omega:PI/($ns*$ns)' " .
 				q{-e '$1=Yi/Omega'};
 		} elsif ("$spec" eq "CIE-u") {
-			$cmd = q{rcalc -if3 -e 'Ri=$1;Gi=$2;Bi=$3' } .
-				"-e '$CIEuv' " .
+			$cmd .= "-e '$CIEuv' " .
 				q{-e '$1=uprime'};
 		} elsif ("$spec" eq "CIE-v") {
-			$cmd = q{rcalc -if3 -e 'Ri=$1;Gi=$2;Bi=$3' } .
-				"-e '$CIEuv' " .
+			$cmd .= "-e '$CIEuv' " .
 				q{-e '$1=vprime'};
 		}
 	}
@@ -439,20 +432,12 @@ sub ttree_comp {
 		my $pcull = ("$spec" eq "Visible") ? $pctcull :
 						     (100 - (100-$pctcull)*.25) ;
 		if ($windoz) {
-			$cmd = "rcollate -ho -oc 1 $src | " .
-					$cmd .
-					" | rttree_reduce$avg -h -fa -t $pcull -r $tensortree -g $ttlog2";
+			$cmd .= " | rttree_reduce$avg -h -fa -t $pcull -r $tensortree -g $ttlog2";
 		} else {
-			$cmd .= " -of $src " .
-					"| rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
+			$cmd .= " | rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
 		}
 		run_check "$cmd > $dest";
 	} else {
-		if ($windoz) {
-			$cmd = "rcollate -ho -oc 1 $src | " . $cmd ;
-		} else {
-			$cmd .= " $src";
-		}
 		if ( active_phase() ) {
 			open(DATOUT, "> $dest");
 			print DATOUT "{\n";
@@ -535,11 +520,11 @@ sub matrix_comp {
 	my $dest = shift;
 	my $cmd = "rmtxop -fa -t";
 	if ("$spec" eq "Visible") {
-		$cmd .= " -c 0.2651 0.6701 0.0648";
+		$cmd .= " -c y";
 	} elsif ("$spec" eq "CIE-X") {
-		$cmd .= " -c 0.5141 0.3239 0.1620";
+		$cmd .= " -c x";
 	} elsif ("$spec" eq "CIE-Z") {
-		$cmd .= " -c 0.0241 0.1229 0.8530";
+		$cmd .= " -c z";
 	}
 	$cmd .= " $src | getinfo -";
 	run_check "$cmd > $dest";
