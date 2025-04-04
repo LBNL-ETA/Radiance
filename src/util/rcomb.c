@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.29 2025/04/04 18:06:48 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.30 2025/04/04 18:18:06 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -1034,6 +1034,10 @@ main(int argc, char *argv[])
 			return(1);
 		mop[nmats].rmp->ncols = mcat->ncols;
 	}
+#if DTrmx_native==DTfloat
+	if (outfmt == DTdouble)
+		fprintf(stderr, "%s: warning - writing float result as double\n", argv[0]);
+#endif
 	newheader("RADIANCE", stdout);	/* write output header */
 	if (echoheader)
 		output_headinfo(stdout);

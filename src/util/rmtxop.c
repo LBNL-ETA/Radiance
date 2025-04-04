@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.38 2025/04/04 18:06:48 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.39 2025/04/04 18:18:06 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -684,6 +684,12 @@ main(int argc, char *argv[])
 		else if (mres->dtype == DTxyze)
 			outfmt = DTxyze;
 	}
+#if DTrmx_native==DTfloat
+	if (outfmt == DTdouble)
+		fprintf(stderr,
+			"%s: warning - writing float result as double\n",
+				argv[0]);
+#endif
 	newheader("RADIANCE", stdout);	/* write result to stdout */
 	printargs(argc, argv, stdout);
 	return(rmx_write(mres, outfmt, stdout) ? 0 : 1);
