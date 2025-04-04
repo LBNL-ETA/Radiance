@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.39 2025/04/04 18:18:06 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.40 2025/04/04 22:47:56 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -676,9 +676,9 @@ main(int argc, char *argv[])
 	mres = loadop(mop+nmats);
 	if (mres == NULL)
 		return(1);
-	if (outfmt == DTfromHeader)	/* check data type */
+	if ((outfmt == DTfromHeader) & (mres->dtype < DTspec))
 		outfmt = mres->dtype;
-	if (outfmt == DTrgbe) {
+	if (outfmt == DTrgbe) {		/* check data type */
 		if (mres->ncomp > 3)
 			outfmt = DTspec;
 		else if (mres->dtype == DTxyze)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.89 2025/04/04 18:06:48 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.90 2025/04/04 22:47:56 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -574,9 +574,13 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		return(0);
 	if (rm->info)
 		fputs(rm->info, fp);
-	if (dtype == DTfromHeader)
+	if (dtype == DTfromHeader) {
 		dtype = rm->dtype;
-	else if (dtype == DTrgbe && (rm->dtype == DTxyze ||
+#if DTrmx_native==DTfloat
+		if (dtype == DTdouble)		/* but stored as float? */
+			dtype = DTfloat;
+#endif
+	} else if (dtype == DTrgbe && (rm->dtype == DTxyze ||
 					findCIEprims(rm->info)))
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
