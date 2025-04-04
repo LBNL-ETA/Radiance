@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.36 2025/03/28 00:06:36 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.37 2025/04/04 01:48:25 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -345,8 +345,7 @@ loadop(ROPMAT *rop)
 		}
 	}
 	if (rop->preop.transpose) {		/* transpose matrix? */
-		mres = rmx_transpose(rop->mtx);
-		if (mres == NULL) {
+		if (!rmx_transpose(rop->mtx)) {
 			fputs(rop->inspec, stderr);
 			fputs(": transpose failed\n", stderr);
 			goto failure;
@@ -355,8 +354,6 @@ loadop(ROPMAT *rop)
 			fputs(rop->inspec, stderr);
 			fputs(": transposed rows and columns\n", stderr);
 		}
-		rmx_free(rop->mtx);
-		rop->mtx = mres;
 	}
 	mres = rop->mtx;
 	rop->mtx = NULL;

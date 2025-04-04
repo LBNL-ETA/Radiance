@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.86 2025/03/28 00:06:36 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.87 2025/04/04 01:48:25 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -707,38 +707,53 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 	return(1);
 }
 
-/* Allocate and assign transposed matrix */
-RMATRIX *
-rmx_transpose(const RMATRIX *rm)
+/* Transpose the given matrix */
+int
+rmx_transpose(RMATRIX *rm)
 {
-	RMATRIX	*dnew;
+	RMATRIX	dnew;
 	int	i, j;
 
-	if (!rm || !rm->mtx)
+	if (!rm || !rm->mtx | (rm->ncomp > MAXCOMP))
 		return(0);
-	if ((rm->nrows == 1) | (rm->ncols == 1)) {
-		dnew = rmx_copy(rm);
-		if (!dnew)
-			return(NULL);
-		dnew->nrows = rm->ncols;
-		dnew->ncols = rm->nrows;
-		return(dnew);
+	if (rm->info)
+		rmx_addinfo(rm, "Transposed rows and columns\n");
+	if ((rm->nrows == 1) | (rm->ncols == 1)) { /* vector? */
+		j = rm->ncols;
+		rm->ncols = rm->nrows;
+		rm->nrows = j;
+		return(1);
 	}
-	dnew = rmx_alloc(rm->ncols, rm->nrows, rm->ncomp);
-	if (!dnew)
-		return(NULL);
-	if (rm->info) {
-		rmx_addinfo(dnew, rm->info);
-		rmx_addinfo(dnew, "Transposed rows and columns\n");
+	if (rm->nrows == rm->ncols) {	/* square matrix case */
+		rmx_dtype	val[MAXCOMP];
+		for (j = rm->ncols; j--; )
+		    for (i = rm->nrows; i--; ) {
+		        if (i == j) continue;
+			memcpy(val, rmx_val(rm,i,j),
+				sizeof(rmx_dtype)*rm->ncomp);
+			memcpy(rmx_lval(rm,i,j), rmx_val(rm,j,i),
+				sizeof(rmx_dtype)*rm->ncomp);
+			memcpy(rmx_val(rm,j,i), val,
+				sizeof(rmx_dtype)*rm->ncomp);
+		    }
+		return(1);
 	}
-	dnew->dtype = rm->dtype;
-	copycolor(dnew->cexp, rm->cexp);
-	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
-	for (j = dnew->ncols; j--; )
-	    for (i = dnew->nrows; i--; )
-	    	memcpy(rmx_lval(dnew,i,j), rmx_val(rm,j,i),
-	    			sizeof(rmx_dtype)*dnew->ncomp);
-	return(dnew);
+	memset(&dnew, 0, sizeof(dnew));
+	dnew.ncols = rm->nrows; dnew.nrows = rm->ncols;
+	dnew.ncomp = rm->ncomp;
+	if (!rmx_prepare(&dnew))
+		return(0);
+	rmx_addinfo(&dnew, rm->info);
+	dnew.dtype = rm->dtype;
+	copycolor(dnew.cexp, rm->cexp);
+	memcpy(dnew.wlpart, rm->wlpart, sizeof(dnew.wlpart));
+	for (j = dnew.ncols; j--; )
+	    for (i = dnew.nrows; i--; )
+	    	memcpy(rmx_lval(&dnew,i,j), rmx_val(rm,j,i),
+	    			sizeof(rmx_dtype)*dnew.ncomp);
+	rmx_reset(rm);			/* frees memory */
+	*rm = dnew;			/* replace w/ transpose */
+	return(1);
 }
 
 /* Multiply (concatenate) two matrices and allocate the result */
