@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.87 2025/04/04 01:48:25 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.88 2025/04/04 02:53:03 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -680,18 +680,20 @@ rmx_copy(const RMATRIX *rm)
 int
 rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 {
-	if (!rdst | !rsrc || (rdst->nrows != rsrc->nrows) |
-			(rdst->ncols != rsrc->ncols) |
-			(rdst->ncomp != rsrc->ncomp))
+	if (!rdst | !rsrc)
 		return(0);
-
 	if (dometa) {		/* transfer everything? */
 		rmx_reset(rdst);
 		*rdst = *rsrc;
 		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
 		return(1);
 	}
-#ifdef MAP_FILE			/* just matrix data -- leave metadata */
+				/* just matrix data -- leave metadata */
+	if ((rdst->nrows != rsrc->nrows) |
+			(rdst->ncols != rsrc->ncols) |
+			(rdst->ncomp != rsrc->ncomp))
+		return(0);
+#ifdef MAP_FILE
 	if (rdst->mapped)
 		munmap(rdst->mapped, rmx_mapped_size(rdst));
 	else
@@ -751,9 +753,8 @@ rmx_transpose(RMATRIX *rm)
 	    for (i = dnew.nrows; i--; )
 	    	memcpy(rmx_lval(&dnew,i,j), rmx_val(rm,j,i),
 	    			sizeof(rmx_dtype)*dnew.ncomp);
-	rmx_reset(rm);			/* frees memory */
-	*rm = dnew;			/* replace w/ transpose */
-	return(1);
+	    				/* and reassign result */
+	return(rmx_transfer_data(rm, &dnew, 1));
 }
 
 /* Multiply (concatenate) two matrices and allocate the result */
