@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.58 2025/03/19 01:18:20 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.59 2025/04/04 01:08:33 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -517,10 +517,10 @@ finish_receiver(void)
 		sprintf(sbuf, "RHS=%c1", curparams.sign);
 		params = savqstr(sbuf);
 	}
-	if (!uniform & (curparams.slist->styp == ST_SOURCE)) {
+	if (!uniform) {
 		SURF	*sp;
 		for (sp = curparams.slist; sp != NULL; sp = sp->next)
-			if (fabs(sp->area - PI) > 1e-3) {
+			if (sp->styp == ST_SOURCE && fabs(sp->area - PI) > 1e-3) {
 				fprintf(stderr, "%s: source '%s' must be 180-degrees\n",
 						progname, sp->sname);
 				exit(1);
