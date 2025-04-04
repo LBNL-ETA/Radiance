@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.94 2025/04/02 00:55:27 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.95 2025/04/04 18:06:48 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -477,7 +477,7 @@ sub do_matrix_dir {
 	my $dop = do_phase();
 	my $r = ($dop < 0) ? " -r" : "";
 	my $sender = ($bsender,$fsender)[$forw];
-	my $cmd = "$rfluxmtx$r -fd $sender $receivers -i $octree";
+	my $cmd = "$rfluxmtx$r -ff $sender $receivers -i $octree";
 	if ( $dop ) {
 		# print STDERR "Running: $cmd\n";
 		system $cmd;

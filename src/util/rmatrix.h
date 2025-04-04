@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.25 2025/04/04 01:48:25 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.26 2025/04/04 18:06:48 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -21,8 +21,18 @@ typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 #define	RMF_SWAPIN	1
 #define RMF_FREEMEM	2
 
-#define	DTrmx_native	DTdouble	/* in-core data type */
+#ifndef MAXCOMP
+#define MAXCOMP		MAXCSAMP	/* #components we support */
+#endif
+					/* Set in-core data type */
+#if !defined(DTrmx_native) || DTrmx_native==DTfloat
+#define	DTrmx_native	DTfloat
+#define rmx_dtype	float
+#define rmx_scanfmt	"%f"
+#elif DTrmx_native==DTdouble
 #define	rmx_dtype	double
+#define rmx_scanfmt	"%lf"
+#endif
 
 /* General [row][col][cmp] component matrix */
 typedef struct {

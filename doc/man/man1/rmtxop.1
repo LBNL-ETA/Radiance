@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.35 2025/03/27 01:26:55 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.36 2025/04/04 18:06:48 greg Exp $"
 .TH RMTXOP 1 5/31/2014 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -224,9 +224,9 @@ The
 option turns on verbose reporting, which announces each operation.
 .SH EXAMPLES
 To concatenate two matrix files with a BTDF between them and write
-the result as binary double:
+the result as binary float:
 .IP "" .2i
-rmtxop -fd view.vmx blinds.xml exterior.dmx > dcoef.dmx
+rmtxop -ff view.vmx blinds.xml exterior.dmx > dcoef.dmx
 .PP
 To convert a BTDF matrix into a Radiance picture:
 .IP "" .2i
@@ -273,6 +273,12 @@ be the same.
 Note that this only applies to concatenation;
 element-wise addition, multiplication, and division are always
 evaluated from left to right.
+.PP
+All calculations are peformed internally using 32-bit floating-point,
+so there is little benefit in either reading or writing 64-bit double
+data.
+This may be overridden at compile time using the macro
+"-DDTrmx_native=DTdouble".
 .SH BUGS
 The
 .I rmtxop

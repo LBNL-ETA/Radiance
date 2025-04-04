@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.37 2025/04/04 01:48:25 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.38 2025/04/04 18:06:48 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -9,10 +9,6 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.37 2025/04/04 01:48:25 greg Exp $
 #include "rtio.h"
 #include "rmatrix.h"
 #include "platform.h"
-
-#ifndef MAXCOMP
-#define MAXCOMP		MAXCSAMP	/* #components we support */
-#endif
 
 /* Unary matrix operation(s) */
 typedef struct {

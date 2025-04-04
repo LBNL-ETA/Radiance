@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.12 2025/03/27 01:26:55 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.13 2025/04/04 18:06:48 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -339,6 +339,14 @@ is not supported in
 .I rcomb,
 and should instead be handled by
 .I pfilt(1).
+.PP
+Similar to
+.I rmtxop,
+all calculations are peformed internally using 32-bit floating-point,
+so there is little benefit in either reading or writing 64-bit double
+data.
+This may be overridden at compile time using the macro
+"-DDTrmx_native=DTdouble".
 .SH BUGS
 The
 .I rcomb

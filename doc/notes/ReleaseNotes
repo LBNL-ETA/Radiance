@@ -2783,3 +2783,9 @@ inputs for efficient i/o sharing.
 
 Made it so genBSDF can use spectral rendering for a
 more accurate photometric result.
+
+Changed default matrix representation to float rather than
+double, which uses less RAM and supports faster operations
+in general.  Build with compiler flag:
+	-DDTnativeDTrmx_native=DTdouble
+to get back higher precision representation.
