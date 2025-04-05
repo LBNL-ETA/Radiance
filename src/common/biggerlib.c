@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biggerlib.c,v 3.5 2003/08/04 22:37:53 greg Exp $";
+static const char	RCSid[] = "$Id: biggerlib.c,v 3.6 2025/04/05 00:34:46 greg Exp $";
 #endif
 /*
  *  biggerlib.c - functions for an even bigger library.
@@ -78,7 +78,7 @@ l_yn(char *nm)
 static double
 l_erf(char *nm)
 {
-    extern double  erf();
+    extern double  erf(double x);
 
     return(erf(argument(1)));
 }
@@ -87,7 +87,7 @@ l_erf(char *nm)
 static double
 l_erfc(char *nm)
 {
-    extern double  erfc();
+    extern double  erfc(double x);
 
     return(erfc(argument(1)));
 }
