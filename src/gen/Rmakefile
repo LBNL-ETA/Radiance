@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.48 2025/02/26 20:39:28 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.49 2025/04/10 23:49:10 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -95,9 +95,9 @@ genssky:	genssky.o sun.o atmos.o
 	$(CC) $(CFLAGS) -o genssky genssky.o sun.o atmos.o \
 -lrtrad $(MLIB)
 
-gensdaymtx:	gensdaymtx.o sun.o atmos.o
+gensdaymtx:	gensdaymtx.o sun.o atmos.o loadEPW.o
 	$(CC) $(CFLAGS) -o gensdaymtx gensdaymtx.o sun.o atmos.o \
--lrtrad $(MLIB)
+loadEPW.o -lrtrad $(MLIB)
 
 mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
@@ -143,7 +143,7 @@ gendaymtx.o:	../common/platform.h ../common/rtmath.h \
 genssky.o:	../common/rtio.h ../common/rtmath.h \
 ../common/paths.h ../common/color.h
 
-genssky.o gensdaymtx.o:	atmos.h
+genssky.o gensdaymtx.o:	atmos.h loadEPW.h
 
 atmos.o:	../common/rtio.h ../common/rtmath.h ../common/color.h \
 ../common/data.h sun.h
