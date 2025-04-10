@@ -2789,3 +2789,6 @@ double, which uses less RAM and supports faster operations
 in general.  Build with compiler flag:
 	-DDTnativeDTrmx_native=DTdouble
 to get back higher precision representation.
+
+Taoning Wang updated genssky and gensdaymtx to provide illuminance
+calibration and accept EPW files directly as input.

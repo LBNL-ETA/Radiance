@@ -20,7 +20,7 @@ target_link_libraries(gensky rtrad ${LIB_M})
 add_executable(genssky genssky.c sun.c atmos.c)
 target_link_libraries(genssky rtrad ${LIB_M} Threads::Threads)
 
-add_executable(gensdaymtx gensdaymtx.c sun.c atmos.c)
+add_executable(gensdaymtx gensdaymtx.c sun.c atmos.c loadEPW.c)
 target_link_libraries(gensdaymtx rtrad ${LIB_M} Threads::Threads)
 
 add_executable(gendaylit gendaylit.c sun.c)

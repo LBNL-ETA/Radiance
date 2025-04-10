@@ -1,7 +1,7 @@
 #include "color.h"
 #ifndef lint
 static const char RCSid[] =
-    "$Id: genssky.c,v 2.6 2024/10/09 17:22:42 greg Exp $";
+    "$Id: genssky.c,v 2.7 2025/04/10 23:30:58 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -260,7 +260,9 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
     }
     free(indirect_irradiance_clear);
     diffuse_irradiance = wmean2(diffuse_irradiance, overcast_ghi, cloud_cover);
-    dif_ratio = difhor / WHTEFFICACY / diffuse_irradiance / 1.15;       /* fudge */
+    if (diffuse_irradiance > 0) {
+        dif_ratio = difhor / WHTEFFICACY / diffuse_irradiance / 1.15;       /* fudge */
+    }
   }
   int i, j, k;
   for (j = 0; j < yres; ++j) {
