@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.90 2025/04/04 22:47:56 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.91 2025/04/16 20:20:14 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -790,7 +790,7 @@ rmx_transpose(RMATRIX *rm)
 	dnew.ncomp = rm->ncomp;
 	if (!rmx_prepare(&dnew))
 		return(0);
-	rmx_addinfo(&dnew, rm->info);
+	dnew.info = rm->info; rm->info = NULL;
 	dnew.dtype = rm->dtype;
 	copycolor(dnew.cexp, rm->cexp);
 	memcpy(dnew.wlpart, rm->wlpart, sizeof(dnew.wlpart));
@@ -1036,13 +1036,17 @@ cm_from_rmatrix(const RMATRIX *rm)
 			case 1:
 			    setcolor(cv, dp[0], dp[0], dp[0]);
 			    break;
-			default: {
+			default:
+			    if (sizeof(COLORV) == sizeof(rmx_dtype)) {
+				scolor2color(cv, (const COLORV *)dp,
+						rm->ncomp, rm->wlpart);
+			    } else {
 				COLORV	scol[MAXCOMP];
-				int	k;
-				for (k = rm->ncomp; k--; )
-					scol[k] = dp[k];
+				int	k = rm->ncomp;
+				while (k--) scol[k] = dp[k];
 				scolor2color(cv, scol, rm->ncomp, rm->wlpart);
-			    } break;
+			    }
+			    break;
 			}
 		    }
 	}
