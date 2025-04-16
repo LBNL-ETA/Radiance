@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.93 2025/04/16 22:47:16 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.94 2025/04/16 22:56:12 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -758,12 +758,6 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 int
 rmx_transpose(RMATRIX *rm)
 {
-#define	bmbyte(r,c)	bmap[((r)*rm->ncols+(c))>>3]
-#define	bmbit(r,c)	(1 << ((r)*rm->ncols+(c) & 7))
-#define	bmop(r,c, op)	(bmbyte(r,c) op bmbit(r,c))
-#define	bmtest(r,c)	bmop(r,c,&)
-#define	bmset(r,c)	bmop(r,c,|=)
-#define bmtestandset(r,c)	(!bmtest(r,c) && bmset(r,c))
 	uby8		*bmap;
 	rmx_dtype	val[MAXCOMP];
 	RMATRIX		dold;
@@ -792,7 +786,13 @@ rmx_transpose(RMATRIX *rm)
 		}
 		return(1);
 	}
-					/* clear completion bitmap */
+#define	bmbyte(r,c)	bmap[((r)*rm->ncols+(c))>>3]
+#define	bmbit(r,c)	(1 << ((r)*rm->ncols+(c) & 7))
+#define	bmop(r,c, op)	(bmbyte(r,c) op bmbit(r,c))
+#define	bmtest(r,c)	bmop(r,c,&)
+#define	bmset(r,c)	bmop(r,c,|=)
+#define bmtestandset(r,c)	(!bmtest(r,c) && bmset(r,c))
+					/* create completion bitmap */
 	bmap = (uby8 *)calloc(((size_t)rm->nrows*rm->ncols+7)>>3, 1);
 	if (!bmap)
 		return(0);
@@ -807,14 +807,14 @@ rmx_transpose(RMATRIX *rm)
 		memcpy(val, rmx_val(rm,i,j),
 			sizeof(rmx_dtype)*rm->ncomp);
 		for ( ; ; ) {		/* value transpose loop */
-		    const rmx_dtype	*src;
+		    const rmx_dtype	*ds;
 		    i0 = i1; j0 = (int)j1;
-		    src = rmx_val(&dold, j0, i0);
-		    j1 = (src - dold.mtx)/dold.ncomp;
+		    ds = rmx_val(&dold, j0, i0);
+		    j1 = (ds - dold.mtx)/dold.ncomp;
 		    i1 = j1 / rm->ncols;
-		    j1 -= i1*rm->ncols;
+		    j1 -= (size_t)i1*rm->ncols;
 		    if (!bmtestandset(i1,j1)) break;
-		    memcpy(rmx_lval(rm,i0,j0), src,
+		    memcpy(rmx_lval(rm,i0,j0), ds,
 				sizeof(rmx_dtype)*rm->ncomp);
 		}
 					/* close the loop */
