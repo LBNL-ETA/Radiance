@@ -12,7 +12,7 @@ on:
 jobs:
   cvs_import:
     name: "Run CVS Import"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
       RELEASE_TODAY: ${{ steps.ifBuildTrigger.outputs.RELEASE_TODAY }}
@@ -344,7 +344,7 @@ jobs:
 
   build_Linux:
     name: "Build for Linux"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     needs: cvs_import
     if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
@@ -925,7 +925,7 @@ jobs:
   Test_Linux_1:
     needs: [build_Linux]
     name: "Test for Linux 1"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 40
 
     steps:
@@ -1031,7 +1031,7 @@ jobs:
   Test_Linux_2:
     needs: [build_Linux]
     name: "Test for Linux 2"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 40
 
     steps:
@@ -1087,7 +1087,7 @@ jobs:
   Test_Linux_3:
     needs: [build_Linux]
     name: "Test for Linux 3"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 40
 
     steps:
@@ -1143,7 +1143,7 @@ jobs:
   Test_Linux_4:
     needs: [build_Linux]
     name: "Test for Linux 4"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 40
 
     steps:
@@ -1214,7 +1214,7 @@ jobs:
         Test_Linux_4,
       ]
     name: check if release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       READY_TO_RELEASE: ${{ needs.cvs_import.outputs.RELEASE_TODAY }}
     outputs:
@@ -1227,7 +1227,7 @@ jobs:
 
   zip_auxiliary:
     name: zip auxiliary files
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: check_if_release
     if: needs.check_if_release.outputs.RELEASE_TODAY == 'true'
 
@@ -1249,7 +1249,7 @@ jobs:
 
   release_installers:
     name: deploy installers
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: zip_auxiliary
 
     steps:
