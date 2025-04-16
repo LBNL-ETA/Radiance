@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.92 2025/04/16 21:54:15 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.93 2025/04/16 22:47:16 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -800,16 +800,19 @@ rmx_transpose(RMATRIX *rm)
 	rm->ncols = dold.nrows; rm->nrows = dold.ncols;
 	for (i = rm->nrows; i--; )
 	    for (j = rm->ncols; j--; ) {
-	    	int	i0, j0, i1 = i, j1 = j;
+	    	int	i0, j0;
+	    	int	i1 = i;
+	    	size_t	j1 = j;
 		if (!bmtestandset(i,j)) continue;
 		memcpy(val, rmx_val(rm,i,j),
 			sizeof(rmx_dtype)*rm->ncomp);
 		for ( ; ; ) {		/* value transpose loop */
 		    const rmx_dtype	*src;
-		    i0 = i1; j0 = j1;
+		    i0 = i1; j0 = (int)j1;
 		    src = rmx_val(&dold, j0, i0);
-		    i1 = (src - dold.mtx)/(dold.ncomp*rm->ncols);
-		    j1 = (src - dold.mtx)/dold.ncomp % rm->ncols;
+		    j1 = (src - dold.mtx)/dold.ncomp;
+		    i1 = j1 / rm->ncols;
+		    j1 -= i1*rm->ncols;
 		    if (!bmtestandset(i1,j1)) break;
 		    memcpy(rmx_lval(rm,i0,j0), src,
 				sizeof(rmx_dtype)*rm->ncomp);
