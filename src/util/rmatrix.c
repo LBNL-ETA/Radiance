@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.91 2025/04/16 20:20:14 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.92 2025/04/16 21:54:15 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -758,8 +758,16 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 int
 rmx_transpose(RMATRIX *rm)
 {
-	RMATRIX	dnew;
-	int	i, j;
+#define	bmbyte(r,c)	bmap[((r)*rm->ncols+(c))>>3]
+#define	bmbit(r,c)	(1 << ((r)*rm->ncols+(c) & 7))
+#define	bmop(r,c, op)	(bmbyte(r,c) op bmbit(r,c))
+#define	bmtest(r,c)	bmop(r,c,&)
+#define	bmset(r,c)	bmop(r,c,|=)
+#define bmtestandset(r,c)	(!bmtest(r,c) && bmset(r,c))
+	uby8		*bmap;
+	rmx_dtype	val[MAXCOMP];
+	RMATRIX		dold;
+	int		i, j;
 
 	if (!rm || !rm->mtx | (rm->ncomp > MAXCOMP))
 		return(0);
@@ -772,34 +780,52 @@ rmx_transpose(RMATRIX *rm)
 		return(1);
 	}
 	if (rm->nrows == rm->ncols) {	/* square matrix case */
-		rmx_dtype	val[MAXCOMP];
-		for (j = rm->ncols; j--; )
-		    for (i = rm->nrows; i--; ) {
-		        if (i == j) continue;
-			memcpy(val, rmx_val(rm,i,j),
+	     for (i = rm->nrows; i--; )
+	     	for (j = rm->ncols; j--; ) {
+		    if (i == j) continue;
+		    memcpy(val, rmx_val(rm,i,j),
 				sizeof(rmx_dtype)*rm->ncomp);
-			memcpy(rmx_lval(rm,i,j), rmx_val(rm,j,i),
+		    memcpy(rmx_lval(rm,i,j), rmx_val(rm,j,i),
 				sizeof(rmx_dtype)*rm->ncomp);
-			memcpy(rmx_val(rm,j,i), val,
+		    memcpy(rmx_val(rm,j,i), val,
 				sizeof(rmx_dtype)*rm->ncomp);
-		    }
+		}
 		return(1);
 	}
-	memset(&dnew, 0, sizeof(dnew));
-	dnew.ncols = rm->nrows; dnew.nrows = rm->ncols;
-	dnew.ncomp = rm->ncomp;
-	if (!rmx_prepare(&dnew))
+					/* clear completion bitmap */
+	bmap = (uby8 *)calloc(((size_t)rm->nrows*rm->ncols+7)>>3, 1);
+	if (!bmap)
 		return(0);
-	dnew.info = rm->info; rm->info = NULL;
-	dnew.dtype = rm->dtype;
-	copycolor(dnew.cexp, rm->cexp);
-	memcpy(dnew.wlpart, rm->wlpart, sizeof(dnew.wlpart));
-	for (j = dnew.ncols; j--; )
-	    for (i = dnew.nrows; i--; )
-	    	memcpy(rmx_lval(&dnew,i,j), rmx_val(rm,j,i),
-	    			sizeof(rmx_dtype)*dnew.ncomp);
-	    				/* and reassign result */
-	return(rmx_transfer_data(rm, &dnew, 1));
+	dold = *rm;
+	rm->ncols = dold.nrows; rm->nrows = dold.ncols;
+	for (i = rm->nrows; i--; )
+	    for (j = rm->ncols; j--; ) {
+	    	int	i0, j0, i1 = i, j1 = j;
+		if (!bmtestandset(i,j)) continue;
+		memcpy(val, rmx_val(rm,i,j),
+			sizeof(rmx_dtype)*rm->ncomp);
+		for ( ; ; ) {		/* value transpose loop */
+		    const rmx_dtype	*src;
+		    i0 = i1; j0 = j1;
+		    src = rmx_val(&dold, j0, i0);
+		    i1 = (src - dold.mtx)/(dold.ncomp*rm->ncols);
+		    j1 = (src - dold.mtx)/dold.ncomp % rm->ncols;
+		    if (!bmtestandset(i1,j1)) break;
+		    memcpy(rmx_lval(rm,i0,j0), src,
+				sizeof(rmx_dtype)*rm->ncomp);
+		}
+					/* close the loop */
+		memcpy(rmx_lval(rm,i0,j0), val,
+			sizeof(rmx_dtype)*rm->ncomp);
+	    }
+	free(bmap);			/* all done! */
+	return(1);
+#undef	bmbyte
+#undef	bmbit
+#undef	bmop
+#undef	bmtest
+#undef	bmset
+#undef	bmtestandset
 }
 
 /* Multiply (concatenate) two matrices and allocate the result */
