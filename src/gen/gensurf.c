@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.31 2025/01/21 01:56:27 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.32 2025/04/18 23:02:53 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -153,7 +153,8 @@ main(int argc, char *argv[])
 						/* print header */
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
-	eclock = 1;
+	doptimize(1);
+	eclock++;
 						/* initialize */
 	comprow(-1.0/m, row0, n);
 	comprow(0.0, row1, n);

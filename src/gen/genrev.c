@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.15 2024/12/10 17:22:39 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.16 2025/04/18 23:02:53 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -135,7 +135,8 @@ char  *argv[];
 
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
-	eclock = 1;
+	doptimize(1);
+	eclock++;
 
 	lastnz = lastnr = 0.0;
 	t = 0.0;
