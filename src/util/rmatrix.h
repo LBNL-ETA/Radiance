@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.26 2025/04/04 18:06:48 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.27 2025/04/18 23:59:03 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -11,10 +11,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Preferred BSDF component:
-	none, transmission, reflection front (normal side), reflection back */
-typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
 /* RMATRIX flags (usually private):
 	need to swap input, we should free memory */
@@ -81,7 +77,7 @@ extern int	rmx_load_row(rmx_dtype *drp, const RMATRIX *rm, FILE *fp);
 extern int	rmx_load_data(RMATRIX *rm, FILE *fp);
 
 /* Load matrix from supported file type (NULL for stdin, '!' with command) */
-extern RMATRIX	*rmx_load(const char *inspec, RMPref rmp);
+extern RMATRIX	*rmx_load(const char *inspec);
 
 /* Append header information associated with matrix data */
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);

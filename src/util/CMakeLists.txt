@@ -58,10 +58,10 @@ target_link_libraries(rcollate rtrad)
 add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
 target_link_libraries(rmtxop rtrad)
 
-add_executable(rcomb rcomb.c rmatrix.c cmbsdf.c cmatrix.c)
+add_executable(rcomb rcomb.c rmatrix.c cmatrix.c)
 target_link_libraries(rcomb rtrad)
 
-add_executable(pvsum pvsum.c rmatrix.c cmbsdf.c cmatrix.c)
+add_executable(pvsum pvsum.c rmatrix.c cmatrix.c)
 target_link_libraries(pvsum rtrad)
 
 add_executable(wrapBSDF wrapBSDF.c)

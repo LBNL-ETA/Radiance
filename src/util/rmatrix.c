@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.96 2025/04/17 23:30:16 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.97 2025/04/18 23:59:03 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -389,7 +389,7 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 
 /* Load matrix from supported file type */
 RMATRIX *
-rmx_load(const char *inspec, RMPref rmp)
+rmx_load(const char *inspec)
 {
 	FILE		*fp;
 	RMATRIX		*dnew;
@@ -403,21 +403,8 @@ rmx_load(const char *inspec, RMPref rmp)
 		fp = stdin;
 	else if (inspec[0] == '!')
 		fp = popen(inspec+1, "r");
-	else {					/* check suffix */
-		const char	*sp = strrchr(inspec, '.');
-		if (sp > inspec && !strcasecmp(sp+1, "XML")) {	/* BSDF? */
-			CMATRIX	*cm = rmp==RMPnone ? (CMATRIX *)NULL :
-					rmp==RMPtrans ? cm_loadBTDF(inspec) :
-					cm_loadBRDF(inspec, rmp==RMPreflB) ;
-			if (!cm)
-				return(NULL);
-			dnew = rmx_from_cmatrix(cm);
-			cm_free(cm);
-			dnew->dtype = DTascii;
-			return(dnew);		/* return here */
-		}				/* else open it ourselves */
+	else
 		fp = fopen(inspec, "r");
-	}
 	if (!fp) {
 		fprintf(stderr, "Cannot open for reading: %s\n", inspec);
 		return(NULL);

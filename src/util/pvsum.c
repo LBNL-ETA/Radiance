@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.3 2025/03/28 21:36:31 greg Exp $";
+static const char RCSid[] = "$Id: pvsum.c,v 2.4 2025/04/18 23:59:03 greg Exp $";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -577,7 +577,7 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	if ((argc-a < 1) | (argc-a > 2) || argv[a][0] == '-')
 		goto userr;
 	in_spec = argv[a];
-	cmtx = rmx_load(argv[a+1], RMPnone);	/* loads from stdin if a+1==argc */
+	cmtx = rmx_load(argv[a+1]);	/* loads from stdin if a+1==argc */
 	if (cmtx == NULL)
 		return(1);		/* error reported */
 	if (nprocs > cmtx->ncols)

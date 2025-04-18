@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.30 2025/04/04 18:18:06 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.31 2025/04/18 23:59:03 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -991,7 +991,7 @@ main(int argc, char *argv[])
 	resize_inparr(nmats+1);		/* extra matrix at end for result */
 	mop[nmats].inspec = "trailing_ops";
 					/* load final concatenation matrix */
-	if (mcat_spec && !(mcat = rmx_load(mcat_spec, RMPnone))) {
+	if (mcat_spec && !(mcat = rmx_load(mcat_spec))) {
 		fprintf(stderr, "%s: error loading concatenation matrix: %s\n",
 				argv[0], mcat_spec);
 		return(1);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.40 2025/04/04 22:47:56 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.41 2025/04/18 23:59:03 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -9,6 +9,10 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.40 2025/04/04 22:47:56 greg Exp $
 #include "rtio.h"
 #include "rmatrix.h"
 #include "platform.h"
+
+/* Preferred BSDF component:
+	none, transmission, reflection front (normal side), reflection back */
+typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
 /* Unary matrix operation(s) */
 typedef struct {
@@ -35,12 +39,25 @@ int	verbose = 0;			/* verbose reporting? */
 int
 loadmatrix(ROPMAT *rop)
 {
-	if (rop->mtx != NULL)		/* already loaded? */
+	if (rop->mtx)			/* already loaded? */
 		return(0);
+					/* check for BSDF input */
+	if ((rop->inspec[0] != '!') & (rop->rmp != RMPnone)) {
+		const char	*sp = strrchr(rop->inspec, '.');
+		if (sp > rop->inspec && !strcasecmp(sp+1, "XML")) {
+			CMATRIX	*cm = rop->rmp==RMPtrans ? cm_loadBTDF(rop->inspec) :
+					cm_loadBRDF(rop->inspec, rop->rmp==RMPreflB) ;
+			if (!cm)
+				return(-1);
+			rop->mtx = rmx_from_cmatrix(cm);
+			cm_free(cm);
+			rop->mtx->dtype = DTascii;
+			return(1);	/* loaded BSDF XML file */
+		}
+	}				/* else load regular matrix */
+	rop->mtx = rmx_load(rop->inspec);
 
-	rop->mtx = rmx_load(rop->inspec, rop->rmp);
-
-	return(!rop->mtx ? -1 : 1);
+	return(rop->mtx ? 1 : -1);
 }
 
 extern int	checksymbolic(ROPMAT *rop);

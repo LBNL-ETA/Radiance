@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.108 2025/03/27 01:26:55 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.109 2025/04/18 23:59:03 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -138,12 +138,12 @@ rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
 	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
 -lrtrad $(MLIB)
 
-rcomb:	rcomb.o rmatrix.o cmatrix.o cmbsdf.o
-	$(CC) $(CFLAGS) -o rcomb rcomb.o rmatrix.o cmatrix.o cmbsdf.o \
+rcomb:	rcomb.o rmatrix.o cmatrix.o
+	$(CC) $(CFLAGS) -o rcomb rcomb.o rmatrix.o cmatrix.o \
 -lrtrad $(MLIB)
 
-pvsum:	pvsum.o rmatrix.o cmatrix.o cmbsdf.o
-	$(CC) $(CFLAGS) -o pvsum pvsum.o rmatrix.o cmatrix.o cmbsdf.o \
+pvsum:	pvsum.o rmatrix.o cmatrix.o
+	$(CC) $(CFLAGS) -o pvsum pvsum.o rmatrix.o cmatrix.o \
 -lrtrad $(MLIB)
 
 wrapBSDF:	wrapBSDF.o
