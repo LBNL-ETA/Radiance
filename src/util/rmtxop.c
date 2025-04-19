@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.41 2025/04/18 23:59:03 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.42 2025/04/19 03:58:00 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -51,6 +51,8 @@ loadmatrix(ROPMAT *rop)
 				return(-1);
 			rop->mtx = rmx_from_cmatrix(cm);
 			cm_free(cm);
+			if (!rop->mtx)
+				return(-1);
 			rop->mtx->dtype = DTascii;
 			return(1);	/* loaded BSDF XML file */
 		}
