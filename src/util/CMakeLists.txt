@@ -1,7 +1,7 @@
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/util/Version.c")
 create_version_file("${VERSION_FILE}")
 
-add_executable(dctimestep dctimestep.c cmbsdf.c cmatrix.c)
+add_executable(dctimestep dctimestep.c cmbsdf.c cmconst.c cmatrix.c)
 target_link_libraries(dctimestep rtrad)
 
 add_executable(findglare findglare.c glareval.c glaresrc.c setscan.c)
@@ -37,7 +37,7 @@ target_link_libraries(vwrays rtrad)
 add_executable(vwright vwright.c)
 target_link_libraries(vwright rtrad)
 
-add_executable(dcglare dcglare.c cmbsdf.c cmatrix.c cmglare.c)
+add_executable(dcglare dcglare.c cmbsdf.c cmconst.c cmatrix.c cmglare.c)
 target_link_libraries(dcglare rtrad)
 
 #the next few libraries all need to include header files from the rt directory
@@ -55,13 +55,13 @@ target_link_libraries(rttree_reduce rtrad)
 add_executable(rcollate rcollate.c)
 target_link_libraries(rcollate rtrad)
 
-add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
+add_executable(rmtxop rmtxop.c rmatrix.c cmconst.c cmbsdf.c cmatrix.c)
 target_link_libraries(rmtxop rtrad)
 
-add_executable(rcomb rcomb.c rmatrix.c cmatrix.c)
+add_executable(rcomb rcomb.c cmconst.c rmatrix.c cmatrix.c)
 target_link_libraries(rcomb rtrad)
 
-add_executable(pvsum pvsum.c rmatrix.c cmatrix.c)
+add_executable(pvsum pvsum.c cmconst.c rmatrix.c cmatrix.c)
 target_link_libraries(pvsum rtrad)
 
 add_executable(wrapBSDF wrapBSDF.c)

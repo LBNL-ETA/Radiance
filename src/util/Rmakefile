@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.109 2025/04/18 23:59:03 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.110 2025/04/19 17:12:59 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -117,9 +117,9 @@ glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrtrad -lGLU -lGL \
 -lX11 -lXext $(MLIB)
 
-dctimestep:	dctimestep.o cmbsdf.o cmatrix.o
-	$(CC) $(CFLAGS) -o dctimestep dctimestep.o cmbsdf.o cmatrix.o \
--lrtrad $(MLIB)
+dctimestep:	dctimestep.o cmbsdf.o cmconst.o cmatrix.o
+	$(CC) $(CFLAGS) -o dctimestep dctimestep.o cmbsdf.o \
+cmconst.o cmatrix.o -lrtrad $(MLIB)
 
 rttree_reduce:	rttree_reduce.o
 	$(CC) $(CFLAGS) -o rttree_reduce rttree_reduce.o -lrtrad $(MLIB)
@@ -134,16 +134,16 @@ eplus_adduvf:	eplus_adduvf.o eplus_idf.o
 rfluxmtx:	rfluxmtx.o
 	$(CC) $(CFLAGS) -o rfluxmtx rfluxmtx.o -lrtrad $(MLIB)
 
-rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
+rmtxop:	rmtxop.o cmconst.o rmatrix.o cmatrix.o cmbsdf.o rmconvert.o
 	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
+cmconst.o rmconvert.o -lrtrad $(MLIB)
+
+rcomb:	rcomb.o cmconst.o rmatrix.o
+	$(CC) $(CFLAGS) -o rcomb rcomb.o cmconst.o rmatrix.o \
 -lrtrad $(MLIB)
 
-rcomb:	rcomb.o rmatrix.o cmatrix.o
-	$(CC) $(CFLAGS) -o rcomb rcomb.o rmatrix.o cmatrix.o \
--lrtrad $(MLIB)
-
-pvsum:	pvsum.o rmatrix.o cmatrix.o
-	$(CC) $(CFLAGS) -o pvsum pvsum.o rmatrix.o cmatrix.o \
+pvsum:	pvsum.o cmconst.o rmatrix.o
+	$(CC) $(CFLAGS) -o pvsum pvsum.o cmconst.o rmatrix.o \
 -lrtrad $(MLIB)
 
 wrapBSDF:	wrapBSDF.o
@@ -171,9 +171,9 @@ rcode_ident:	rcode_ident.o
 rcrop:		rcrop.o
 	$(CC) $(CFLAGS) -o rcrop rcrop.o -lrtrad -lm
 
-dcglare:	dcglare.o cmbsdf.o cmatrix.o cmglare.o
-	$(CC) $(CFLAGS) -o dcglare dcglare.o cmbsdf.o cmatrix.o cmglare.o \
--lrtrad $(MLIB)
+dcglare:	dcglare.o cmbsdf.o cmconst.o cmatrix.o cmglare.o
+	$(CC) $(CFLAGS) -o dcglare dcglare.o cmbsdf.o cmconst.o cmatrix.o \
+cmglare.o -lrtrad $(MLIB)
 
 rcomb.o:	../common/calcomp.h \
 ../common/paths.h ../common/rtprocess.h

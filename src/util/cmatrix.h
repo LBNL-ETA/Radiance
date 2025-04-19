@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.15 2025/04/04 18:06:48 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.16 2025/04/19 17:12:59 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -25,6 +25,7 @@ extern "C" {
 #define	DTdouble	6
 #define DTend		7
 
+/* Defined in cmconst.c */
 extern const char	stdin_name[];
 extern const char	*cm_fmt_id[];
 extern const int	cm_elem_size[];
