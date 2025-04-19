@@ -55,13 +55,13 @@ target_link_libraries(rttree_reduce rtrad)
 add_executable(rcollate rcollate.c)
 target_link_libraries(rcollate rtrad)
 
-add_executable(rmtxop rmtxop.c rmatrix.c cmconst.c cmbsdf.c cmatrix.c)
+add_executable(rmtxop rmtxop.c rmatrix.c cmconst.c cmbsdf.c cmatrix.c rmconvert.c)
 target_link_libraries(rmtxop rtrad)
 
-add_executable(rcomb rcomb.c cmconst.c rmatrix.c cmatrix.c)
+add_executable(rcomb rcomb.c cmconst.c rmatrix.c)
 target_link_libraries(rcomb rtrad)
 
-add_executable(pvsum pvsum.c cmconst.c rmatrix.c cmatrix.c)
+add_executable(pvsum pvsum.c cmconst.c rmatrix.c)
 target_link_libraries(pvsum rtrad)
 
 add_executable(wrapBSDF wrapBSDF.c)
