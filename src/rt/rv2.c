@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.76 2024/12/03 19:36:58 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.77 2025/04/22 15:47:47 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -520,7 +520,7 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf", &d0) != 1)
 				return(0);
 		}
-		if (FABSEQ(ptr->d, d0))
+		if (FRELEQ(ptr->d, d0))
 			return(0);
 		ptr->d = d0;
 		break;
@@ -552,9 +552,9 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf %lf %lf", &d0, &d1, &d2) != 3)
 				return(0);
 		}
-		if (FABSEQ(colval(ptr->C,RED), d0) &&
-				FABSEQ(colval(ptr->C,GRN), d1) &&
-				FABSEQ(colval(ptr->C,BLU), d2))
+		if (FRELEQ(colval(ptr->C,RED), d0) &&
+				FRELEQ(colval(ptr->C,GRN), d1) &&
+				FRELEQ(colval(ptr->C,BLU), d2))
 			return(0);
 		setcolor(ptr->C, d0, d1, d2);
 		break;
@@ -588,12 +588,10 @@ setparam(				/* get/set program parameter */
 	case 'l':			/* limit */
 		switch (s[1]) {
 		case 'w':			/* weight */
-			getparam(s+2, "limit weight", 'r',
-					(void *)&minweight);
+			getparam(s+2, "limit weight", 'r', &minweight);
 			break;
 		case 'r':			/* reflection */
-			getparam(s+2, "limit reflection", 'i',
-					(void *)&maxdepth);
+			getparam(s+2, "limit reflection", 'i', &maxdepth);
 			break;
 		default:
 			goto badparam;
@@ -602,24 +600,19 @@ setparam(				/* get/set program parameter */
 	case 'd':			/* direct */
 		switch (s[1]) {
 		case 'j':			/* jitter */
-			getparam(s+2, "direct jitter", 'r',
-					(void *)&dstrsrc);
+			getparam(s+2, "direct jitter", 'r', &dstrsrc);
 			break;
 		case 'c':			/* certainty */
-			getparam(s+2, "direct certainty", 'r',
-					(void *)&shadcert);
+			getparam(s+2, "direct certainty", 'r', &shadcert);
 			break;
 		case 't':			/* threshold */
-			getparam(s+2, "direct threshold", 'r',
-					(void *)&shadthresh);
+			getparam(s+2, "direct threshold", 'r', &shadthresh);
 			break;
 		case 'v':			/* visibility */
-			getparam(s+2, "direct visibility", 'b',
-					(void *)&directvis);
+			getparam(s+2, "direct visibility", 'b', &directvis);
 			break;
 		case 's':			/* sampling */
-			getparam(s+2, "direct sampling", 'r',
-					(void *)&srcsizerat);
+			getparam(s+2, "direct sampling", 'r', &srcsizerat);
 			break;
 		default:
 			goto badparam;
@@ -635,8 +628,7 @@ setparam(				/* get/set program parameter */
 		case ' ':
 		case 'y': case 'Y': case 't': case 'T': case '1': case '+':
 		case 'n': case 'N': case 'f': case 'F': case '0': case '-':
-			getparam(s+1, "black and white", 'b',
-					(void *)&greyscale);
+			getparam(s+1, "black and white", 'b', &greyscale);
 			newparam = prev_newp;
 			break;
 		default:
@@ -644,39 +636,31 @@ setparam(				/* get/set program parameter */
 		}
 		break;
 	case 'i':			/* irradiance */
-		getparam(s+1, "irradiance", 'b',
-				(void *)&do_irrad);
+		getparam(s+1, "irradiance", 'b', &do_irrad);
 		break;
 	case 'a':			/* ambient */
 		switch (s[1]) {
 		case 'v':			/* value */
-			getparam(s+2, "ambient value", 'C',
-					(void *)ambval);
+			getparam(s+2, "ambient value", 'C', ambval);
 			break;
 		case 'w':			/* weight */
-			getparam(s+2, "ambient value weight", 'i',
-					(void *)&ambvwt);
+			getparam(s+2, "ambient value weight", 'i', &ambvwt);
 			break;
 		case 'a':			/* accuracy */
-			if (getparam(s+2, "ambient accuracy", 'r',
-					(void *)&ambacc))
+			if (getparam(s+2, "ambient accuracy", 'r', &ambacc))
 				setambacc(ambacc);
 			break;
 		case 'd':			/* divisions */
-			getparam(s+2, "ambient divisions", 'i',
-					(void *)&ambdiv);
+			getparam(s+2, "ambient divisions", 'i', &ambdiv);
 			break;
 		case 's':			/* samples */
-			getparam(s+2, "ambient super-samples", 'i',
-					(void *)&ambssamp);
+			getparam(s+2, "ambient super-samples", 'i', &ambssamp);
 			break;
 		case 'b':			/* bounces */
-			getparam(s+2, "ambient bounces", 'i',
-					(void *)&ambounce);
+			getparam(s+2, "ambient bounces", 'i', &ambounce);
 			break;
 		case 'r':
-			if (getparam(s+2, "ambient resolution", 'i',
-					(void *)&ambres))
+			if (getparam(s+2, "ambient resolution", 'i', &ambres))
 				setambres(ambres);
 			break;
 		default:
@@ -686,20 +670,16 @@ setparam(				/* get/set program parameter */
 	case 'm':			/* medium */
 		switch (s[1]) {
 		case 'e':			/* extinction coefficient */
-			getparam(s+2, "extinction coefficient", 'C',
-					(void *)cextinction);
+			getparam(s+2, "extinction coefficient", 'C', cextinction);
 			break;
 		case 'a':			/* scattering albedo */
-			getparam(s+2, "scattering albedo", 'C',
-					(void *)salbedo);
+			getparam(s+2, "scattering albedo", 'C', salbedo);
 			break;
 		case 'g':			/* scattering eccentricity */
-			getparam(s+2, "scattering eccentricity", 'r',
-					(void *)&seccg);
+			getparam(s+2, "scattering eccentricity", 'r', &seccg);
 			break;
 		case 's':			/* sampling distance */
-			getparam(s+2, "mist sampling distance", 'r',
-					(void *)&ssampdist);
+			getparam(s+2, "mist sampling distance", 'r', &ssampdist);
 			break;
 		default:
 			goto badparam;
@@ -708,13 +688,11 @@ setparam(				/* get/set program parameter */
 	case 'p':			/* pixel */
 		switch (s[1]) {
 		case 's':			/* sample */
-			if (getparam(s+2, "pixel sample", 'i',
-					(void *)&psample))
+			if (getparam(s+2, "pixel sample", 'i', &psample))
 				pdepth = 0;
 			break;
 		case 't':			/* threshold */
-			if (getparam(s+2, "pixel threshold", 'r',
-					(void *)&maxdiff))
+			if (getparam(s+2, "pixel threshold", 'r', &maxdiff))
 				pdepth = 0;
 			break;
 		default:
@@ -725,12 +703,10 @@ setparam(				/* get/set program parameter */
 	case 's':			/* specular */
 		switch (s[1]) {
 		case 's':			/* sampling */
-			getparam(s+2, "specular sampling", 'r',
-					(void *)&specjitter);
+			getparam(s+2, "specular sampling", 'r', &specjitter);
 			break;
 		case 't':			/* threshold */
-			getparam(s+2, "specular threshold", 'r',
-					(void *)&specthresh);
+			getparam(s+2, "specular threshold", 'r', &specthresh);
 			break;
 		default:
 			goto badparam;
