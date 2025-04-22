@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.77 2025/04/22 15:47:47 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.78 2025/04/22 16:39:20 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -791,14 +791,14 @@ traceray(				/* trace a single ray */
 		if (thisray.rot >= FHUGE*.99)
 			(*dev->comout)("at infinity");
 		else {
-			sprintf(buf, "at (%.6g %.6g %.6g) (%.6g)",
+			sprintf(buf, "at (%.3f %.3f %.3f) (%.6g)",
 					thisray.rop[0], thisray.rop[1],
 					thisray.rop[2], raydistance(&thisray));
 			(*dev->comout)(buf);
 		}
 		(*dev->comin)(buf, NULL);
 		scolor_rgb(col, thisray.rcol);
-		sprintf(buf, "value (%.5g %.5g %.5g) (%.3gL)",
+		sprintf(buf, "value (%.4g %.4g %.4g) (%.3gL)",
 				colval(col,RED),
 				colval(col,GRN),
 				colval(col,BLU),
