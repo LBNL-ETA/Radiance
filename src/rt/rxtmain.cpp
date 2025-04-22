@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.12 2025/03/05 18:56:28 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.13 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.12 2025/03/05 18:56:28 greg Ex
 #include  "rtprocess.h" /* getpid() */
 #include  "platform.h"
 #include  "RtraceSimulManager.h"
+#include  "func.h"
 
 extern char	*progname;		/* global argv[0] */
 
@@ -80,6 +81,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXTRACE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* add trace notify function */
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;

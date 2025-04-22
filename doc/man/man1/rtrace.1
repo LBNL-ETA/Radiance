@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.40 2023/12/12 16:31:45 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.41 2025/04/22 17:12:25 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -260,7 +260,7 @@ This is mostly useful for recovering image dimensions with
 and for creating valid Radiance picture files using the color output
 format.
 (See the
-.I \-f
+.I \-f\*
 option, above.)
 .TP
 .BI -n \ nproc
@@ -280,6 +280,15 @@ There is no benefit from specifying more processes than there are
 cores available on the system or the
 .I \-x
 setting, which forces a wait at each flush.
+.TP
+.BI -f \ source
+Load definitions from
+.I source
+and assign at global level.
+.TP
+.BI -e \ expr
+Set additional definitions from
+.I expr.
 .TP
 .BI -dj \ frac
 Set the direct jittering to

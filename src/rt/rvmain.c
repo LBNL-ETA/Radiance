@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.22 2024/10/30 16:47:03 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.23 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.22 2024/10/30 16:47:03 greg Exp $
 
 #include  "platform.h"
 #include  "ray.h"
+#include  "func.h"
 #include  "source.h"
 #include  "ambient.h"
 #include  "rpaint.h"
@@ -55,6 +56,24 @@ static void onsig(int  signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
 
+static void
+set_defaults(void)
+{
+	shadthresh = .1;
+	shadcert = .25;
+	directrelay = 0;
+	vspretest = 128;
+	srcsizerat = 0.;
+	specthresh = .3;
+	specjitter = 1.;
+	maxdepth = 6;
+	minweight = 1e-3;
+	ambacc = 0.3;
+	ambres = 32;
+	ambdiv = 256;
+	ambssamp = 64;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -75,19 +94,9 @@ main(int argc, char *argv[])
 					/* global program name */
 	progname = argv[0] = fixargv0(argv[0]);
 					/* set our defaults */
-	shadthresh = .1;
-	shadcert = .25;
-	directrelay = 0;
-	vspretest = 128;
-	srcsizerat = 0.;
-	specthresh = .3;
-	specjitter = 1.;
-	maxdepth = 6;
-	minweight = 1e-3;
-	ambacc = 0.3;
-	ambres = 32;
-	ambdiv = 256;
-	ambssamp = 64;
+	set_defaults();
+					/* initialize calcomp routines */
+	initfunc();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */

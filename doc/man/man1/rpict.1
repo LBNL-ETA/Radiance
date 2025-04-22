@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.30 2023/11/15 19:21:54 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.31 2025/04/22 17:12:25 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -280,6 +280,15 @@ Output standard RGB values (the default).
 .TP
 .BR \-pXYZ
 Output standard CIE XYZ tristimulus values rather than RGB.
+.TP
+.BI -f \ source
+Load definitions from
+.I source
+and assign at global level.
+.TP
+.BI -e \ expr
+Set additional definitions from
+.I expr.
 .TP
 .BI -dj \ frac
 Set the direct jittering to
@@ -916,6 +925,8 @@ A value of zero turns automatic reporting off.
 Send error messages and progress reports to
 .I efile
 instead of the standard error.
+(Note this option overlaps with "-e expr" above, so file paths
+with '=' or ':' in them are not allowed on this option.)
 .TP
 .BR \-w
 Boolean switch for warning messages.

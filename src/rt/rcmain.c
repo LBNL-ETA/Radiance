@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.39 2024/10/30 17:26:13 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.40 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -210,8 +210,7 @@ main(int argc, char *argv[])
 		if (_setmaxstdio(i) == i)
 			break;
 #endif
-					/* initialize calcomp routines early */
-	initfunc();
+	initfunc();			/* initialize calcomp routines */
 	calcontext(RCCONTEXT);
 					/* option city */
 	for (i = 1; i < argc; i++) {
@@ -263,10 +262,6 @@ main(int argc, char *argv[])
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
-		case 'e':			/* expression */
-			check(2,"s");
-			scompile(argv[++i], NULL, 0);
-			break;
 		case 'l':			/* limit distance */
 			if (argv[i][2] != 'd')
 				goto badopt;
@@ -275,12 +270,7 @@ main(int argc, char *argv[])
 		case 'I':			/* immed. irradiance */
 			check_bool(2,imm_irrad);
 			break;
-		case 'f':			/* file or force or format */
-			if (!argv[i][2]) {
-				check(2,"s");
-				loadfunc(argv[++i]);
-				break;
-			}
+		case 'f':			/* force or format */
 			if (argv[i][2] == 'o') {
 				check_bool(3,force_open);
 				break;

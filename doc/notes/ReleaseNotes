@@ -2792,3 +2792,6 @@ to get back higher precision representation.
 
 Taoning Wang updated genssky and gensdaymtx to provide illuminance
 calibration and accept EPW files directly as input.
+
+Added -e expr and -f file.cal options to all rendering tools, not
+just rcontrib/rxcontrib.  Feature request from Peter A-B.

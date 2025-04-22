@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.42 2024/10/29 00:36:54 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.43 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -127,8 +127,6 @@ getfunc(	/* get function for this modifier */
 	if ((f = (MFUNC *)m->os) != NULL)
 		return(f);
 	fobj = NULL; fray = NULL;
-	if (rayinitcal[0])		/* initialize on first call */
-		initfunc();
 	if ((na = m->oargs.nsargs) <= ff)
 		goto toofew;
 	arg = m->oargs.sarg;
@@ -261,9 +259,6 @@ worldfunc(			/* special function context sans object */
 )
 {
 	static RNUMBER	lastrno = ~0;
-
-	if (rayinitcal[0])		/* initialize on first call */
-		initfunc();
 					/* set evaluator context */
 	calcontext((char *)ctx);
 					/* check if ray already set */

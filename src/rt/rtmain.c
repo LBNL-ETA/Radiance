@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.57 2025/03/05 18:56:28 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.58 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.57 2025/03/05 18:56:28 greg Exp $
 #include  "rtprocess.h" /* getpid() */
 #include  "resolu.h"
 #include  "ray.h"
+#include  "func.h"
 #include  "source.h"
 #include  "ambient.h"
 #include  "random.h"
@@ -114,6 +115,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RTRACE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* add trace notify function */
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;

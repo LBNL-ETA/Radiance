@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.7 2025/01/02 20:19:48 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.8 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.7 2025/01/02 20:19:48 greg Exp
 #include  "rtprocess.h" /* getpid() */
 #include  "platform.h"
 #include  "RpictSimulManager.h"
+#include  "func.h"
 
 extern char  *progname;			/* argv[0] */
 const char  *sigerr[NSIG];		/* signal error messages */
@@ -107,6 +108,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXPICT_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* set defaults */
 	default_options();
 					/* option city */

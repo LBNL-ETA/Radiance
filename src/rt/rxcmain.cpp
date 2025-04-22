@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.16 2025/03/05 17:29:57 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.17 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -242,10 +242,6 @@ main(int argc, char *argv[])
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
-		case 'e':			/* .cal expression */
-			check(2,"s");
-			scompile(argv[++i], NULL, 0);
-			break;
 		case 'l':			/* limit distance */
 			if (argv[i][2] != 'd')
 				goto badopt;
@@ -258,12 +254,7 @@ main(int argc, char *argv[])
 			check_bool(2,rval);
 			myRCmanager.SetFlag(RTimmIrrad, rval);
 			break;
-		case 'f':			/* .cal file or force or format */
-			if (!argv[i][2]) {
-				check(2,"s");
-				loadfunc(argv[++i]);
-				break;
-			}
+		case 'f':			/* force or format */
 			if (argv[i][2] == 'o') {
 				check_bool(3,force_open);
 				break;

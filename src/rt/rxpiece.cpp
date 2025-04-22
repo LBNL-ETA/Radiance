@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.10 2025/01/09 17:25:37 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.11 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.10 2025/01/09 17:25:37 greg Ex
 
 #include  "platform.h"
 #include  "RpictSimulManager.h"
+#include  "func.h"
 #include  "ambient.h"
 #include  "pmapray.h"
 #include  "random.h"
@@ -104,6 +105,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXPIECE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* set defaults */
 	default_options();
 					/* option city */
