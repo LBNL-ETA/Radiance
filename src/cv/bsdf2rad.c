@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.39 2021/12/07 23:55:02 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.40 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -638,7 +638,7 @@ convert_mgf(const char *mgfdata)
 	if ((fp = popen(cmdbuf, "r")) == NULL ||
 			fscanf(fp, "%f %f %f %f %f %f",
 				&xmin, &xmax, &ymin, &ymax, &zmin, &zmax) != 6
-			|| pclose(fp) < 0) {
+			|| pclose(fp) != 0) {
 		fprintf(stderr, "%s: error reading from command: %s\n",
 				progname, cmdbuf);
 		return;

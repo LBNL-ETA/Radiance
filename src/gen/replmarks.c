@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.18 2021/02/12 00:53:56 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.19 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -183,7 +183,12 @@ cvcomm(		/* convert a command */
 			exit(1);
 		}
 		convert(buf, pin);
-		pclose(pin);
+		if (pclose(pin) != 0) {
+			fprintf(stderr,
+			"%s: (%s): bad status from \"%s\"\n",
+					progname, fname, buf);
+			exit(1);
+		}
 	} else
 		printf("\n%s\n", buf);
 }

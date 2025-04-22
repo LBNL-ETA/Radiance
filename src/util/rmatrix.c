@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.98 2025/04/19 17:12:59 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.99 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -424,7 +424,7 @@ rmx_load(const char *inspec)
 
 	if (fp != stdin) {			/* close input stream */
 		if (inspec[0] == '!')
-			pclose(fp);
+			ok &= pclose(fp)==0;
 		else
 			fclose(fp);
 	}

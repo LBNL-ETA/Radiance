@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.26 2024/12/07 02:05:30 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.27 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -64,9 +64,12 @@ readobj(				/* read in an object file or stream */
 			getobject(inpspec, infp);
 		}
 	}
-	if (inpspec[0] == '!')
-		pclose(infp);
-	else if (infp != stdin)
+	if (inpspec[0] == '!') {
+		if (pclose(infp) != 0) {
+			sprintf(errmsg, "bad status from \"%s\"", inpspec);
+			error(USER, errmsg);
+		}
+	} else if (infp != stdin)
 		fclose(infp);
 #ifdef getc_unlocked
 	else

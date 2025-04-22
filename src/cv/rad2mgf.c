@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.28 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.29 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -193,11 +193,14 @@ rad2mgf(		/* convert a Radiance file to MGF */
 			}
 			break;
 		}
-	printf("# End conversion from: %s\n", inp);
-	if (inp[0] == '!')
-		pclose(fp);
-	else
+	if (inp[0] == '!') {
+		if (pclose(fp) != 0) {
+			fprintf(stderr, "%s: bad exit status\n", inp);
+			exit(1);
+		}
+	} else
 		fclose(fp);
+	printf("# End conversion from: %s\n", inp);
 }
 
 
