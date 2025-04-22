@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.52 2025/04/22 04:45:25 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.53 2025/04/22 14:51:29 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -394,11 +394,9 @@ xfcomm(			/* transform a command */
 			exit(1);
 		}
 		xform(buf, pin);
-		if (pclose(pin) != 0) {
-			fprintf(stderr, "%s: (%s): bad status from \"%s\"\n",
+		if (pclose(pin) != 0)
+			fprintf(stderr, "%s: (%s): warning - bad status from \"%s\"\n",
 					progname, fname, buf);
-			exit(1);
-		}
 	} else {
 		printf("\n%s", buf);
 		if (xac > 1) {

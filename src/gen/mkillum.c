@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.45 2025/04/22 04:45:25 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.46 2025/04/22 14:51:29 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -209,7 +209,7 @@ filter(		/* process stream */
 			filter(pfp, buf);
 			if (pclose(pfp) != 0) {
 				sprintf(errmsg, "bad status from \"%s\"", buf);
-				error(USER, errmsg);
+				error(WARNING, errmsg);
 			}
 		} else {				/* object */
 			ungetc(c, infp);

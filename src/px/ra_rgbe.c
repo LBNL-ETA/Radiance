@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.24 2025/04/22 04:45:25 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.25 2025/04/22 14:51:29 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -192,11 +192,9 @@ transfer(			/* transfer a Radiance picture */
 	if (fflush(fp) == EOF)
 		goto writerr;
 	if (oname[0] == '!') {
-		if (pclose(fp) != 0) {
-			fprintf(stderr, "%s: bad status from \"%s\"\n",
+		if (pclose(fp) != 0)
+			fprintf(stderr, "%s: warning - bad status from \"%s\"\n",
 					progname, oname);
-			exit(1);
-		}
 	} else if (ospec != NULL)
 		fclose(fp);
 	return(1);
