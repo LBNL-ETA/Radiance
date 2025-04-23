@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.12 2024/08/21 20:42:20 greg Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $";
 #endif
 
 
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.12 2024/08/21 20:42:20 greg Exp $
        (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")
    ======================================================================
    
-   $Id: mkpmap.c,v 2.12 2024/08/21 20:42:20 greg Exp $    
+   $Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $    
 */
 
 
@@ -32,6 +32,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.12 2024/08/21 20:42:20 greg Exp $
 #include "ambient.h"
 #include "resolu.h"
 #include "source.h"
+#include "func.h"
 #include <ctype.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -191,7 +192,9 @@ int main (int argc, char* argv [])
    progname = fixargv0(argv [0]);
    /* Initialize object types */
    initotypes();
-   
+   /* initialize calcomp routines */
+   initfunc();
+
    /* Parse options */
    for (i = 1; i < argc; i++) {
       /* Eggs-pand arguments */
