@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.31 2025/04/22 17:12:25 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.32 2025/04/23 15:09:03 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -282,9 +282,12 @@ Output standard RGB values (the default).
 Output standard CIE XYZ tristimulus values rather than RGB.
 .TP
 .BI -f \ source
-Load definitions from
+Load definitions from the file
 .I source
-and assign at global level.
+and assign at the global level.
+The usual set of library directories is searched based on the
+.I RAYPATH
+environment variable.
 .TP
 .BI -e \ expr
 Set additional definitions from

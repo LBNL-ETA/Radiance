@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.25 2025/03/27 01:26:55 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.26 2025/04/23 15:09:03 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -254,12 +254,20 @@ The rules and predefined functions available for these expressions are
 described in the
 .I rcalc(1)
 man page.
-Like
-.I rcalc,
+Like the other rendering tools,
 .I rcontrib
-will search the RADIANCE library directories for each file given in a
+will search the 
+.I RAYPATH
+library directories for each file given in a
 .I \-f
 option.
+However, a special evaluation context is set for the
+.I \-f
+and
+.I \-e
+definitions, so attach a back-quote ('`') to variable and function names
+you wish these to apply at the global evaluation level and used by all
+materials and modifiers during rendering.
 .PP
 If no
 .I \-o

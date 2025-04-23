@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.41 2025/04/22 17:12:25 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.42 2025/04/23 15:09:03 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -282,9 +282,12 @@ cores available on the system or the
 setting, which forces a wait at each flush.
 .TP
 .BI -f \ source
-Load definitions from
+Load definitions from the file
 .I source
-and assign at global level.
+and assign at the global level.
+The usual set of library directories is searched based on the
+.I RAYPATH
+environment variable.
 .TP
 .BI -e \ expr
 Set additional definitions from
