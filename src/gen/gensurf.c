@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.32 2025/04/18 23:02:53 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.33 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -55,7 +55,8 @@ struct {
 } datarec;			/* our recorded data */
 
 /* XXX this is redundant with rt/noise3.c, should go to a library */
-double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
+double  l_hermite(char *), l_bezier(char *),
+		l_bspline(char *), l_dataval(char *);
 
 typedef struct {
 	int  valid;	/* point is valid (vertex number) */

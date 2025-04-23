@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.35 2025/04/22 14:51:29 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.36 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -145,8 +145,6 @@ readoct(				/* read in octree file or stream */
 static char *
 ogetstr(char *s)		/* get null-terminated string */
 {
-	extern char  *getstr();
-
 	if (getstr(s, infp) == NULL)
 		octerror(USER, "truncated octree");
 	return(s);
@@ -157,8 +155,8 @@ static OCTREE
 getfullnode()			/* get a set, return fullnode */
 {
 	OBJECT	set[MAXSET+1];
-	register int  i;
-	register long  m;
+	int  i;
+	long  m;
 
 	if ((set[0] = ogetint(objsize)) > MAXSET)
 		octerror(USER, "bad set in getfullnode");
@@ -174,8 +172,7 @@ getfullnode()			/* get a set, return fullnode */
 static long
 ogetint(int siz)		/* get a siz-byte integer */
 {
-	extern long  getint();
-	register long  r;
+	long  r;
 
 	r = getint(siz, infp);
 	if (feof(infp))
@@ -187,7 +184,6 @@ ogetint(int siz)		/* get a siz-byte integer */
 static double
 ogetflt()			/* get a floating point number */
 {
-	extern double  getflt();
 	double	r;
 
 	r = getflt(infp);
@@ -200,8 +196,8 @@ ogetflt()			/* get a floating point number */
 static OCTREE
 gettree()			/* get a pre-ordered octree */
 {
-	register OCTREE	 ot;
-	register int  i;
+	OCTREE	 ot;
+	int  i;
 	
 	switch (getc(infp)) {
 	case OT_EMPTY:
@@ -227,7 +223,7 @@ static int
 nonsurfintree(OCTREE ot)		/* check tree for modifiers */
 {
 	OBJECT  set[MAXSET+1];
-	register int  i;
+	int  i;
 
 	if (isempty(ot))
 		return(0);
@@ -248,7 +244,7 @@ nonsurfintree(OCTREE ot)		/* check tree for modifiers */
 static void
 skiptree(void)				/* skip octree on input */
 {
-	register int  i;
+	int  i;
 	
 	switch (getc(infp)) {
 	case OT_EMPTY:
