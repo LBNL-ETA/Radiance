@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.23 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.24 2025/04/23 02:35:26 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -12,7 +12,6 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.23 2025/04/22 17:12:25 greg Exp $
 
 #include  "platform.h"
 #include  "ray.h"
-#include  "func.h"
 #include  "source.h"
 #include  "ambient.h"
 #include  "rpaint.h"
@@ -95,8 +94,6 @@ main(int argc, char *argv[])
 	progname = argv[0] = fixargv0(argv[0]);
 					/* set our defaults */
 	set_defaults();
-					/* initialize calcomp routines */
-	initfunc();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */

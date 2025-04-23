@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.21 2024/08/21 16:18:54 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.22 2025/04/23 02:35:26 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -23,6 +23,7 @@ static const char RCSid[] = "$Id: ranimove.c,v 3.21 2024/08/21 16:18:54 greg Exp
 #include "platform.h"
 #include "paths.h"
 #include "ranimove.h"
+#include "func.h"
 
 int		NVARS = NV_INIT; /* total number of variables */
 
@@ -84,6 +85,8 @@ main(
 	int	i;
 
 	progname = argv[0];			/* get arguments */
+						/* initialize calcomp */
+	initfunc();
 	gargc = argc;
 	gargv = argv;
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)

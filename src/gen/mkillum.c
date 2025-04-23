@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.46 2025/04/22 14:51:29 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.47 2025/04/23 02:35:26 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.46 2025/04/22 14:51:29 greg Exp 
 
 #include  "paths.h"		/* win_popen() */
 #include  "mkillum.h"
+#include  "func.h"
 
 				/* default parameters */
 #define  SAMPDENS	48		/* points per projected steradian */
@@ -69,6 +70,8 @@ main(		/* compute illum distributions using rtrace */
 	dstrsrc = 0.5;
 	directrelay = 3;
 	ambounce = 2;
+				/* initialize calcomp routines */
+	initfunc();
 				/* get options from command line */
 	for (i = 1; i < argc; i++) {
 		while ((rval = expandarg(&argc, &argv, i)) > 0)

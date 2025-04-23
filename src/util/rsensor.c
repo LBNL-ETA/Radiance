@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.23 2023/12/16 03:30:35 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.24 2025/04/23 02:35:27 greg Exp $";
 #endif
 
 /*
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: rsensor.c,v 2.23 2023/12/16 03:30:35 greg Exp 
 #include "ray.h"
 #include "platform.h"
 #include "source.h"
+#include "func.h"
 #include "view.h"
 #include "random.h"
 
@@ -101,6 +102,8 @@ main(
 	directrelay = 3;
 	ambounce = 1;
 	maxdepth = -10;
+				/* initialize calcomp routines */
+	initfunc();
 				/* get options from command line */
 	for (i = 1; i < argc; i++) {
 		while ((rval = expandarg(&argc, &argv, i)) > 0)
