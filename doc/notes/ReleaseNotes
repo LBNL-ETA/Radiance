@@ -2795,3 +2795,9 @@ calibration and accept EPW files directly as input.
 
 Added -e expr and -f file.cal options to all rendering tools, not
 just rcontrib/rxcontrib.  Feature request from Peter A-B.
+
+Fixed slight bias in indirect calculation caused by ambient
+collision detection, pointed out by Jon Sargent.  New code
+keeps track of rejected samples and sells them back to
+later calls to get something closer to a true Poisson
+sampling method.

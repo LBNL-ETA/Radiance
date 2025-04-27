@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.98 2025/04/24 01:43:58 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.99 2025/04/27 20:20:01 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -23,6 +23,9 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.98 2025/04/24 01:43:58 greg Exp 
 
 #ifndef MINADIV
 #define MINADIV		7	/* minimum # divisions in each dimension */
+#endif
+#ifndef MINSDIST
+#define MINSDIST	0.25	/* def. min. spacing = 1/4th division */
 #endif
 
 typedef struct {
@@ -62,10 +65,8 @@ ambcollision(				/* proposed direciton collides? */
 {
 	double	cos_thresh;
 	int	ii, jj;
-					/* min. spacing = 1/4th division */
-	cos_thresh = (PI/4.)/(double)hp->ns;
-	if (cos_thresh > 7.*PI/180.)	/* 7 degrees is enough in any case */
-		cos_thresh = 7.*PI/180.;
+
+	cos_thresh = (PI*MINSDIST)/(double)hp->ns;
 	cos_thresh = 1. - .5*cos_thresh*cos_thresh;
 					/* check existing neighbors */
 	for (ii = i-1; ii <= i+1; ii++) {
@@ -89,6 +90,94 @@ ambcollision(				/* proposed direciton collides? */
 	}
 	return(0);			/* nothing to worry about */
 }
+
+
+#define	XLOTSIZ		251		/* size of used car lot */
+#define CFIRST		0		/* first corner */
+#define COTHER		(CFIRST+4)	/* non-corner sample */
+#define CMAXTARGET	(int)(XLOTSIZ*MINSDIST/(1-MINSDIST))
+#define CXCOPY(d,s)	(excharr[d][0]=excharr[s][0], excharr[d][1]=excharr[s][1])
+
+static int
+psample_class(double ss[2])		/* classify patch sample */
+{
+	if (ss[0] < MINSDIST) {
+		if (ss[1] < MINSDIST)
+			return(CFIRST);
+		if (ss[1] > 1.-MINSDIST)
+			return(CFIRST+2);
+	} else if (ss[0] > 1.-MINSDIST) {
+		if (ss[1] < MINSDIST)
+			return(CFIRST+1);
+		if (ss[1] > 1.-MINSDIST)
+			return(CFIRST+3);
+	}
+	return(COTHER);			/* not in a corner */
+}
+
+static void
+trade_patchsamp(double ss[2])		/* trade in problem patch position */
+{
+	static float	excharr[XLOTSIZ][2];
+	static short	gterm[COTHER+1];
+	double		srep[2];
+	int		sclass, rclass;
+	int		x;
+					/* reset on corner overload */
+	if (gterm[COTHER-1] >= (CMAXTARGET+XLOTSIZ)/2)
+		memset(gterm, 0, sizeof(gterm));
+					/* (re-)initialize? */
+	while (gterm[COTHER] < XLOTSIZ) {
+		excharr[gterm[COTHER]][0] = frandom();
+		excharr[gterm[COTHER]][1] = frandom();
+		++gterm[COTHER];
+	}				/* get trade-in candidate... */
+	sclass = psample_class(ss);	/* submitted corner or not? */
+	switch (sclass) {
+	case COTHER:			/* trade mid-edge with corner/any */
+		x = irandom( gterm[COTHER-1] > CMAXTARGET
+				? gterm[COTHER-1] : XLOTSIZ );
+		break;
+	case CFIRST:			/* kick out of first corner */
+		x = gterm[CFIRST] + irandom(XLOTSIZ - gterm[CFIRST]);
+		break;
+	default:			/* kick out of 2nd-4th corner */
+		x = irandom(XLOTSIZ - (gterm[sclass] - gterm[sclass-1]));
+		x += (x >= gterm[sclass-1])*(gterm[sclass] - gterm[sclass-1]);
+		break;
+	}
+	srep[0] = excharr[x][0];	/* save selected trade output */
+	srep[1] = excharr[x][1];
+					/* adjust our lot groups */
+	for (rclass = CFIRST; rclass < COTHER; rclass++)
+		if (x < gterm[rclass])
+			break;
+	if (sclass < rclass) {		/* submitted group before replacement? */
+		CXCOPY(x, gterm[rclass-1]);
+		while (--rclass > sclass) {
+			CXCOPY(gterm[rclass], gterm[rclass-1]);
+			++gterm[rclass];
+		}
+		x = gterm[sclass]++;
+	} else if (sclass > rclass) {	/* submitted group after replacement? */
+		--gterm[rclass];
+		CXCOPY(x, gterm[rclass]);
+		while (++rclass < sclass) {
+			--gterm[rclass];
+			CXCOPY(gterm[rclass-1], gterm[rclass]);
+		}
+		x = gterm[sclass-1];
+	}
+	excharr[x][0] = ss[0];		/* complete the transaction */
+	excharr[x][1] = ss[1];
+	ss[0] = srep[0];
+	ss[1] = srep[1];
+}
+
+#undef CXCOPY
+#undef XLOTSIZ
+#undef COTHER
+#undef CFIRST
 
 
 static int
@@ -121,7 +210,7 @@ ambsample(				/* initial ambient division sample */
 	hlist[1] = AI(hp,i,j);
 	hlist[2] = samplendx;
 	multisamp(ss, 2, urand(ilhash(hlist,3)+n));
-resample:
+patch_redo:
 	square2disk(spt, (j+ss[1])/hp->ns, (i+ss[0])/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
@@ -129,11 +218,10 @@ resample:
 				spt[1]*hp->uy[ii] +
 				zd*hp->onrm[ii];
 	checknorm(ar.rdir);
-					/* avoid coincident samples? */
-	if (!n & (ambacc > FTINY) & (hp->ns >= 4) &&
-			ambcollision(hp, i, j, ar.rdir)) {
-		ss[0] = frandom(); ss[1] = frandom();
-		goto resample;		/* reject this sample */
+					/* avoid coincident samples */
+	if (!n & (hp->ns >= 4) && ambcollision(hp, i, j, ar.rdir)) {
+		trade_patchsamp(ss);
+		goto patch_redo;
 	}
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
 	rayvalue(&ar);			/* evaluate ray */
