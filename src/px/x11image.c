@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.78 2024/11/21 17:15:54 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.79 2025/04/28 01:37:07 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -312,7 +312,7 @@ init(			/* get data and open window */
 	XTextProperty	windowName, iconName;
 	XGCValues	xgcv;
 	char	*name;
-	register int	i;
+	int	i;
 	
 	if (fname != NULL) {
 		scanpos = (long *)malloc(ymax*sizeof(long));
@@ -422,7 +422,7 @@ quiterr(		/* print message and exit */
 	char  *err
 )
 {
-	register int  es;
+	int  es;
 	int  cs;
 
 	if ( (es = (err != NULL)) )
@@ -443,12 +443,12 @@ quiterr(		/* print message and exit */
 
 static int
 viscmp(		/* compare visual to see which is better, descending */
-	register XVisualInfo	*v1,
-	register XVisualInfo	*v2
+	XVisualInfo	*v1,
+	XVisualInfo	*v2
 )
 {
 	int	bad1 = 0, bad2 = 0;
-	register int  *rp;
+	int  *rp;
 
 	if (v1->class == v2->class) {
 		if ((v1->class == TrueColor) | (v1->class == DirectColor)) {
@@ -505,7 +505,7 @@ static char  vistype[][12] = {
 	};
 	XVisualInfo	*xvi;
 	int	vismatched;
-	register int	i, j;
+	int	i, j;
 
 	if (greyscale) {
 		ourrank = rankings[2];
@@ -676,7 +676,7 @@ traceray(			/* print requested pixel data */
 	RREAL  hv[2];
 	FVECT  rorg, rdir;
 	COLOR  cval;
-	register char  *cp;
+	char  *cp;
 
 	bbox.xmin = xpos; bbox.xsiz = 1;
 	bbox.ymin = ypos; bbox.ysiz = 1;
@@ -954,16 +954,17 @@ revbox(			/* draw bbox with reversed lines */
 
 static void
 colavg(
-	register COLR	*scn,
-	register int	n,
+	COLR	*scn,
+	int	n,
 	void *cavg
 )
 {
 	COLOR	col;
 
 	while (n--) {
-		colr_color(col, *scn++);
+		colr_color(col, *scn);
 		addcolor((COLORV*)cavg, col);
+		scn++;
 	}
 }
 
@@ -974,10 +975,10 @@ avgbox(				/* average color over current bbox */
 )
 {
 	double	d;
-	register int	rval;
+	int	rval;
 
 	setcolor(cavg, 0., 0., 0.);
-	rval = dobox(colavg, (void *)cavg);
+	rval = dobox(colavg, cavg);
 	if (rval > 0) {
 		d = 1./rval;
 		scalecolor(cavg, d);
@@ -988,7 +989,6 @@ avgbox(				/* average color over current bbox */
 
 static int
 dobox(				/* run function over bbox */
-	//void	(*f)(),			/* function to call for each subscan */
 	doboxf_t *f,			/* function to call for each subscan */
 	void	*p			/* pointer to private data */
 )
@@ -1013,7 +1013,7 @@ dobox(				/* run function over bbox */
 	if (top >= bottom)
 		return(0);
 	for (y = top; y < bottom; y++) {
-		if (getscan(y) == -1)
+		if (getscan(y) < 0)
 			return(-1);
 		(*f)(scanline+left, right-left, p);
 	}
@@ -1086,7 +1086,7 @@ make_tonemap(void)			/* initialize tone mapping */
 		}
 	}
 	tmCurrent = tmDup(tmGlobal);	/* add fixations to duplicate map */
-	dobox(addfix, (void *)tmCurrent);
+	dobox(addfix, tmCurrent);
 					/* (re)compute tone mapping */
 	if (tmComputeMapping(tmCurrent, gamcor, 0., 0.))
 		goto tmerr;
@@ -1100,11 +1100,11 @@ tmerr:
 
 static void
 tmap_colrs(		/* apply tone mapping to scanline */
-	register COLR  *scn,
+	COLR  *scn,
 	int  len
 )
 {
-	register uby8  *ps;
+	uby8  *ps;
 
 	if (tmflags == TM_F_LINEAR) {
 		if (scale)
@@ -1142,8 +1142,8 @@ tmerr:
 static void
 getmono(void)			/* get monochrome data */
 {
-	register unsigned char	*dp;
-	register int	x, err;
+	unsigned char	*dp;
+	int	x, err;
 	int	y, errp;
 	short	*cerr;
 
@@ -1168,7 +1168,7 @@ getmono(void)			/* get monochrome data */
 			cerr[x] = err + errp;
 		}
 	}
-	free((void *)cerr);
+	free(cerr);
 }
 
 
@@ -1182,8 +1182,8 @@ add2icon(		/* add a scanline to our icon data */
 	static int  ynext;
 	static char  *dp;
 	COLR  clr;
-	register int  err;
-	register int	x, ti;
+	int  err;
+	int	x, ti;
 	int  errp;
 
 	if (iconheight == 0) {		/* initialize */
@@ -1230,9 +1230,9 @@ static void
 getfull(void)			/* get full (24-bit) data */
 {
 	int	y;
-	register uint32	*dp;
-	register uint16	*dph;
-	register int	x;
+	uint32	*dp;
+	uint16	*dph;
+	int	x;
 					/* initialize tone mapping */
 	make_tonemap();
 					/* read and convert file */
@@ -1298,8 +1298,8 @@ static void
 getgrey(void)			/* get greyscale data */
 {
 	int	y;
-	register unsigned char	*dp;
-	register int	x;
+	unsigned char	*dp;
+	int	x;
 					/* initialize tone mapping */
 	make_tonemap();
 					/* read and convert file */
@@ -1357,11 +1357,11 @@ getmapped(void)			/* get color-mapped data */
 
 static void
 scale_rcolors(			/* scale color map */
-	register XRASTER	*xr,
+	XRASTER	*xr,
 	double	sf
 )
 {
-	register int	i;
+	int	i;
 	long	maxv;
 
 	if (xr->pixels == NULL)
@@ -1392,17 +1392,19 @@ getscan(
 {
 	static int  trunced = -1;		/* truncated file? */
 skipit:
-	if (trunced >= 0 && y >= trunced) {
-		memset(scanline, '\0', xmax*sizeof(COLR));
+	if (y == cury-1)			/* already got it? */
+		return(0);
+	if ((trunced >= 0) & (y >= trunced)) {
+		memset(scanline, 0, xmax*sizeof(COLR));
 		return(-1);
 	}
 	if (y != cury) {
-		if (scanpos == NULL || scanpos[y] == -1)
+		if (scanpos == NULL || scanpos[y] < 0)
 			return(-1);
-		if (fseek(fin, scanpos[y], 0) == -1)
+		if (fseek(fin, scanpos[y], 0) < 0)
 			quiterr("fseek error");
 		cury = y;
-	} else if (scanpos != NULL && scanpos[y] == -1)
+	} else if (scanpos != NULL && scanpos[y] < 0)
 		scanpos[y] = ftell(fin);
 
 	if (fread2colrs(scanline, xmax, fin, NCSAMP, WLPART) < 0) {
