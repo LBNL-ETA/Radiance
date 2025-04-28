@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.99 2025/04/27 20:20:01 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.100 2025/04/28 19:30:01 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -146,29 +146,22 @@ trade_patchsamp(double ss[2])		/* trade in problem patch position */
 		x += (x >= gterm[sclass-1])*(gterm[sclass] - gterm[sclass-1]);
 		break;
 	}
-	srep[0] = excharr[x][0];	/* save selected trade output */
+	srep[0] = excharr[x][0];	/* save selected replacement (result) */
 	srep[1] = excharr[x][1];
-					/* adjust our lot groups */
+					/* identify replacement class */
 	for (rclass = CFIRST; rclass < COTHER; rclass++)
 		if (x < gterm[rclass])
-			break;
-	if (sclass < rclass) {		/* submitted group before replacement? */
+			break;		/* repark to keep classes grouped */
+	while (rclass > sclass) {	/* replacement group after submitted? */
 		CXCOPY(x, gterm[rclass-1]);
-		while (--rclass > sclass) {
-			CXCOPY(gterm[rclass], gterm[rclass-1]);
-			++gterm[rclass];
-		}
-		x = gterm[sclass]++;
-	} else if (sclass > rclass) {	/* submitted group after replacement? */
+		x = gterm[--rclass]++;
+	}
+	while (rclass < sclass) {	/* replacement group before submitted? */
 		--gterm[rclass];
 		CXCOPY(x, gterm[rclass]);
-		while (++rclass < sclass) {
-			--gterm[rclass];
-			CXCOPY(gterm[rclass-1], gterm[rclass]);
-		}
-		x = gterm[sclass-1];
+		x = gterm[rclass++];
 	}
-	excharr[x][0] = ss[0];		/* complete the transaction */
+	excharr[x][0] = ss[0];		/* complete the trade-in */
 	excharr[x][1] = ss[1];
 	ss[0] = srep[0];
 	ss[1] = srep[1];
