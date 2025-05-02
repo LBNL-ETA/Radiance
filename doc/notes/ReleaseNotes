@@ -2801,3 +2801,8 @@ collision detection, pointed out by Jon Sargent.  New code
 keeps track of rejected samples and sells them back to
 later calls to get something closer to a true Poisson
 sampling method.
+
+Altered rvu "origin" command to take shift amounts forward,
+right, and up rather than taking an explicit origin, which
+can be done easily enough with the "view" command.  Peter A-B
+requested (sort of).

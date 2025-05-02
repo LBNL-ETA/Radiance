@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.78 2025/04/22 16:39:20 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.79 2025/05/02 23:56:18 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -374,13 +374,20 @@ getorigin(				/* origin viewpoint */
 )
 {
 	VIEW	nv = ourview;
+	FVECT	voff;
+	int	i;
 	double	d;
-					/* get new view origin */
-	if (sscanf(s, "%lf %lf", &d, &d) == 1) {
-					/* just moving some distance */
-		VSUM(nv.vp, nv.vp, nv.vdir, d);
-	} else if (!sscanvec(s, nv.vp)) {
-		int	x, y;		/* need to pick origin */
+					/* check for view origin shift */
+	if (sscanf(s, "%lf", &d) == 1) {
+		double	d_fore=d, d_right=0, d_up=0;
+		sscanf(s, "%*f %lf %lf", &d_right, &d_up);
+		d_right /= sqrt(nv.hn2);
+		for (i = 3; i--; )
+			nv.vp[i] += d_fore*nv.vdir[i] +
+					d_right*nv.hvec[i] +
+					d_up*nv.vup[i];
+	} else {			/* else pick new origin */
+		int	x, y;
 		RAY	thisray;
 		if (dev->getcur == NULL)
 			return;
@@ -401,17 +408,15 @@ getorigin(				/* origin viewpoint */
 			flipsurface(&thisray);
 		VSUM(nv.vp, thisray.rop, thisray.ron, 20.0*FTINY);
 		VCOPY(nv.vdir, thisray.ron);
-	} else if (!sscanvec(sskip2(s,3), nv.vdir) || normalize(nv.vdir) == 0.0)
-		VCOPY(nv.vdir, ourview.vdir);
-
-	d = DOT(nv.vdir, nv.vup);	/* need different up vector? */
-	if (d*d >= 1.-2.*FTINY) {
-		int	i;
-		nv.vup[0] = nv.vup[1] = nv.vup[2] = 0.0;
-		for (i = 3; i--; )
-			if (nv.vdir[i]*nv.vdir[i] < 0.34)
-				break;
-		nv.vup[i] = 1.;
+		d = DOT(nv.vdir, nv.vup);
+		if (d*d >= 1.-2.*FTINY) {
+					/* need different up vector */
+			nv.vup[0] = nv.vup[1] = nv.vup[2] = 0.0;
+			for (i = 3; i--; )
+				if (nv.vdir[i]*nv.vdir[i] < 0.34)
+					break;
+			nv.vup[i] = 1.;
+		}
 	}
 	newview(&nv);
 }
