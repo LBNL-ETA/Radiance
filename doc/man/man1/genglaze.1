@@ -1,0 +1,70 @@
+.TH GENGLAZE "1" "05/02/25" "RADIANCE" ""
+.SH NAME
+genglaze \- calculate multi-layer glazing optical properties
+.SH SYNOPSIS
+.B genglaze
+[\fB\-s\fR \fIstart_wvl end_wvl interval\fR] [\fB\-p\fR \fIprefix\fR] {\fB\-m\fR \fIfile thick\fR | \fB\-c\fR \fIfile\fR}...
+.br
+.B genglaze
+\fB\-h\fR
+.SH DESCRIPTION
+The
+.B genglaze
+program calculates the angular-dependent spectral transmittance and reflectance of a multi-layer glazing system. It takes one or more input spectral data files (\fI.dat\fR), each representing a single layer of glass or coating. Layers are specified sequentially on the command line and must be designated as either monolithic (uncoated glass) using the
+.B \-m
+option, or as coated/laminated using the
+.B \-c
+option. The order specified on the command line defines the assembly order from outside to inside.
+
+The program interpolates the input spectral data onto a wavelength range and interval (either default or specified using
+.BR \-s ).
+It then calculates the angular optical properties (0-90 degrees) for each layer based on its type (monolithic or coated). For monolithic layers, the provided thickness is used along with physics-based models. For coated layers, an empirical angular model is used.
+
+Finally, the program combines the angular properties of the individual layers using standard matrix methods to determine the overall system transmittance and reflectance. The results are written to output spectral files. Radiance material definitions based on the output files are printed to standard output.
+.SH OPTIONS
+.TP
+\fB\-m\fR \fIfilename thickness\fR
+Specify an uncoated (monolithic) glass layer spectral data file (\fIfilename\fR) and the layer \fIthickness\fR specified in \fBmeters\fR.
+.TP
+\fB\-c\fR \fIfilename\fR
+Specify a coated or laminated glass layer spectral data file (\fIfilename\fR). The thickness is not required as an empirical angular model is used.
+.TP
+\fB\-s\fR \fIstart_wvl end_wvl interval\fR
+Specify the wavelength range and interval for calculation and output. \fIstart_wvl\fR and \fIend_wvl\fR are the start and end wavelengths in nanometers (nm). \fIinterval\fR is the wavelength step in nanometers (nm). If not specified, defaults are used (380 nm to 780 nm with a 5 nm interval).
+.TP
+\fB\-p\fR \fIprefix\fR
+Specify a \fIprefix\fR for the output data filenames. The output files will be named \fIprefix\fR\fB_t.dat\fR and \fIprefix\fR\fB_r.dat\fR. If omitted, a default prefix, "unnamed", is sed.
+.TP
+\fB\-h\fR
+Display a help message summarizing usage and options, then exit.
+.SH INPUT FILES
+Input files specified with
+.B \-m
+or
+.B \-c
+should be text files containing spectral measurement at normal incidence. The expected format is Radiance .dat file format:
+.IP
+2
+.IP
+0 2 3
+.IP
+{wavelength range/samples}
+.IP
+{reflectance front data}
+.IP
+{reflectance back data}
+.IP
+{transmittance data}
+.IP
+
+.SH EXAMPLES
+.TP
+Calculate optics for a double-glazing unit with a 6mm clear outer pane and a coated inner pane, using default wavelength settings:
+.B genglaze \-m clear_6mm.dat 0.006 \-c coated_inner.dat
+.TP
+Calculate optics for a triple-glazing unit, specifying a custom wavelength range (400-2500nm, 20nm interval) and output prefix "triple":
+.B genglaze \-s 400 2500 20 \-p triple \-m pane1.dat 0.004 \-c pane2_coated.dat \-m pane3.dat 0.004
+.SH AUTHOR
+Written by Taoning Wang / LBNL, taoningwang@lbl.gov
+.SH "SEE ALSO"
+gensdaymtx(1), gensky(1), genssky(1), rcontrib(1), rpict(1), rtrace(1), rvu(1)

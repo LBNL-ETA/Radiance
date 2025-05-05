@@ -2806,3 +2806,6 @@ Altered rvu "origin" command to take shift amounts forward,
 right, and up rather than taking an explicit origin, which
 can be done easily enough with the "view" command.  Peter A-B
 requested (sort of).
+
+Added genglaze tool created by Taoning Wang to generate
+spectral glazing materials based on CGDB data and models.
