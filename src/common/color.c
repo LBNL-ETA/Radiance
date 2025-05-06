@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.41 2025/03/21 20:04:15 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.42 2025/05/06 20:45:31 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -409,7 +409,7 @@ convertscolor(			/* spectrum conversion, zero-fill ends */
 		if (sdir > 0) {
 			ssi = si = (wl - swl0)/sstp;
 		} else {
-			si = (wl - swl1)/sstp;
+			si = (wl - swl1)/-sstp;
 			ssi = snc-1 - si;
 		}
 		di = 0;
