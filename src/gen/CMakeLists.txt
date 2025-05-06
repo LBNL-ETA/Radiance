@@ -15,7 +15,7 @@ add_executable(genmarble genmarble.c ../common/random.h)
 target_link_libraries(genmarble ${LIB_M})
 
 add_executable(genglaze genglaze.c ../common/data.h)
-target_link_libraries(genglaze rtrace ${LIB_M})
+target_link_libraries(genglaze rtrad ${LIB_M})
 
 add_executable(gensky gensky.c sun.c)
 target_link_libraries(gensky rtrad ${LIB_M})
