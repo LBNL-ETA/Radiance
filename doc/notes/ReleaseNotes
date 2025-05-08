@@ -2809,3 +2809,7 @@ requested (sort of).
 
 Added genglaze tool created by Taoning Wang to generate
 spectral glazing materials based on CGDB data and models.
+
+Fixed bug that caused inf and nan errors with -cw setting
+where longer wavelength was substantially less than limits
+of specified spectra.
