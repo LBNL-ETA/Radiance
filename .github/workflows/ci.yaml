@@ -5,9 +5,8 @@ on:
     branches: [cvsimport]
   schedule:
     - cron: "0 0 * * *"
-  
-  workflow_dispatch:
 
+  workflow_dispatch:
 
 jobs:
   cvs_import:
@@ -61,29 +60,7 @@ jobs:
 
           if [[ "$LAST_COMMIT_ID" != "$LAST_TAG" ]]; then echo "Has new commits since last release"; HAS_NEW_COMMITS_FROM_TAG=true; fi
 
-
-          LAST_RELEASE_SEVEN_DAYS_OLD=false
-          LATEST_DATE=$(git show -s --format=%ai refs/tags/$LAST_TAG)
-          echo $LATEST_DATE
-          if [[ $(($(date '+%s') - $(date -d "$LATEST_DATE" '+%s'))) -gt 7*86400 ]]; then echo "Last release was 7 days ago"; LAST_RELEASE_SEVEN_DAYS_OLD=true; fi
-
-
-          TODAY_IS_SUNDAY=false
-          if [[ $(date +%u) -gt 6 ]]; then echo "Today is Sunday"; TODAY_IS_SUNDAY=true; fi
-
-          RELEASE_TODAY=false
-          if [[ "$TODAY_IS_SUNDAY" == "true" || "$LAST_RELEASE_SEVEN_DAYS_OLD" == "true" ]]; then echo "Last release was 7 days ago or today is sunday"; RELEASE_TODAY=true; fi
-          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
-
-          if [[ "$HAS_NEW_COMMITS_FROM_TAG" == "false" ]]; then echo "No new commit from last release, cancel the release"; RELEASE_TODAY=false; fi
-          if [[ "$RELEASE_TODAY" == "true" ]]; then echo "release today"; fi
-          echo ::set-output name=RELEASE_TODAY::${RELEASE_TODAY}
-
-          if [[ "$HAS_NEW_COMMITS" == "false" && "$RELEASE_TODAY" == "true" ]];
-          then
-              echo ::set-output name=HAS_NEW_COMMITS::${RELEASE_TODAY}
-              echo "No commit, but release a new version today!";
-          fi
+          echo ::set-output name=RELEASE_TODAY::${HAS_NEW_COMMITS_FROM_TAG}
 
       - name: Push updates to master branch
         env:
