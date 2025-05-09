@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.29 2023/03/30 20:19:05 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.30 2025/05/09 12:52:48 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -269,7 +269,7 @@ computesky(void)			/* compute sky parameters */
 	printf("# Ground ambient level: %.1f\n", groundbr);
 	if (!overcast && sundir[2] > 0.0 && (!u_solar || solarbr > 0.0)) {
 		if (u_solar == -1)
-			solarbr /= 6e-5*sundir[2];
+			solarbr /= 5.98e-5*sundir[2];
 		else if (u_solar == 0) {
 			solarbr = 1.5e9/SUNEFFICACY *
 			(1.147 - .147/(sundir[2]>.16?sundir[2]:.16));
