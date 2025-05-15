@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.50 2025/05/05 19:20:16 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.51 2025/05/15 16:36:43 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -92,11 +92,11 @@ genbranch:	genbranch.o
 
 # Assume rt is built before this
 genssky:	genssky.o sun.o atmos.o
-	$(CC) $(CFLAGS) -o genssky genssky.o sun.o atmos.o \
+	$(CC) $(CFLAGS) $(PTHD) -o genssky genssky.o sun.o atmos.o \
 -lrtrad $(MLIB)
 
 gensdaymtx:	gensdaymtx.o sun.o atmos.o loadEPW.o
-	$(CC) $(CFLAGS) -o gensdaymtx gensdaymtx.o sun.o atmos.o \
+	$(CC) $(CFLAGS) $(PTHD) -o gensdaymtx gensdaymtx.o sun.o atmos.o \
 loadEPW.o -lrtrad $(MLIB)
 
 genglaze: genglaze.o
