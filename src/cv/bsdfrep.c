@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.37 2021/12/15 01:38:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.38 2025/05/18 01:46:05 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -225,12 +225,55 @@ rotate_rbf(RBFNODE *rbf, const FVECT invec)
 }
 
 /* Compute outgoing vector from grid position */
+#if 1
 void
 ovec_from_pos(FVECT vec, int xpos, int ypos)
-{
+{				/* precomputed table version */
+	static int	qsiz = 0;
+	static float	(*q_uv)[2] = NULL;
+
+	if (vec == NULL) {	/* just free table? */
+		if (q_uv) free(q_uv);
+		qsiz = 0;
+		return;
+	}
+	if (qsiz != grid_res>>1) {
+		int	x, y;	/* (re)make positive quadrant table */
+		RREAL	uv[2];
+		double	r;
+		if (q_uv) free(q_uv);
+		qsiz = grid_res>>1;
+		q_uv = (float (*)[2])malloc(sizeof(float)*2*qsiz*qsiz);
+		for (y = qsiz; y--; )
+		    for (x = qsiz; x--; ) {
+		    	square2disk(uv, 0.5 + (x+.5)/grid_res,
+		    			0.5 + (y+.5)/grid_res);
+				/* uniform hemispherical projection */
+			r = sqrt(2. - uv[0]*uv[0] - uv[1]*uv[1]);
+		    	q_uv[qsiz*y + x][0] = (float)(r*uv[0]);
+		    	q_uv[qsiz*y + x][1] = (float)(r*uv[1]);
+		    }
+	}
+				/* put in positive quadrant */
+	if (xpos >= qsiz) { xpos -= qsiz; vec[0] = 1.; }
+	else { xpos = qsiz-1 - xpos; vec[0] = -1.; }
+	if (ypos >= qsiz) { ypos -= qsiz; vec[1] = 1.; }
+	else { ypos = qsiz-1 - ypos; vec[1] = -1.; }
+
+	vec[0] *= (RREAL)q_uv[qsiz*ypos + xpos][0];
+	vec[1] *= (RREAL)q_uv[qsiz*ypos + xpos][1];
+	vec[2] = output_orient*sqrt(1. - vec[0]*vec[0] - vec[1]*vec[1]);
+}
+#else
+void
+ovec_from_pos(FVECT vec, int xpos, int ypos)
+{				/* table-free version */
 	RREAL	uv[2];
 	double	r2;
-	
+
+	if (vec == NULL)
+		return;
+
 	square2disk(uv, (xpos+.5)/grid_res, (ypos+.5)/grid_res);
 				/* uniform hemispherical projection */
 	r2 = uv[0]*uv[0] + uv[1]*uv[1];
@@ -239,6 +282,7 @@ ovec_from_pos(FVECT vec, int xpos, int ypos)
 	vec[1] *= uv[1];
 	vec[2] = output_orient*(1. - r2);
 }
+#endif
 
 /* Compute grid position from normalized input/output vector */
 void
