@@ -1,4 +1,4 @@
-# RCSid $Id: UnitTests.txt,v 1.18 2022/03/15 00:25:50 greg Exp $
+# RCSid $Id: UnitTests.txt,v 1.19 2025/05/20 22:55:53 greg Exp $
 #
 # Remember to add binary files using "cvs add -kb file"
 #
@@ -43,6 +43,9 @@ replmarks
 Missing:
 ++++++++
 gendaylit
+genglaze
+genssky
+gensdaymtx
 -----------------------
 Tools tested in "util":
 =======================
@@ -65,8 +68,10 @@ Missing:
 ++++++++
 findglare
 genBSDF
+pvsum
 ranimate
 ranimove
+rcomb
 rsensor
 evalglare
 ---------------------
@@ -80,13 +85,16 @@ robjutil
 ++++++++
 Missing:
 ++++++++
+3ds2mgf
 bsdf2rad
+bsdfquery
 epq2wea
 ies2rad
 optics2rad
 mgf2meta
-pabopto2xyz
+mgfilt
 pabopto2bsdf
+pabopto2xyz
 bsdf2ttree
 bsdf2klems
 pkgBSDF
