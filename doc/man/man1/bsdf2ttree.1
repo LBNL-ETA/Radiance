@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.12 2023/09/12 16:40:57 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.13 2025/05/21 20:42:48 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -89,7 +89,7 @@ The
 .I \-n
 option controls the number of super-samples to send in patches whose
 difference to its neighbors exceeds some threshold.
-The default number of super-samples is 256.
+The default number of super-samples is 64.
 The difference threshold for super-sampling is controlled by the
 .I \-s
 option, and defaults to 0.35.

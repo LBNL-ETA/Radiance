@@ -2816,3 +2816,7 @@ of specified spectra.
 
 Created bsdfpeaks utility to identify and report full-width,
 half-maximum sizes of peaks in SIR and XML inputs.
+
+Changed default super-sampling in bsdf2ttree from 256 to 64,
+since there doesn't seem to be much benefit to the higher
+sampling rate for most BSDFs.

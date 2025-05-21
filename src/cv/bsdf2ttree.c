@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.61 2024/02/23 03:47:57 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.62 2025/05/21 20:42:48 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -28,7 +28,7 @@ static int		samp_order = 6;
 				/* super-sampling threshold */
 static double		ssamp_thresh = 0.35;
 				/* number of super-samples */
-static int		nssamp = 256;
+static int		nssamp = 64;
 				/* limit on number of RBF lobes */
 static int		lobe_lim = 15000;
 				/* progress bar length */
