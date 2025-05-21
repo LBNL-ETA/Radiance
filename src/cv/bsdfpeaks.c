@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.2 2025/05/21 21:21:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.3 2025/05/21 23:10:55 greg Exp $";
 #endif
 /*
  *  Compute minimum FWHM peak for each incident direction in SIR input.
@@ -13,10 +13,10 @@ static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.2 2025/05/21 21:21:25 greg Exp
 #include "bsdfrep.h"
 
 typedef struct {
-	float	peakv;		/* peak BSDF value */
-	float	width;		/* smallest FWHM (deg) */
-	RBFNODE	*rbs;		/* incident system */
-	int	ndx;		/* peak index for RBFVAL */
+	float		peakv;		/* peak BSDF value */
+	float		width;		/* smallest FWHM (deg) */
+	const RBFNODE	*rbs;		/* incident system */
+	int		ndx;		/* peak index for RBFVAL */
 } FWHM;			/* struct to hold peak value */
 
 typedef double	eval_f(const FVECT vin, const FVECT vout, const void *p);
@@ -90,14 +90,14 @@ getFWHM(const FVECT vin, const FVECT vc, double rad0, eval_f *ev, const void *p)
 void
 getOutDir(FVECT vo, FWHM *dp)
 {
-	RBFVAL	*vp = dp->rbs->rbfa + dp->ndx;
+	const RBFVAL	*vp = dp->rbs->rbfa + dp->ndx;
 
 	ovec_from_pos(vo, vp->gx, vp->gy);
 }
 
 /* Assign FWHM record for specified RBF system */
 void
-assignFWHM(FWHM *dp, RBFNODE *rbf)
+assignFWHM(FWHM *dp, const RBFNODE *rbf)
 {
 	FVECT	vo;
 	int	j;
@@ -121,12 +121,12 @@ assignFWHM(FWHM *dp, RBFNODE *rbf)
 int
 main(int argc, char *argv[])
 {
-	RBFNODE	*rbf;
-	SDData	*sdp;
-	FILE	*fp;
-	int	ndirs;
-	FWHM	*peaka;
-	int	i;
+	const RBFNODE	*rbf;
+	SDData		*sdp;
+	FILE		*fp;
+	int		ndirs;
+	FWHM		*peaka;
+	int		i;
 
 	progname = argv[0];
 	if (argc < 2)
