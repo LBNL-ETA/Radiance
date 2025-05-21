@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.1 2025/05/21 17:23:07 greg Exp $";
+static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.2 2025/05/21 21:21:25 greg Exp $";
 #endif
 /*
  *  Compute minimum FWHM peak for each incident direction in SIR input.
@@ -19,7 +19,7 @@ typedef struct {
 	int	ndx;		/* peak index for RBFVAL */
 } FWHM;			/* struct to hold peak value */
 
-typedef double	eval_f(const FVECT vin, const FVECT vout, void *p);
+typedef double	eval_f(const FVECT vin, const FVECT vout, const void *p);
 
 char	*progname;		/* needed by bsdfrep.c */
 
@@ -37,20 +37,20 @@ cmpFWHM(const void *p0, const void *p1)
 
 /* BSDF evaluation function for RBF system */
 double
-rbf_eval(const FVECT vin, const FVECT vout, void *p)
+rbf_eval(const FVECT vin, const FVECT vout, const void *p)
 {
 	/* XXX verify vin == p->invec ? */
-	return(eval_rbfrep((RBFNODE *)p, vout));
+	return(eval_rbfrep((const RBFNODE *)p, vout));
 }
 
 /* BSDF evaluation for XML input */
 double
-bsdf_eval(const FVECT vin, const FVECT vout, void *p)
+bsdf_eval(const FVECT vin, const FVECT vout, const void *p)
 {
 	SDValue	sv;
 
 	if (SDreportError(
-			SDevalBSDF(&sv, vin, vout, (SDData *)p),
+			SDevalBSDF(&sv, vin, vout, (const SDData *)p),
 			stderr))
 		exit(1);
 
@@ -59,7 +59,7 @@ bsdf_eval(const FVECT vin, const FVECT vout, void *p)
 
 /* Find full-width, half-maximum in radians around BSDF direction */
 double
-getFWHM(const FVECT vin, const FVECT vc, double rad0, eval_f *ev, void *p)
+getFWHM(const FVECT vin, const FVECT vc, double rad0, eval_f *ev, const void *p)
 {
 	const double	peakv = (*ev)(vin, vc, p);
 	double		rad1 = rad0;			/* current radii */
@@ -73,7 +73,7 @@ getFWHM(const FVECT vin, const FVECT vc, double rad0, eval_f *ev, void *p)
 	    	spinvector(vt, v0, vc, phi);
 	    	if ((*ev)(vin, vt, p) <= .5*peakv) {	/* found one side? */
 		    FVECT	vt1;
-		    while (rad1 < M_PI/2.) {		/* find opposite */
+		    while (rad1 < M_PI/2.) {		/* bracket peak */
 			geodesic(vt1, vt, vc, rad0+rad1, GEOD_RAD);
 			if ((*ev)(vin, vt1, p) <= .5*peakv)
 			    return(rad0+rad1);		/* got both! */
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
 
 			printf("\t%.1f", 180./M_PI * getFWHM(peaka[i].rbs->invec,
 						vout, sqrt(psa/M_PI),
-						bsdf_eval, (void *)sd));
+						bsdf_eval, sd));
 		}
 		fputc('\n', stdout);
 	}
