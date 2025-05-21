@@ -51,6 +51,9 @@ target_link_libraries(bsdf2rad rtrad)
 add_executable(bsdfquery bsdfquery.c bsdfrep.c bsdfinterp.c)
 target_link_libraries(bsdfquery rtrad)
 
+add_executable(bsdfpeaks bsdfpeaks.c bsdfrep.c bsdfinterp.c)
+target_link_libraries(bsdfpeaks rtrad)
+
 add_executable(bsdf2ttree bsdf2ttree.c bsdfrep.c bsdfinterp.c)
 target_link_libraries(bsdf2ttree rtrad)
 

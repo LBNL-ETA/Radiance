@@ -2813,3 +2813,6 @@ spectral glazing materials based on CGDB data and models.
 Fixed bug that caused inf and nan errors with -cw setting
 where longer wavelength was substantially less than limits
 of specified spectra.
+
+Created bsdfpeaks utility to identify and report full-width,
+half-maximum sizes of peaks in SIR and XML inputs.

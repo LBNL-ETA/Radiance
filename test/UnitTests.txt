@@ -1,4 +1,4 @@
-# RCSid $Id: UnitTests.txt,v 1.19 2025/05/20 22:55:53 greg Exp $
+# RCSid $Id: UnitTests.txt,v 1.20 2025/05/21 17:23:07 greg Exp $
 #
 # Remember to add binary files using "cvs add -kb file"
 #
@@ -87,6 +87,7 @@ Missing:
 ++++++++
 3ds2mgf
 bsdf2rad
+bsdfpeaks
 bsdfquery
 epq2wea
 ies2rad
