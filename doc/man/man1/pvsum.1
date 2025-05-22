@@ -1,4 +1,4 @@
-.\" RCSid $Id: pvsum.1,v 1.3 2025/03/28 16:36:31 greg Exp $"
+.\" RCSid $Id: pvsum.1,v 1.4 2025/05/22 21:39:42 greg Exp $"
 .TH PVSUM 1 12/09/09 RADIANCE
 .SH NAME
 pvsum - sum component Radiance pictures based on vector or matrix
@@ -92,29 +92,23 @@ gensdaymtx -of sfo.epw | pvsum -o timestep%04d.hsr -N 10 tregcomp%03d.hsr
 .SH NOTES
 This tool overlaps with
 .I dctimestep,
-but provides some important capabilities.
-First,
+but provides some missing capabilities.
+Foremost,
 .I pvsum
 reads and can produce spectral pictures and matrices, whereas
 .I dctimestep
 expects and requires 3-component pictures and matrices throughout.
-Changing the data structures in
-.I dctimestep
-proved too difficult and likely to
-lead to a less efficient implementation, especially on systems with
-limited memory.
-In contrast,
+In addition,
 .I pvsum
 accelerates picture sums on Unix systems with more
-memory and processint ability.
-Second, operation was simplified by focusing on the Daylight Coefficient
+memory and CPU cores.
+Operations were simplified by focusing on the Daylight Coefficient
 command form, where the DC matrix is represented as a collection of
 pictures.
-By excluding the other operation modes of
-.I dctimestep,
-new functionality could be explored and optimized,
-such as floating-point support and
-sending output to commands as well as files.
+Finally,
+.I pvsum
+offers more flexible floating-point support and
+can output to commands as well as files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
