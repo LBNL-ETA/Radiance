@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.35 2024/01/17 00:43:45 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.36 2025/05/23 17:02:07 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -19,6 +19,14 @@ static const char	RCSid[] = "$Id: mgf2rad.c,v 2.35 2024/01/17 00:43:45 greg Exp 
 #define putv(v)		printf("%18.12g %18.12g %18.12g\n",(v)[0],(v)[1],(v)[2])
 
 #define invert		(xf_context != NULL && xf_context->rev)
+
+#define	SGEN_DEF	"spec*"
+#define SGEN_RS		"rs_spec*"
+#define SGEN_TD		"td_spec*"
+#define SGEN_TS		"ts_spec*"
+
+char	void_str[] = "void";		/* global VOIDID */
+char	sgen_str[16] = SGEN_DEF;	/* generic specular */
 
 double	glowdist = FHUGE;		/* glow test distance */
 
@@ -43,6 +51,9 @@ extern char * object(void);
 extern char * addarg(char *op, char *arg);
 extern void do_tri(char *mat, C_VERTEX *cv1, C_VERTEX *cv2, C_VERTEX *cv3, int iv);
 extern void cvtcolor(COLOR radrgb, C_COLOR *ciec, double intensity);
+extern int color_clash(int e1, int e2);
+extern int isgrey(COLOR rgb);
+extern void putrgbpat(char *pnm, COLOR rgb);
 extern char * specolor(COLOR radrgb, C_COLOR *ciec, double intensity);
 
 
@@ -520,6 +531,7 @@ char *
 material(void)			/* get (and print) current material */
 {
 	char	*mname = "mat";
+	C_COLOR	*refclr = NULL;
 	char	*pname;
 	COLOR	radrgb, c2;
 	double	d;
@@ -577,8 +589,51 @@ material(void)			/* get (and print) current material */
 				c_cmaterial->nr);
 		return(mname);
 	}
+					/* check for WGMDfunc */
+	if (((c_cmaterial->rs > .02) & (c_cmaterial->ts > .02) &&
+			fabs(c_cmaterial->rs_a - c_cmaterial->ts_a) > .02) ||
+			((c_cmaterial->rs > .05) & (c_cmaterial->rd > .05) &&
+				!c_isgrey(&c_cmaterial->rs_c) &&
+				!c_equiv(&c_cmaterial->rd_c, &c_cmaterial->rs_c)) ||
+			color_clash(MG_E_TS, MG_E_TD) ||
+			color_clash(MG_E_TD, MG_E_RD) ||
+			color_clash(MG_E_RD, MG_E_TS)) {
+		COLOR	rs_rgb, ts_rgb, td_rgb;	/* separate modifier paths */
+		char	rs_pname[128], ts_pname[128], td_pname[128];
+		strcpy(sgen_str, SGEN_RS);
+		strcpy(rs_pname, specolor(rs_rgb, &c_cmaterial->rs_c, c_cmaterial->rs));
+		strcpy(sgen_str, SGEN_TS);
+		strcpy(ts_pname, specolor(ts_rgb, &c_cmaterial->ts_c, c_cmaterial->ts));
+		strcpy(sgen_str, SGEN_TD);
+		strcpy(td_pname, specolor(td_rgb, &c_cmaterial->td_c, c_cmaterial->td));
+		strcpy(sgen_str, SGEN_DEF);
+		pname = specolor(radrgb, &c_cmaterial->rd_c, c_cmaterial->rd);
+		if (!strcmp(rs_pname, void_str) && !isgrey(rs_rgb)) {
+			putrgbpat(strcpy(rs_pname,"rs_rgb*"), rs_rgb);
+			colval(rs_rgb,GRN) = 1;
+		}
+		if (!strcmp(ts_pname, void_str) && !isgrey(ts_rgb)) {
+			putrgbpat(strcpy(ts_pname,"ts_rgb*"), ts_rgb);
+			colval(ts_rgb,GRN) = 1;
+		}
+		fprintf(matfp, "\n%s WGMDfunc %s\n", pname, mname);
+		fprintf(matfp, "13\t%s %f %f %f\n", rs_pname, colval(rs_rgb,GRN),
+				c_cmaterial->rs_a, c_cmaterial->rs_a);
+		fprintf(matfp, "\t%s %f %f %f\n", ts_pname, colval(ts_rgb,GRN),
+				c_cmaterial->ts_a, c_cmaterial->ts_a);
+		fprintf(matfp, "\t%s\n\t0 0 1 .\n0\n", td_pname);
+		fprintf(matfp, "9\t%f %f %f\n", colval(radrgb,RED),
+				colval(radrgb,GRN), colval(radrgb,BLU));
+		fprintf(matfp, "\t%f %f %f\n", colval(radrgb,RED),
+				colval(radrgb,GRN), colval(radrgb,BLU));
+		fprintf(matfp, "\t%f %f %f\n", colval(td_rgb,RED),
+				colval(td_rgb,GRN), colval(td_rgb,BLU));
+		if (c_cmaterial->sided)
+			putsided(mname);
+		return(mname);
+	}
 					/* check for trans */
-	if (c_cmaterial->td > .01 || c_cmaterial->ts > .01) {
+	if (c_cmaterial->td + c_cmaterial->ts > .01) {
 		double	a5, a6;
 						/* average colors */
 		d = c_cmaterial->rd + c_cmaterial->td + c_cmaterial->ts;
@@ -654,11 +709,62 @@ cvtcolor(	/* convert a CIE XYZ color to RGB */
 {
 	COLOR	ciexyz;
 
+	if (intensity <= 0) {
+		setcolor(radrgb, 0, 0, 0);
+		return;
+	}
 	c_ccvt(ciec, C_CSXY);		/* get xy representation */
 	ciexyz[1] = intensity;
 	ciexyz[0] = ciec->cx/ciec->cy*ciexyz[1];
 	ciexyz[2] = ciexyz[1]*(1./ciec->cy - 1.) - ciexyz[0];
 	cie_rgb(radrgb, ciexyz);
+}
+
+
+int color_clash(	/* do non-zero material components clash? */
+	int e1,
+	int e2
+)
+{
+	C_COLOR	*c1;
+
+	if (e1 == e2)
+		return(0);
+	switch (e1) {
+	case MG_E_RD:
+		if (c_cmaterial->rd <= .01) return(0);
+		c1 = &c_cmaterial->rd_c;
+		break;
+	case MG_E_RS:
+		if (c_cmaterial->rs <= .01) return(0);
+		c1 = &c_cmaterial->rs_c;
+		break;
+	case MG_E_TD:
+		if (c_cmaterial->td <= .01) return(0);
+		c1 = &c_cmaterial->td_c;
+		break;
+	case MG_E_TS:
+		if (c_cmaterial->ts <= .01) return(0);
+		c1 = &c_cmaterial->ts_c;
+		break;
+	default:
+		return(0);
+	}
+	switch (e2) {
+	case MG_E_RD:
+		if (c_cmaterial->rd <= .01) return(0);
+		return(!c_equiv(c1, &c_cmaterial->rd_c));
+	case MG_E_RS:
+		if (c_cmaterial->rs <= .01) return(0);
+		return(!c_equiv(c1, &c_cmaterial->rs_c));
+	case MG_E_TD:
+		if (c_cmaterial->td <= .01) return(0);
+		return(!c_equiv(c1, &c_cmaterial->td_c));
+	case MG_E_TS:
+		if (c_cmaterial->ts <= .01) return(0);
+		return(!c_equiv(c1, &c_cmaterial->ts_c));
+	}
+	return(0);
 }
 
 
@@ -693,23 +799,23 @@ specolor(	/* check if color has spectra and output accordingly */
 	double	mult;
 	int	cbeg, cend, i;
 
-	if (!dospectra | !(clr->flags & C_CDSPEC)) {
+	if (!dospectra | !(clr->flags & C_CDSPEC) | (intensity <= FTINY)) {
 		cvtcolor(radrgb, clr, intensity);
-		return("void");			/* just use RGB */
+		return(void_str);		/* just use RGB */
 	}
 	setcolor(radrgb, intensity, intensity, intensity);
 	for (cbeg = 0; cbeg < C_CNSS; cbeg++)	/* trim zeros off beginning */
 		if (clr->ssamp[cbeg])
 			break;
 	if (cbeg >= C_CNSS)			/* should never happen! */
-		return("void");
+		return(void_str);
 	if (clr->client_data != NULL) {		/* get name if available */
 		strcpy(spname, (char *)clr->client_data);
 		strcat(spname, "*");		/* make sure it's special */
 		if (!newspecdef(clr))		/* output already? */
 			return(spname);
 	} else
-		strcpy(spname, "spec*");
+		strcpy(spname, sgen_str);
 	c_ccvt(clr, C_CSEFF);			/* else output spectrum prim */
 	for (cend = 0; !clr->ssamp[C_CNSS-1-cend]; cend++)
 		;				/* trim zeros off end */
@@ -723,6 +829,35 @@ specolor(	/* check if color has spectra and output accordingly */
 	}
 	fputc('\n', matfp);
 	return(spname);
+}
+
+
+int
+isgrey(				/* is RGB close match to grey? */
+	COLOR rgb
+)
+{
+	const double	yv = bright(rgb);
+	double		diff2 = 0;
+	int		i;
+
+	for (i = 3; i--; ) {
+		double	d = yv - colval(rgb,i);
+		diff2 += d*d;
+	}
+	return(diff2 <= yv*yv*0.0025);
+}
+
+
+void
+putrgbpat(			/* put out RGB pattern with given name */
+	char *pnm,
+	COLOR rgb
+)
+{
+	fprintf(matfp, "\nvoid colorfunc %s\n", pnm);
+	fprintf(matfp, "4 %f %f %f .\n0\n0\n", colval(rgb,RED),
+			colval(rgb,GRN), colval(rgb,BLU));
 }
 
 
