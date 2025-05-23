@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.41 2024/12/09 00:44:29 greg Exp $
+# RCSid $Id: Makefile,v 1.42 2025/05/23 19:42:48 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -17,17 +17,7 @@ RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 IMG_CMP = radcompare -rel 0.007 -rms 0.1 -max 1.5
 
 # Default target is to test everything
-all:	test-xform test-oconv test-rad test-rfluxmtx test-rpiece \
-test-rpict test-mkpmap \
-test-trans2-def test-trans2-fish test-trans2-win \
-test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
-test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
-test-mesh-def test-mesh-cyl test-mesh-cyl2 test-mist-def \
-test-dielectric-def test-dielectric-fish test-trans-def \
-test-glass-def test-glass-fish test-glass-up \
-test-trans-fish test-patterns-def test-patterns-plan \
-test-rtrace test-mirror-fish test-obj2mesh \
-test-prism1-fish test-prism2-fish test-spectra-fish test-wgmdf-def
+all:	batch1 batch2 batch3 batch4
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \

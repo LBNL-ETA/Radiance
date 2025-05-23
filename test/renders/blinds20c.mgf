@@ -1,3 +1,4 @@
+# RCSid: $Id: blinds20c.mgf,v 1.2 2025/05/23 19:42:48 greg Exp $
 # Y-axis points "up", Z-axis into room, right-handed coordinates
 m MagentaPlastic =
 	c

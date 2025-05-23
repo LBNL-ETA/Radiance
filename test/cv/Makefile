@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.2 2022/03/03 00:12:23 greg Exp $
+# RCSid $Id: Makefile,v 1.3 2025/05/23 19:42:48 greg Exp $
 #
 # Unit tests for tools built in src/cv
 #
@@ -31,10 +31,10 @@ test-robjutil:	rounded_box.obj
 test-rad2mgf:	sawtooth.mgf
 	radcompare -n -c# ref/sawtooth.mgf sawtooth.mgf 
 
-test-mgf2rad:	sawtooth.mgf
-	mgf2rad sawtooth.mgf > sawtooth_rec.rad
-	radcompare -c# ref/sawtooth_rec.rad sawtooth_rec.rad
-	rm -f sawtooth_rec.rad
+test-mgf2rad:	testspecmat.mgf sawtooth.mgf
+	mgf2rad -s testspecmat.mgf sawtooth.mgf > reconv.rad
+	radcompare -c# ref/reconv.rad reconv.rad
+	rm -f reconv.rad
 
 sawtooth.mgf:	sawtooth.rad sawtooth.pts
 	rad2mgf sawtooth.rad > sawtooth.mgf
