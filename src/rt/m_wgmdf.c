@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.9 2024/12/20 16:29:50 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.10 2025/05/23 17:09:26 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -256,7 +256,7 @@ set_scomp(WGMDDAT *wp, int trans)
 	if (normalize(sp->v) == 0.0) {	/* orientation vector==normal? */
 		if (fabs(sp->u_alpha - sp->v_alpha) > 0.001)
 			objerror(wp->mtp, WARNING, "bad orientation vector");
-		getperpendicular(sp->u, sp->mo.pnorm, 1);	/* punting */
+		getperpendicular(sp->u, sp->mo.pnorm, 0);	/* punting */
 		fcross(sp->v, sp->mo.pnorm, sp->u);
 		sp->u_alpha = sp->v_alpha = sqrt( 0.5 *
 			(sp->u_alpha*sp->u_alpha + sp->v_alpha*sp->v_alpha) );

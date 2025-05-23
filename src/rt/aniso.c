@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.68 2024/12/20 16:29:50 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.69 2025/05/23 17:09:26 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -324,7 +324,7 @@ getacoords(		/* set up coordinate system */
 	if (normalize(np->v) == 0.0) {
 		if (fabs(np->u_alpha - np->v_alpha) > 0.001)
 			objerror(np->mp, WARNING, "illegal orientation vector");
-		getperpendicular(np->u, np->pnorm, 1);	/* punting */
+		getperpendicular(np->u, np->pnorm, 0);	/* punting */
 		fcross(np->v, np->pnorm, np->u);
 		np->u_alpha = np->v_alpha = sqrt( 0.5 *
 			(np->u_alpha*np->u_alpha + np->v_alpha*np->v_alpha) );
