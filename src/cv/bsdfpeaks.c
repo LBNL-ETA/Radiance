@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.3 2025/05/21 23:10:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.4 2025/05/25 17:41:10 greg Exp $";
 #endif
 /*
  *  Compute minimum FWHM peak for each incident direction in SIR input.
@@ -194,9 +194,14 @@ main(int argc, char *argv[])
 			printf("\t%.1f", 180./M_PI * getFWHM(peaka[i].rbs->invec,
 						vout, sqrt(psa/M_PI),
 						bsdf_eval, sd));
+			SDfreeCache(sd);
 		}
 		fputc('\n', stdout);
 	}
+	/*			we're exiting, anyway...
+	SDfreeCache(NULL);
+	clear_bsdf_rep();
+	*/
 	return(0);
 userr:
 	fprintf(stderr, "Usage: %s bsdf.sir [bsdfrep1.xml ..]\n", progname);
