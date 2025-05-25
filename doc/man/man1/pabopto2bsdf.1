@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pabopto2bsdf.1,v 1.10 2022/06/14 17:45:53 greg Exp $"
+.\" RCSid "$Id: pabopto2bsdf.1,v 1.11 2025/05/25 17:57:18 greg Exp $"
 .TH PABOPTO2BSDF 1 2/24/2021 RADIANCE
 .SH NAME
 pabopto2bsdf - convert BSDF measurements to a scattering interpolant representation
@@ -255,10 +255,11 @@ The same theta and phi are used for incoming and scattered angles,
 so theta=180 is the opposite side surface normal.
 This differs from the WINDOW, which use separate
 coordinate systems for the front and the back.
-To confusing things further, notions of "front" and "back" are
+To confuse things further, notions of "front" and "back" are
 opposite in WINDOW and RADIANCE.
 In RADIANCE, the normal of a window surface usually faces the
-interior of a space.
+interior of a space, where the WINDOW convention uses "FRONT"
+for the exterior of a building.
 .PP
 In the
 .I genBSDF(1)
