@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.40 2024/12/13 18:17:17 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.41 2025/05/29 16:42:28 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 6.0 Synthetic Imaging System
@@ -585,6 +585,26 @@ This is only appropriate if the surface hides other (more detailed) geometry wit
         0
         3 red green blue
 </pre>
+
+While alternate materials that are reflective will appear as normal,
+indirect rays will use the mirror's reflectance rather than the
+alternate type.
+Transmitting materials are an exception, where both transmission and
+reflection will use the alternate type for all rays not specifically
+targeting virtual light sources.
+Therefore, transmitting alternate types should only have pure specular
+reflection if they reflect at all, to maintain a valid calculation.
+
+<p>
+
+The mirror material type reflects light sources only from the front side
+of a surface, regardless of any alternate material.
+If virtual source generation is desired on both sides, two coincident
+surfaces with opposite normal orientations may be employed to achieve
+this effect.
+The reflectance and alternate material type may be
+different for the overlapped surfaces,
+and the two sides will behave accordingly.
 
 <p>
 

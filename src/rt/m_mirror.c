@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.23 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.24 2025/05/29 16:42:28 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: m_mirror.c,v 2.23 2023/11/15 18:02:53 greg Exp
 
 #include  "ray.h"
 #include  "otypes.h"
+#include  "otspecial.h"
 #include  "rtotypes.h"
 #include  "source.h"
 
@@ -44,14 +45,24 @@ m_mirror(			/* shade mirrored ray */
 		objerror(m, USER, "bad number of arguments");
 					/* check for substitute material */
 					/* but avoid double-counting */
-	if ( m->oargs.nsargs > 0 &&
-			(r->rsrc < 0 || source[r->rsrc].so != r->ro) &&
-			!(r->crtype & (AMBIENT|SPECULAR) && r->rod > 0.) ) {
-		if (!strcmp(m->oargs.sarg[0], VOIDID)) {
-			raytrans(r);
+	if (m->oargs.nsargs > 0 &&
+			(r->rsrc < 0 || source[r->rsrc].so != r->ro)) {
+		int	passOK = (r->rod < 0.) |
+					!(r->crtype & (AMBIENT|SPECULAR));
+		if (strcmp(m->oargs.sarg[0], VOIDID)) {
+			OBJECT	altmod = lastmod(objndx(m), m->oargs.sarg[0]);
+			OBJREC	*altmat;
+			if (passOK)		/* no double-count hazard? */
+				return(rayshade(r, altmod));
+			if (altmod == OVOID ||	/* else check alternate type */
+					(altmat = findmaterial(objptr(altmod))) == NULL)
+				return(0);
+			if (istransp(altmat))	/* pass "transparent" materials */
+				return(rayshade(r, altmod));
+		} else if (passOK) {
+			raytrans(r);		/* "safe" void passage */
 			return(1);
 		}
-		return(rayshade(r, lastmod(objndx(m), m->oargs.sarg[0])));
 	}
 					/* check for bad source ray */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)

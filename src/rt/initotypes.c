@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.34 2025/05/28 19:13:13 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.35 2025/05/29 16:42:28 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -36,6 +36,7 @@ initotypes(void)			/* initialize ofun array */
 	ofun[MAT_SPOT].funp = m_light;
 	ofun[MAT_LIGHT].flags |= T_OPAQUE;
 	ofun[MAT_SPOT].flags |= T_OPAQUE;
+	ofun[MAT_GLOW].flags |= T_OPAQUE;
 	ofun[MAT_PLASTIC].funp =
 	ofun[MAT_METAL].funp =
 	ofun[MAT_TRANS].funp = m_normal;
