@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.48 2025/05/29 16:42:28 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.49 2025/05/30 16:35:52 greg Exp $"
 .\" Print using the -ms macro package
 .DA 12/09/2024
 .LP
@@ -428,8 +428,10 @@ alternate type.
 Transmitting materials are an exception, where both transmission and
 reflection will use the alternate type for all rays not specifically
 targeting virtual light sources.
-Therefore, transmitting alternate types should only have pure specular
-reflection if they reflect at all, to maintain a valid calculation.
+In this case, it is important that any reflections be purely specular
+(mirror-like) and equal to the mirror's reflectivity
+to maintain a valid result.
+A pure diffuse reflection may be added if desired.
 .PP
 The mirror material type reflects light sources only from the front side
 of a surface, regardless of any alternate material.
