@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.10 2025/05/23 17:09:26 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.11 2025/05/31 00:54:34 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -94,6 +94,7 @@ typedef struct {
 	RAY		*rp;		/* ray pointer */
 	OBJREC		*mtp;		/* material pointer */
 	MFUNC		*mf;		/* pointer to expression list */
+	OBJECT		mto;		/* material object index (or -2) */
 	int		specfl;		/* specularity flags, defined above */
 	FVECT		ulocal;		/* u-vector in local coordinates */
 	DCOMP		rd, td;		/* diffuse component params */
@@ -101,7 +102,7 @@ typedef struct {
 	FVECT		prdir;		/* vector in transmitted direction */
 } WGMDDAT;		/* WGMD material data */
 
-#define clr_comps(wp)	((wp)->specfl = 0, \
+#define clr_comps(wp)	((wp)->specfl = 0, (wp)->mto = OVOID-1, \
 			(wp)->rd.mo.nam = (wp)->td.mo.nam = \
 			(wp)->rs.mo.nam = (wp)->ts.mo.nam = "")
 
@@ -133,7 +134,7 @@ set_modval(MODVAL *mp, OBJECT omod, const RAY *r)
 
 /* fill modifier values, using previous setting if found */
 static int
-fill_modval(MODVAL *mp, const WGMDDAT *wp)
+fill_modval(MODVAL *mp, WGMDDAT *wp)
 {
 	if (mp == &wp->rd.mo) {		/* special case (should be first) */
 		set_modval(mp, wp->mtp->omod, wp->rp);
@@ -154,8 +155,11 @@ fill_modval(MODVAL *mp, const WGMDDAT *wp)
 	if (mp != &wp->ts.mo && !strcmp(mp->nam, wp->ts.mo.nam)) {
 		*mp = wp->ts.mo;
 		return(1);
-	}				/* new modifier */
-	return(set_modval(mp, lastmod(objndx(wp->mtp), mp->nam), wp->rp));
+	}
+	if (wp->mto < OVOID)
+		wp->mto = objndx(wp->mtp);
+					/* new modifier */
+	return(set_modval(mp, lastmod(wp->mto, mp->nam), wp->rp));
 }
 
 /* set calculation context for given component of MAT_WGMDF */
