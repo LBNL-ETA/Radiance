@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.24 2025/05/29 16:42:28 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.25 2025/05/31 00:52:54 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -36,10 +36,6 @@ m_mirror(			/* shade mirrored ray */
 	RAY  *r
 )
 {
-	SCOLOR  mcolor;
-	RAY  nr;
-	int  rpure = 1;
-	int  i;
 					/* check arguments */
 	if (m->oargs.nfargs != 3 || m->oargs.nsargs > 1)
 		objerror(m, USER, "bad number of arguments");
@@ -73,6 +69,11 @@ m_mirror(			/* shade mirrored ray */
 			raytrans(r);	/* unless back visibility is off */
 		return(1);
 	}
+	{				/* new context for stack memory */
+	SCOLOR  mcolor;
+	RAY  nr;
+	int  rpure = 1;
+	int  i;
 					/* get modifiers */
 	raytexture(r, m->omod);
 					/* assign material color */
@@ -114,6 +115,7 @@ m_mirror(			/* shade mirrored ray */
 	r->rmt = r->rot;
 	if (rpure && r->ro != NULL && isflat(r->ro->otype))
 		r->rmt += raydistance(&nr);
+	}				/* end stack context */
 	return(1);
 }
 
