@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: dmessage.c,v 2.2 2025/06/01 03:25:17 greg Exp $";
+#endif
 /*
  *  dmessage.c
  *  panlib
