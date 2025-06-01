@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadEPW.c,v 2.3 2025/03/04 17:45:41 greg Exp $";
+static const char RCSid[] = "$Id: loadEPW.c,v 2.4 2025/06/01 21:03:18 greg Exp $";
 #endif
 /*
  * Load an EPW (or WEA) file, one data point at a time
@@ -585,19 +585,20 @@ EPWread(EPWheader *epw, EPWrecord *rp)
 		rp->nosnowdays = atoi(cp);
 		cp = strchr(cp, ',');
 	}
-	if (!cp++) goto badformat;
+	if (!cp++) goto skiprest;
 	if (*cp != ',') {
 		rp->albedo = atof(cp);
 		cp = strchr(cp, ',');
 	}
-	if (!cp++) goto badformat;
+	if (!cp++) goto skiprest;
 	if (*cp != ',') {
 		rp->liqpdepth = atof(cp) * 1e-3;
 		cp = strchr(cp, ',');
 	}
-	if (!cp++) goto badformat;
+	if (!cp++) goto skiprest;
 	if ((*cp != ',') & (*cp != '\n'))
 		rp->liqhours = atof(cp);
+skiprest:
 	if (scan_date(epw) || feof(epw->fp))
 		return(1);	/* normal return (even if next is EOF) */
 badformat:
