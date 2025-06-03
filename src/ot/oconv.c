@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.23 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.24 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -19,8 +19,6 @@ static const char RCSid[] = "$Id: oconv.c,v 2.23 2023/02/06 22:40:21 greg Exp $"
 #define	 OMARGIN	(10*FTINY)	/* margin around global cube */
 
 #define	 MAXOBJFIL	255		/* maximum number of scene files */
-
-char  *progname;			/* argv[0] */
 
 int  nowarn = 0;			/* supress warnings? */
 
@@ -54,7 +52,7 @@ main(		/* convert object files to an octree */
 	OBJECT	startobj;
 	int  i;
 
-	progname = argv[0] = fixargv0(argv[0]);
+	fixargv0(argv[0]);		/* sets global progname */
 
 	ot_initotypes();
 

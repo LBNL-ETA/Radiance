@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.11 2020/06/30 15:57:30 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.12 2025/06/03 21:31:51 greg Exp $";
 #endif
 /* EVALGLARE V2.10
  * Evalglare Software License, Version 2.0
@@ -369,8 +369,6 @@ calculate "illuminance-contribution of zones"
 #include <string.h>
 #include "platform.h"
 #include "muc_randvar.h"
-
-char *progname;
 
 /* subroutine to add a pixel to a glare source */
 void add_pixel_to_gs(pict * p, int x, int y, int gsn)
@@ -1613,7 +1611,7 @@ int main(int argc, char **argv)
 	set_lum_max2 = 0;
 	img_corr=0;
 	abs_max = 0;
-	progname = argv[0];
+	fixargv0(argv[0]);
 	E_v_contr = 0.0;
 	strcpy(version, "1.19 release 09.12.2015 by J.Wienold");
         low_light_corr=1.0;

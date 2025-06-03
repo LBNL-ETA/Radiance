@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writewfobj.c,v 2.5 2021/02/12 01:57:49 greg Exp $";
+static const char RCSid[] = "$Id: writewfobj.c,v 2.6 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  writewfobj.c
@@ -119,7 +119,6 @@ toOBJ(Scene *sc, FILE *fp)
 int
 writeOBJ(Scene *sc, const char *fspec)
 {
-	extern char     *progname;
 	FILE		*fp;
 	int		n;
 

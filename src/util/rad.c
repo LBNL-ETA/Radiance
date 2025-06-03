@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.133 2024/12/23 01:39:27 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.134 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -145,7 +145,6 @@ int	overture = 0;		/* overture calculation needed */
 
 int	children_running = 0;	/* set negative in children */
 
-char	*progname;		/* global argv[0] */
 char	*rifname;		/* global rad input file name */
 
 char	radname[PATH_MAX];	/* root Radiance file name */
@@ -198,8 +197,8 @@ main(
 	char	ropts[512];
 	char	popts[64];
 	int	i;
-
-	progname = argv[0];
+				/* set global progname */
+	fixargv0(argv[0]);
 				/* get options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

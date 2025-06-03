@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.7 2020/01/25 05:35:34 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.8 2025/06/03 21:31:51 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -95,8 +95,6 @@ int		decode_worldpos_next(FVECT wpos, DEPTHCODEC *dcp);
 
 /* Decode depth and compute world position for the given pixel */
 extern int	get_worldpos_pix(FVECT wpos, DEPTHCODEC *dcp, int x, int y);
-
-extern char	*progname;	/* global argv[0] (set by main) */
 
 #ifdef __cplusplus
 }

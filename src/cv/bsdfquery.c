@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.12 2021/03/26 22:01:44 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.13 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -14,9 +14,8 @@ static const char RCSid[] = "$Id: bsdfquery.c,v 2.12 2021/03/26 22:01:44 greg Ex
 #include <stdlib.h>
 #include "rtmath.h"
 #include "rtio.h"
+#include "paths.h"
 #include "bsdfrep.h"
-
-char	*progname;
 
 /* Read in a vector pair */
 static int
@@ -65,8 +64,9 @@ main(int argc, char *argv[])
 	SDData	myBSDF;
 	FVECT	idir, odir;
 	int	n;
+						/* set global progname */
+	fixargv0(argv[0]);
 						/* check arguments */
-	progname = argv[0];
 	while (argc > 2 && argv[1][0] == '-') {
 		switch (argv[1][1]) {
 		case 'u':			/* unbuffered output */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.33 2024/09/11 18:56:11 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.34 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -19,8 +19,6 @@ int	what2do = 0;			/* desired adjustments */
 double	ldmax = LDMAX;			/* maximum output luminance */
 double	lddyn = LDDYN;			/* display dynamic range */
 double	Bldmin, Bldmax;			/* Bl(ldmax/lddyn) and Bl(ldmax) */
-
-char	*progname;			/* global argv[0] */
 
 char	*infn;				/* input file name */
 FILE	*infp;				/* input stream */
@@ -67,7 +65,7 @@ main(
 				case '-': case '0': what2do &= ~(flg); break; \
 				default: goto userr; }
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.40 2023/11/20 21:44:29 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.41 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -46,8 +46,6 @@ int  checkthresh = 0;			/* check threshold value */
 char  StandardInput[] = "<stdin>";
 char  Command[] = "<Command>";
 char  Label[] = "<Label>";
-
-char  *progname;
 
 struct {
 	char  *name;			/* file or command name */
@@ -112,10 +110,12 @@ main(
 	int  xsgn, ysgn;
 	char  *thislabel;
 	int  an;
+
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+
+	fixargv0(argv[0]);		/* sets global progname */
 
 	for (an = 1; an < argc && argv[an][0] == '-'; an++)
 		switch (argv[an][1]) {

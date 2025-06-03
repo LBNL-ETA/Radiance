@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xglaresrc.c,v 2.12 2020/05/14 20:58:03 greg Exp $";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.13 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Circle sources in a displayed image.
@@ -27,8 +27,6 @@ float	col[3] = {1.,0.,0.};		/* color */
 VIEW	ourview = STDVIEW;		/* view for picture */
 RESOLU	pres;				/* picture resolution */
 
-char	*progname;			/* program name */
-
 Display	*theDisplay = NULL;		/* connection to server */
 
 #define rwind		RootWindow(theDisplay,ourScreen)
@@ -52,7 +50,7 @@ main(
 	char	*windowname = NULL;
 	FILE	*fp;
 
-	progname = *argv++; argc--;
+	fixargv0(*argv++); argc--;
 	while (argc > 0 && argv[0][0] == '-') {
 		switch (argv[0][1]) {
 		case 'n':

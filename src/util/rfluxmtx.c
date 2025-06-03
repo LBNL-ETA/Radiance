@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.59 2025/04/04 01:08:33 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.60 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -21,8 +21,6 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.59 2025/04/04 01:08:33 greg Exp
 #ifndef MAXRCARG
 #define MAXRCARG	10000
 #endif
-
-char		*progname;		/* global argv[0] */
 
 int		verbose = 0;		/* verbose mode (< 0 no warnings) */
 
@@ -1239,8 +1237,9 @@ main(int argc, char *argv[])
 	FILE	*rcfp;
 	int	nsbins;
 	int	a, i;
+					/* set global progname */
+	fixargv0(argv[0]);
 					/* screen rcontrib options */
-	progname = argv[0];
 	for (a = 1; a < argc-2; a++) {
 		int	na;
 					/* check for argument expansion */

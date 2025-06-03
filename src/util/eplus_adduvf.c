@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.23 2024/06/03 18:55:51 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.24 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -22,8 +22,6 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.23 2024/06/03 18:55:51 greg
 #endif
 
 #define	SURF_EPS	0.0005			/* surface testing epsilon */
-
-char		*progname;			/* global argv[0] */
 
 int		nsamps = NSAMPLES;		/* number of samples to use */
 
@@ -680,7 +678,7 @@ main(int argc, char *argv[])
 	IDF_OBJECT	*pptr;
 	int		i;
 
-	progname = *argv++; argc--;		/* get options if any */
+	fixargv0(*argv++); argc--;		/* get options if any */
 	while (argc > 1 && argv[0][0] == '-')
 		switch (argv[0][1]) {
 		case 'c':			/* elide comments */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcrop.c,v 1.17 2024/06/05 17:30:56 greg Exp $";
+static const char RCSid[] = "$Id: rcrop.c,v 1.18 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * rcrop.c - crop a Radiance picture or matrix data
@@ -11,8 +11,6 @@ static const char RCSid[] = "$Id: rcrop.c,v 1.17 2024/06/05 17:30:56 greg Exp $"
 #include "color.h"
 #include "fvect.h"
 #include "view.h"
-
-char	*progname;		/* global argv[0] */
 
 VIEW	vw = STDVIEW;
 int	gotvw = 0;
@@ -259,8 +257,8 @@ main(int argc, char *argv[])
 	FILE	*fp = stdin;
 	int	asiz = 0;
 	int	gotdims;
-
-	progname = argv[0];
+				/* set global progname */
+	fixargv0(argv[0]);
 				/* get input and output */
 	if ((argc < 5) | (argc > 7))
 		goto usage;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.17 2023/02/06 22:40:21 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.18 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -18,8 +18,6 @@ extern int	o_face(); /* XXX should go to a header file */
 int	o_default() { return(O_MISS); }
 
 FUN  ofun[NUMOTYPE] = INIT_OTYPE;	/* needed for link resolution */
-
-char  *progname;			/* argv[0] */
 
 int  nowarn = 0;			/* supress warnings? */
 
@@ -43,7 +41,8 @@ main(		/* compile a .OBJ file into a mesh */
 	char  *cp;
 	int  i, j;
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
+
 	ofun[OBJ_FACE].funp = o_face;
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)

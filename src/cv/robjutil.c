@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.6 2024/09/09 00:54:30 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.7 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -10,9 +10,9 @@ static const char RCSid[] = "$Id: robjutil.c,v 2.6 2024/09/09 00:54:30 greg Exp 
 #include <stdlib.h>
 #include <string.h>
 #include "rtio.h"
+#include "paths.h"
 #include "objutil.h"
 
-const char      *progname;
 int		verbose = 0;
 
 int
@@ -33,8 +33,8 @@ main(int argc, char *argv[])
 	char		cbuf[256];
 	double		verteps = -1.;
 	int     i, n;
-	
-	progname = argv[0];
+						/* set global progname */
+	fixargv0(argv[0]);
 						/* process options */
 	for (i = 1; i < argc && (argv[i][0] == '-' || argv[i][0] == '+'); i++)
 		switch (argv[i][1]) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.79 2025/04/28 01:37:07 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.80 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -118,8 +118,6 @@ char  *geometry = NULL;			/* geometry specification */
 char  icondata[ICONSIZ*ICONSIZ/8];	/* icon bitmap data */
 int  iconwidth = 0, iconheight = 0;
 
-char  *progname;
-
 char  errmsg[128];
 
 uby8  clrtab[256][3];			/* global color map */
@@ -168,7 +166,7 @@ main(int  argc, char  *argv[])
 	int  i;
 	int  pid;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 	fin = stdin;
 
 	for (i = 1; i < argc; i++)

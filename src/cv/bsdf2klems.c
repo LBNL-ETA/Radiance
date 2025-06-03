@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.36 2024/02/23 03:47:57 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.37 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -22,8 +22,6 @@ static const char RCSid[] = "$Id: bsdf2klems.c,v 2.36 2024/02/23 03:47:57 greg E
 enum {CIE_X, CIE_Y, CIE_Z};
 				/* assumed maximum # Klems patches */
 #define MAXPATCHES	145
-				/* global argv[0] */
-char			*progname;
 				/* selected basis function name */
 static const char	klems_full[] = "LBNL/Klems Full";
 static const char	klems_half[] = "LBNL/Klems Half";
@@ -621,8 +619,8 @@ main(int argc, char *argv[])
 	char	buf[1024];
 	char	*cp;
 	int	i, na;
-
-	progname = argv[0];
+						/* set global progname */
+	fixargv0(argv[0]);
 	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
 	esupport &= ~(E_INCHAN|E_OUTCHAN);
 	scompile("PI:3.14159265358979323846", NULL, 0);

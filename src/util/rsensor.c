@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.24 2025/04/23 02:35:27 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.25 2025/06/03 21:31:51 greg Exp $";
 #endif
 
 /*
@@ -20,7 +20,6 @@ static const char RCSid[] = "$Id: rsensor.c,v 2.24 2025/04/23 02:35:27 greg Exp 
 #define	MAXNT		181	/* maximum number of theta divisions */
 #define MAXNP		360	/* maximum number of phi divisions */
 
-extern char	*progname;	/* global argv[0] */
 extern int	nowarn;         /* don't report warnings? */
 
 				/* current sensor's perspective */
@@ -93,8 +92,8 @@ main(
 	int	doheader = 1;
 	int	optwarn = 0;
 	int	i, rval;
-
-	progname = argv[0];
+				/* set global progname */
+	fixargv0(argv[0]);
 				/* set up rendering defaults */
 	rand_samp = 1;
 	dstrsrc = 0.65;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.9 2020/07/24 16:00:10 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.10 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -12,8 +12,6 @@ static const char RCSid[] = "$Id: rcode_norm.c,v 2.9 2020/07/24 16:00:10 greg Ex
 #include "rtio.h"
 #include "rtmath.h"
 #include "normcodec.h"
-
-char		*progname;		/* set in main() */
 
 
 /* Report usage error and exit */
@@ -225,8 +223,8 @@ main(int argc, char *argv[])
 	int		unbuffered = 0;
 	NORMCODEC	nc;
 	int		a;
-
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 	set_nc_defaults(&nc);
 	nc.hdrflags = HF_ALL;
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)

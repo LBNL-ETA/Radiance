@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.35 2024/12/09 00:29:30 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.36 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -101,7 +101,6 @@ typedef struct {		/* dynamic line buffer */
 #define MAXBUF		(100L<<20)
 
 				/* input files */
-char		*progname = NULL;
 const char	stdin_name[] = "<stdin>";
 const char	*f1name=NULL, *f2name=NULL;
 FILE		*f1in=NULL, *f2in=NULL;
@@ -1061,8 +1060,8 @@ main(int argc, char *argv[])
 {
 	int	typ1, typ2;
 	int	a;
-
-	progname = argv[0];
+						/* set global progname */
+	fixargv0(argv[0]);
 	for (a = 1; a < argc && argv[a][0] == '-'; a++) {
 		switch (argv[a][1]) {
 		case 'h':			/* ignore header info. */

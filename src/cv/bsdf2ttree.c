@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.62 2025/05/21 20:42:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.63 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -17,8 +17,6 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.62 2025/05/21 20:42:48 greg E
 #include "rtio.h"
 #include "calcomp.h"
 #include "bsdfrep.h"
-				/* global argv[0] */
-char			*progname;
 				/* reciprocity averaging option */
 static const char	*recip = "";
 				/* percentage to cull (<0 to turn off) */
@@ -746,8 +744,8 @@ main(int argc, char *argv[])
 	int			nsirs = 0;
 	char			buf[1024];
 	int			i;
-
-	progname = argv[0];
+						/* set global progname */
+	fixargv0(argv[0]);
 	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
 	esupport &= ~(E_INCHAN|E_OUTCHAN);
 	scompile("PI:3.14159265358979323846", NULL, 0);

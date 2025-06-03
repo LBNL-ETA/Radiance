@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.30 2024/02/22 17:45:54 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.31 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -121,7 +121,6 @@ COLOR	colmin, colmax;		/* gamut limits */
 WARP3D	*wcor = NULL;		/* color space warp */
 
 FILE	*debugfp = NULL;	/* debug output picture */
-char	*progname;
 
 static void init(void);
 static int chartndx(int	x, int y, int	*np);
@@ -150,7 +149,7 @@ main(
 {
 	int	i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'd':				/* debug output */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.45 2024/09/16 23:02:53 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.46 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -43,8 +43,6 @@ int  ord[3] = {RED, GRN, BLU};	/* RGB ordering */
 int  rord[4];			/* reverse ordering */
 
 COLOR  exposure = WHTCOLOR;
-
-char  *progname;
 
 FILE  *fin;
 FILE  *fin2 = NULL, *fin3 = NULL;	/* for other color channels */
@@ -98,7 +96,7 @@ main(
 	double		d, expval = 1.0;
 	int		i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);	/* sets global progname */
 	mybright = &rgb_bright; /* default */
 	picres.rt = PIXSTANDARD;
 

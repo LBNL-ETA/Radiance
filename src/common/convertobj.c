@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.6 2021/04/17 14:51:33 greg Exp $";
+static const char RCSid[] = "$Id: convertobj.c,v 2.7 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  convertobj.c
@@ -160,7 +160,6 @@ toRadiance(Scene *sc, FILE *fp, int flreq, int flexc)
 int
 writeRadiance(Scene *sc, const char *fspec, int flreq, int flexc)
 {
-	extern char     *progname;
 	FILE		*fp;
 	int		n;
 

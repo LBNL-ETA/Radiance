@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.22 2025/04/23 02:35:26 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.23 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -83,8 +83,8 @@ main(
 	int	explicate = 0;
 	char	*cfname;
 	int	i;
-
-	progname = argv[0];			/* get arguments */
+						/* set global progname */
+	fixargv0(argv[0]);
 						/* initialize calcomp */
 	initfunc();
 	gargc = argc;

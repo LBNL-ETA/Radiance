@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.58 2023/06/10 15:49:55 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.59 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -102,7 +102,6 @@ struct {
 	int	tnext;			/* next frame to transfer */
 }	astat;			/* animation status */
 
-char	*progname;		/* our program name */
 char	*cfname;		/* our control file name */
 
 int	nowarn = 0;		/* turn warnings off? */
@@ -169,8 +168,9 @@ main(
 {
 	int	explicate = 0;
 	int	i;
-
-	progname = argv[0];			/* get arguments */
+						/* set global progname */
+	fixargv0(argv[0]);
+						/* get arguments */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'e':			/* print variables */

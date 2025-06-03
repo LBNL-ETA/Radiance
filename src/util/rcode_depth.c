@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.12 2022/06/30 00:16:49 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.13 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -14,8 +14,6 @@ static const char RCSid[] = "$Id: rcode_depth.c,v 2.12 2022/06/30 00:16:49 greg 
 #include "rtio.h"
 #include "fvect.h"
 #include "depthcodec.h"
-
-char		*progname;		/* set in main() */
 
 enum {CV_FWD, CV_REV, CV_PTS};
 
@@ -285,8 +283,8 @@ main(int argc, char *argv[])
 	int		unbuffered = 0;
 	DEPTHCODEC	dc;
 	int		a;
-
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 	set_dc_defaults(&dc);
 	dc.hdrflags = HF_ALL;
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)

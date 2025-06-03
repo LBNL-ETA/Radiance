@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.47 2025/04/23 02:35:26 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.48 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -65,7 +65,7 @@ main(		/* compute illum distributions using rtrace */
 	int	i;
 				/* set global arguments */
 	gargv = argv;
-	progname = gargv[0];
+	gargv[0] = fixargv0(argv[0]);
 				/* set up rendering defaults */
 	dstrsrc = 0.5;
 	directrelay = 3;

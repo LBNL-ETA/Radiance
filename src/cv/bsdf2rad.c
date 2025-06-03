@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.40 2025/04/22 04:45:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.41 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -43,8 +43,6 @@ const double	sph_xoffset = 15.;
 
 #define	set_minlog()	overall_min = (overall_min < 1e-5) ? 1e-5 : overall_min; \
 				min_log10 = log10(overall_min) - .1
-
-char	*progname;
 
 /* Get Fibonacci sphere vector (0 to NINCIDENT-1) */
 static RREAL *
@@ -709,8 +707,9 @@ main(int argc, char *argv[])
 	double	myLim[2];
 	SDData	myBSDF;
 	int	a, n;
+						/* set global progname */
+	fixargv0(argv[0]);
 						/* check arguments */
-	progname = argv[0];
 	a = 1;
 	myLim[0] = -1; myLim[1] = -2;		/* specified BSDF range? */
 	if (argc > a+3 && argv[a][0] == '-' && argv[a][1] == 'r') {

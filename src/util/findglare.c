@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.17 2023/01/15 16:38:10 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.18 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -20,7 +20,6 @@ char	*picture = NULL;		/* picture file name */
 char	*octree = NULL;			/* octree file name */
 
 int	verbose = 0;			/* verbose reporting */
-char	*progname;			/* global argv[0] */
 
 double	threshold = 0.;			/* glare threshold */
 
@@ -53,8 +52,8 @@ main(
 	int	gotview = 0;
 	int	rval, i;
 	char	*err;
-
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 					/* process options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
 						/* expand arguments */

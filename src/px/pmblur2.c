@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.7 2019/11/07 23:20:29 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.8 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -37,8 +37,6 @@ float		*zprev;		/* loaded depth buffer */
 double		exprev;		/* previous image exposure */
 VIEW		vwprev = STDVIEW;	/* previous view */
 int		fnprev;		/* frame number for previous view */
-
-char		*progname;	/* global argv[0] */
 
 typedef struct {
 	VIEW	*vp;		/* view pointer */
@@ -391,7 +389,7 @@ main(int argc, char *argv[])
 {
 	double	fstart, fend, fstep, fcur;
 
-	progname = argv[0];
+	fixargv0(argv[0]);	/* sets global progname */
 	SET_DEFAULT_BINARY();
 	if (argc != 5)
 		goto userr;

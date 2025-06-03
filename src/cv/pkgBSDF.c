@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.9 2024/12/08 18:33:23 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.10 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -11,8 +11,6 @@ static const char RCSid[] = "$Id: pkgBSDF.c,v 2.9 2024/12/08 18:33:23 greg Exp $
 
 int	do_stdout = 0;			/* send Radiance object to stdout? */
 int	do_instance = 0;		/* produce instance/octree pairs? */
-
-char	*progname;			/* global argv[0] */
 
 /* Return appropriate suffix for Z offset */
 static const char *
@@ -143,7 +141,7 @@ main(int argc, char *argv[])
 	int	status = 0;
 	int	i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

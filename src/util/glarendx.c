@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.16 2020/07/24 16:58:16 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.17 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -77,7 +77,6 @@ struct named_func {
 
 #define newp(type)	(type *)malloc(sizeof(type))
 
-char	*progname;
 int	print_header = 1;
 
 VIEW	midview = STDVIEW;

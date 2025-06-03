@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.28 2024/06/03 18:55:51 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.29 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -70,7 +70,6 @@ VIEW	thisview = STDVIEW;		/* displayed view */
 double	eyedist = 1;			/* interocular distance */
 VIEW	lastview;			/* last recorded view */
 
-char	*progname;			/* global argv[0] */
 char	*radfile;			/* rad input file */
 char	*scene[MAXSCENE+1];		/* material and scene file list */
 int	nscenef = 0;			/* number of scene files */
@@ -129,8 +128,8 @@ main(
 	char	*viewsel = NULL;
 	long	vwintvl = 0;
 	int	i;
-
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'v':

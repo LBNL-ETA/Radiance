@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.52 2024/06/11 17:23:25 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.53 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -63,8 +63,6 @@ COLOR	*ourbpict = NULL;		/* blurred picture (view averaging) */
 
 VIEW	avgview;			/* average view for -B option */
 int	nvavg;				/* number of views averaged */
-
-char	*progname;
 
 int	fillo = F_FORE|F_BACK;		/* selected fill options */
 int	fillsamp = 0;			/* sample separation (0 == inf) */
@@ -137,7 +135,7 @@ main(			/* interpolate pictures */
         SET_DEFAULT_BINARY();
         SET_FILE_BINARY(stdout);
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 
 	for (an = 1; an < argc && argv[an][0] == '-'; an++) {
 		rval = getviewopt(&ourview, argc-an, argv+an);

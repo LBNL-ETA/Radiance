@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.12 2025/01/18 20:23:15 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.13 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id: mksource.c,v 2.12 2025/01/18 20:23:15 greg Exp
 
 #include "ray.h"
 #include "random.h"
+#include "paths.h"
 #include "resolu.h"
 
 #define NTRUNKBR	4		/* number of branches at trunk */
@@ -28,8 +29,6 @@ typedef struct lostlight {
 	int32		sd;		/* lost source direction */
 	COLOR		intens;		/* output times solid angle */
 } LOSTLIGHT;
-
-extern char	*progname;
 
 FVECT	scene_cent;		/* center of octree cube */
 RREAL	scene_rad;		/* radius to get outside cube from center */
@@ -502,8 +501,9 @@ main(int argc, char *argv[])
 	TRITREE	*samptree;
 	double	thresh = 0;
 	int	i;
-	
-	progname = argv[0];
+
+	fixargv0(argv[0]);		/* sets global progname */
+
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'd':		/* number of samples */

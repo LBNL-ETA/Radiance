@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.55 2022/07/16 00:26:34 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.56 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -633,7 +633,6 @@ char  *s
 )
 {
 	static char  *altname[]={NULL,VIEWSTR,"rpict","rview","rvu","rpiece","pinterp",NULL};
-	extern char  *progname;
 	char  *cp;
 	char  **an;
 					/* add program name to list */

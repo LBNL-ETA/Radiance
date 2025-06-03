@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.66 2024/09/12 23:14:32 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.67 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -78,7 +78,6 @@ int  nforked = 0;
 
 #define  sflock(t)	if ((t)!=synclst) dolock(fileno(syncfp),synclst=t)
 
-char  *progname;
 int  verbose = 0;
 int  nowarn = 0;
 unsigned  timelim = 0;
@@ -105,7 +104,7 @@ main(
 {
 	int  i, rval;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);			/* assigns global progname */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
 		while ((rval = expandarg(&argc, &argv, i)) > 0)

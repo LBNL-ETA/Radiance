@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.60 2024/11/07 20:07:08 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.61 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -70,8 +70,6 @@ int	xres, yres;			/* output resolution */
 
 int	xpos, ypos;			/* output position */
 
-char	*progname;			/* global argv[0] */
-
 int	echoheader = 1;
 int	wrongformat = 0;
 int	gotview;
@@ -104,7 +102,7 @@ main(
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
 	esupport &= ~(E_OUTCHAN|E_INCHAN);
 						/* scan options */

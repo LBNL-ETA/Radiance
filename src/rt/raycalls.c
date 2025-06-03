@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.32 2025/04/23 02:35:26 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.33 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -36,9 +36,9 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.32 2025/04/23 02:35:26 greg Exp
  *  as simple as we can.  Global variables and their defaults
  *  are defined below, and including "ray.h" declares these
  *  along with all the routines you are likely to need.  First,
- *  assign the global variable progname to your argv[0], then
- *  change the rendering parameters as you like.  If you have a set
- *  of option arguments you are working from, the getrenderopt(ac,av)
+ *  assign the global variable progname by calling fixargv0(argv[0]),
+ *  then change the rendering parameters as you like.  If you have a
+ *  set of option arguments you are working from, the getrenderopt()
  *  call should be very useful.  Before tracing any rays, you
  *  must read in the octree with a call to ray_init(oct).
  *  Passing NULL for the file name causes ray_init() to read
@@ -102,8 +102,6 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.32 2025/04/23 02:35:26 greg Exp
 #include  "data.h"
 #include  "font.h"
 #include  "pmapray.h"
-
-char	*progname = "unknown_app";	/* caller sets to argv[0] */
 
 char	*octname;			/* octree name we are given */
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.31 2023/04/07 19:06:18 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.32 2025/06/03 21:31:51 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -92,7 +92,6 @@
     #ifndef DEFPATH
       #define DEFPATH		";/ray/lib"
     #endif
-    #define	 fixargv0(a0)	(a0)
 
   #else
 
@@ -114,7 +113,6 @@
     #define SPECIALS		" \t\n'\"()${}*?[];|&"
     #define QUOTCHAR		'\''
     #define ALTQUOT		'"'
-    #define	 fixargv0(a0)	(a0)
 
   #endif
 #endif
@@ -133,8 +131,11 @@ extern "C" {
 #if defined(_WIN32) || defined(_WIN64)
   extern FILE *win_popen(char *command, char *type);
   extern int win_pclose(FILE *p);
-  extern char  *fixargv0(char *arg0);
 #endif
+
+/* Set global progname and return path-free version of argv[0] */
+extern char  *fixargv0(char *arg0);
+extern char  *progname;
 
 /* Check if any of the characters in str2 are found in str1 */
 extern int matchany(const char *str1, const char *str2);

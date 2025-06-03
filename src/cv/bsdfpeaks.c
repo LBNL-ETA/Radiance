@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.4 2025/05/25 17:41:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.5 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  Compute minimum FWHM peak for each incident direction in SIR input.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.4 2025/05/25 17:41:10 greg Exp
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "paths.h"
 #include "bsdfrep.h"
 
 typedef struct {
@@ -20,8 +21,6 @@ typedef struct {
 } FWHM;			/* struct to hold peak value */
 
 typedef double	eval_f(const FVECT vin, const FVECT vout, const void *p);
-
-char	*progname;		/* needed by bsdfrep.c */
 
 /* Comparison function to put larger peaks first */
 int
@@ -127,8 +126,8 @@ main(int argc, char *argv[])
 	int		ndirs;
 	FWHM		*peaka;
 	int		i;
-
-	progname = argv[0];
+						/* set global progname */
+	fixargv0(argv[0]);
 	if (argc < 2)
 		goto userr;
 

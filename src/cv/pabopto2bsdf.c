@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.42 2022/11/21 18:28:24 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.43 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -16,8 +16,6 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.42 2022/11/21 18:28:24 greg
 #include "platform.h"
 #include "paths.h"
 #include "bsdfrep.h"
-				/* global argv[0] */
-char			*progname;
 
 typedef struct {
 	const char	*fname;		/* input file path */
@@ -235,8 +233,9 @@ main(int argc, char *argv[])
 	const char	*symmetry = "0";
 	int		ninpfiles, totinc;
 	int		a, i;
-
-	progname = argv[0];			/* get options */
+					/* set global progname */
+	fixargv0(argv[0]);
+					/* get options */
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)
 		switch (argv[a][1]) {
 		case 't':

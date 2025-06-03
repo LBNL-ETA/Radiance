@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.39 2023/12/15 01:57:45 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.40 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -75,8 +75,6 @@ COLORV  **scoutbar;		/* output scan bar (if thresh > 0) */
 float  **greybar;		/* grey-averaged input values */
 int  obarsize = 0;		/* size of output scan bar */
 int  orad = 0;			/* output window radius */
-
-char  *progname;
 
 static void copyfile(FILE  *infp, FILE  *out);
 static void pass1(FILE  *infp);
@@ -162,6 +160,8 @@ main(
 	double	outaspect = 0.0;
 	double	d;
 	int  i, j;
+
+	fixargv0(argv[0]);		/* sets global progname */
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
@@ -179,9 +179,6 @@ main(
 	signal(SIGXCPU, quit);
 	signal(SIGXFSZ, quit);
 #endif
-
-	progname = argv[0] = fixargv0(argv[0]);
-
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
@@ -216,7 +213,7 @@ main(
 				if (d < 1e-20 || d > 1e20) {
 					fprintf(stderr,
 						"%s: exposure out of range\n",
-							argv[0]);
+							progname);
 					quit(1);
 				}
 				switch (argv[i][2]) {

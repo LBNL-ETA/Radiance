@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.25 2024/01/12 17:29:10 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.26 2025/06/03 21:31:51 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -37,8 +37,6 @@ int	unbuffered = 0;
 
 int	repeatcnt = 1;
 
-char	*progname;
-
 
 int
 main(
@@ -50,7 +48,7 @@ main(
 	int	rval, getdim = 0;
 	int	i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);		/* sets global progname */
 	if (argc < 2)
 		goto userr;
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
