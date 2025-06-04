@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.102 2025/05/29 18:13:22 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.103 2025/06/04 20:32:25 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -122,7 +122,8 @@ HEADERS = ambient.h ray.h otspecial.h source.h
 #
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/rcontrib \
-$(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump
+$(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump \
+$(DESTDIR)/rxpiece
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 

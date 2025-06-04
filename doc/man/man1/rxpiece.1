@@ -1,0 +1,138 @@
+.\" RCSid "$Id: rxpiece.1,v 1.1 2025/06/04 20:32:24 greg Exp $"
+.TH RXPIECE 1 6/4/2025 RADIANCE
+.SH NAME
+rxpiece - render tiles in a RADIANCE picture/depth buffer
+.SH SYNOPSIS
+.B rxpiece
+[
+.B "\-n nproc"
+][
+.B "\-x xres"
+][
+.B "\-y yres"
+][
+.B "\-X xdiv"
+][
+.B "\-Y ydiv"
+][
+.B "\-f{f|c}"
+][
+.B "\-d ref_depth/unit"
+]
+[
+.B $EVAR
+]
+[
+.B @file
+]
+[
+rpict options
+]
+.B "\-o picture"
+.B octree
+.SH DESCRIPTION
+.I Rxpiece
+renders a RADIANCE picture a tile at a time.
+This is useful for running multiple cooperating
+processes to create a single picture.
+Output is written to a memory-mapped file specified with the
+.I \-o
+argument.
+The format will be determined by the
+.I \-p
+and
+.I \-f
+options.
+The first is detailed in the
+.I rpict(1)
+man page, and the second may be
+.I \-fc
+for uncompressed common-exponent format or
+.I \-ff
+for float picture (matrix) output.
+An output depth map may be given as well with the
+.I \-z
+option, which will be stored as raw float by default,
+but can be written as a 16-bit/depth encoding if the
+.I \-d
+option is used to specify a reference depth/unit.
+(See
+.I rcode_depth(1).)
+.PP
+The overall picture dimensions will be
+.I xres
+by
+.I yres
+or smaller, depending on the
+.I \-pa
+option and other view options, and the picture will be rendered in
+.I xdiv
+by
+.I ydiv
+tiles.
+.PP
+If the output picture file already exists, new tiles will
+be rendered into it.
+In this way, multiple invocations of
+.I rxpiece
+may be used with or without the
+.I \-n
+multiprocessing option.
+.PP
+Options may be given on the command line and/or read from the
+environment and/or read from a file.
+A command argument beginning with a dollar sign ('$') is immediately
+replaced by the contents of the given environment variable.
+A command argument beginning with an at sign ('@') is immediately
+replaced by the contents of the given file.
+.SH EXAMPLE
+Run 8
+.I rxpiece
+processes and create an encoded depth map with a 10-meter reference:
+.IP "" .2i
+rxpiece -n 8 -d 10/meter -z scene.dpt -o scene.hdr scene.oct
+.SH NOTES
+Unfortunately, memory-mapped files are not supported across a
+network, so
+.I rxpiece
+only works on a single machine.
+If network rendering is desired, use
+.I rpiece(1),
+instead.
+.PP
+The main advantage of
+.I rxpiece
+over
+.I rpiece
+is the
+.I \-n
+multiprocessing option, which requires only a single invocation
+to render a tiled picture efficiently.
+.I Rxpiece
+also supports more output types and options, such as float and
+depth map results.
+Because it avoids the need for a sync file, preferring a shared
+memory map, tile assignment and recovery is faster and more robust
+on a single machine.
+.PP
+The output picture is not run-length encoded, and can be quite
+large.
+Once the picture is finished, the
+.I ra_rgbe(1)
+program with the \-r option may be used to convert to a run\-length
+encoded picture for more efficient storage, although
+.I pfilt(1)
+or any of the other Radiance picture filters will do the same
+thing.
+.PP
+The ALRM signal may be used to gracefully terminate an
+.I rxpiece
+process after it finishes the tile it is working on.
+This permits other currently running or subsequently started
+.I rxpiece
+process(es) to continue rendering tiles with no lost effort.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), pfilt(1), ra_rgbe(1), rcode_depth(1), rcomb(1),
+rmtxop(1), rpict(1), rpiece(1), rtpict(1), ximage(1)

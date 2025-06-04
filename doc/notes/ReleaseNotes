@@ -2824,3 +2824,5 @@ sampling rate for most BSDFs.
 Fixed problem with "mirror" primitive, which was not permitting
 indirect rays to transmit through alternate material type.
 Thanks to Jon Sargent for finding problem and help resolving it.
+
+Added experimental C++ based rxpiece tool to default installation.

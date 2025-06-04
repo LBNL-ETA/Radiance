@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.11 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.12 2025/06/04 20:32:25 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -19,7 +19,6 @@ static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.11 2025/04/22 17:12:25 greg Ex
 #include  "pmapray.h"
 #include  "random.h"
 
-extern char  *progname;			/* argv[0] */
 const char  *sigerr[NSIG];		/* signal error messages */
 
 VIEW  ourview = STDVIEW;		/* global view parameters */
@@ -99,8 +98,8 @@ main(int  argc, char  *argv[])
 	int  outfmt = 'c';
 	int  rval;
 	int  i;
-					/* global program name */
-	progname = argv[0];
+					/* set global program name */
+	fixargv0(argv[0]);
 					/* feature check only? */
 	strcat(RFeatureList, RXPIECE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
@@ -638,7 +637,8 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		pixaspect = .0;			// need to leave this as is
 		myRPmanager.NewHeader(pout);	// get prev. header info
 		const char *	tval = myRPmanager.GetHeadStr("TILED=");
-		if (tval) sscanf(tval, "%d %d", &tileGrid[0], &tileGrid[1]);
+		if (!tval || sscanf(tval, "%d %d", &tileGrid[0], &tileGrid[1]) != 2)
+			error(USER, "existing picture must be tiled");
 		CHECK(myRPmanager.GetView()==NULL,
 				USER, "missing view in picture file");
 		ourview = *myRPmanager.GetView();
@@ -747,7 +747,7 @@ rpiece(char *pout, RenderDataType dt, char *zout)
 		ndone++;
 	}
 	if (!ndone)
-		error(WARNING, "no tiles need rendering, exit");
+		error(WARNING, "no tiles to render, exiting");
 	/*
 	munmap(pixMap, pmlen);			// technically unnecessary...
 	if (zdMap) munmap(zdMap, zmlen);
