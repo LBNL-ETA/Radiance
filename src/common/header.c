@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.48 2022/03/21 17:03:51 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.49 2025/06/04 22:34:27 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -168,14 +168,6 @@ printargs(		/* print arguments to a file */
 	FILE  *fp
 )
 {
-#if defined(_WIN32) || defined(_WIN64)
-	extern char	*fixargv0(char *arg0);
-	char		myav0[128];
-				/* clean up Windows executable path */
-	if (ac-- <= 0) return;
-	fputs(fixargv0(strcpy(myav0, *av++)), fp);
-	fputc(ac ? ' ' : '\n', fp);
-#endif
 	while (ac-- > 0) {
 		fputword(*av++, fp);
 		fputc(ac ? ' ' : '\n', fp);

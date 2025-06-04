@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.40 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.41 2025/06/04 22:34:27 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -198,7 +198,7 @@ main(int argc, char *argv[])
 	int	rval;
 	int	i;
 					/* global program name */
-	progname = argv[0] = fixargv0(argv[0]);
+	argv[0] = fixargv0(argv[0]);
 	gargv = argv;
 	gargc = argc;
 					/* feature check only? */
