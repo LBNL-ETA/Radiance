@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadEPW.c,v 2.4 2025/06/01 21:03:18 greg Exp $";
+static const char RCSid[] = "$Id: loadEPW.c,v 2.5 2025/06/04 17:48:48 greg Exp $";
 #endif
 /*
  * Load an EPW (or WEA) file, one data point at a time
@@ -210,8 +210,8 @@ EPWopen(const char *fname)
 		goto badformat;
 	if (hdr->isWEA) {		/* getting WEA header */
 		cp = linbuf+6;
-		if (sscanf(cp, "%[^_]_%[^\r\n]q",
-				hdr->loc.city, hdr->loc.country) != 2)
+		if (sscanf(cp, "%[^_]_%[^\r\n]",
+				hdr->loc.city, hdr->loc.country) < 1)
 			goto badformat;
 		if (!fgets(linbuf, sizeof(linbuf), hdr->fp))
 			goto readerr;
