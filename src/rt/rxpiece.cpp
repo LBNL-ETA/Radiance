@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.12 2025/06/04 20:32:25 greg Exp $";
+static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.13 2025/06/05 18:26:46 greg Exp $";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.12 2025/06/04 20:32:25 greg Ex
 #include  <time.h>
 #include  <signal.h>
 #include  <sys/mman.h>
+#include  <sys/wait.h>
 #include  <unistd.h>
 
 #include  "platform.h"

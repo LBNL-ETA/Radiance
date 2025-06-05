@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.17 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.18 2025/06/05 18:26:46 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -22,8 +22,6 @@ int	inpfmt = 'a';			/* input format */
 int	outfmt = 'f';			/* output format */
 
 int	report_intvl = 0;		/* reporting interval (seconds) */
-
-extern char *	progname;		// global argv[0]
 
 RcontribSimulManager	myRCmanager;	// global rcontrib simulation manager
 

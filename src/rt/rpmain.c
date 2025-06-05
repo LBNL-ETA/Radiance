@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.39 2025/04/23 01:57:04 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.40 2025/06/05 18:26:46 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -28,7 +28,6 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.39 2025/04/23 01:57:04 greg Exp $
 #define  PCHILD		3		/* child of normal persist */
 #endif
 
-char  *progname;			/* argv[0] */
 char  *octname;				/* octree name */
 char  *sigerr[NSIG];			/* signal error messages */
 char  *errfile = NULL;			/* error output file */

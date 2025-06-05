@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.13 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.14 2025/06/05 18:26:46 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -13,8 +13,6 @@ static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.13 2025/04/22 17:12:25 greg Ex
 #include  "platform.h"
 #include  "RtraceSimulManager.h"
 #include  "func.h"
-
-extern char	*progname;		/* global argv[0] */
 
 static const char  *sigerr[NSIG];	/* signal error messages */
 char  *errfile = NULL;			/* error output file */

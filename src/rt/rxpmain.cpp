@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.8 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.9 2025/06/05 18:26:46 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -15,7 +15,6 @@ static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.8 2025/04/22 17:12:25 greg Exp
 #include  "RpictSimulManager.h"
 #include  "func.h"
 
-extern char  *progname;			/* argv[0] */
 const char  *sigerr[NSIG];		/* signal error messages */
 char  *errfile = NULL;			/* error output file */
 
