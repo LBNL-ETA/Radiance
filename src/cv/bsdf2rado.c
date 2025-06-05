@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rado.c,v 2.5 2021/12/07 23:55:02 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rado.c,v 2.6 2025/06/05 19:10:31 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -28,8 +28,6 @@ char	validf[] = "-e \"valid(s,t)=X`SYS(s,t)^2+Y`SYS(s,t)^2+Z`SYS(s,t)^2-1e-7\"";
 char	validf[] = "-e 'valid(s,t)=X`SYS(s,t)^2+Y`SYS(s,t)^2+Z`SYS(s,t)^2-1e-7'";
 #endif
 
-char	*progname;
-
 /* Produce a Radiance model plotting the indicated incident direction(s) */
 int
 main(int argc, char *argv[])
@@ -45,7 +43,7 @@ main(int argc, char *argv[])
 	FVECT	idir, odir;
 	int	i, j, n;
 						/* check arguments */
-	progname = argv[0];
+	fixargv0(argv[0]);
 	if (argc > 1 && !strcmp(argv[1], "-p")) {
 		++showPeaks;
 		++argv; --argc;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.85 2025/02/06 21:45:00 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.86 2025/06/05 19:10:31 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -36,7 +36,6 @@ int	NVARS = NRHVARS;		/* total number of variables */
 
 VARIABLE	vv[] = RHVINIT;		/* variable-value pairs */
 
-char	*progname;		/* our program name */
 char	*hdkfile;		/* holodeck file name */
 char	froot[256];		/* root file name */
 
@@ -90,7 +89,7 @@ main(
 {
 	int	i;
 
-	progname = argv[0];			/* get arguments */
+	fixargv0(argv[0]);			/* get arguments */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'w':			/* turn off warnings */

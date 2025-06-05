@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.40 2025/02/05 23:43:41 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.41 2025/06/05 19:10:31 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -32,8 +32,6 @@ int	iofmt = 'a';		/* input/output format for rays */
 #define H_OBSF		04		/* OBSTRUCTIONS= False */
 #define H_VDST		010		/* VDISTANCE= True */
 #define H_SWAP		020		/* byte order is different */
-
-char	*progname;		/* global argv[0] */
 
 struct phead {
 	VIEW	vw;
@@ -73,7 +71,7 @@ main(
 {
 	int	i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 	for (i = 2; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'u':
