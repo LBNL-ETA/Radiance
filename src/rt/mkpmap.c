@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.14 2025/06/05 18:28:25 greg Exp $";
 #endif
 
 
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $
        (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")
    ======================================================================
    
-   $Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $    
+   $Id: mkpmap.c,v 2.14 2025/06/05 18:28:25 greg Exp $    
 */
 
 
@@ -45,7 +45,6 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.13 2025/04/23 02:13:34 greg Exp $
 extern char VersionID [];
 
 
-char*    progname;                  /* argv[0] */
 int      dimlist [MAXDIM];          /* sampling dimensions */
 int      ndims = 0;                 /* number of sampling dimenshunns */
 char*    octname = NULL;            /* octree name */
