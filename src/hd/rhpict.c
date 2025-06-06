@@ -1,17 +1,16 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.22 2023/02/06 22:40:21 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.23 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
  */
 
 #include <string.h>
-
+#include "paths.h"
 #include "platform.h"
 #include "rterror.h"
 #include "rholo.h"
 
-char	*progname;		/* our program name */
 char	*hdkfile;		/* holodeck file name */
 char	gargc;			/* global argc */
 char	**gargv;		/* global argv */
@@ -50,7 +49,7 @@ char	*argv[]
 	int	i, rval;
 
 	gargc = argc; gargv = argv;
-	progname = argv[0];			/* get arguments */
+	fixargv0(argv[0]);			/* get arguments */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
 		rval = getviewopt(&myview, argc-i, argv+i);
 		if (rval >= 0) {		/* view option */

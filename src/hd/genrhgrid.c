@@ -1,17 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.10 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.11 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
  */
 
 #include <stdio.h>
-
+#include "paths.h"
 #include "platform.h"
 #include "resolu.h"
 #include "holo.h"
-
-char	*progname;		/* global argv[0] */
 
 char	*mat, *name;		/* material and object id */
 double	rad;			/* grid line radius */
@@ -29,7 +27,7 @@ main(
 {
 	int	sect;
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 	if ((argc < 5) | (argc > 6))
 		goto userr;
 	mat = argv[1];

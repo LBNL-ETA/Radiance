@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.15 2024/09/10 20:24:42 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.16 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: ra_bmp.c,v 2.15 2024/09/10 20:24:42 greg Exp $
 #include  <math.h>
 
 #include  "rtio.h"
+#include  "paths.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "tonemap.h"
@@ -17,8 +18,6 @@ static const char RCSid[] = "$Id: ra_bmp.c,v 2.15 2024/09/10 20:24:42 greg Exp $
 int		bradj = 0;		/* brightness adjustment */
 
 double		gamcor = 2.2;		/* gamma correction value */
-
-char		*progname;
 
 static void quiterr(const char *err);
 static void tmap2bmp(char *fnin, char *fnout, char *expec,
@@ -43,7 +42,7 @@ main(int argc, char *argv[])
 	RESOLU		rs;
 	int		i;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);		/* assigns progname */
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-' && argv[i][1])

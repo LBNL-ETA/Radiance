@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.30 2025/05/09 12:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.31 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: gensky.c,v 2.30 2025/05/09 12:52:48 greg Exp $
  */
 
 #include  "rtio.h"
+#include  "paths.h"
 #include  <stdlib.h>
 #include  <math.h>
 #include  <ctype.h>
@@ -77,7 +78,6 @@ double  F2;
 double  solarbr = 0.0;
 int	u_solar = 0;				/* -1=irradiance, 1=radiance */
 
-char  *progname;
 char  errmsg[128];
 
 void computesky(void);
@@ -97,7 +97,7 @@ main(
 	int  got_meridian = 0;
 	int  i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 	if (argc == 2 && !strcmp(argv[1], "-defaults")) {
 		printdefaults();
 		exit(0);

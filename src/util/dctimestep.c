@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.53 2025/03/27 16:34:23 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.54 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -8,13 +8,12 @@ static const char RCSid[] = "$Id: dctimestep.c,v 2.53 2025/03/27 16:34:23 greg E
  */
 
 #include <ctype.h>
+#include "paths.h"
 #include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"
 #include "platform.h"
 #include "resolu.h"
-
-char	*progname;			/* global argv[0] */
 
 /* Sum together a set of images and write result to fout */
 static int
@@ -180,8 +179,8 @@ main(int argc, char *argv[])
 	CMATRIX		*cmtx;		/* component vector/matrix result */
 	char		fnbuf[256];
 	int		a, i;
-
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 					/* get options */
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)
 		switch (argv[a][1]) {

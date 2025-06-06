@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.49 2025/06/04 22:34:27 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.50 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -30,6 +30,7 @@ static const char	RCSid[] = "$Id: header.c,v 2.49 2025/06/04 22:34:27 greg Exp $
 #include  <ctype.h>
 
 #include  "tiff.h"	/* for int32 */
+#include  "paths.h"	/* for fixargv0() */
 #include  "rtio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -162,16 +163,26 @@ fputnow(			/* write out the current time */
 
 
 void
-printargs(		/* print arguments to a file */
+printargs(		/* print command arguments to a file */
 	int  ac,
 	char  **av,
 	FILE  *fp
 )
 {
-	while (ac-- > 0) {
-		fputword(*av++, fp);
-		fputc(ac ? ' ' : '\n', fp);
+	if (ac <= 0)
+		return;
+	if (progname == NULL)
+		fixargv0(av[0]);	/* sets global progname */
+
+	if (progname >= av[0] && progname - av[0] < strlen(av[0]))
+		fputword(progname, fp);
+	else
+		fputword(av[0], fp);
+	while (--ac > 0) {
+		fputc(' ', fp);
+		fputword(*++av, fp);
 	}
+	fputc('\n', fp);
 }
 
 

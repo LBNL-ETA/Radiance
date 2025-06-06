@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_skel.c,v 2.13 2006/03/10 19:40:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_skel.c,v 2.14 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  Skeletal 24-bit image conversion program.  Replace "skel"
@@ -18,7 +18,7 @@ static const char	RCSid[] = "$Id: ra_skel.c,v 2.13 2006/03/10 19:40:13 schorsch 
 #include  <stdio.h>
 #include  <math.h>
 #include  <time.h>
-
+#include  "paths.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -26,8 +26,6 @@ static const char	RCSid[] = "$Id: ra_skel.c,v 2.13 2006/03/10 19:40:13 schorsch 
 double	gamcor = 2.2;			/* gamma correction */
 
 int  bradj = 0;				/* brightness adjustment */
-
-char  *progname;
 
 int  xmax, ymax;
 
@@ -39,7 +37,7 @@ char  *argv[];
 	int  reverse = 0;
 	int  i;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')

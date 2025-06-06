@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.17 2023/02/09 21:54:11 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.18 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.17 2023/02/09 21:54:11 greg Exp $"
  */
 
 #include  <math.h>
-
+#include  "paths.h"
 #include  "platform.h"
 #include  "rtio.h"
 #include  "rtmisc.h"
@@ -31,7 +31,6 @@ uby8  clrtab[256][3];
 extern int	samplefac;
 double	gamv = 2.2;			/* gamv correction */
 int  bradj = 0;				/* brightness adjustment */
-char  *progname;
 char  errmsg[128];
 COLR	*inl;
 uby8	*tarData;
@@ -62,10 +61,11 @@ main(
 	int  ncolors = 256;
 	int  greyscale = 0;
 	int  i;
+	
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+	fixargv0(argv[0]);
 	samplefac = 0;
 
 	for (i = 1; i < argc; i++)

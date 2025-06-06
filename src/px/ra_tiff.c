@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.38 2024/10/04 19:15:19 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.39 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.38 2024/10/04 19:15:19 greg Exp 
 
 #include  <math.h>
 #include  <ctype.h>
-
+#include  "paths.h"
 #include  "rtio.h"
 #include  "platform.h"
 #include  "tiffio.h"
@@ -108,16 +108,14 @@ short	ortab[8] = {		/* orientation conversion table */
 extern char	TMSTR[];	/* "CAPDATE=" from header.c */
 char		OWNSTR[] = "OWNER=";
 
-char  *progname;
-
 
 int
 main(int  argc, char  *argv[])
 {
 	int  reverse = 0;
 	int  i;
-	
-	progname = argv[0];
+					/* set global progname */
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')

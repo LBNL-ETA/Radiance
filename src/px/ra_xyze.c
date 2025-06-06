@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.15 2024/10/01 20:04:44 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.16 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -7,7 +7,7 @@ static const char	RCSid[] = "$Id: ra_xyze.c,v 2.15 2024/10/01 20:04:44 greg Exp 
  */
 
 #include  <math.h>
-
+#include  "paths.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -21,7 +21,6 @@ RGBPRIMS  outprims = STDPRIMS;		/* output primaries */
 double	expcomp = 1.0;			/* exposure compensation */
 int  doflat = -1;			/* produce flat file? */
 double  origexp = -1.0;			/* original exposure */
-char  *progname;
 
 static gethfunc headline;
 static void quiterr(char *err);
@@ -74,10 +73,11 @@ int
 main(int  argc, char  *argv[])
 {
 	int  i;
+
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')

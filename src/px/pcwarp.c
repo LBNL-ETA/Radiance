@@ -1,16 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcwarp.c,v 3.7 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: pcwarp.c,v 3.8 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  * Warp colors in Radiance picture to correct for input/output changes.
  */
 
+#include "paths.h"
 #include "rtio.h"
 #include "resolu.h"
 #include "color.h"
 #include "warp3d.h"
-
-char	*progname;			/* global argv[0] */
 
 FILE	*infp = NULL;			/* input stream */
 int	xres, yres;			/* input picture resolution */
@@ -34,7 +33,7 @@ main(
 	int	rval;
 	int	i;
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 	infp = stdin;
 					/* get options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)

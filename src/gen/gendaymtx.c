@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.42 2025/02/27 19:00:00 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.43 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -83,6 +83,7 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.42 2025/02/27 19:00:00 greg Ex
 #define	_USE_MATH_DEFINES
 #include <stdlib.h>
 #include <ctype.h>
+#include "paths.h"
 #include "platform.h"
 #include "rtmath.h"
 #include "rtio.h"
@@ -90,7 +91,6 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.42 2025/02/27 19:00:00 greg Ex
 #include "sun.h"
 #include "loadEPW.h"
 
-char *progname;					/* Program name */
 const double DC_SolarConstantE = 1367.0;	/* Solar constant W/m^2 */
 const double DC_SolarConstantL = 127.5;		/* Solar constant klux */
 
@@ -332,7 +332,7 @@ main(int argc, char *argv[])
 	int	i, j;
 	double	timeinterval = 0;
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 					/* get options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

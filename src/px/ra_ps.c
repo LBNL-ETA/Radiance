@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.33 2024/10/04 01:53:45 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.34 2025/06/06 19:11:21 greg Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
@@ -51,7 +51,6 @@ int  docolor = 1;			/* produce color image? */
 int  bradj = 0;				/* brightness adjustment */
 int  ncopies = 1;			/* number of copies */
 
-char  *progname;
 int  xmax, ymax;			/* input image dimensions */
 
 typedef void putprimf_t(COLR *scn, int pri);
@@ -98,7 +97,7 @@ main(int  argc, char  *argv[])
 	int  i;
 	double	d;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);		/* assigns progname */
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')
