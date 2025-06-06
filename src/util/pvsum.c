@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.4 2025/04/18 23:59:03 greg Exp $";
+static const char RCSid[] = "$Id: pvsum.c,v 2.5 2025/06/06 18:26:22 greg Exp $";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -15,6 +15,7 @@ static const char RCSid[] = "$Id: pvsum.c,v 2.4 2025/04/18 23:59:03 greg Exp $";
 #include "rmatrix.h"
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/mman.h>
+#include <sys/wait.h>
 #endif
 
 int	nprocs = 1;			/* # of calculation processes (Unix) */
