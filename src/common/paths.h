@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.32 2025/06/03 21:31:51 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.33 2025/06/07 05:09:45 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -137,6 +137,9 @@ extern "C" {
 extern char  *fixargv0(char *arg0);
 extern char  *progname;
 
+/* Print program arguments to file; side effect is to set progname */
+extern void  printargs(int ac, char **av, FILE *fp);
+
 /* Check if any of the characters in str2 are found in str1 */
 extern int matchany(const char *str1, const char *str2);
 
@@ -164,7 +167,14 @@ extern FILE *temp_fp(char *s, size_t len, char *templ);
 
 /* Concatenate two strings, leaving exactly one DIRSEP in between */
 extern char *append_filepath(char *s1, char *s2, size_t len);
-
+					/* defined in fropen.c */
+extern FILE	*frlibopen(char *fname);
+					/* defined in getlibpath.c */
+extern char	*getrlibpath(void);
+					/* defined in gethomedir.c */
+extern char	*gethomedir(char *uname, char *path, int plen);
+					/* defined in getpath.c */
+extern char	*getpath(char *fname, char *searchpath, int mode);
 
 #ifdef __cplusplus
 }

@@ -1,12 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.23 2025/06/06 19:11:21 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.24 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
  */
 
 #include <string.h>
-#include "paths.h"
 #include "platform.h"
 #include "rterror.h"
 #include "rholo.h"

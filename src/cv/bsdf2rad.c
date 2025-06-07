@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.41 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.42 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -7,7 +7,6 @@ static const char RCSid[] = "$Id: bsdf2rad.c,v 2.41 2025/06/03 21:31:51 greg Exp
 
 #include <stdlib.h>
 #include "rtio.h"
-#include "paths.h"
 #include "rtmath.h"
 #include "bsdfrep.h"
 

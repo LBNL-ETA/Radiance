@@ -1,13 +1,14 @@
 #include "color.h"
 #ifndef lint
 static const char RCSid[] =
-    "$Id: genssky.c,v 2.7 2025/04/10 23:30:58 greg Exp $";
+    "$Id: genssky.c,v 2.8 2025/06/07 05:09:45 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
 
-#include "atmos.h"
 #include "copyright.h"
+#include "paths.h"
+#include "atmos.h"
 #include "resolu.h"
 #include "rtio.h"
 #include <ctype.h>
@@ -18,8 +19,6 @@ static const char RCSid[] =
 #include <sys/stat.h>
 #include <sys/types.h>
 #endif
-
-char *progname;
 
 const double ARCTIC_LAT = 67.;
 const double TROPIC_LAT = 23.;
@@ -429,7 +428,6 @@ static Atmosphere init_atmos(const double aod, const double grefl) {
 }
 
 int main(int argc, char *argv[]) {
-  progname = argv[0];
   int month, day;
   double hour;
   FVECT sundir;
@@ -451,6 +449,7 @@ int main(int argc, char *argv[]) {
   double dirnorm = 0; /* direct normal illuminance */
   double difhor = 0;  /* diffuse horizontal illuminance */
 
+  fixargv0(argv[0]);
   if (argc == 2 && !strcmp(argv[1], "-defaults")) {
     printf("-i %d\t\t\t\t#scattering order\n", sorder);
     printf("-g %f\t\t\t#ground reflectance\n", grefl);

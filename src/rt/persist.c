@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.44 2016/03/06 01:13:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.45 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -25,7 +25,6 @@ static const char	RCSid[] = "$Id: persist.c,v 2.44 2016/03/06 01:13:18 schorsch 
 #include "ray.h"
 
 #ifdef F_SETLKW
-#include "paths.h"
 #include "selcall.h"
 
 #ifndef TIMELIM

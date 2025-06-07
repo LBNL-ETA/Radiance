@@ -1,4 +1,4 @@
-/* RCSid: $Id: pfilt.h,v 2.3 2023/12/08 17:56:26 greg Exp $ */
+/* RCSid: $Id: pfilt.h,v 2.4 2025/06/07 05:09:46 greg Exp $ */
 /*
  * Header file for picture filtering
  */
@@ -6,6 +6,7 @@
 #define _RAD_PFILT_H_
 
 #include  "standard.h"
+#include  "paths.h"
 #include  "color.h"
 
 #ifdef __cplusplus

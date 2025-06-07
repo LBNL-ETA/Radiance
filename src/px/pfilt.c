@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.40 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.41 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -13,7 +13,6 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.40 2025/06/03 21:31:51 greg Exp $"
 #include  <signal.h>
 #include  "pfilt.h"
 #include  "platform.h"
-#include  "paths.h"
 #include  "view.h"
 
 #define	 FEQ(a,b)	((a) >= .98*(b) && (a) <= 1.02*(b))

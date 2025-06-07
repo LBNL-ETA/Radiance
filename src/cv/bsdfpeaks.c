@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.5 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.6 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  Compute minimum FWHM peak for each incident direction in SIR input.
@@ -10,7 +10,6 @@ static const char RCSid[] = "$Id: bsdfpeaks.c,v 2.5 2025/06/03 21:31:51 greg Exp
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "paths.h"
 #include "bsdfrep.h"
 
 typedef struct {

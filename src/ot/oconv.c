@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.24 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.25 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -12,7 +12,6 @@ static const char RCSid[] = "$Id: oconv.c,v 2.24 2025/06/03 21:31:51 greg Exp $"
 #include  "octree.h"
 #include  "object.h"
 #include  "otypes.h"
-#include  "paths.h"
 #include  "resolu.h"
 #include  "oconv.h"
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.10 2025/06/03 21:31:51 greg Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.11 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  * Fix argv[0] and assign global progname variable
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: fixargv0.c,v 2.10 2025/06/03 21:31:51 greg Exp
  *  External symbols declared in paths.h
  */
 
+#include "rtio.h"
 #include "paths.h"
 #include <ctype.h>
 
@@ -34,4 +35,28 @@ fixargv0(char *av0)		/* extract command name from full path */
 #endif
 		}
 	return(progname = av0);
+}
+
+
+void
+printargs(		/* print command arguments to a file */
+	int  ac,
+	char  **av,
+	FILE  *fp
+)
+{
+	if (ac <= 0) return;
+
+	if (progname == NULL)
+		fixargv0(av[0]);
+
+	if (progname >= av[0] && progname - av[0] < strlen(av[0]))
+		fputword(progname, fp);
+	else
+		fputword(av[0], fp);
+	while (--ac > 0) {
+		fputc(' ', fp);
+		fputword(*++av, fp);
+	}
+	fputc('\n', fp);
 }

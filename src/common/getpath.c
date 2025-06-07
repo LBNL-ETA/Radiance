@@ -1,17 +1,16 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.23 2021/12/05 15:44:15 greg Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.24 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
  *
- *  External symbols declared in rtio.h
+ *  External symbols declared in paths.h
  */
 
 #include "copyright.h"
 
 #include  <ctype.h>
 
-#include  "rtio.h"
 #include  "paths.h"
 
 

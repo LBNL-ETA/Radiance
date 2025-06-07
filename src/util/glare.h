@@ -1,4 +1,4 @@
-/* RCSid: $Id: glare.h,v 2.7 2008/05/01 16:42:06 greg Exp $ */
+/* RCSid: $Id: glare.h,v 2.8 2025/06/07 05:09:46 greg Exp $ */
 /*
  * Common data structures for glare source finding routines
  */
@@ -6,6 +6,7 @@
 #define _RAD_GLARE_H_
 
 #include "standard.h"
+#include "paths.h"
 #include "view.h"
 #include "color.h"
 #include "setscan.h"

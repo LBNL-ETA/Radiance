@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.24 2025/04/23 02:35:26 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.25 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -16,7 +16,6 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.24 2025/04/23 02:35:26 greg Exp $
 #include  "ambient.h"
 #include  "rpaint.h"
 #include  "random.h"
-#include  "paths.h"
 #include  "view.h"
 #include  "pmapray.h"
 

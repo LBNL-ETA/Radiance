@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.37 2013/10/18 17:04:13 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.38 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rview.c,v 2.37 2013/10/18 17:04:13 greg Exp $"
 #include  <ctype.h>
 
 #include  "ray.h"
+#include  "paths.h"
 #include  "rpaint.h"
 
 #define	 CTRL(c)	((c)-'@')
@@ -35,7 +36,7 @@ devopen(				/* open device driver */
 	char  *dname
 )
 {
-	extern char  *progname, *octname;
+	extern char  *octname;
 	char  *id;
 	int  i;
 

@@ -1,14 +1,15 @@
-/* RCSid $Id: platform.h,v 3.18 2025/01/22 19:41:55 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.19 2025/06/07 05:09:45 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
 #ifndef _RAD_PLATFORM_H_
 #define _RAD_PLATFORM_H_
 
+#include "paths.h"
+
 #if defined(_WIN32) || defined(_WIN64)
 
   #include <io.h>     /* _setmode() and stuff from unistd.h */
-  #include <stdio.h>
   typedef long off_t;
   #undef ftello
   #define ftello _ftelli64
@@ -45,7 +46,6 @@
   #define mktemp _mktemp
   #define fpurge(s)
 
-  #include <string.h>
   #undef strcasecmp
   #define strcasecmp _stricmp
   #undef strncasecmp
@@ -71,8 +71,6 @@
 
   #define NON_POSIX
 
-  #include <sys/types.h>
-  #include <sys/stat.h>
   #define RHAS_STAT
   #define S_IFREG _S_IFREG
   #define W_IFDIR _S_IFDIR

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.79 2025/05/02 23:56:18 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.80 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -14,7 +14,6 @@ static const char	RCSid[] = "$Id: rv2.c,v 2.79 2025/05/02 23:56:18 greg Exp $";
 
 #include  "platform.h"
 #include  "rtprocess.h"	/* win_popen() */
-#include  "paths.h"
 #include  "ray.h"
 #include  "ambient.h"
 #include  "otypes.h"

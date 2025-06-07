@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dcglare.c,v 2.9 2025/06/06 19:11:21 greg Exp $";
+static const char RCSid[] = "$Id: dcglare.c,v 2.10 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Compute time-step glare using imageless DGP calculation method.
@@ -30,7 +30,6 @@ static const char RCSid[] = "$Id: dcglare.c,v 2.9 2025/06/06 19:11:21 greg Exp $
  */
 
 #include <ctype.h>
-#include "paths.h"
 #include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"

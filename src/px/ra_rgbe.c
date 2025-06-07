@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.25 2025/04/22 14:51:29 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.26 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -9,7 +9,6 @@ static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.25 2025/04/22 14:51:29 greg Exp 
 
 #include  "platform.h"
 #include  "rtio.h"
-#include  "paths.h"
 #include  "color.h"
 #include  "resolu.h"
 

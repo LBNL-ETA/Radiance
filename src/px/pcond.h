@@ -1,4 +1,4 @@
-/* RCSid: $Id: pcond.h,v 3.15 2017/11/30 18:43:05 greg Exp $ */
+/* RCSid: $Id: pcond.h,v 3.16 2025/06/07 05:09:46 greg Exp $ */
 /*
  * Header file for picture file conditioning.
  */
@@ -8,6 +8,7 @@
 #include "standard.h"
 #include "color.h"
 #include "view.h"
+#include "paths.h"
 
 #ifdef __cplusplus
 extern "C" {

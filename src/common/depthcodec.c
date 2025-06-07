@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.13 2022/09/22 21:45:28 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.14 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -7,9 +7,9 @@ static const char RCSid[] = "$Id: depthcodec.c,v 2.13 2022/09/22 21:45:28 greg E
 
 #include "copyright.h"
 
-#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
+#include "paths.h"
 #include "rtio.h"
 #include "fvect.h"
 #include "depthcodec.h"

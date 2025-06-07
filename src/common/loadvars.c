@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.23 2025/02/06 21:45:00 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.24 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -7,11 +7,10 @@ static const char	RCSid[] = "$Id: loadvars.c,v 2.23 2025/02/06 21:45:00 greg Exp
 
 #include "copyright.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
 
 #include "standard.h"
+#include "paths.h"
 #include "vars.h"
 
 #define NOCHAR	127		/* constant for character to delete */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.134 2025/06/03 21:31:51 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.135 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -14,7 +14,6 @@ static const char	RCSid[] = "$Id: rad.c,v 2.134 2025/06/03 21:31:51 greg Exp $";
 #include "platform.h"
 #include "rtprocess.h"
 #include "view.h"
-#include "paths.h"
 #include "vars.h"
 
 #if defined(_WIN32) || defined(_WIN64)

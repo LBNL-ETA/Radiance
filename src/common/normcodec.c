@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.9 2022/09/22 21:47:13 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.10 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -7,8 +7,8 @@ static const char RCSid[] = "$Id: normcodec.c,v 2.9 2022/09/22 21:47:13 greg Exp
 
 #include "copyright.h"
 
-#include <stdlib.h>
 #include "rtio.h"
+#include "paths.h"
 #include "rtmath.h"
 #include "normcodec.h"
 

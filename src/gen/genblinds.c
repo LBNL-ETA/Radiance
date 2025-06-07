@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.15 2020/07/25 19:23:09 greg Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.16 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -16,7 +16,7 @@ static const char	RCSid[] = "$Id: genblinds.c,v 2.15 2020/07/25 19:23:09 greg Ex
  */
 
 #include  "rtio.h"
-#include  <stdlib.h>
+#include  "paths.h"
 #include  <math.h>
 
 #ifndef PI

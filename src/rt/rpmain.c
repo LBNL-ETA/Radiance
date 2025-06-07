@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.40 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.41 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -17,7 +17,6 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.40 2025/06/05 18:26:46 greg Exp $
 #include  "source.h"
 #include  "ambient.h"
 #include  "random.h"
-#include  "paths.h"
 #include  "view.h"
 #include  "pmapray.h"
 

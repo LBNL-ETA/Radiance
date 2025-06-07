@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.18 2025/06/06 19:11:21 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.19 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -7,7 +7,6 @@ static const char	RCSid[] = "$Id: ra_ppm.c,v 2.18 2025/06/06 19:11:21 greg Exp $
 
 #include  <math.h>
 #include  <ctype.h>
-#include  "paths.h"
 #include  "platform.h"
 #include  "rtio.h"
 #include  "color.h"

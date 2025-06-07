@@ -1,9 +1,8 @@
-/* RCSid $Id: bsdf.h,v 2.30 2021/12/13 21:05:00 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.31 2025/06/07 05:09:45 greg Exp $ */
 /*
  *  bsdf.h
  *  
  *  Declarations for bidirectional scattering distribution functions.
- *  Assumes <stdio.h> already included.
  *
  *  A material is oriented in right-hand coordinate system with X-axis
  *	in the surface plane pointed to the right as seen from the front.
@@ -23,9 +22,9 @@
 #ifndef _BSDF_H_
 #define	_BSDF_H_
 
+#include "platform.h"
 #include "fvect.h"
 #include "ccolor.h"
-#include "platform.h"
 
 #ifdef __cplusplus
 extern "C" {

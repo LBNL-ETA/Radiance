@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.7 2025/06/06 19:11:21 greg Exp $";
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.8 2025/06/07 05:09:45 greg Exp $";
 #endif
 
 #include <stdlib.h>
@@ -15,7 +15,6 @@ static const char RCSid[] = "$Id: gensdaymtx.c,v 1.7 2025/06/06 19:11:21 greg Ex
 #include "atmos.h"
 #include "copyright.h"
 #include "data.h"
-#include "paths.h"
 #include "platform.h"
 #include "rtio.h"
 #include "rtmath.h"

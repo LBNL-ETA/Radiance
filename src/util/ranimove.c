@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.23 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.24 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -21,7 +21,6 @@ static const char RCSid[] = "$Id: ranimove.c,v 3.23 2025/06/03 21:31:51 greg Exp
 #include <string.h>
 
 #include "platform.h"
-#include "paths.h"
 #include "ranimove.h"
 #include "func.h"
 

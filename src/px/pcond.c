@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.34 2025/06/03 21:31:51 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.35 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -7,7 +7,6 @@ static const char	RCSid[] = "$Id: pcond.c,v 3.34 2025/06/03 21:31:51 greg Exp $"
  */
 
 #include "platform.h"
-#include "paths.h"
 #include "pcond.h"
 
 

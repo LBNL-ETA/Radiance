@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.17 2016/03/22 03:56:17 greg Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.18 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -12,7 +12,6 @@ static const char	RCSid[] = "$Id: rglinst.c,v 3.17 2016/03/22 03:56:17 greg Exp 
 #include <time.h>
 
 #include "platform.h"
-#include "paths.h"
 #include "resolu.h"
 #include "radogl.h"
 #include "octree.h"

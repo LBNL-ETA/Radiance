@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.14 2025/06/06 19:11:21 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.15 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -10,7 +10,7 @@ static const char	RCSid[] = "$Id: genbox.c,v 2.14 2025/06/06 19:11:21 greg Exp $
 #include  "rtio.h"
 #include  "rtmath.h"
 #include  "objutil.h"
-#include  <stdlib.h>
+#include  "paths.h"
 
 int	verbose = 0;
 

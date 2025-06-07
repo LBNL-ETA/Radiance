@@ -1,11 +1,10 @@
-/* RCSid $Id: rcontrib.h,v 2.19 2023/11/15 18:02:53 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.20 2025/06/07 05:09:46 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
  */
 
 #include "platform.h"
-#include "paths.h"
 #include "rtprocess.h"
 #include "ray.h"
 #include "func.h"

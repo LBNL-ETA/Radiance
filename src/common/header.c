@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.50 2025/06/06 19:11:21 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.51 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -12,7 +12,6 @@ static const char	RCSid[] = "$Id: header.c,v 2.50 2025/06/06 19:11:21 greg Exp $
  *  gmtval(t,s)		get GMT as UTC
  *  fputdate(t,fp)	put out the given UTC
  *  fputnow(fp)		put out the current date and time
- *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
  *  formatval(r,s)	copy the format value in s to r
  *  fputformat(s,fp)	write "FORMAT=%s" to fp
  *  nativebigendian()	are we native on big-endian machine?
@@ -30,7 +29,6 @@ static const char	RCSid[] = "$Id: header.c,v 2.50 2025/06/06 19:11:21 greg Exp $
 #include  <ctype.h>
 
 #include  "tiff.h"	/* for int32 */
-#include  "paths.h"	/* for fixargv0() */
 #include  "rtio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -159,30 +157,6 @@ fputnow(			/* write out the current time */
 	time_t	tv;
 	time(&tv);
 	fputdate(tv, fp);
-}
-
-
-void
-printargs(		/* print command arguments to a file */
-	int  ac,
-	char  **av,
-	FILE  *fp
-)
-{
-	if (ac <= 0)
-		return;
-	if (progname == NULL)
-		fixargv0(av[0]);	/* sets global progname */
-
-	if (progname >= av[0] && progname - av[0] < strlen(av[0]))
-		fputword(progname, fp);
-	else
-		fputword(av[0], fp);
-	while (--ac > 0) {
-		fputc(' ', fp);
-		fputword(*++av, fp);
-	}
-	fputc('\n', fp);
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.80 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.81 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -18,16 +18,14 @@ static const char RCSid[] = "$Id: x11image.c,v 2.80 2025/06/03 21:31:51 greg Exp
 
 #include  "standard.h"
 
-#include  <string.h>
 #include  <signal.h>
-#include  <unistd.h>
-#include  <sys/types.h>
 #include  <sys/wait.h>
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
 #include  <X11/Xatom.h>
 
+#include  "paths.h"
 #include  "color.h"
 #include  "tonemap.h"
 #include  "clrtab.h"

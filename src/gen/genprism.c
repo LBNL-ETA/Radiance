@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.13 2020/07/25 19:18:01 greg Exp $";
+static const char	RCSid[] = "$Id: genprism.c,v 2.14 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -10,7 +10,7 @@ static const char	RCSid[] = "$Id: genprism.c,v 2.13 2020/07/25 19:18:01 greg Exp
  */
 
 #include  "rtio.h"
-#include  <stdlib.h>
+#include  "paths.h"
 #include  <math.h>
 #include  <ctype.h>
 

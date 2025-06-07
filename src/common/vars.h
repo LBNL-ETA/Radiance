@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.11 2025/02/06 21:45:00 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.12 2025/06/07 05:09:45 greg Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -21,8 +21,6 @@ typedef struct variable_s {
 extern int	NVARS;		/* total number of variables */
 
 extern VARIABLE	vv[];		/* variable-value pairs */
-
-extern char	*progname;	/* global argv[0] from main */
 
 extern int	nowarn;		/* global boolean to turn warnings off */
 

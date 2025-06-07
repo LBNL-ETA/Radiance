@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwright.c,v 2.11 2025/06/03 21:31:51 greg Exp $";
+static const char	RCSid[] = "$Id: vwright.c,v 2.12 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Move a viewpoint the given distance to the right
@@ -7,7 +7,7 @@ static const char	RCSid[] = "$Id: vwright.c,v 2.11 2025/06/03 21:31:51 greg Exp 
 
 
 #include "standard.h"
-
+#include "paths.h"
 #include "view.h"
 
 #include <ctype.h>

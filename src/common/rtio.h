@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.33 2025/03/01 00:51:26 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.34 2025/06/07 05:09:45 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -52,7 +52,6 @@ extern int	dateval(time_t *t, const char *s);
 extern int	gmtval(time_t *t, const char *s);
 extern void	fputdate(time_t t, FILE *fp);
 extern void	fputnow(FILE *fp);
-extern void	printargs(int ac, char **av, FILE *fp);
 extern int	formatval(char fmt[MAXFMTLEN], const char *s);
 extern void	fputformat(const char *s, FILE *fp);
 extern int	nativebigendian(void);
@@ -81,14 +80,6 @@ extern int	fgetval(FILE *fp, int ty, void *vp);
 extern char	*fgetword(char *s, int n, FILE *fp);
 					/* defined in fputword.c */
 extern void	fputword(char *s, FILE *fp);
-					/* defined in fropen.c */
-extern FILE	*frlibopen(char *fname);
-					/* defined in getlibpath.c */
-extern char	*getrlibpath(void);
-					/* defined in gethomedir.c */
-extern char	*gethomedir(char *uname, char *path, int plen);
-					/* defined in getpath.c */
-extern char	*getpath(char *fname, char *searchpath, int mode);
 					/* defined in byteswap.c */
 extern void	swap16(char *wp, size_t n);
 extern void	swap32(char *wp, size_t n);

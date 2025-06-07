@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.11 2025/06/04 22:34:27 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.12 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -9,7 +9,6 @@ static const char RCSid[] = "$Id: rcode_norm.c,v 2.11 2025/06/04 22:34:27 greg E
 
 #include <stdlib.h>
 #include "platform.h"
-#include "paths.h"
 #include "rtio.h"
 #include "rtmath.h"
 #include "normcodec.h"
