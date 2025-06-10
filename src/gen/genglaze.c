@@ -16,7 +16,7 @@ enum {
 };
 
 const double DBL_EPSILON = 1E-9;
-const double FLT_MAX = 3.40282347E+38;
+const double LARGE_DOUBE = 3.40282347E+38;
 const double RAD_PER_DEG = 0.0174532925199;
 const double COEFFS_TAU_CLEAR[] = {-0.0015, 3.355, -3.84, 1.46, 0.0288};
 const double COEFFS_TAU_BRONZE[] = {0.002, 2.813, -2.341, -0.05725, 0.599};
@@ -53,7 +53,7 @@ typedef struct {
 } GlazingLayer;
 
 
-inline double polynomial_5(double x, const double coeffs[5]) {
+static inline double polynomial_5(double x, const double coeffs[5]) {
 	return x * ( x * ( x * (coeffs[4] * x + coeffs[3]) + coeffs[2]) + coeffs[1]) + coeffs[0];
 }
 
@@ -147,7 +147,7 @@ void angular_monolithic(GlazingLayer *layer, const int nwvl) {
 			if (rho_lambda > 1.0)
 				rho_lambda = 1.0;
 
-			double exp_arg = (cos_phi_prime < DBL_EPSILON) ? -FLT_MAX : (-abs_coeff[iwvl] * layer->thickness_m / cos_phi_prime);
+			double exp_arg = (cos_phi_prime < DBL_EPSILON) ? -LARGE_DOUBE : (-abs_coeff[iwvl] * layer->thickness_m / cos_phi_prime);
 			/* Clamp exponent argument to prevent overflow in exp() */
 			if (exp_arg < -700.0) 
 				exp_arg = -700.0;
@@ -178,6 +178,9 @@ void angular_monolithic(GlazingLayer *layer, const int nwvl) {
 			layer->rb_lambda_theta[flat_idx] = r_lambda;
 		}
 	}
+	free(rho_0);
+	free(refrac);
+	free(abs_coeff);
 }
 
 
@@ -403,11 +406,34 @@ void print_usage() {
 	fprintf(stderr, "Output Files: prefix_t.dat, prefix_r.dat\n");
 }
 
+
+static void free_layer_data(GlazingLayer *layer) {
+    if (!layer) return;
+    
+    free(layer->filename);
+    free(layer->t_0);
+    free(layer->rf_0);
+    free(layer->rb_0);
+    free(layer->t_lambda_theta);
+    free(layer->rf_lambda_theta);
+    free(layer->rb_lambda_theta);
+    
+    // Set pointers to NULL to prevent double-free errors
+    layer->filename = NULL;
+    layer->t_0 = NULL;
+    layer->rf_0 = NULL;
+    layer->rb_0 = NULL;
+    layer->t_lambda_theta = NULL;
+    layer->rf_lambda_theta = NULL;
+    layer->rb_lambda_theta = NULL;
+}
+
+
 void cleanup_layers(GlazingLayer *layers, int num_layers) {
 	 if (!layers) return;
 	 for (int i = 0; i < num_layers; ++i) {
 		if (layers[i].filename)
-			free(layers[i].filename);
+			free_layer_data(&layers[i]);
 	}
 	free(layers);
 }
@@ -440,8 +466,8 @@ int main(int argc, char *argv[])
 			filename = argv[++i];
 			thickness_m = atof(argv[++i]);
 			if (!add_layer(&layers, &num_layers, &layer_capacity, filename, thickness_m, 1)) {
-				 cleanup_layers(layers, num_layers);
-				 return EXIT_FAILURE;
+				cleanup_layers(layers, num_layers);
+				return EXIT_FAILURE;
 			}
 			break;
 		case 'c':
@@ -460,12 +486,14 @@ int main(int argc, char *argv[])
 			wvl_interval_nm = atof(argv[++i]);
 			if (wvl_start_nm > wvl_end_nm) {
 				fprintf(stderr, "Starting wavelength > End wavelength\n");
+				cleanup_layers(layers, num_layers);
 				return EXIT_FAILURE;
 			}
 			if (((int)(wvl_end_nm - wvl_start_nm) % (int)wvl_interval_nm) > 0) {
 				fprintf(stderr, 
 						"Error: Wavelength range (%f to %f nm) must be evenly divisible by the interval (%f nm).\n", 
 						wvl_start_nm, wvl_end_nm, wvl_interval_nm);
+				cleanup_layers(layers, num_layers);
 				return EXIT_FAILURE;
 			}
 			break;
@@ -537,11 +565,11 @@ int main(int argc, char *argv[])
 		for (int i = 0;i < argc; ++i) {
 			printf("%s ", argv[i]);
 		}
-		printf("\nvoid specdata refl_spec\n");
+		printf("\nvoid specdata refl_spec_%s\n", prefix);
 		printf("4 noop %s . 'Acos(Rdot)/DEGREE'\n0\n0\n\n", file_r);
-		printf("void specdata trans_spec\n");
+		printf("void specdata trans_spec_%s\n", prefix);
 		printf("4 noop %s . 'Acos(abs(Rdot))/DEGREE'\n0\n0\n\n", file_t);
-		printf("void WGMDfunc glaze_mat\n13\n\trefl_spec 1 0 0\n\ttrans_spec 1 0 0\n\tvoid\n\t0 0 1 .\n0\n9 0 0 0 0 0 0 0 0 0\n");
+		printf("void WGMDfunc glaze_mat_%s\n13\n\trefl_spec_%s 1 0 0\n\ttrans_spec_%s 1 0 0\n\tvoid\n\t0 0 1 .\n0\n9 0 0 0 0 0 0 0 0 0\n", prefix, prefix, prefix);
 	} else {
 		fprintf(stderr, "Error: Failed to write one or more output files.\n");
 	}
