@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.15 2019/03/01 02:03:33 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.16 2025/06/18 22:16:31 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -184,8 +184,10 @@ o_mesh(			/* compute ray intersection with a mesh */
 	if ((o->omod == OVOID) & (tmod != OVOID)) {
 		r->ro = getmeshpseudo(curmsh, tmod);
 		r->rox = &curmi->x;
-	} else
+	} else {
 		r->ro = o;
+		r->rox = NULL;
+	}
 					/* compute barycentric weights */
 	if (flags & (MT_N|MT_UV))
 		if (get_baryc(wt, rcont.rop, tv[0].v, tv[1].v, tv[2].v) < 0) {
