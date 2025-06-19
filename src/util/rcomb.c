@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.31 2025/04/18 23:59:03 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.32 2025/06/19 22:36:53 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -876,6 +876,7 @@ main(int argc, char *argv[])
 	int		stdin_used = 0;
 	int		nproc = 1;
 	const char	*mcat_spec = NULL;
+	int		transpose_mcat = 0;
 	int		n2comp = 0;
 	uby8		comp_ndx[128];
 	int		i;
@@ -970,8 +971,9 @@ main(int argc, char *argv[])
 				mop[nmats].preop.csym = NULL;
 				break;
 			case 'm':
-				mcat_last = 1;
 				if (!n) goto userr;
+				mcat_last = 1;
+				transpose_mcat = (argv[i][2] == 't');
 				if (argv[++i][0] == '-' && !argv[i][1]) {
 					if (stdin_used++) goto stdin_error;
 					mcat_spec = stdin_name;
@@ -990,11 +992,19 @@ main(int argc, char *argv[])
 	}
 	resize_inparr(nmats+1);		/* extra matrix at end for result */
 	mop[nmats].inspec = "trailing_ops";
-					/* load final concatenation matrix */
-	if (mcat_spec && !(mcat = rmx_load(mcat_spec))) {
-		fprintf(stderr, "%s: error loading concatenation matrix: %s\n",
-				argv[0], mcat_spec);
-		return(1);
+
+	if (mcat_spec) {		/* load final concatenation matrix? */
+		mcat = rmx_load(mcat_spec);
+		if (!mcat) {
+			fprintf(stderr, "%s: error loading concatenation matrix: %s\n",
+					argv[0], mcat_spec);
+			return(1);
+		}
+		if (transpose_mcat && !rmx_transpose(mcat)) {
+			fprintf(stderr, "%s: error transposing concatenation matrix: %s\n",
+					argv[0], mcat_spec);
+			return(1);
+		}
 	}
 					/* get/check inputs, set constants */
 	if (!initialize(&mop[nmats].imx))

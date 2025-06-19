@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcomb.1,v 1.13 2025/04/04 18:06:48 greg Exp $"
+.\" RCSid "$Id: rcomb.1,v 1.14 2025/06/19 22:36:53 greg Exp $"
 .TH RCOMB 12/5/2023 RADIANCE
 .SH NAME
 rcomb - combine and convert matrices a row at a time
@@ -25,7 +25,7 @@ rcomb - combine and convert matrices a row at a time
 ]
 .B "m1 .."
 [
-.B "\-m mcat"
+.B "\-m[t] mcat"
 ]
 .SH DESCRIPTION
 .I Rcomb
@@ -60,6 +60,9 @@ A single concatenation matrix may be applied after element operations
 using the
 .I \-m
 option.
+If the option is given as
+.I \-mt
+then the concatenation matrix will be transposed before it is applied.
 Matrix concatenation will happen before or after any trailing
 operations, depending on relative command line placement.
 .PP

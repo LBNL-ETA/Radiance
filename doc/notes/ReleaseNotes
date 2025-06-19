@@ -2826,3 +2826,5 @@ indirect rays to transmit through alternate material type.
 Thanks to Jon Sargent for finding problem and help resolving it.
 
 Added experimental C++ based rxpiece tool to default installation.
+
+Added rcomb -mt option to transpose concatenation matrix.
