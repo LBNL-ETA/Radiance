@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.99 2025/04/22 04:45:25 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.100 2025/06/19 22:03:37 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -761,17 +761,16 @@ rmx_transpose(RMATRIX *rm)
 		return(1);
 	}
 	if (rm->nrows == rm->ncols) {	/* square matrix case */
-	     for (i = rm->nrows; i--; )
-	     	for (j = rm->ncols; j--; ) {
-		    if (i == j) continue;
+	     for (i = rm->nrows; --i > 0; )
+	     	for (j = i; j-- > 0; ) {
 		    memcpy(val, rmx_val(rm,i,j),
 				sizeof(rmx_dtype)*rm->ncomp);
 		    memcpy(rmx_lval(rm,i,j), rmx_val(rm,j,i),
 				sizeof(rmx_dtype)*rm->ncomp);
-		    memcpy(rmx_val(rm,j,i), val,
+		    memcpy(rmx_lval(rm,j,i), val,
 				sizeof(rmx_dtype)*rm->ncomp);
 		}
-		return(1);
+	    return(1);
 	}
 #define	bmbyte(r,c)	bmap[((r)*rm->ncols+(c))>>3]
 #define	bmbit(r,c)	(1 << ((r)*rm->ncols+(c) & 7))

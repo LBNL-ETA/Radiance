@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.95 2025/04/04 18:06:48 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.96 2025/06/19 22:03:37 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -257,10 +257,11 @@ if ( $tensortree ) {
 	do_matrix_bsdf();
 }
 # Output XML
-# print STDERR "Running: $wrapper\n";
+print STDERR "Running: $wrapper\n";
 system "$wrapper -C \"Created by: genBSDF @savedARGV\"";
 die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
+exit;
 exec $rmtmp;
 
 #============== End of main program segment ==============#
@@ -291,7 +292,7 @@ sub active_phase {
 sub run_check {
 	if ( !active_phase() ) { return; }
 	my $cmd = shift;
-	# print STDERR "Running: $cmd\n";
+	print STDERR "Running: $cmd\n";
 	system $cmd;
 	die "Failure running: $cmd\n" if ( $? );
 }
@@ -357,7 +358,7 @@ sub do_ttree_dir {
 		}
 	}
 	if ( $dop ) {
-		# print STDERR "Running: $cmd\n";
+		print STDERR "Running: $cmd\n";
 		system $cmd;
 		die "Failure running rfluxmtx" if ( $? );
 	}
@@ -442,7 +443,7 @@ sub ttree_comp {
 			open(DATOUT, "> $dest");
 			print DATOUT "{\n";
 			close DATOUT;
-			# print STDERR "Running: $cmd\n";
+			print STDERR "Running: $cmd\n";
 			system "$cmd >> $dest";
 			die "Failure running rcalc" if ( $? );
 			open(DATOUT, ">> $dest");
@@ -479,7 +480,7 @@ sub do_matrix_dir {
 	my $sender = ($bsender,$fsender)[$forw];
 	my $cmd = "$rfluxmtx$r -ff $sender $receivers -i $octree";
 	if ( $dop ) {
-		# print STDERR "Running: $cmd\n";
+		print STDERR "Running: $cmd\n";
 		system $cmd;
 		die "Failure running rfluxmtx" if ( $? );
 	}
