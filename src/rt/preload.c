@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.19 2025/06/20 23:47:43 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.20 2025/06/20 23:48:28 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -125,7 +125,7 @@ load_os(			/* load associated data for object */
 		getfunc(op, 3, 0x7, 1);
 		return(1);
 	case MAT_WGMDF:		/* WGMDfunc material */
-		getfunc(m, 12, 0xEEE, 1);
+		getfunc(op, 12, 0xEEE, 1);
 		return(1);
 	case MAT_BRTDF:		/* BRDTfunc material */
 		getfunc(op, 9, 0x3f, 0);
