@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.96 2025/02/07 16:32:56 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.97 2025/06/20 23:21:33 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -261,7 +261,7 @@ rayparticipate(			/* compute ray medium participation */
 	RAY  *r
 )
 {
-	SCOLOR	ce, ca;
+	COLOR	ce;
 	double	re, ge, be;
 
 	if (intens(r->cext) <= 1./FHUGE)
@@ -274,20 +274,21 @@ rayparticipate(			/* compute ray medium participation */
 		ge *= 1. - colval(r->albedo,GRN);
 		be *= 1. - colval(r->albedo,BLU);
 	}
-	setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+	setcolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
 			ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
 			be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
-	smultscolor(r->rcol, ce);		/* path extinction */
+	smultcolor(r->rcol, ce);		/* path extinction */
 	if (r->crtype & SHADOW || intens(r->albedo) <= FTINY)
 		return;				/* no scattering */
 	
 	/* PMAP: indirect inscattering accounted for by volume photons? */
 	if (!volumePhotonMapping) {
+		SCOLOR	ca;
 		setscolor(ca,
-			colval(r->albedo,RED)*colval(ambval,RED)*(1.-scolval(ce,RED)),
-			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-scolval(ce,GRN)),
-			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-scolval(ce,BLU)));
-		saddscolor(r->rcol, ca);		/* ambient in scattering */
+			colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
+			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
+			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
+		saddscolor(r->rcol, ca);	/* ambient in scattering */
 	}
 	
 	srcscatter(r);				/* source in scattering */
