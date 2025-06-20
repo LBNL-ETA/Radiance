@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.33 2025/06/03 21:31:51 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.34 2025/06/20 03:43:17 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -110,7 +110,7 @@ OBJECT	nsceneobjs;			/* number of objects in our scene */
 
 int	dimlist[MAXDIM];		/* sampling dimensions */
 int	ndims = 0;			/* number of sampling dimensions */
-int	samplendx = 0;			/* index for this sample */
+unsigned long	samplendx = 0;		/* index for this sample */
 
 void	(*trace)() = NULL;		/* trace call */
 
@@ -155,7 +155,7 @@ char	*amblist[AMBLLEN+1];		/* ambient include/exclude list */
 int	ambincl = -1;			/* include == 1, exclude == 0 */
 
 
-static void
+void
 reset_random(void)		/* re-initialize random number generator */
 {
 	if (rand_samp) {

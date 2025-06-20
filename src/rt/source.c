@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.86 2025/01/18 03:49:00 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.87 2025/06/20 03:43:17 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -561,7 +561,7 @@ srcscatter(			/* compute source scattering into ray */
 	RAY  *r
 )
 {
-	int  oldsampndx;
+	unsigned long  oldsampndx;
 	int  nsamps;
 	RAY  sr;
 	SRCINDEX  si;
@@ -583,7 +583,7 @@ srcscatter(			/* compute source scattering into ray */
 		nsamps = MAXSSAMP;
 #endif
 	oldsampndx = samplendx;
-	samplendx = random()&0x7fff;		/* randomize */
+	samplendx = random()&0x7ffff;		/* randomize */
 	for (i = volumePhotonMapping ? 1 : r->slights[0]; i > 0; i--) {
 		/* for each source OR once if volume photon map enabled */
 		for (j = 0; j < nsamps; j++) {	/* for each sample position */

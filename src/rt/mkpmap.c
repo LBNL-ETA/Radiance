@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.14 2025/06/05 18:28:25 greg Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.15 2025/06/20 03:43:17 greg Exp $";
 #endif
 
 
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.14 2025/06/05 18:28:25 greg Exp $
        (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")
    ======================================================================
    
-   $Id: mkpmap.c,v 2.14 2025/06/05 18:28:25 greg Exp $    
+   $Id: mkpmap.c,v 2.15 2025/06/20 03:43:17 greg Exp $    
 */
 
 
@@ -73,8 +73,9 @@ double   shadthresh = .05, ambacc = 0.2, shadcert = .5, minweight = 5e-3,
          ssampdist = 0, dstrsrc = 0.0, specthresh = 0.15, specjitter = 1.0,
          avgrefl = 0.5;
 int      ambvwt = 0, ambssamp = 0, ambres = 32, ambounce = 0, 
-         directrelay = 1, directvis = 1, samplendx, do_irrad = 0, 
+         directrelay = 1, directvis = 1, do_irrad = 0,
          ambdiv = 128, vspretest = 512, maxdepth = 6, contrib = 0;
+unsigned long	samplendx = 0;
 char     *ambfile = NULL, *RCCONTEXT = NULL;
 void     (*trace)() = NULL, (*addobjnotify [])() = {ambnotify, NULL};
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.59 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.60 2025/06/20 03:43:17 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -362,13 +362,7 @@ main(int  argc, char  *argv[])
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
-	if (rand_samp) {
-		srandom((long)time(0));
-		initurand(0);
-	} else {
-		srandom(0L);
-		initurand(2048);
-	}
+	reset_random();
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP

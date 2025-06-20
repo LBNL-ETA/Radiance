@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.43 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.44 2025/06/20 03:43:17 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -233,7 +233,7 @@ my_face(		/* make an illum face */
 	int  dim[2];
 	int  n, nalt, nazi, alti;
 	double  sp[2], r1, r2;
-	int  h;
+	unsigned long  h;
 	FVECT  dn, org, dir;
 	FVECT  u, v;
 	double  ur[2], vr[2];

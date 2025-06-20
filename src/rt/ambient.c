@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.131 2025/01/23 22:03:08 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.132 2025/06/20 03:43:17 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -154,7 +154,7 @@ setambient(void)				/* initialize calculation */
 		if (flen != lastpos) {
 			sprintf(errmsg,
 			"ignoring last %ld values in ambient file (corrupted)",
-					(flen - lastpos)/AMBVALSIZ);
+					(long)((flen - lastpos)/AMBVALSIZ));
 			error(WARNING, errmsg);
 			fseeko(ambfp, lastpos, SEEK_SET);
 			ftruncate(fileno(ambfp), lastpos);
@@ -861,7 +861,7 @@ ambsync(void)			/* synchronize ambient file */
 			if (!readambval(&avs, ambinp)) {
 				sprintf(errmsg,
 			"ambient file \"%s\" corrupted near character %ld",
-						ambfile, flen - n);
+						ambfile, (long)(flen - n));
 				error(WARNING, errmsg);
 				break;
 			}

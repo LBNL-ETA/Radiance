@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.46 2024/10/23 23:51:20 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.47 2025/06/20 03:43:17 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -17,7 +17,7 @@ OBJECT	nsceneobjs;			/* number of objects in our scene */
 
 int	dimlist[MAXDIM];		/* sampling dimensions */
 int	ndims = 0;			/* number of sampling dimensions */
-int	samplendx = 0;			/* index for this sample */
+unsigned long	samplendx = 0;		/* index for this sample */
 
 void	(*trace)() = NULL;		/* trace call (NULL before rcinit) */
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.58 2025/01/18 03:49:00 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.59 2025/06/20 03:43:17 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -104,7 +104,8 @@ extern void	(*trace)(RAY*);	/* global trace reporting callback */
 
 extern int	dimlist[];	/* dimension list for distribution */
 extern int	ndims;		/* number of dimensions so far */
-extern int	samplendx;	/* index for this sample */
+extern unsigned long
+		samplendx;	/* index for this sample */
 
 extern int	do_irrad;	/* compute irradiance? */
 
@@ -215,6 +216,7 @@ extern void	ray_done(int freall);
 extern void	ray_save(RAYPARAMS *rp);
 extern void	ray_restore(RAYPARAMS *rp);
 extern void	ray_defaults(RAYPARAMS *rp);
+extern void	reset_random(void);
 					/* defined in raypcalls.c */
 extern void	ray_pinit(char *otnm, int nproc);
 extern int	ray_psend(RAY *r);
