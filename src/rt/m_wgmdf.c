@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.13 2025/06/20 16:48:39 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.14 2025/06/20 18:05:30 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -298,7 +298,7 @@ agaussamp(WGMDDAT *wp)
 				nstarget = 1;
 		}
 		scolorblack(scol);
-		dimlist[ndims_inc] = (int)(size_t)wp->mtp;
+		dimlist[ndims_inc()] = (int)(size_t)wp->mtp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; (nstaken < nstarget) &
 						(ntrials < maxiter); ntrials++) {
@@ -347,7 +347,7 @@ agaussamp(WGMDDAT *wp)
 			scalescolor(scol, d);
 			saddscolor(wp->rp->rcol, scol);
 		}
-		dec_ndims;
+		dec_ndims();
 	}
 					/* compute transmission */
 	if ((wp->specfl & (SP_TRAN|SP_TPURE|SP_TBLT)) == SP_TRAN &&
@@ -364,14 +364,14 @@ agaussamp(WGMDDAT *wp)
 			} else
 				nstarget = 1;
 		}
-		dimlist[ndims_inc] = (int)(size_t)wp->mtp;
+		dimlist[ndims_inc()] = (int)(size_t)wp->mtp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; (nstaken < nstarget) &
 						(ntrials < maxiter); ntrials++) {
 			if (ntrials)
 				d = frandom();
 			else
-				d = urand(ilhash(dimlist,ndims)+1823+samplendx);
+				d = urand(ilhash(dimlist,ndims)+4337+samplendx);
 			multisamp(rv, 2, d);
 			d = 2.0*PI * rv[0];
 			cosp = tcos(d) * wp->ts.u_alpha;
@@ -401,7 +401,7 @@ agaussamp(WGMDDAT *wp)
 			saddscolor(wp->rp->rcol, sr.rcol);
 			++nstaken;
 		}
-		dec_ndims;
+		dec_ndims();
 	}
 }
 

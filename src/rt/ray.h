@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.61 2025/06/20 16:48:39 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.62 2025/06/20 18:05:30 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -21,8 +21,8 @@ extern "C" {
 
 #define  MAXDIM		36	/* maximum number of sampling dimensions */
 #define  XTRADIM	3	/* #spare dimensions */
-#define  ndims_inc	(ndims -= ndims>=MAXDIM-XTRADIM, ndims++)
-#define  dec_ndims	(ndims -= ndims>0)
+#define  ndims_inc()	(ndims -= ndims>=MAXDIM-XTRADIM, ndims++)
+#define  dec_ndims()	(ndims -= ndims>0)
 
 				/* ray type flags */
 #define  PRIMARY	01		/* original ray */

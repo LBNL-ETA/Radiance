@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.76 2025/06/20 17:03:01 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.77 2025/06/20 18:05:30 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -611,14 +611,14 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 				setscolor(unsc, b, b, b);
 		}
 		return(ntotal);
-	}
-	dimlist[ndims_inc] = (int)(size_t)ndp->mp;	/* else sample specular */
-	ndims_inc;
+	}					/* else sample specular */
+	dimlist[ndims_inc()] = (int)(size_t)ndp->mp;
+	ndims_inc();
 	for (n = dfp->ncomp; n--; ) {		/* loop over components */
 		dimlist[ndims-1] = n + 9438;
 		ntotal += sample_sdcomp(ndp, &dfp->comp[n], sflags==SDsampSpT);
 	}
-	dec_ndims; dec_ndims;
+	dec_ndims(); dec_ndims();
 	return(ntotal);
 }
 
