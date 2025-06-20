@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.9 2025/05/23 17:09:26 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.10 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -253,7 +253,7 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 		} else
 			nstarget = 1;
 	}
-	dimlist[ndims++] = (int)(size_t)np->mp;
+	dimlist[ndims_inc] = (int)(size_t)np->mp;
 	maxiter = MAXITER*nstarget;
 	for (nstaken = ntrials = 0; nstaken < nstarget &&
 					ntrials < maxiter; ntrials++) {

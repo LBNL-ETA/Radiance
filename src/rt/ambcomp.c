@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.101 2025/04/29 23:41:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.102 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -217,7 +217,7 @@ ambsample(				/* initial ambient division sample */
 				spt[1]*hp->uy[ii] +
 				zd*hp->onrm[ii];
 	checknorm(ar.rdir);
-	dimlist[ndims++] = AI(hp,i,j) + 90171;
+	dimlist[ndims_inc] = AI(hp,i,j) + 90171;
 	rayvalue(&ar);			/* evaluate ray */
 	ndims--;
 	zd = raydistance(&ar);

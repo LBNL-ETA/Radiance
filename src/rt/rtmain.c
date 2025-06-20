@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.60 2025/06/20 03:43:17 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.61 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -18,9 +18,6 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.60 2025/06/20 03:43:17 greg Exp $
 #include  "ambient.h"
 #include  "random.h"
 #include  "pmapray.h"
-
-extern char	*progname;		/* global argv[0] */
-
 					/* persistent processes define */
 #ifdef  F_SETLKW
 #define  PERSIST	1		/* normal persist */

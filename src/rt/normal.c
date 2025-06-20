@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.87 2024/12/20 16:29:50 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.88 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -394,7 +394,7 @@ gaussamp(			/* sample Gaussian specular */
 				nstarget = 1;
 		}
 		scolorblack(scol);
-		dimlist[ndims++] = (int)(size_t)np->mp;
+		dimlist[ndims_inc] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; nstaken < nstarget &&
 						ntrials < maxiter; ntrials++) {
@@ -458,7 +458,7 @@ gaussamp(			/* sample Gaussian specular */
 			} else
 				nstarget = 1;
 		}
-		dimlist[ndims++] = (int)(size_t)np->mp;
+		dimlist[ndims_inc] = (int)(size_t)np->mp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; nstaken < nstarget &&
 						ntrials < maxiter; ntrials++) {

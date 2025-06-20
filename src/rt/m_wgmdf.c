@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.11 2025/05/31 00:54:34 greg Exp $";
+static const char RCSid[] = "$Id: m_wgmdf.c,v 2.12 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -298,7 +298,7 @@ agaussamp(WGMDDAT *wp)
 				nstarget = 1;
 		}
 		scolorblack(scol);
-		dimlist[ndims++] = (int)(size_t)wp->mtp;
+		dimlist[ndims_inc] = (int)(size_t)wp->mtp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; (nstaken < nstarget) &
 						(ntrials < maxiter); ntrials++) {
@@ -364,7 +364,7 @@ agaussamp(WGMDDAT *wp)
 			} else
 				nstarget = 1;
 		}
-		dimlist[ndims++] = (int)(size_t)wp->mtp;
+		dimlist[ndims_inc] = (int)(size_t)wp->mtp;
 		maxiter = MAXITER*nstarget;
 		for (nstaken = ntrials = 0; (nstaken < nstarget) &
 						(ntrials < maxiter); ntrials++) {
