@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.24 2025/06/21 00:15:30 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.25 2025/06/21 17:42:17 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -10,9 +10,7 @@ static const char RCSid[] = "$Id: modobject.c,v 2.24 2025/06/21 00:15:30 greg Ex
 #include "copyright.h"
 
 #include  "standard.h"
-
 #include  "object.h"
-
 #include  "otypes.h"
 
 
@@ -29,13 +27,27 @@ objndx(				/* get object number from pointer */
 	OBJREC  *op
 )
 {
-	int	i;
-
+#ifndef ONCACHESIZ
+#define ONCACHESIZ	907	/* keep a cache of previous searches */
+#endif
+	static OBJECT	oncache[ONCACHESIZ];
+	const int	ent = (size_t)op % ONCACHESIZ;
+	int		i;
+				/* clear cache on first call */
+	for (i = ONCACHESIZ*(!oncache[0] & !oncache[1]); i--; )
+		oncache[i] = OVOID;
+				/* is this pointer in cache? */
+	if ((oncache[ent] != OVOID) & (oncache[ent] < nobjects) &&
+				objptr(oncache[ent]) == op)
+		return(oncache[ent]);		/* matches previous search */
+				/* else look for allocated block */
 	for (i = (nobjects-1)>>OBJBLKSHFT; i >= 0; i--)
-		if ((objblock[i] <= op) & (op < objblock[i]+OBJBLKSIZ))
-			return( ((OBJECT)i << OBJBLKSHFT) +
-					(OBJECT)(op - objblock[i]) );
-
+		if ((objblock[i] <= op) & (op < objblock[i]+OBJBLKSIZ)) {
+				/* found it -- save index to cache */
+			oncache[ent] = ((OBJECT)i << OBJBLKSHFT) +
+						(op - objblock[i]);
+			return(oncache[ent]);
+		}
 	return(OVOID);		/* not in our array -- may still be valid */
 }
 
