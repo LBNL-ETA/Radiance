@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xf.c,v 2.8 2020/04/02 20:44:15 greg Exp $";
+static const char	RCSid[] = "$Id: xf.c,v 2.9 2025/06/23 15:11:04 greg Exp $";
 #endif
 /*
  *  xf.c - routines to convert transform arguments into 4X4 matrix.
@@ -14,6 +14,25 @@ static const char	RCSid[] = "$Id: xf.c,v 2.8 2020/04/02 20:44:15 greg Exp $";
 #define  d2r(a)		((PI/180.)*(a))
 
 #define  checkarg(a,l)	if (av[i][a] || badarg(ac-i-1,av+i+1,l)) goto done
+
+
+int
+isxfopt(char *p)	/* check whether option begins transform */
+{
+	if (*p++ != '-')
+		return(0);
+
+	if ((p[0] == 't') | (p[0] == 's') | (p[0] == 'i') &&
+			!p[1])
+		return(1);
+
+	if ((p[0] == 'r') | (p[0] == 'm') &&
+			('x' <= p[1]) & (p[1] <= 'z') &&
+			!p[2])
+		return(1);
+
+	return(0);
+}
 
 
 int

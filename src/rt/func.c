@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.43 2025/04/22 17:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.44 2025/06/23 15:11:04 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -161,7 +161,7 @@ getfunc(	/* get function for this modifier */
 		goto toofew;
 	if (i <= ff)			/* find transform args */
 		i = ff+1;
-	while (i < na && arg[i][0] != '-')
+	while (i < na && !isxfopt(arg[i]))
 		i++;
 	if (i == na) {			/* no transform */
 		f->fxp = f->bxp = &unitxf;

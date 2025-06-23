@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.15 2021/12/13 21:05:00 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.16 2025/06/23 15:11:04 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -46,6 +46,7 @@ extern double	atan2a(double y, double x);
 #define  ttan(x)		(tsin(x)/tcos(x))
 #endif
 					/* defined in xf.c */
+extern int	isxfopt(char *);
 extern int	xf(XF *ret, int ac, char *av[]);
 extern int	invxf(XF *ret, int ac, char *av[]);
 extern int	fullxf(FULLXF *fx, int ac, char *av[]);
