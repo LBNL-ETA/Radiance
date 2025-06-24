@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.30 2025/06/23 19:56:47 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.31 2025/06/24 21:04:16 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -10,8 +10,6 @@ static const char RCSid[] = "$Id: readobj.c,v 2.30 2025/06/23 19:56:47 greg Exp 
 #include "copyright.h"
 
 #include  <ctype.h>
-#include  <string.h>
-#include  <stdio.h>
 
 #include  "platform.h"
 #include  "standard.h"
@@ -19,7 +17,7 @@ static const char RCSid[] = "$Id: readobj.c,v 2.30 2025/06/23 19:56:47 greg Exp 
 #include  "otypes.h"
 
 #ifndef OBJMEMOPT
-#define OBJMEMOPT	1		/* optimize object block memory? */
+#define OBJMEMOPT	0		/* optimize object block memory? */
 #endif
 
 OBJREC  *objblock[MAXOBJBLK];		/* our objects */
@@ -184,7 +182,7 @@ optimize_objblock(int i)		/* consolidate memory in object block */
 	unsigned long	sargcnt = 0, iargcnt = 0, fargcnt = 0, namecnt = 0;
 
 	if (i < 0 || objblock[i] == NULL || objblock[i][OBJBLKSIZ].otype < 0)
-		return;			/* invalid or already flagged */
+		return;			/* invalid or already done */
 
 	for (o = objblock[i]+OBJBLKSIZ; o-- > objblock[i]; ) {
 		if (o->oname == NULL)	/* too early to optimize? */
@@ -199,7 +197,7 @@ optimize_objblock(int i)		/* consolidate memory in object block */
 #endif
 		namecnt += strlen(o->oname)+1;
 	}
-	if (n < OBJBLKSIZ/10)	/* never happens? */
+	if (n < OBJBLKSIZ/10)		/* never happens? */
 		return;
 					/* prep consolidation object */
 	co = objblock[i]+OBJBLKSIZ;
@@ -215,6 +213,7 @@ optimize_objblock(int i)		/* consolidate memory in object block */
 			(co->oargs.farg == NULL)) {
 		free(co->oname);
 		free(co->oargs.sarg); free(co->oargs.farg);
+		memset(co, 0, sizeof(OBJREC));
 		return;			/* insufficient memory */
 	}
 #ifdef  IARGS
@@ -223,6 +222,7 @@ optimize_objblock(int i)		/* consolidate memory in object block */
 	if (co->oargs.iarg == NULL) {
 		free(co->oname);
 		free(co->oargs.sarg); free(co->oargs.farg);
+		memset(co, 0, sizeof(OBJREC));
 		return;			/* insufficient memory */
 	}
 	iargcnt = 0;
