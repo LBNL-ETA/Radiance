@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.57 2025/06/20 16:29:02 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.58 2025/06/25 15:28:56 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -558,14 +558,14 @@ FILE  *fp
 )
 {
 	fprintf(fp, " -vt%c", vp->type);
-	fprintf(fp, " -vp %.6g %.6g %.6g", vp->vp[0], vp->vp[1], vp->vp[2]);
-	fprintf(fp, " -vd %.6g %.6g %.6g", vp->vdir[0]*vp->vdist,
+	fprintf(fp, " -vp %.7g %.7g %.7g", vp->vp[0], vp->vp[1], vp->vp[2]);
+	fprintf(fp, " -vd %.7g %.7g %.7g", vp->vdir[0]*vp->vdist,
 						vp->vdir[1]*vp->vdist,
 						vp->vdir[2]*vp->vdist);
-	fprintf(fp, " -vu %.6g %.6g %.6g", vp->vup[0], vp->vup[1], vp->vup[2]);
-	fprintf(fp, " -vh %.6g -vv %.6g", vp->horiz, vp->vert);
-	fprintf(fp, " -vo %.6g -va %.6g", vp->vfore, vp->vaft);
-	fprintf(fp, " -vs %.6g -vl %.6g", vp->hoff, vp->voff);
+	fprintf(fp, " -vu %.5g %.5g %.5g", vp->vup[0], vp->vup[1], vp->vup[2]);
+	fprintf(fp, " -vh %.5g -vv %.5g", vp->horiz, vp->vert);
+	fprintf(fp, " -vo %.5g -va %.5g", vp->vfore, vp->vaft);
+	fprintf(fp, " -vs %.5g -vl %.5g", vp->hoff, vp->voff);
 }
 
 
