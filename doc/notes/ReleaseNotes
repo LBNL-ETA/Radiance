@@ -2672,9 +2672,11 @@ put out as many color channels as specified in any -cs option
 
 Added ability of mgf2rad to convert spectral data at least
 for light, glow, plastic, and metal primitive types.  Need
-to use new '-s' option to get new output.
+to use new '-s' option to get new output.  Added support for
+new WGMDfunc type as well, which is considerably more flexible
+at supporting different spectral components.
 
-Added handling of spectral images to rcode2bmp script.
+Added handling of spectral pictures (HSR) to rcode2bmp script.
 
 Minor change to rcollate to allow explicit byte records to
 be any specified length without checks against header input.
@@ -2718,7 +2720,7 @@ Wrote rxpiece tool that will render pictures using tiling and
 can handle different output formats and hyperspectral pictures.
 Only runs on a single machine, however -- no NFS locking on
 shared volumes.  Mainly a demonstration tool for RpictSimulManager
-C++ class, but may have its uses.
+C++ class, but later added to standard Rmakefile targets.
 
 Fixed a bug in BSDF sampling of sources pointed out by
 David Geisler-Moroder, which tended to overestimate specular
@@ -2740,7 +2742,7 @@ results are still reported in RGB.
 Added accurate conversion of hyperspectral pictures to ra_xyze.
 
 Added hyperspectral picture conversion to ra_tiff, with accurate
-color when targeting 16-bit/comp., LogLuv, and float utput,
+color when targeting 16-bit/comp., LogLuv, and float output,
 and the approximate method for 24-bit RGB.
 
 Taoning added genssky -L option to specify global and diffuse
@@ -2825,6 +2827,7 @@ Fixed problem with "mirror" primitive, which was not permitting
 indirect rays to transmit through alternate material type.
 Thanks to Jon Sargent for finding problem and help resolving it.
 
-Added experimental C++ based rxpiece tool to default installation.
+Added experimental C++ based rxpiece tool to default installation
+in makeall/Rmakefile.
 
 Added rcomb -mt option to transpose concatenation matrix.
