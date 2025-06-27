@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.33 2025/06/04 20:32:24 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.34 2025/06/27 15:19:58 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -282,16 +282,20 @@ Output standard RGB values (the default).
 Output standard CIE XYZ tristimulus values rather than RGB.
 .TP
 .BI -f \ source
-Load definitions from the file
+Load function and variable definitions from the file
 .I source
 and assign at the global level.
+This may be convenient for altering material appearance on a per-run basis.
 The usual set of library directories is searched based on the
 .I RAYPATH
 environment variable.
+These file definitions will override same-named variables
+and functions in "rayinit.cal".
 .TP
 .BI -e \ expr
-Set additional definitions from
-.I expr.
+Set initial definitions from
+.I expr,
+which may include constant assignments with the ':' character.
 .TP
 .BI -dj \ frac
 Set the direct jittering to

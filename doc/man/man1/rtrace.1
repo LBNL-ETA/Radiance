@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.42 2025/04/23 15:09:03 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.43 2025/06/27 15:19:58 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -282,16 +282,20 @@ cores available on the system or the
 setting, which forces a wait at each flush.
 .TP
 .BI -f \ source
-Load definitions from the file
+Load function and variable definitions from the file
 .I source
 and assign at the global level.
+This may be convenient for altering material appearance on a per-run basis.
 The usual set of library directories is searched based on the
 .I RAYPATH
 environment variable.
+These file definitions will override same-named variables
+and functions in "rayinit.cal".
 .TP
 .BI -e \ expr
-Set additional definitions from
-.I expr.
+Set initial definitions from
+.I expr,
+which may include constant assignments with the ':' character.
 .TP
 .BI -dj \ frac
 Set the direct jittering to
