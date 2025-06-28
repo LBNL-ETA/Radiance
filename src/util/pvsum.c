@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.5 2025/06/06 18:26:22 greg Exp $";
+static const char RCSid[] = "$Id: pvsum.c,v 2.6 2025/06/28 17:30:50 greg Exp $";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -472,7 +472,7 @@ multi_process(void)
 				return(0);
 			}
 			i = in_type==DTfloat ? ncomp*(int)sizeof(float) : ncomp+1;
-			maplen = dstart + yres*xres*i;
+			maplen = dstart + (size_t)yres*xres*i;
 			imap = mmap(NULL, maplen, PROT_READ,
 					MAP_FILE|MAP_SHARED, fileno(finp), 0);
 			fclose(finp);		/* will read from map (randomly) */
