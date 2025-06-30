@@ -192,7 +192,6 @@ else()
   install_and_copy_without_extension(
     falsecolor.pl
     normpat.csh
-    pbilat.csh
     pdfblur.csh
     pgblur.csh
     phisto.pl
