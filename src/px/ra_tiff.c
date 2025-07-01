@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.40 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.41 2025/07/01 19:40:35 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -374,7 +374,7 @@ initfromtif(void)		/* initialize conversion from TIFF input */
 		cvts.owner[sizeof(cvts.owner)-1] = '\0';
 	}
 					/* add to Radiance header */
-	if (cvts.pixrat < .99 || cvts.pixrat > 1.01)
+	if (cvts.pixrat < .999 || cvts.pixrat > 1.001)
 		fputaspect(cvts.pixrat, cvts.rfp);
 	if (CHK(C_XYZE)) {
 		if (cvts.stonits > .0)
