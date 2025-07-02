@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.8 2025/06/07 05:09:45 greg Exp $";
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.9 2025/07/02 01:56:35 greg Exp $";
 #endif
 
 #include <stdlib.h>
@@ -647,15 +647,19 @@ int main(int argc, char *argv[])
 		const int	   mo = erec.date.month+1;
 		const int	   da = erec.date.day;
 		const double	hr = erec.date.hour;
-		double aod = erec.optdepth;
+		double aod = erec.optdepth * 1e3;
+		if (aod >= 999.0) {
+			fprintf(stderr, "aod not set, using default value %.3f\n", AOD0_CA);
+			aod = AOD0_CA;
+		}
 		double cc = erec.skycover;
+		if (cc >= 99.0) {
+			fprintf(stderr, "skycover not set, using default value 0.0\n");
+			cc = 0.0;
+		}
 		double		  sda, sta, st;
 		int			 sun_in_sky;
 
-		if (aod == 0.0) {
-			aod = AOD0_CA;
-			fprintf(stderr, "aod is zero, using default value %.3f\n", AOD0_CA);
-		}
 		/* compute solar position */
 		if ((mo == 2) & (da == 29)) {
 			julian_date = 60;
