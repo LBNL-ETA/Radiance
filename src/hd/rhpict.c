@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.25 2025/07/01 19:40:35 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.26 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -228,7 +228,7 @@ startpicture(		/* initialize picture for rendering & output */
 	fputs(VIEWSTR, stdout);
 	fprintview(&myview, stdout);
 	fputc('\n', stdout);
-	if ((pa < 0.999) | (pa > 1.001))
+	if ((pa < 0.995) | (pa > 1.005))
 		fputaspect(pa, stdout);
 	if ((expval < 0.99) | (expval > 1.01))
 		fputexpos(expval, stdout);

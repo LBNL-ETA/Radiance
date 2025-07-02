@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.41 2025/06/07 05:09:46 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.42 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -539,7 +539,7 @@ scan2init(void)			/* prepare scanline arrays */
 					/* record pixel aspect ratio */
 	if (!correctaspect) {
 		d = order & YMAJOR ? x_c/y_r : y_r/x_c ;
-		if (!FEQ(d,1.0))
+		if ((d < 0.995) | (d > 1.005))
 			fputaspect(d, stdout);
 	}
 					/* record exposure */

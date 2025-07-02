@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.54 2025/07/01 19:40:35 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.55 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -326,7 +326,7 @@ main(			/* interpolate pictures */
 		fprintview(&avgview, stdout);
 		putc('\n', stdout);
 	}
-	if ((pixaspect < .999) | (pixaspect > 1.001))
+	if ((pixaspect < .995) | (pixaspect > 1.005))
 		fputaspect(pixaspect, stdout);
 	if (ourexp > 0)
 		ourexp *= rexpadj;

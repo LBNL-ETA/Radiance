@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.109 2025/07/01 19:40:35 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.110 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -342,7 +342,7 @@ rpict(			/* generate image(s) */
 		fputs(VIEWSTR, stdout);
 		fprintview(&ourview, stdout);
 		putchar('\n');
-		if ((pa < .999) | (pa > 1.001))
+		if ((pa < .995) | (pa > 1.005))
 			fputaspect(pa, stdout);
 		fputnow(stdout);
 		if (out_prims == xyzprims) {

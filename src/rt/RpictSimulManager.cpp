@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.16 2025/07/01 19:40:35 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.17 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -706,7 +706,7 @@ RpictSimulManager::NewOutput(FILE *pdfp[2], const char *pfname,
 	if (frameNo > 0)
 		fprintf(pdfp[0], "FRAME=%d\n", frameNo);
 	double	pasp = viewaspect(&vw) * GetWidth() / GetHeight();
-	if ((0.999 > pasp) | (pasp > 1.001))
+	if ((0.995 > pasp) | (pasp > 1.005))
 		fputaspect(pasp, pdfp[0]);
 	fputnow(pdfp[0]);
 	switch (RDTcolorT(dt)) {		// set primaries and picture format

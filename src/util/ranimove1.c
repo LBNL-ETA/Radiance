@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.28 2025/07/01 19:40:35 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.29 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -916,7 +916,7 @@ send_frame(void)			/* send frame to destination */
 	if ((d < 0.99) | (d > 1.01))
 		fputexpos(d, fp);
 	d = viewaspect(&vw) * hres / vres;
-	if ((d < 0.999) | (d > 1.001))
+	if ((d < 0.995) | (d > 1.005))
 		fputaspect(d, fp);
 	fputformat(COLRFMT, fp);
 	fputc('\n', fp);		/* end header */
