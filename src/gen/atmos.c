@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: atmos.c,v 2.2 2024/07/19 23:38:28 greg Exp $";
+static const char RCSid[] = "$Id: atmos.c,v 2.3 2025/07/09 23:43:59 greg Exp $";
 #endif
 /*
 The Radiance Software License, Version 2.0
@@ -946,7 +946,7 @@ void savedata(DATARRAY *dp) {
     fprintf(fp, "%f %f %d\n", dp->dim[i].org, dp->dim[i].siz, dp->dim[i].ne);
   }
   for (i = 0; i < nvals; i++) {
-    fprintf(fp, "%f\n", dp->arr.d[i]);
+    fprintf(fp, "%.15e\n", dp->arr.d[i]);
   }
   fclose(fp);
 }
@@ -1382,7 +1382,6 @@ void get_ground_radiance(DATARRAY *tau, DATARRAY *scat, DATARRAY *scat1m, DATARR
     /* transmittance between view point and ground point */
     double trans[NSSAMP] = {0};
     get_transmittance(tau, radius, mu, distance, intersect, trans);
-    if (trans[0] == 0) {printf("trans 0\n");}
 
     /* inscattering */
     float inscatter[NSSAMP] = {0}; 
