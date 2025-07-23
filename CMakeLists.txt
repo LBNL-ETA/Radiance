@@ -86,6 +86,7 @@ set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PR
 
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11 -std=c++11 -stdlib=libc++")
+  add_compile_options(-O2 -DBSD -DNOSTEREO -Dfreebsd)
   add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
 endif()
