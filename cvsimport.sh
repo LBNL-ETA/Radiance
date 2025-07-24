@@ -8,13 +8,13 @@
 
 set -e
 
+cd Radiance
 echo "Starting CVS import of Radiance 'ray' module..."
 
 git cvsimport -k \
-    -v \
     -o master \
     -d :pserver:anonymous@radiance-online.org:/home/cvsd/radiance \
-    -A authors.txt \
+    -A ../authors.txt \
     ray
 
 echo "CVS import completed successfully."

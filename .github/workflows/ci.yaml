@@ -35,7 +35,6 @@ jobs:
 
       - name: Run CVS Import
         run: |
-          cd Radiance
           bash cvsimport.sh
 
       - name: Set up build trigger
