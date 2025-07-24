@@ -35,6 +35,7 @@ jobs:
 
       - name: Run CVS Import
         run: |
+          ls
           bash cvsimport.sh
 
       - name: Set up build trigger
