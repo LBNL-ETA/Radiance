@@ -11,6 +11,7 @@ set -e
 echo "Starting CVS import of Radiance 'ray' module..."
 
 git cvsimport -k \
+    -v \
     -o master \
     -d :pserver:anonymous@radiance-online.org:/home/cvsd/radiance \
     -A ../authors.txt \
