@@ -77,8 +77,9 @@ jobs:
           git push "${remote_repo}" HEAD:master;
 
       - name: Trigger build workflow
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: "Build + Test"
+          workflow: build.yaml
           token: ${{ secrets.GH_TOKEN }}
           ref: master
