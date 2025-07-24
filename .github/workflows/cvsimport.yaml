@@ -76,14 +76,9 @@ jobs:
           remote_repo="https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote_repo}" HEAD:master;
 
-      - name: Trigger build.yaml
-        uses: actions/github-script@v6
+      - name: Trigger build workflow
+        uses: benc-uk/workflow-dispatch@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'build.yaml',
-              ref: master
-            });
+          workflow: "Build + Test"
+          token: ${{ secrets.GH_TOKEN }}
+          ref: master
