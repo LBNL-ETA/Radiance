@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.33 2025/07/24 01:24:01 greg Exp $
+
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0048 NEW)

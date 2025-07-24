@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.53 2025/07/24 01:24:01 greg Exp $
+
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/util/Version.c")
 create_version_file("${VERSION_FILE}")
 

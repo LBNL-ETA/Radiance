@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.22 2025/07/24 01:24:01 greg Exp $
+
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/rt/Version.c")
 create_version_file("${VERSION_FILE}")
 
@@ -124,6 +126,19 @@ if(NOT BUILD_HEADLESS)
     )
     target_link_libraries(rvu raycalls radiance rtrad ${X11_LIBRARIES})
     list(APPEND targets_to_install rvu)
+
+    if(NOT WIN32)
+      add_executable(rxpiece
+        rxpiece.cpp
+        RpictSimulManager.cpp
+        RtraceSimulManager.cpp
+        ../common/abitmap.cpp
+        srcdraw.c
+      )
+      target_link_libraries(rxpiece raycalls radiance rtrad)
+
+      list(APPEND targets_to_install rxpiece)
+    endif()
 
     # only link to rvu-qt-lib if qt is found
     if(BUILD_QT)

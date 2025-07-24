@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.4 2025/07/24 01:24:01 greg Exp $
+
 include(FindPerl)
 
 set(resources_dir "${CMAKE_SOURCE_DIR}/resources")

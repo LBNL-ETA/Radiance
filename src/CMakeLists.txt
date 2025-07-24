@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.10 2025/07/24 01:24:01 greg Exp $
+
 if(UNIX)
   find_library(LIB_M m DOC "Path to libm")
   if(NOT LIB_M)

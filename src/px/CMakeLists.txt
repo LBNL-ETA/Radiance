@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.10 2025/07/24 01:24:01 greg Exp $
+
 add_executable(pfilt pf2.c pf3.c pfilt.c)
 target_link_libraries(pfilt rtrad)
 

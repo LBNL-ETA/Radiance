@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.11 2025/07/24 01:24:01 greg Exp $
+
 if(X11_FOUND)
   get_filename_component(X11_LIBRARY_DIR ${X11_X11_LIB} PATH)
 endif()

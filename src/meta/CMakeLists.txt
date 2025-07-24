@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.4 2025/07/24 01:24:01 greg Exp $
+
 set(common_src mfio.c misc.c syscalls.c)
 
 add_executable(bgraph bgraph.c mgvars.c mgraph.c)

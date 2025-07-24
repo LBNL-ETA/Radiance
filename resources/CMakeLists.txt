@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.3 2025/07/24 01:24:01 greg Exp $
+
 add_subdirectory(cmake_tests)
 
 file(COPY fonts/helvet.fnt

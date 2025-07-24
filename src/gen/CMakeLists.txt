@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 2.19 2025/07/24 01:24:01 greg Exp $
+
 # Locate the threads package
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)

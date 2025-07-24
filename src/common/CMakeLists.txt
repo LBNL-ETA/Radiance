@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.25 2025/07/24 01:24:01 greg Exp $
+
 set(rtrad_SOURCES
   addobjnotify.c
   badarg.c

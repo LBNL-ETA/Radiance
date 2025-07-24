@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.23 2025/07/24 01:24:01 greg Exp $
+
 add_executable(ies2rad ies2rad.c)
 target_link_libraries(ies2rad rtrad)
 

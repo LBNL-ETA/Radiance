@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.4 2025/07/24 01:24:01 greg Exp $
+
 qt5_wrap_cpp(rvu_moc rvuwidget.h mainwindow.h)
 qt5_wrap_ui(rvu_ui mainwindow.ui)
 qt5_wrap_ui(exposure_dialog_ui exposuredialog.ui)

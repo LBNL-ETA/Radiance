@@ -1,3 +1,5 @@
+# RCSid $Id: CMakeLists.txt,v 1.9 2025/07/24 01:24:01 greg Exp $
+
 add_executable(cnt cnt.c)
 target_link_libraries(cnt rtrad)
 
