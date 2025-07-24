@@ -1,81 +1,15 @@
-name: Import from CVS and Build + Test
+name: Build + Test
 
 on:
   push:
-    branches: [cvsimport]
-  schedule:
-    - cron: "0 0 * * *"
-
+    branches: [master]
   workflow_dispatch:
 
 jobs:
-  cvs_import:
-    name: "Run CVS Import"
-    runs-on: ubuntu-22.04
-    outputs:
-      HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
-      RELEASE_TODAY: ${{ steps.ifBuildTrigger.outputs.RELEASE_TODAY }}
-
-    steps:
-      - name: Clone this repo to machine
-        run: |
-          git clone -b master https://github.com/${{ github.repository }}
-          cd Radiance
-          git branch -a
-          git checkout cvsimport
-          ls
-
-      - name: Install cvsimport
-        run: |
-          sudo apt-get update
-          sudo add-apt-repository ppa:git-core/ppa
-          sudo apt install git
-          sudo apt install git-cvs
-          apt show git-cvs
-
-      - name: Run CVS Import
-        run: |
-          cd Radiance
-          bash cvsimport.sh
-
-      - name: Set up build trigger
-        id: ifBuildTrigger
-        run: |
-          cd Radiance
-          git checkout master
-
-          HAS_NEW_COMMITS=false
-          if [[ "$(git status)" == *"Your branch is ahead of"* ]]; then HAS_NEW_COMMITS=true ; fi
-          echo set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-          echo ::set-output name=HAS_NEW_COMMITS::${HAS_NEW_COMMITS}
-
-
-
-          HAS_NEW_COMMITS_FROM_TAG=false
-
-          LAST_COMMIT_ID=$(git log --pretty="%h" -n 1)
-          LAST_TAG=$(git describe --tags --abbrev=0)
-          echo LAST_COMMIT_ID = $LAST_COMMIT_ID
-          echo LAST_TAG = $LAST_TAG
-
-          if [[ "$LAST_COMMIT_ID" != "$LAST_TAG" ]]; then echo "Has new commits since last release"; HAS_NEW_COMMITS_FROM_TAG=true; fi
-
-          echo ::set-output name=RELEASE_TODAY::${HAS_NEW_COMMITS_FROM_TAG}
-
-      - name: Push updates to master branch
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          cd Radiance
-          remote_repo="https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push "${remote_repo}" HEAD:master;
-
   build_Windows:
     name: "Build for Windows"
     runs-on: windows-latest
     timeout-minutes: 20
-    needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -182,8 +116,6 @@ jobs:
     name: "Build for OSX"
     runs-on: macos-13
     timeout-minutes: 20
-    needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -253,8 +185,6 @@ jobs:
     name: "Build for OSX arm64"
     runs-on: macos-14
     timeout-minutes: 20
-    needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -323,8 +253,6 @@ jobs:
     name: "Build for Linux"
     runs-on: ubuntu-22.04
     timeout-minutes: 20
-    needs: cvs_import
-    if: needs.cvs_import.outputs.HAS_NEW_COMMITS == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -1173,10 +1101,11 @@ jobs:
           name: Radiance_Linux_Failed4
           path: Radiance_Linux_Failed4.zip
 
-  check_if_release:
+  zip_auxiliary:
+    name: zip auxiliary files
+    runs-on: ubuntu-22.04
     needs:
       [
-        cvs_import,
         Test_Windows_1,
         Test_Windows_2,
         Test_Windows_3,
@@ -1190,23 +1119,6 @@ jobs:
         Test_Linux_3,
         Test_Linux_4,
       ]
-    name: check if release
-    runs-on: ubuntu-22.04
-    env:
-      READY_TO_RELEASE: ${{ needs.cvs_import.outputs.RELEASE_TODAY }}
-    outputs:
-      RELEASE_TODAY: ${{ steps.if_release.outputs.RELEASE_TODAY }}
-    steps:
-      - name: Check date if release
-        id: if_release
-        run: |
-          echo ::set-output name=RELEASE_TODAY::${READY_TO_RELEASE}
-
-  zip_auxiliary:
-    name: zip auxiliary files
-    runs-on: ubuntu-22.04
-    needs: check_if_release
-    if: needs.check_if_release.outputs.RELEASE_TODAY == 'true'
 
     steps:
       - name: "Checkout Master Branch"

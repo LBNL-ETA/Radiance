@@ -1,0 +1,90 @@
+name: Import from CVS
+
+on:
+  push:
+    branches: [cvsimport]
+  schedule:
+    - cron: "0 0 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  cvs_import:
+    name: "Run CVS Import"
+    runs-on: ubuntu-22.04
+    outputs:
+      HAS_NEW_COMMITS: ${{ steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS }}
+      RELEASE_TODAY: ${{ steps.ifBuildTrigger.outputs.RELEASE_TODAY }}
+
+    steps:
+      - name: Clone this repo to machine
+        run: |
+          git clone -b master https://github.com/${{ github.repository }}
+          cd Radiance
+          git branch -a
+          git checkout cvsimport
+          ls
+          cp authors.txt ../authors.txt
+          cp cvsimport.sh ../cvsimport.sh
+
+      - name: Install cvsimport
+        run: |
+          sudo apt-get update
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt install git
+          sudo apt install git-cvs
+          apt show git-cvs
+
+      - name: Run CVS Import
+        run: |
+          cd Radiance
+          git checkout master
+          bash ../cvsimport.sh
+
+      - name: Set up build trigger
+        working-directory: ./Radiance
+        id: ifBuildTrigger
+        run: |
+          git checkout master
+          # Compare local master with remote master to see if cvsimport added commits
+          if git rev-list origin/master..master | grep -q .; then
+            echo "New commits found from CVS import."
+            HAS_NEW_COMMITS='true'
+          else
+            echo "No new commits found."
+            HAS_NEW_COMMITS='false'
+          fi
+          echo "HAS_NEW_COMMITS=$HAS_NEW_COMMITS" >> $GITHUB_OUTPUT
+
+          # Check if there are new commits since the last tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          if git rev-list $LATEST_TAG..master | grep -q .; then
+            echo "New commits found since last tag ($LATEST_TAG)."
+            RELEASE_TODAY='true'
+          else
+            echo "No new commits since last tag ($LATEST_TAG)."
+            RELEASE_TODAY='false'
+          fi
+          echo "RELEASE_TODAY=$RELEASE_TODAY" >> $GITHUB_OUTPUT
+
+      - name: Push updates to master branch
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          cd Radiance
+          remote_repo="https://${GITHUB_ACTOR}:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${remote_repo}" HEAD:master;
+
+      - name: Trigger build.yaml
+        if: steps.ifBuildTrigger.outputs.HAS_NEW_COMMITS == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yaml',
+              ref: context.ref
+            });
