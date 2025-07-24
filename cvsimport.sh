@@ -8,7 +8,6 @@
 
 set -e
 
-cd Radiance
 echo "Starting CVS import of Radiance 'ray' module..."
 
 git cvsimport -k \

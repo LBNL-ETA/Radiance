@@ -24,6 +24,8 @@ jobs:
           git branch -a
           git checkout cvsimport
           ls
+          cp authors.txt ../authors.txt
+          cp cvsimport.sh ../cvsimport.sh
 
       - name: Install cvsimport
         run: |
@@ -35,8 +37,9 @@ jobs:
 
       - name: Run CVS Import
         run: |
-          ls
-          bash cvsimport.sh
+          cd Radiance
+          git checkout master
+          bash ../cvsimport.sh
 
       - name: Set up build trigger
         id: ifBuildTrigger
