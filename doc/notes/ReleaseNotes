@@ -2383,7 +2383,7 @@ Added -u option to gendaymtx to elide data columns (time steps) when
 the sun is not visible above the horizon.
 
 =========================
-Version 5.4
+Version 5.4 (Released November 5, 2023)
 
 Added rcollate -c option to force operation to continue even if it
 seems unnecessary.  Made tool more robust.
@@ -2605,7 +2605,7 @@ Made reciprocity averaging default to "off" in bsdf2ttree, as it seems
 to create more problems than it solves.
 
 ====================
-Version 6.0
+Version 6.0 (Released July 23, 2025)
 
 Extensive changes to enable spectral rendering, which defaults to "off"
 to maintain backwards-compatibility with previous versions, with the
@@ -2831,3 +2831,6 @@ Added experimental C++ based rxpiece tool to default installation
 in makeall/Rmakefile.
 
 Added rcomb -mt option to transpose concatenation matrix.
+
+====================
+Version 6.1
