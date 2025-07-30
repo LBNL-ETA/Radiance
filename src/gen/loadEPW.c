@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadEPW.c,v 2.5 2025/06/04 17:48:48 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Load an EPW (or WEA) file, one data point at a time
@@ -295,8 +295,8 @@ EPWopen(const char *fname)
 		hdr->comments1 = (char *)malloc(n);
 		if (hdr->comments1 == NULL)
 			goto memerr;
-		memcpy(hdr->comments1, linbuf+11, n);
-		hdr->comments1[n] = '\0';
+		memcpy(hdr->comments1, linbuf+11, n-1);
+		hdr->comments1[n-1] = '\0';
 	}
 	if (!fgets(linbuf, sizeof(linbuf), hdr->fp))
 		goto readerr;
@@ -308,8 +308,8 @@ EPWopen(const char *fname)
 		hdr->comments2 = (char *)malloc(n);
 		if (hdr->comments2 == NULL)
 			goto memerr;
-		memcpy(hdr->comments2, linbuf+11, n);
-		hdr->comments2[n] = '\0';
+		memcpy(hdr->comments2, linbuf+11, n-1);
+		hdr->comments2[n-1] = '\0';
 	}
 	if (!fgets(linbuf, sizeof(linbuf), hdr->fp))
 		goto readerr;
