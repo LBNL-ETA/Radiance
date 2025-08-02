@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.32 2025/06/19 22:36:53 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -194,7 +194,7 @@ checksymbolic(ROPMAT *rop)
 	double		cf = 1;
 	int		i, j;
 					/* check suffix => reference file */
-	if (strchr(rop->preop.csym, '.') > rop->preop.csym)
+	if (strchr(rop->preop.csym, '.') != NULL)
 		return(checkreffile(rop));
 
 	if (nc < 3) {
