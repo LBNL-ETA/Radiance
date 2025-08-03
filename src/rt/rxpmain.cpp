@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.9 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -54,7 +54,7 @@ static void printdefaults(void);
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
-		"AdaptiveShadowTesting\nOutputs=v,l\n" \
+		"AdaptiveShadowTesting\nOutputFormats=f,c\nOutputs=v,l\n" \
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
 void

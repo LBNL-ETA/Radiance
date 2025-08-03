@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpiece.cpp,v 2.13 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxpiece.cpp - main for rxpiece tile rendering program
@@ -54,7 +54,7 @@ static RenderDataType rpiece(char *pout, RenderDataType dt, char *zout);
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\n" \
-		"AdaptiveShadowTesting\nOutputs=v,l\n" \
+		"AdaptiveShadowTesting\nOutputFormats=f,c\nOutputs=v,l\n" \
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
 // Exit program
