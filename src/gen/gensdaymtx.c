@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.10 2025/07/11 18:12:25 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 
 #include <stdlib.h>
@@ -764,7 +764,7 @@ main
 	DATARRAY *mie_dp = getdata(mie_path);
 	if (mie_dp == NULL) {
 		fprintf(stderr, "Error reading mie data\n");
-		return 0;
+		return 1;
 	}
 
 	if (epw->isWEA == WEAnot) {
@@ -861,7 +861,7 @@ main
 			fprintf(stderr, "# Pre-computing...\n");
 			if (!precompute(sorder, clear_paths, &clear_atmos, num_threads)) {
 				fprintf(stderr, "Pre-compute failed\n");
-				return 0;
+				return 1;
 			}
 		}
 

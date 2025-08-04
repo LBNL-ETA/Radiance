@@ -686,7 +686,7 @@ main
 			"res -n nproc -c ccover -l mie -L dirnorm_illum difhor_illum "
 			"-g grefl -f outpath\n",
 			argv[0]);
-		return 0;
+		return 1;
 	}
 
 	month = atoi(argv[1]);
@@ -790,7 +790,7 @@ main
 	DATARRAY *mie_dp = getdata(mie_path);
 	if (mie_dp == NULL) {
 		fprintf(stderr, "Error reading mie data\n");
-		return 0;
+		return 1;
 	}
 	clear_atmos.beta_m = mie_dp;
 
@@ -813,7 +813,7 @@ main
 		printf("# Pre-computing...\n");
 		if (!precompute(sorder, clear_paths, &clear_atmos, num_threads)) {
 			fprintf(stderr, "Pre-compute failed\n");
-			return 0;
+			return 1;
 		}
 	}
 
@@ -847,5 +847,5 @@ main
 	freedata(irrad_clear_dp);
 	freedata(scat1m_clear_dp);
 
-	return 1;
+	return 0;
 }
