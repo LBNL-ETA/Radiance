@@ -939,8 +939,8 @@ main
 		case 'f':
 			for (j = 0; j < nstored; j++) {
 				float ment[NSSAMP];
-				for (k = NSSAMP - 1; k >= 0; k--) {
-					ment[k] = mtx_data[mtx_offset + k];
+				for (k = 0; k < NSSAMP; k++) {
+					ment[NSSAMP-1 - k] = mtx_data[mtx_offset + k];
 				}
 				putbinary(ment, sizeof(float), NSSAMP, stdout);
 				mtx_offset += NSSAMP * nskypatch;
@@ -949,8 +949,8 @@ main
 		case 'd':
 			for (j = 0; j < nstored; j++) {
 				double ment[NSSAMP];
-				for (k = NSSAMP - 1; k >= 0; k--) {
-					ment[j] = mtx_data[mtx_offset + k];
+				for (k = 0; k < NSSAMP; k++) {
+					ment[NSSAMP-1 - k] = mtx_data[mtx_offset + k];
 				}
 				putbinary(ment, sizeof(double), NSSAMP, stdout);
 				mtx_offset += NSSAMP * nskypatch;
