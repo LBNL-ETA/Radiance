@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: genssky.c,v 2.9 2025/07/11 18:12:25 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -284,7 +284,7 @@ write_rad
 )
 {
 	if (sundir[2] > 0) {
-		printf("void spectrum sunrad\n0\n0\n22 380 780 ");
+		printf("void spectrum sunrad\n0\n0\n22 390 770 ");
 		int i;
 		for (i = 0; i < NSSAMP; ++i) {
 			printf("%.3f ", sun_radiance[i]);
