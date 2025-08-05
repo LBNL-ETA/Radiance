@@ -62,6 +62,7 @@ int		inchild = -1;			/* our child ID (-1: parent) */
 
 extern int	checksymbolic(ROPMAT *rop);
 
+/* Split input matrices to allow for certain operations */
 int
 split_input(ROPMAT *rop)
 {
@@ -300,6 +301,7 @@ checksymbolic(ROPMAT *rop)
 	return(1);
 }
 
+/* Set up color transform for matrix */
 int
 get_component_xfm(ROPMAT *rop)
 {
@@ -383,6 +385,7 @@ get_component_xfm(ROPMAT *rop)
 	return(1);
 }
 
+/* Apply the given color transform and/or scaling operation */
 int
 apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 {
@@ -402,6 +405,7 @@ apply_op(RMATRIX *dst, const RMATRIX *src, const RUNARYOP *ro)
 	return(1);
 }
 
+/* Open the associated input file and load/check header */
 int
 open_input(ROPMAT *rop)
 {
@@ -473,6 +477,7 @@ l_chanin(char *nam)
 	return(mop[mi].rmp->mtx[cur_col*in_ncomp + chan]);
 }
 
+/* Set up our operations and check consistency */
 int
 initialize(RMATRIX *imp)
 {
@@ -520,6 +525,7 @@ initialize(RMATRIX *imp)
 	return(1);
 }
 
+/* Copy input header information to output header, indented */
 void
 output_headinfo(FILE *fp)
 {
@@ -543,6 +549,7 @@ output_headinfo(FILE *fp)
 	}
 }
 
+/* Spawn the indicated number of children and return 1 in parent */
 int
 spawned_children(int np)
 {
@@ -650,6 +657,7 @@ memerror:
 	exit(1);
 }
 
+/* Run parental feeder loop */
 int
 parent_loop(void)
 {
@@ -699,6 +707,7 @@ parent_loop(void)
 	return(1);				/* return success! */
 }
 
+/* Main operation loop, may be run in each child */
 int
 combine_input(void)
 {
@@ -794,6 +803,7 @@ multerror:
 	return(0);
 }
 
+/* Run output process loop when #processes > 1 */
 int
 output_loop(void)
 {
@@ -833,6 +843,7 @@ output_loop(void)
 	return(fflush(stdout) != EOF);
 }
 
+/* Check/convert floating-point arguments following this */
 int
 get_factors(double da[], int n, char *av[])
 {
@@ -843,6 +854,7 @@ get_factors(double da[], int n, char *av[])
 	return(ac);
 }
 
+/* Resize/reallocate the input array as requested */
 void
 resize_inparr(int n2alloc)
 {
