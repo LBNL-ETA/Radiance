@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.14 2025/06/07 05:09:45 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -35,27 +35,36 @@ int  do_ends = 1;		/* include end caps */
 int  iscomplete = 0;		/* polygon is already completed */
 double  crad = 0.0;		/* radius for corners (sign from lvdir) */
 
-static double  compute_rounding(void);
 
-
-static void
+void
 readverts(char *fname)		/* read vertices from a file */
 {
 	FILE  *fp;
 
-	if (fname == NULL)
+	if (fname == NULL) {
 		fp = stdin;
-	else if ((fp = fopen(fname, "r")) == NULL) {
+		fname = "<stdin>";
+	} else if ((fp = fopen(fname, "r")) == NULL) {
 		fprintf(stderr, "%s: cannot open\n", fname);
 		exit(1);
 	}
 	while (fscanf(fp, "%lf %lf", &vert[nverts][0], &vert[nverts][1]) == 2)
-		nverts++;
+		if (++nverts >= MAXVERT)
+			break;
+
+	if (!feof(fp)) {
+		if (nverts < MAXVERT) {
+			fprintf(stderr, "%s: warning - non-numerical data\n", fname);
+		} else {
+			fprintf(stderr, "%s: too many vertices\n", fname);
+			exit(1);
+		}
+	}
 	fclose(fp);
 }
 
 
-static void
+void
 side(int n0, int n1)			/* print single side */
 {
 	printf("\n%s polygon %s.%d\n", pmtype, pname, n0+1);
@@ -71,7 +80,7 @@ side(int n0, int n1)			/* print single side */
 }
 
 
-static void
+void
 rside(int n0, int n1)			/* print side with rounded edge */
 {
 	double  s, c, t[3];
@@ -121,8 +130,8 @@ rside(int n0, int n1)			/* print side with rounded edge */
 }
 
 
-static double
-compute_rounding(void)		/* compute vectors for rounding operations */
+double
+compute_rounding()		/* compute vectors for rounding operations */
 {
 	int  i;
 	double	*v0, *v1;
@@ -165,8 +174,8 @@ compute_rounding(void)		/* compute vectors for rounding operations */
 }
 
 
-static void
-printends(void)			/* print ends of prism */
+void
+printends()			/* print ends of prism */
 {
 	int  i;
 						/* bottom face */
@@ -184,8 +193,8 @@ printends(void)			/* print ends of prism */
 }
 
 
-static void
-printrends(void)		/* print ends of prism with rounding */
+void
+printrends()		/* print ends of prism with rounding */
 {
 	int  i;
 	double	c0[3], c1[3], cl[3];
@@ -264,7 +273,7 @@ printrends(void)		/* print ends of prism with rounding */
 }
 
 
-static void
+void
 printsides(int round)		/* print prism sides */
 {
 	int  i;
@@ -301,6 +310,10 @@ main(int argc, char **argv)
 		nverts = atoi(argv[3]);
 		if (argc-3 < 2*nverts)
 			goto userr;
+		if (nverts > MAXVERT) {
+			fprintf(stderr, "%s: too many vertices\n", argv[0]);
+			return(1);
+		}
 		for (an = 0; an < nverts; an++) {
 			vert[an][0] = atof(argv[2*an+4]);
 			vert[an][1] = atof(argv[2*an+5]);
@@ -312,7 +325,7 @@ main(int argc, char **argv)
 	}
 	if (nverts < 3) {
 		fprintf(stderr, "%s: not enough vertices\n", argv[0]);
-		exit(1);
+		return(1);
 	}
 
 	for ( ; an < argc; an++) {
@@ -331,7 +344,7 @@ main(int argc, char **argv)
 				fprintf(stderr,
 					"%s: illegal extrusion vector\n",
 						argv[0]);
-				exit(1);
+				return(1);
 			}
 			llen = sqrt(lvect[0]*lvect[0] + lvect[1]*lvect[1] +
 					lvect[2]*lvect[2]);
@@ -353,7 +366,7 @@ main(int argc, char **argv)
 		if (crad > lvdir*lvect[2]) {
 			fprintf(stderr, "%s: rounding greater than height\n",
 					argv[0]);
-			exit(1);
+			return(1);
 		}
 		crad *= lvdir;		/* simplifies formulas */
 		compute_rounding();
