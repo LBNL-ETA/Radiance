@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.32 2024/09/16 17:31:14 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -34,8 +34,10 @@ typedef struct activation {
 }  ACTIVATION;		/* an activation record */
 
 static ACTIVATION  *curact = NULL;
+static unsigned long  curdepth = 0, next_dreport = 100;
 
 static double  libfunc(char *fname, VARDEF *vp);
+static void  report_depth(char *nm);
 
 #ifndef  MAXLIB
 #define  MAXLIB		64	/* maximum number of library functions */
@@ -118,6 +120,8 @@ funvalue(			/* return a function value to the user */
     }
     act.fun = NULL;
     curact = &act;
+    if (++curdepth >= next_dreport)
+    	report_depth(act.name);
 
     if ((vp = varlookup(fname)) == NULL || vp->def == NULL
 		|| vp->def->v.kid->type != FUNC)
@@ -125,7 +129,7 @@ funvalue(			/* return a function value to the user */
     else
 	rval = evalue(vp->def->v.kid->sibling);
 
-    curact = act.prev;			/* pop environment */
+    curact = act.prev; curdepth--;	/* pop environment */
     return(rval);
 }
 
@@ -213,12 +217,12 @@ argument(int n)			/* return nth argument for active function */
 
     if (!actp->fun || !(ep = ekid(actp->fun, n+1))) {
 	eputs(actp->name);
-	eputs(": too few arguments\n");
+	eputs("(): too few arguments\n");
 	quit(1);
     }
-    curact = actp->prev;			/* previous context */
+    curact = actp->prev; curdepth--;		/* previous context */
     aval = evalue(ep);				/* compute argument */
-    curact = actp;				/* put back calling context */
+    curact = actp; curdepth++;			/* put back calling context */
     if (n < ALISTSIZ) {				/* save value if room */
 	actp->ap[n] = aval;
 	actp->an |= 1L<<n;
@@ -243,7 +247,7 @@ eargf(int n)			/* return function def for nth argument */
 
 	if ((ep = ekid(actp->fun, n)) == NULL) {
 	    eputs(actp->name);
-	    eputs(": too few arguments\n");
+	    eputs("(): too few arguments\n");
 	    quit(1);
 	}
 	if (ep->type == VAR)
@@ -259,7 +263,7 @@ eargf(int n)			/* return function def for nth argument */
 
 badarg:
     eputs(actp->name);
-    eputs(": argument not a function\n");
+    eputs("(): argument not a function\n");
     quit(1);
 	return NULL; /* pro forma return */
 }
@@ -287,13 +291,15 @@ efunc(EPNODE *ep)			/* evaluate a function */
     act.an = 0;
     act.fun = ep;
     curact = &act;
+    if (++curdepth >= next_dreport)
+    	report_depth(act.name);
 
     if (dp->def == NULL || dp->def->v.kid->type != FUNC)
 	rval = libfunc(act.name, dp);
     else
 	rval = evalue(dp->def->v.kid->sibling);
     
-    curact = act.prev;			/* pop environment */
+    curact = act.prev; curdepth--;	/* pop environment */
     return(rval);
 }
 
@@ -338,6 +344,17 @@ eliblookup(char *fname)		/* look up a library function */
  */
 
 
+static void
+report_depth(char *nm)			/* report current function call depth */
+{
+	char	msg[64];
+
+	sprintf(msg, "%s(): depth level at %lu\n", nm, next_dreport);
+	wputs(msg);
+	next_dreport *= 10;
+}
+
+
 static double
 libfunc(				/* execute library function */
 	char  *fname,
@@ -354,7 +371,7 @@ libfunc(				/* execute library function */
 	lp = eliblookup(fname);
     if (lp == NULL) {
 	eputs(fname);
-	eputs(": undefined function\n");
+	eputs("(): undefined function\n");
 	quit(1);
     }
     lasterrno = errno;
@@ -371,11 +388,11 @@ libfunc(				/* execute library function */
     if ((errno == EDOM) | (errno == ERANGE)) {
 	wputs(fname);
 	if (errno == EDOM)
-		wputs(": domain error\n");
+		wputs("(): domain error\n");
 	else if (errno == ERANGE)
-		wputs(": range error\n");
+		wputs("(): range error\n");
 	else
-		wputs(": error in call\n");
+		wputs("(): error in call\n");
 	return(0.0);
     }
     errno = lasterrno;
