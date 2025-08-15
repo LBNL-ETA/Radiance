@@ -347,7 +347,7 @@ eliblookup(char *fname)		/* look up a library function */
 static void
 report_depth(char *nm)			/* report current function call depth */
 {
-	char	msg[64];
+	char	msg[RMAXWORD+48];
 
 	sprintf(msg, "%s(): depth level at %lu\n", nm, next_dreport);
 	wputs(msg);
