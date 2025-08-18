@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.10 2025/01/02 16:16:49 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  RcontribSimulManager.h
  *
@@ -66,7 +66,7 @@ public:
 				}
 				/// Update output row count
 	bool			SetRowsDone(int r) {
-					if (!rData | (0 >= r) | (r > nRows)) return false;
+					if (!rData | (0 > r) | (r > nRows)) return false;
 					char *	rbuf = (char *)rData->GetMemory(rowCountPos, 17, 0);
 					sprintf(rbuf, "%-16d", r);
 					rbuf[16] = '\n';	// replaces nul byte
