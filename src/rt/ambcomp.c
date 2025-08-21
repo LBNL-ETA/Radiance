@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.104 2025/06/20 18:05:30 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -25,7 +25,7 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.104 2025/06/20 18:05:30 greg Exp
 #define MINADIV		7	/* minimum # divisions in each dimension */
 #endif
 #ifndef MINSDIST
-#define MINSDIST	0.25	/* def. min. spacing = 1/4th division */
+#define MINSDIST	0.2	/* def. min. spacing = 1/5th division */
 #endif
 
 typedef struct {
@@ -81,11 +81,11 @@ static void
 trade_patchsamp(double ss[2])		/* trade in problem patch position */
 {
 	static float	tradelot[XLOTSIZ][2];
-	static short	gterm[COTHER+1];
+	static int	gterm[COTHER+1];
 	double		repl[2];
 	int		sclass, rclass;
 	int		x;
-					/* initialize lot? */
+re_initialize:				/* initialize lot? */
 	while (gterm[COTHER] < XLOTSIZ) {
 		tradelot[gterm[COTHER]][0] = frandom();
 		tradelot[gterm[COTHER]][1] = frandom();
@@ -105,6 +105,10 @@ trade_patchsamp(double ss[2])		/* trade in problem patch position */
 		x = irandom(XLOTSIZ - (gterm[sclass] - gterm[sclass-1]));
 		x += (x >= gterm[sclass-1])*(gterm[sclass] - gterm[sclass-1]);
 		break;
+	}
+	if (x >= XLOTSIZ) {		/* uh-oh... trapped in a corner! */
+		memset(gterm, 0, sizeof(gterm));
+		goto re_initialize;
 	}
 	repl[0] = tradelot[x][0];	/* save selected replacement (result) */
 	repl[1] = tradelot[x][1];
