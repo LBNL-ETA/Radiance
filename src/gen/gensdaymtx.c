@@ -458,7 +458,7 @@ add_direct
 	double mean = sum / NSSAMP;
 
 	double intensity = mean * WVLSPAN;
-	if (dirnorm > 0) {
+	if (dirnorm >= 0) {
 		intensity = dirnorm / SOLOMG / WHTEFFICACY;
 	}
 	double dir_ratio = 1.;
@@ -479,7 +479,7 @@ add_direct
 		float *pdest = parr + NSSAMP * near_patch[i];
 		int k;
 		for (k = 0; k < NSSAMP; k++) {
-			*pdest++ = sun_radiance[k] * wta[i] / wtot;
+			*pdest++ += sun_radiance[k] * wta[i] / wtot;
 		}
 	}
 }
@@ -572,7 +572,7 @@ compute_sky
 
 	/* diffuse calibration factor */
 	double dif_ratio = 1;
-	if (difhor > 0) {
+	if (difhor >= 0) {
 		DATARRAY *indirect_irradiance_clear = get_indirect_irradiance(irrad, radius, sun_ct);
 		double overcast_ghi = overcast_zenithbr * 7.0 * PI / 9.0;
 		double diffuse_irradiance = 0;
@@ -616,8 +616,8 @@ main
 	int tstorage = 0;                                           /* number of allocated time steps */
 	int nstored = 0;                                            /* number of time steps in matrix */
 	int last_monthly = 0;                                       /* month of last report */
-	double dni;                                                 /* direct normal illuminance */
-	double dhi;                                                 /* diffuse horizontal illuminance */
+	double dni = -1.0;                                                 /* direct normal illuminance */
+	double dhi = -1.0;                                                 /* diffuse horizontal illuminance */
 
 	float           *mtx_data = NULL;
 	int mtx_offset = 0;
