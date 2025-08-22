@@ -2847,4 +2847,6 @@ Fixed crash in new Poisson sampling routines for large settings of -ad.
 Fixed reversal of direct and diffuse values in EPW files.  (Thanks to
 Taoning Wang for spotting the error.)
 
+Fixed issue with zero radiation values in gensdaymtx (TW).
+
 (The above fixes were released as official patch 6.0.1)
