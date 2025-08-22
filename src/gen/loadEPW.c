@@ -512,16 +512,16 @@ EPWread(EPWheader *epw, EPWrecord *rp)
 	}
 	if (!cp++) goto badformat;
 	if (*cp != ',') {
-		rp->diffillum = atof(cp);
-		if (rp->diffillum >= 999900.f)
-			rp->diffillum = EPWrecInit.diffillum;
+		rp->dirillum = atof(cp);
+		if (rp->dirillum >= 999900.f)
+			rp->dirillum = EPWrecInit.dirillum;
 		cp = strchr(cp, ',');
 	}
 	if (!cp++) goto badformat;
 	if (*cp != ',') {
-		rp->dirillum = atof(cp);
-		if (rp->dirillum >= 999900.f)
-			rp->dirillum = EPWrecInit.dirillum;
+		rp->diffillum = atof(cp);
+		if (rp->diffillum >= 999900.f)
+			rp->diffillum = EPWrecInit.diffillum;
 		cp = strchr(cp, ',');
 	}
 	if (!cp++) goto badformat;
