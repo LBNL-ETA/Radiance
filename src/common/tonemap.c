@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.55 2024/11/21 17:15:54 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Tone mapping functions.
@@ -273,6 +273,14 @@ int	len
 		for (i = 1024; i--; )
 			gamtab[i] = (int)(256.*pow((i+.5)/1024., 1./curgam));
 	}
+	if (cs != TM_NOCHROM && tms->flags & TM_F_BW) {	/* fill B&W chroma */
+		int	j = 3;
+		while (j--) {
+			const int	pv = (tms->cdiv[j]<<8)/TM_BRES;
+			for (i = len; i--; )
+				cs[3*i + j] = pv;
+		}
+	}
 	for (i = len; i--; ) {
 		if (tmNeedMatrix(tms)) {		/* get monitor RGB */
 			colortrans(cmon, tms->cmat, scan[i]);
@@ -289,8 +297,7 @@ int	len
 		if (cmon[RED] < .0f) cmon[RED] = .0f;
 		if (cmon[GRN] < .0f) cmon[GRN] = .0f;
 		if (cmon[BLU] < .0f) cmon[BLU] = .0f;
-#endif
-							/* world luminance */
+#endif							/* world luminance */
 		lum =	tms->clf[RED]*cmon[RED] +
 			tms->clf[GRN]*cmon[GRN] +
 			tms->clf[BLU]*cmon[BLU] ;
@@ -299,8 +306,8 @@ int	len
 			ls[i] = TM_NOBRT;
 		} else
 			ls[i] = tmCvLumLUfp(&lum);
-		if (cs == TM_NOCHROM)			/* no color? */
-			continue;
+		if ((cs == TM_NOCHROM) | (tms->flags & TM_F_BW))
+			continue;			/* no color */
 		if (tms->flags & TM_F_MESOPIC && lum < LMESUPPER) {
 			slum = scotlum(cmon);		/* mesopic adj. */
 			if (lum < LMESLOWER) {
@@ -317,10 +324,6 @@ int	len
 				cmon[GRN] += d;
 				cmon[BLU] += d;
 			}
-		} else if (tms->flags & TM_F_BW) {
-			int	j = 3;
-			while (j--) cs[3*i+j] = tms->cdiv[j]/(TM_BRES>>8);
-			continue;
 		}
 		d = tms->clf[RED]*cmon[RED]/lum;
 		cs[3*i  ] = d>=.999f ? 255 : gamtab[(int)(1024.f*d)];
