@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.21 2021/10/04 23:04:59 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -205,7 +205,7 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 		goto err;
 	br->hdr->infoSiz = bmPos - (hdrSiz + palSiz);
 	if (br->hdr->nColors > 0 || br->hdr->infoSiz > 0) {
-		br->hdr = (BMPHeader *)realloc((void *)br->hdr,
+		br->hdr = (BMPHeader *)realloc(br->hdr,
 					sizeof(BMPHeader) +
 					palSiz + br->hdr->infoSiz);
 		if (br->hdr == NULL)
@@ -228,14 +228,14 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	br->yscan = -1;
 	if (seek != NULL && ((br->hdr->compr == BI_RLE8) |
 					(br->hdr->compr == BI_RLE4))) {
-		BMPReader       *newbr = (BMPReader *)realloc((void *)br,
+		BMPReader       *newbr = (BMPReader *)realloc(br,
 						sizeof(BMPReader) +
 						sizeof(br->scanpos[0]) *
 							br->hdr->height);
 		if (newbr == NULL)
 			goto err;
 		br = newbr;
-		memset((void *)(br->scanpos + 1), 0,
+		memset(br->scanpos+1, 0,
 				sizeof(br->scanpos[0])*br->hdr->height);
 	}
 	br->scanpos[0] = br->fpos;
@@ -243,10 +243,10 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 		return br;
 err:
 	if (br->hdr != NULL)
-		free((void *)br->hdr);
+		free(br->hdr);
 	if (br->scanline != NULL)
-		free((void *)br->scanline);
-	free((void *)br);
+		free(br->scanline);
+	free(br);
 	return NULL;
 }
 
@@ -479,9 +479,9 @@ BMPfreeReader(BMPReader *br)
 {
 	if (br == NULL)
 		return;
-	free((void *)br->hdr);
-	free((void *)br->scanline);
-	free((void *)br);
+	free(br->hdr);
+	free(br->scanline);
+	free(br);
 }
 
 /* stdio getc() callback */
@@ -529,7 +529,8 @@ BMPtruecolorHeader(int xr, int yr, int infolen)
 	hdr->compr = BI_UNCOMPR;
 	hdr->hRes = hdr->vRes = 2835;		/* default to 72 ppi */
 	hdr->nColors = hdr->impColors = 0;
-	hdr->infoSiz = infolen;
+	if ((hdr->infoSiz = infolen) > 0)
+		memset(BMPinfo(hdr), 0, hdr->infoSiz);
 	return hdr;
 }
 
@@ -565,7 +566,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 	hdr->nColors = ncolors;
 	hdr->impColors = 0;			/* says all colors important */
 	hdr->infoSiz = infolen;
-	memset((void *)hdr->palette, 0, sizeof(RGBquad)*((size_t)1<<n) + infolen);
+	memset(hdr->palette, 0, sizeof(RGBquad)*((size_t)1<<n) + infolen);
 	for (n = ncolors; n--; )
 		hdr->palette[n].r = hdr->palette[n].g =
 			hdr->palette[n].b = n*255/(ncolors-1);
@@ -655,7 +656,7 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 	bw->yscan = 0;
 	bw->scanline = (uint8 *)calloc(scanSiz, sizeof(uint8));
 	if (bw->scanline == NULL) {
-		free((void *)bw);
+		free(bw);
 		return NULL;
 	}
 	bw->fbmp = hdrSiz + palSiz + hdr->infoSiz;
@@ -785,7 +786,7 @@ BMPfreeWriter(BMPWriter *bw)
 {
 	if (bw == NULL)
 		return;
-	free((void *)bw->hdr);
-	free((void *)bw->scanline);
-	free((void *)bw);
+	free(bw->hdr);
+	free(bw->scanline);
+	free(bw);
 }
