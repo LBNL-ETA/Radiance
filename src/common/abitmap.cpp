@@ -1,15 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: abitmap.cpp,v 2.2 2024/08/24 23:25:24 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  abitmap.cpp
- *  panlib
  *
  *  General bitmap class implementation
  *
  *  Created by gward on Wed Oct 31 2001.
- *  Copyright (c) 2022 Anyhere Software. All rights reserved.
- *
  */
 
 #include <string.h>

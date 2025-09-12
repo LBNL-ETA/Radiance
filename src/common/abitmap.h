@@ -1,13 +1,10 @@
-/* RCSid $Id: abitmap.h,v 2.2 2024/08/24 23:25:24 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  abitmap.h
- *  panlib
  *
  *  General bitmap class (mostly inline)
  *
  *  Created by gward on Tue May 15 2001.
- *  Copyright (c) 2001 Anyhere Software. All rights reserved.
- *
  */
 #ifndef _ABITMAP_H_
 #define _ABITMAP_H_
