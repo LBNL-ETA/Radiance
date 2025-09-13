@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.31 2025/01/23 01:59:17 greg Exp $
+# RCSid $Id$
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -7,6 +7,7 @@
 #	G. Ward
 #
 use strict;
+my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 # we'll run rpict if no -n or -o* option
 my $nprocs = 1;
 # rtrace options and the associated number of arguments
@@ -145,6 +146,10 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 }
 die "Number of processes must be positive" if ($nprocs <= 0);
+if ($windoz && $nprocs > 1) {
+	print STDERR "Only one process supported under Windows\n";
+	$nprocs = 1;
+}
 if ($specout) {
 	$specout = ($ncsamp > 3);
 }
@@ -200,14 +205,14 @@ if ($nprocs > 1 && $ambounce > 0 && $ambcache && defined($ambfile)) {
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
 	my $picvt = $specout ? 'rcomb -fc -' : "@pvalueA -df";
-	exec "@vwraysA -ff | @rtraceA -fff -olv @res '$oct' | " .
-		"rsplit -ih -iH -f -of '$outzbf' -oh -oH -of$ncsamp - | " .
-		$picvt . " | getinfo -a 'VIEW=$view'";
+	exec qq{@vwraysA -ff | @rtraceA -fff -olv @res "$oct" | } .
+		qq{rsplit -ih -iH -f -of "$outzbf" -oh -oH -of$ncsamp - | } .
+		$picvt . qq{ | getinfo -a "VIEW=$view"};
 }
 #####################################################################
 ##### Base case with output picture only?
 if (! defined $outdir) {
-	exec "@vwraysA -ff | @rtraceA -ffc @res '$oct' | getinfo -a 'VIEW=$view'";
+	exec qq{@vwraysA -ff | @rtraceA -ffc @res "$oct" | getinfo -a "VIEW=$view"};
 }
 #####################################################################
 ##### Layered image output case
@@ -262,4 +267,4 @@ foreach my $oval (split //, $outlyr) {
 	delete $rtoutC{$oval};
 }
 			# call rtrace + rsplit
-exec "@vwraysA -ff | @rtraceA -fff @res '$oct' | getinfo -a 'VIEW=$view' | @rsplitA";
+exec qq{@vwraysA -ff | @rtraceA -fff @res "$oct" | getinfo -a "VIEW=$view" | @rsplitA};
