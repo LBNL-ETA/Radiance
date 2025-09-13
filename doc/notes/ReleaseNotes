@@ -2850,3 +2850,6 @@ Taoning Wang for spotting the error.)
 Fixed issue with zero radiation values in gensdaymtx (TW).
 
 (The above fixes were released as official patch 6.0.1)
+
+Fixed issues with rtpict running under Windows.  Thanks to Mehlika
+Inanici for help finding problems and testing.

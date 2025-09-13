@@ -145,7 +145,8 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 		die "Unsupported option: " . $ARGV[0] . "\n";
 	}
 }
-die "Number of processes must be positive" if ($nprocs <= 0);
+die "-o* option cannot contain spaces\n" if ($windoz && $outdir =~ /[ 	]/);
+die "Number of processes must be positive\n" if ($nprocs <= 0);
 if ($windoz && $nprocs > 1) {
 	print STDERR "Only one process supported under Windows\n";
 	$nprocs = 1;
@@ -263,7 +264,11 @@ foreach my $oval (split //, $outlyr) {
 	die "File '$outfile' already exists\n" if (-e $outfile);
 	my ($otyp) = ($rtoutC{$oval} =~ /(\.[^.]+)$/);
 	push @rsplitA, $rcodeC{$otyp}[0];
-	push @rsplitA, qq{'$rcodeC{$otyp}[1] > "$outfile"'};
+	if ($windoz) {
+		push @rsplitA, qq{"$rcodeC{$otyp}[1] > $outfile"};
+	} else {
+		push @rsplitA, qq{'$rcodeC{$otyp}[1] > "$outfile"'};
+	}
 	delete $rtoutC{$oval};
 }
 			# call rtrace + rsplit
