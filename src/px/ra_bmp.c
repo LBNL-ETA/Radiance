@@ -31,7 +31,7 @@ extern void info2rad(char *infs, int len, FILE *fout);
 extern char *growInfo(int n);
 extern gethfunc headline;
 
-#define	add2info(s)	strcpy(growInfo(strlen(s)), s)
+#define	add2info(s)	{int _n=strlen(s); memcpy(growInfo(_n), s, _n+1);}
 #define clearInfo()	growInfo(-infolen)
 
 RGBPRIMP	rgbinp = stdprims;	/* RGB input primitives */
@@ -289,19 +289,21 @@ headline(char *s, void *p)
 void
 addBMPcspace(RGBPRIMP pp, double gamma)
 {
-	char	ibuf[128];
+	char	ibuf[196];
+	char	*cp = ibuf;
 
+	sprintf(cp, "GAMMA=%.2f\n", gamma);
+	cp += strlen(cp);
 	if (pp != NULL) {
-		sprintf(ibuf,
+		sprintf(cp,
 			"%s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",
 				PRIMARYSTR,
 				pp[RED][CIEX],pp[RED][CIEY],
 				pp[GRN][CIEX],pp[GRN][CIEY],
 				pp[BLU][CIEX],pp[BLU][CIEY],
 				pp[WHT][CIEX],pp[WHT][CIEY]);
-		add2info(ibuf);
+		/* cp += strlen(cp); */
 	}
-	sprintf(ibuf, "GAMMA=%.2f\n", gamma);
 	add2info(ibuf);
 }
 
@@ -319,7 +321,7 @@ info2rad(char *infs, int len, FILE *fout)
 					/* check for gamma */
 	if ((cp = strstr(infs, "GAMMA=")) != NULL) {
 					/* copy what came before */
-		fwrite(infs, cp-infs, 1, fout);
+		fwrite(infs, 1, cp-infs, fout);
 		cp += 6;
 		gamcor = atof(cp);	/* record setting */
 		while (*cp++ != '\n')
