@@ -382,7 +382,7 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 			}
 		else if (bradj)
 			shiftcolrs(scanin, bwr->hdr->width, bradj);
-		if (monpri == NULL && rgbinp != TM_XYZPRIM)
+		if ((monpri == NULL) & (rgbinp != TM_XYZPRIM))
 			for (x = bwr->hdr->width; x--; )
 				scanin[x][GRN] = normbright(scanin[x]);
 		colrs_gambs(scanin, bwr->hdr->width);
@@ -463,10 +463,8 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 		tmflags = TM_F_LINEAR;
 	else
 		quiterr("illegal exposure specification (auto|human|linear)");
-	if (monpri == NULL) {
-		tmflags |= TM_F_BW;
-		monpri = stdprims;
-	}
+
+	tmflags |= (monpri == NULL)*TM_F_BW;
 					/* open Radiance input */
 	if (fnin == NULL)
 		fp = stdin;
@@ -475,7 +473,8 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 		exit(1);
 	}
 					/* tone-map picture */
-	if (tmMapPicture(&pa, &xr, &yr, tmflags, monpri, gamval,
+	if (tmMapPicture(&pa, &xr, &yr, tmflags,
+			tmflags&TM_F_BW ? stdprims : monpri, gamval,
 			0., 0., fnin, fp) != TM_E_OK)
 		exit(1);
 					/* try to retrieve info */
