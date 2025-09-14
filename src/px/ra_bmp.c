@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.17 2025/06/07 05:09:46 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -18,16 +18,24 @@ int		bradj = 0;		/* brightness adjustment */
 
 double		gamcor = 2.2;		/* gamma correction value */
 
-static void quiterr(const char *err);
-static void tmap2bmp(char *fnin, char *fnout, char *expec,
+char		*info = "";		/* information header string */
+int		infolen = 0;		/* information header length */
+
+extern void quiterr(const char *err);
+extern void addBMPcspace(RGBPRIMP pp, double gamma);
+extern void tmap2bmp(char *fnin, char *fnout, char *expec,
 				RGBPRIMP monpri, double gamval);
-static void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri);
-static void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
+extern void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri);
+extern void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
+extern void info2rad(char *infs, int len, FILE *fout);
+extern char *growInfo(int n);
+extern gethfunc headline;
 
-static RGBPRIMP	rgbinp = stdprims;	/* RGB input primitives */
-static RGBPRIMS	myinprims;		/* custom primitives holder */
+#define	add2info(s)	strcpy(growInfo(strlen(s)), s)
+#define clearInfo()	growInfo(-infolen)
 
-static gethfunc headline;
+RGBPRIMP	rgbinp = stdprims;	/* RGB input primitives */
+RGBPRIMS	myinprims;		/* custom primitives holder */
 
 
 int
@@ -93,16 +101,13 @@ main(int argc, char *argv[])
 
 	if (i == argc-2 && strcmp(argv[i+1], "-"))
 		outfile = argv[i+1];
-					/* check for tone-mapping */
-	if (expec != NULL) {
+
+	if (expec != NULL) {		/* check for tone-mapping */
 		if (reverse)
 			goto userr;
 		tmap2bmp(inpfile, outfile, expec, rgbp, gamcor);
 		return(0);
 	}
-
-	setcolrgam(gamcor);		/* set up conversion */
-
 	if (reverse) {
 		BMPReader       *rdr;
 					/* open BMP file or stream */
@@ -124,6 +129,7 @@ main(int argc, char *argv[])
 		}
 					/* put Radiance header */
 		newheader("RADIANCE", stdout);
+		info2rad(BMPinfo(rdr->hdr), rdr->hdr->infoSiz, stdout);
 		printargs(i, argv, stdout);
 		fputformat(COLRFMT, stdout);
 		putchar('\n');
@@ -134,8 +140,10 @@ main(int argc, char *argv[])
 		if (rdr->hdr->yIsDown || inpfile != NULL)
 			rs.rt |= YDECR;
 		fputsresolu(&rs, stdout);
+					/* set up conversion */
+		setcolrgam(gamcor);
 					/* convert file */
-		bmp2rad(rdr, stdout, !rdr->hdr->yIsDown && inpfile!=NULL);
+		bmp2rad(rdr, stdout, !rdr->hdr->yIsDown & (inpfile!=NULL));
 					/* flush output */
 		BMPcloseInput(rdr);
 		if (fflush(stdout) < 0)
@@ -149,23 +157,28 @@ main(int argc, char *argv[])
 					inpfile);
 			exit(1);
 		}
-					/* get header info. */
+					/* get/save header info. */
 		if (getheader(stdin, headline, NULL) < 0 ||
-				!fgetsresolu(&rs, stdin))
+					!fgetsresolu(&rs, stdin))
 			quiterr("bad Radiance picture format");
-					/* initialize BMP header */
+					/* record color space */
+		addBMPcspace(rgbp, gamcor);
+					/* open output/write BMP header */
 		if (rgbp == NULL) {
 			hdr = BMPmappedHeader(scanlen(&rs),
-						numscans(&rs), 0, 256);
+						numscans(&rs), infolen+1, 256);
 			/*
 			if (outfile != NULL)
 				hdr->compr = BI_RLE8;
 			*/
 		} else
 			hdr = BMPtruecolorHeader(scanlen(&rs),
-						numscans(&rs), 0);
+						numscans(&rs), infolen+1);
 		if (hdr == NULL)
-			quiterr("cannot initialize BMP header");
+			quiterr("cannot create BMP output");
+					/* copy info to BMP header */
+		strcpy(BMPinfo(hdr), info);
+		clearInfo();
 					/* set up output direction */
 		hdr->yIsDown = ((outfile == NULL) | (hdr->compr == BI_RLE8));
 					/* open BMP output */
@@ -175,6 +188,8 @@ main(int argc, char *argv[])
 			wtr = BMPopenOutputStream(stdout, hdr);
 		if (wtr == NULL)
 			quiterr("cannot allocate writer structure");
+					/* set up conversion */
+		setcolrgam(gamcor);
 					/* convert file */
 		rad2bmp(stdin, wtr, !hdr->yIsDown, rgbp);
 					/* flush output */
@@ -194,7 +209,7 @@ userr:
 }
 
 /* print message and exit */
-static void
+void
 quiterr(const char *err)
 {
 	if (err != NULL) {
@@ -204,12 +219,40 @@ quiterr(const char *err)
 	exit(0);
 }
 
+/* grow (or shrink) saved info header string */
+char *
+growInfo(int n)
+{
+	char	*ns = NULL;
+
+	if (infolen + n <= 0) {
+		if (info) free(info);
+		info = "";
+		infolen = 0;
+		return(NULL);
+	}
+	if (infolen)
+		info = (char *)realloc(info, infolen+n+1);
+	else
+		info = (char *)malloc(n+1);
+
+	if (info == NULL)
+		quiterr("out of memory in growInfo()");
+
+	if (n > 0) memset(ns = info+infolen, 0, n+1);
+
+	infolen += n;
+	return(ns);
+}
+
 /* process header line (don't echo) */
-static int
+int
 headline(char *s, void *p)
 {
 	char	fmt[MAXFMTLEN];
 
+	if (isheadid(s))		/* skip header magic ID */
+		return(0);
 	if (formatval(fmt, s)) {	/* check if format string */
 		if (!strcmp(fmt,COLRFMT))
 			return(0);
@@ -226,6 +269,10 @@ headline(char *s, void *p)
 		rgbinp = myinprims;
 		return(0);
 	}
+	if (isexpos(s))
+		return(0);		/* ignore this on input */
+	if (!strncmp(s, "GAMMA=", 6))
+		return(0);		/* should not be here! */
 	if (isncomp(s)) {
 		NCSAMP = ncompval(s);
 		return(0);
@@ -234,13 +281,57 @@ headline(char *s, void *p)
 		wlsplitval(WLPART, s);
 		return(0);
 	}
-					/* should I grok colcorr also? */
-	return(0);
+	add2info(s);			/* else save info string */
+	return(1);
 }
 
+/* add BMP output color space to info string */
+void
+addBMPcspace(RGBPRIMP pp, double gamma)
+{
+	char	ibuf[128];
+
+	if (pp != NULL) {
+		sprintf(ibuf,
+			"%s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",
+				PRIMARYSTR,
+				pp[RED][CIEX],pp[RED][CIEY],
+				pp[GRN][CIEX],pp[GRN][CIEY],
+				pp[BLU][CIEX],pp[BLU][CIEY],
+				pp[WHT][CIEX],pp[WHT][CIEY]);
+		add2info(ibuf);
+	}
+	sprintf(ibuf, "GAMMA=%.2f\n", gamma);
+	add2info(ibuf);
+}
+
+/* write out Radiance header from BMP info string */
+void
+info2rad(char *infs, int len, FILE *fout)
+{
+	char	*cp;
+					/* must fit metadata profile */
+	if (len < 3 || infs[0] == '\n' ||
+			infs[--len] != '\0' || infs[len-1] != '\n')
+		return;			/* not what we expected */
+	if (strlen(infs) < len || strstr(infs, "\n\n") != NULL)
+		return;			/* also not cool */
+					/* check for gamma */
+	if ((cp = strstr(infs, "GAMMA=")) != NULL) {
+					/* copy what came before */
+		fwrite(infs, cp-infs, 1, fout);
+		cp += 6;
+		gamcor = atof(cp);	/* record setting */
+		while (*cp++ != '\n')
+			;
+		len -= cp - infs;
+		infs = cp;		/* & elide from output */
+	}
+	fputs(infs, fout);		/* copy the remainder */
+}
 
 /* convert Radiance picture to BMP */
-static void
+void
 rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 {
 	int	usexfm = 0;
@@ -254,8 +345,8 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 	if (scanin == NULL)
 		quiterr("out of memory in rad2bmp");
 						/* set up color conversion */
-	usexfm = (monpri != NULL ? rgbinp != monpri :
-			rgbinp != TM_XYZPRIM && rgbinp != stdprims);
+	usexfm = (monpri != NULL) ? (rgbinp != monpri) :
+			((rgbinp != TM_XYZPRIM) & (rgbinp != stdprims));
 	if (usexfm) {
 		RGBPRIMP	destpri = monpri != NULL ? monpri : stdprims;
 		double		expcomp = pow(2.0, (double)bradj);
@@ -307,12 +398,11 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 		if (x != BIR_OK)
 			quiterr(BMPerrorMessage(x));
 	}
-						/* free scanline */
-	free((void *)scanin);
+	free(scanin);				/* free scanline */
 }
 
 /* convert BMP file to Radiance */
-static void
+void
 bmp2rad(BMPReader *brd, FILE *rfp, int inv)
 {
 	COLR	*scanout;
@@ -347,12 +437,11 @@ bmp2rad(BMPReader *brd, FILE *rfp, int inv)
 		if (fwritecolrs(scanout, brd->hdr->width, rfp) < 0)
 			quiterr("error writing Radiance picture");
 	}
-						/* clean up */
-	free((void *)scanout);
+	free(scanout);				/* clean up */
 }
 
 /* Tone-map and convert Radiance picture */
-static void
+void
 tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 {
 	int		tmflags;
@@ -387,15 +476,23 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 	if (tmMapPicture(&pa, &xr, &yr, tmflags, monpri, gamval,
 			0., 0., fnin, fp) != TM_E_OK)
 		exit(1);
+					/* try to retrieve info */
+	if (fseek(fp, 0L, SEEK_SET) == 0)
+		getheader(fp, headline, NULL);
+					/* add output color space */
+	addBMPcspace(monpri, gamval);
 					/* initialize BMP header */
 	if (tmflags & TM_F_BW) {
-		hdr = BMPmappedHeader(xr, yr, 0, 256);
+		hdr = BMPmappedHeader(xr, yr, infolen+1, 256);
 		if (fnout != NULL)
 			hdr->compr = BI_RLE8;
 	} else
-		hdr = BMPtruecolorHeader(xr, yr, 0);
+		hdr = BMPtruecolorHeader(xr, yr, infolen+1);
 	if (hdr == NULL)
 		quiterr("cannot initialize BMP header");
+
+	strcpy(BMPinfo(hdr), info);	/* copy info if any */
+	clearInfo();
 					/* open BMP output */
 	if (fnout != NULL)
 		wtr = BMPopenOutputFile(fnout, hdr);
@@ -408,7 +505,7 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 		uby8    *scn = pa + xr*((tmflags & TM_F_BW) ? 1 : 3)*
 						(yr-1 - wtr->yscan);
 		if (tmflags & TM_F_BW)
-			memcpy((void *)wtr->scanline, (void *)scn, xr);
+			memcpy(wtr->scanline, scn, xr);
 		else
 			for (i = xr; i--; ) {
 				wtr->scanline[3*i] = scn[3*i+BLU];
@@ -424,6 +521,6 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 					/* clean up */
 	if (fnin != NULL)
 		fclose(fp);
-	free((void *)pa);
+	free(pa);
 	BMPcloseOutput(wtr);
 }
