@@ -51,20 +51,15 @@ jobs:
           version: "5.15.2"
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
-      - name: Install CMake
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Compile
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          cmakeAppendedArgs: "-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON"
-          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+      - name: Configure and Build
+        run: |
+          cmake -S . -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_LIBTIFF=ON `
+            -DBUILD_PABOPTO_UTILS=ON `
+            -DBUILD_QT=ON
+          cmake --build build --config Release
+        shell: bash
 
       - name: list
         run: |
@@ -79,15 +74,8 @@ jobs:
           setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
 
       - name: Build installer
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          buildWithCMakeArgs: "--config Release --target PACKAGE"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+        run: cmake --build build --config Release --target PACKAGE
+        shell: bash
 
       - name: Zip Compiled Artifact
         run: |
