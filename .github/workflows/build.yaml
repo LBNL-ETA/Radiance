@@ -25,6 +25,11 @@ jobs:
       - name: Install PAR::Packer
         run: |
           cpanm PAR::Packer --force
+
+      - name: check perl packer
+        run: |
+          perl -version
+          pp --version
           # Find the library path for the newly installed module and add it to PERL5LIB
           MODULE_PATH=$(perldoc -l PAR::Packer)
           if [ -z "$MODULE_PATH" ]; then
@@ -33,8 +38,8 @@ jobs:
           fi
           LIB_PATH=$(dirname "$(dirname "$MODULE_PATH")")
           echo "PERL5LIB=${LIB_PATH}" >> $GITHUB_ENV
-          pp --version
-        shell: bash
+          ls D:\a\Radiance\Radiance\local\lib\perl5
+          ls D:\a\Radiance\Radiance\local\lib\perl5\PAR
 
       - name: override update version
         run: |
