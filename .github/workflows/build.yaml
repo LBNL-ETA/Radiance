@@ -49,12 +49,12 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cmake -S . -B build `
+          cmake -G "Visual Studio 16 2019" -A x64 -S . -B build `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_LIBTIFF=ON `
             -DBUILD_PABOPTO_UTILS=ON `
             -DBUILD_QT=ON
-          cmake --build build --config Release
+          cmake --build build --config Release --verbose
         shell: pwsh
 
       - name: list
@@ -65,8 +65,9 @@ jobs:
           ls src/px
 
       - name: set up QT path
-        run: echo "${{ env.Qt5_Dir }}\bin" >> $GITHUB_PATH
-        shell: bash
+        run: |
+          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
+          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
 
       - name: Build installer
         run: cmake --build build --config Release --target PACKAGE
