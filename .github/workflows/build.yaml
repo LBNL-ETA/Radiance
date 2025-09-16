@@ -53,10 +53,10 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cmake -S . -B build `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DBUILD_LIBTIFF=ON `
-            -DBUILD_PABOPTO_UTILS=ON `
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_LIBTIFF=ON \
+            -DBUILD_PABOPTO_UTILS=ON \
             -DBUILD_QT=ON
           cmake --build build --config Release
         shell: bash
