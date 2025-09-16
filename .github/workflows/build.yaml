@@ -31,6 +31,9 @@ jobs:
           perl -version
           pp --version
 
+      - name: check perl packer library path
+        run: |
+          pp --version
           ls D:\a\Radiance\Radiance\local\lib\perl5
           ls D:\a\Radiance\Radiance\local\lib\perl5\PAR
 
