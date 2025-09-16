@@ -31,18 +31,6 @@ jobs:
           perl -version
           pp --version
 
-      - name: check perl packer library path
-        run: |
-          pp --version
-          ls D:\a\Radiance\Radiance\local\lib\perl5
-          ls D:\a\Radiance\Radiance\local\lib\perl5\PAR
-
-          # Find the library path for the newly installed module and add it to PERL5LIB
-          MODULE_PATH=$(perldoc -l PAR::Packer)
-          LIB_PATH=$(dirname "$(dirname "$MODULE_PATH")")
-          echo "PERL5LIB=${LIB_PATH}" >> $GITHUB_ENV
-        shell: bash
-
       - name: override update version
         run: |
           git fetch
@@ -61,20 +49,20 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_LIBTIFF=ON \
-            -DBUILD_PABOPTO_UTILS=ON \
+          cmake -S . -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_LIBTIFF=ON `
+            -DBUILD_PABOPTO_UTILS=ON `
             -DBUILD_QT=ON
           cmake --build build --config Release
-        shell: bash
+        shell: pwsh
 
       - name: list
         run: |
-          echo "List src\util============================="
-          ls src\util
-          echo "List src\px============================="
-          ls src\px
+          echo "List src/util============================="
+          ls src/util
+          echo "List src/px============================="
+          ls src/px
 
       - name: set up QT path
         run: echo "${{ env.Qt5_Dir }}\bin" >> $GITHUB_PATH
@@ -82,7 +70,7 @@ jobs:
 
       - name: Build installer
         run: cmake --build build --config Release --target PACKAGE
-        shell: bash
+        shell: pwsh
 
       - name: Zip Compiled Artifact
         run: |
