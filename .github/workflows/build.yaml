@@ -23,17 +23,18 @@ jobs:
         run: cpan App::cpanminus
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer --force
-
-      - name: check perl
         run: |
-          perl -version
-          ls c:\strawberry\c\lib
-
-      - name: check perl packer
-        run: |
-          ls c:\strawberry\perl\site\bin
+          cpanm PAR::Packer --force
+          # Find the library path for the newly installed module and add it to PERL5LIB
+          MODULE_PATH=$(perldoc -l PAR::Packer)
+          if [ -z "$MODULE_PATH" ]; then
+            echo "::error::Could not find PAR::Packer module after installation."
+            exit 1
+          fi
+          LIB_PATH=$(dirname "$(dirname "$MODULE_PATH")")
+          echo "PERL5LIB=${LIB_PATH}" >> $GITHUB_ENV
           pp --version
+        shell: bash
 
       - name: override update version
         run: |
@@ -69,9 +70,8 @@ jobs:
           ls src\px
 
       - name: set up QT path
-        run: |
-          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
-          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
+        run: echo "${{ env.Qt5_Dir }}\bin" >> $GITHUB_PATH
+        shell: bash
 
       - name: Build installer
         run: cmake --build build --config Release --target PACKAGE
