@@ -49,7 +49,7 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cmake -G "Visual Studio 16 2019" -A x64 -S . -B build `
+          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_LIBTIFF=ON `
             -DBUILD_PABOPTO_UTILS=ON `
