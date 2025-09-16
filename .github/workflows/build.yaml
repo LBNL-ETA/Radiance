@@ -30,16 +30,15 @@ jobs:
         run: |
           perl -version
           pp --version
-          # Find the library path for the newly installed module and add it to PERL5LIB
-          MODULE_PATH=$(perldoc -l PAR::Packer)
-          if [ -z "$MODULE_PATH" ]; then
-            echo "::error::Could not find PAR::Packer module after installation."
-            exit 1
-          fi
-          LIB_PATH=$(dirname "$(dirname "$MODULE_PATH")")
-          echo "PERL5LIB=${LIB_PATH}" >> $GITHUB_ENV
+
           ls D:\a\Radiance\Radiance\local\lib\perl5
           ls D:\a\Radiance\Radiance\local\lib\perl5\PAR
+
+          # Find the library path for the newly installed module and add it to PERL5LIB
+          MODULE_PATH=$(perldoc -l PAR::Packer)
+          LIB_PATH=$(dirname "$(dirname "$MODULE_PATH")")
+          echo "PERL5LIB=${LIB_PATH}" >> $GITHUB_ENV
+        shell: bash
 
       - name: override update version
         run: |
