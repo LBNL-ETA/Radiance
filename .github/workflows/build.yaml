@@ -23,16 +23,12 @@ jobs:
         run: cpan App::cpanminus
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer --force
-
-      - name: check perl
         run: |
-          perl -version
-          ls c:\strawberry\c\lib
+          cpanm PAR::Packer --force
 
       - name: check perl packer
         run: |
-          ls c:\strawberry\perl\site\bin
+          perl -version
           pp --version
 
       - name: override update version
@@ -51,27 +47,24 @@ jobs:
           version: "5.15.2"
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
-      - name: Install CMake
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Compile
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          cmakeAppendedArgs: "-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON"
-          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+      - name: Configure and Build
+        run: |
+          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_LIBTIFF=ON `
+            -DTIFF_INCLUDE_DIR:PATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff/libtiff" `
+            -DTIFF_LIBRARY:FILEPATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff-build/libtiff/tiff.lib" `
+            -DBUILD_PABOPTO_UTILS=ON `
+            -DBUILD_QT=ON
+          cmake --build build --config Release --verbose
+        shell: pwsh
 
       - name: list
         run: |
-          echo "List src\util============================="
-          ls src\util
-          echo "List src\px============================="
-          ls src\px
+          echo "List src/util============================="
+          ls src/util
+          echo "List src/px============================="
+          ls src/px
 
       - name: set up QT path
         run: |
@@ -79,15 +72,8 @@ jobs:
           setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
 
       - name: Build installer
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeGenerator: VS16Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          buildWithCMakeArgs: "--config Release --target PACKAGE"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+        run: cmake --build build --config Release --target PACKAGE
+        shell: pwsh
 
       - name: Zip Compiled Artifact
         run: |
