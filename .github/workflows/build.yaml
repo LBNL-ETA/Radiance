@@ -55,7 +55,8 @@ jobs:
             -DTIFF_INCLUDE_DIR:PATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff/libtiff" `
             -DTIFF_LIBRARY:FILEPATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff-build/libtiff/tiff.lib" `
             -DBUILD_PABOPTO_UTILS=ON `
-            -DBUILD_QT=ON
+            -DBUILD_QT=ON `
+            -DCMAKE_SYSTEM_VERSION=10.0
           cmake --build build --config Release --verbose
         shell: pwsh
 
