@@ -320,7 +320,7 @@ sub do_ttree_dir {
 				qq{-e "r2=rand(-5.37138*recno+67.1737811)" } .
 				qq{-e "r3=rand(+3.17603772*recno+83.766771)" } .
 				qq{-e "r4=rand(-1.5839226*recno-59.82712)" } .
-				qq{-e "odds(n):if(.5*n-floor(.5*n)-.25,-1,1)"} .
+				qq{-e "odds(n):if(.5*n-floor(.5*n)-.25,-1,1)" } .
 				qq{-e "Dx=1-(\$1+r1)/$ns2" } .
 				qq{-e "Dy=min(1/$ns,sqrt(1-Dx*Dx))*odds(\$1)*r2" } .
 				qq{-e "Dz=sqrt(1-Dx*Dx-Dy*Dy)" } .
