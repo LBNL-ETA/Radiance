@@ -2856,3 +2856,7 @@ Inanici for help finding problems and testing.
 
 Added metadata i/o to ra_bmp in both directions, preserving
 color space, gamma, and typical Radiance header settings.
+
+Updated evalglare with new 3.0x version from Jan Wienold.
+
+Fixed issue with genBSDF -t3 option under Windows.
