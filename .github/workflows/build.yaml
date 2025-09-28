@@ -14,6 +14,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install NSIS
+        run: choco install nsis
+
+      - name: Check for NSIS
+        shell: pwsh
+        run: |
+          echo "--- Checking for makensis.exe ---"
+          if (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe") {
+            echo "makensis.exe found at default location."
+          } else {
+            echo "makensis.exe NOT found at default location."
+          }
+          echo "--- System PATH ---"
+          $env:PATH -split ';' | ForEach-Object { Write-Output $_ }
+
       - name: Install Perl
         uses: shogo82148/actions-setup-perl@v1
         with:
@@ -79,15 +94,8 @@ jobs:
           ls src\px
 
       - name: Build installer
-        uses: lukka/run-cmake@v2
-        with:
-          cmakeGenerator: VS17Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
-          cmakeBuildType: Release
-          buildWithCMakeArgs: "--config Release --target PACKAGE"
-          buildDirectory: ${{ github.workspace }}/build
-          buildWithCMake: true
+        run: cmake --build build --config Release --target PACKAGE
+        shell: pwsh
 
       - name: Zip Compiled Artifact
         run: |
