@@ -1,4 +1,4 @@
-# RCSid $Id: CMakeLists.txt,v 1.33 2025/07/24 01:24:01 greg Exp $
+# RCSid $Id$
 
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0020 NEW)
@@ -95,18 +95,23 @@ endif()
 
 if(BUILD_LIBTIFF)
   include(ExternalProject)
-  set(LIBTIFF_URL http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz)
-  set(LIBTIFF_MD5 54BAD211279CC93EB4FCA31BA9BFDC79)
+  set(LIBTIFF_URL http://download.osgeo.org/libtiff/tiff-4.7.0.tar.gz)
+  set(LIBTIFF_MD5 3A0FA4A270A4A192B08913F88D0CFBDD)
   if(WIN32)
     ExternalProject_Add(libtiff
       URL ${LIBTIFF_URL}
       URL_MD5 ${LIBTIFF_MD5}
       CMAKE_GENERATOR "NMake Makefiles"
       CMAKE_ARGS
-        "-UHAVE_UNISTD_H"
         "-DBUILD_SHARED_LIBS=OFF"
         "-DCMAKE_BUILD_TYPE=Release"
+        "-Djpeg=OFF"
         "-Dzlib=OFF"
+        "-Dwebp=OFF"
+        "-Dlzma=OFF"
+        "-Dtiff-tools=OFF"
+        "-Dtiff-tests=OFF"
+        "-Dtiff-docs=OFF"
         "../libtiff"
       INSTALL_COMMAND ""
     )
@@ -118,7 +123,13 @@ if(BUILD_LIBTIFF)
       CMAKE_ARGS
         "-DBUILD_SHARED_LIBS=OFF"
         "-DCMAKE_BUILD_TYPE=Release"
+        "-Djpeg=OFF"
         "-Dzlib=OFF"
+        "-Dwebp=OFF"
+        "-Dlzma=OFF"
+        "-Dtiff-tools=OFF"
+        "-Dtiff-tests=OFF"
+        "-Dtiff-docs=OFF"
         "../libtiff"
       INSTALL_COMMAND ""
     )
