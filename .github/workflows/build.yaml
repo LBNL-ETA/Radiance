@@ -70,9 +70,6 @@ jobs:
           version: "5.15.2"
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
-      - name: Install CMake
-        uses: ilammy/msvc-dev-cmd@v1
-
       - name: Compile
         run: |
           cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
