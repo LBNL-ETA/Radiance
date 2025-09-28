@@ -63,7 +63,7 @@ jobs:
         uses: lukka/run-cmake@v2
         with:
           cmakeGenerator: VS17Win64
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsOrSettingsJson: CMakeListsTxtBasic
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
           cmakeAppendedArgs: "-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON"
