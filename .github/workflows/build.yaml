@@ -67,7 +67,7 @@ jobs:
           cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
           cmakeBuildType: Release
           cmakeAppendedArgs: "-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON"
-          buildWithCMakeArgs: "--config Release"
+          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
           buildDirectory: ${{ github.workspace }}/build
           buildWithCMake: true
 
