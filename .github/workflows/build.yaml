@@ -59,15 +59,17 @@ jobs:
       - name: Install CMake
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure and Build
-        run: |
-          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
-            -DBUILD_LIBTIFF=ON `
-            -DBUILD_PABOPTO_UTILS=ON `
-            -DBUILD_QT=ON `
-            -DCMAKE_SYSTEM_VERSION=10.0
-          cmake --build build --config Release --target ALL_BUILD --verbose
-        shell: pwsh
+      - name: Compile
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeGenerator: VS16Win64
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: ${{ github.workspace }}/CMakeLists.txt
+          cmakeBuildType: Release
+          cmakeAppendedArgs: "-DBUILD_LIBTIFF=ON -DBUILD_PABOPTO_UTILS=ON -DBUILD_QT=ON"
+          buildWithCMakeArgs: "--config Release --target ALL_BUILD"
+          buildDirectory: ${{ github.workspace }}/build
+          buildWithCMake: true
 
       - name: list
         run: |
