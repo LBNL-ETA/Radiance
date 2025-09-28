@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install NSIS
-        run: choco install nsis
+        run: choco install nsis --version=3.11
 
       - name: Install Perl
         uses: shogo82148/actions-setup-perl@v1
@@ -31,10 +31,10 @@ jobs:
             ${{ runner.os }}-perl-5.32-par-packer-v1
 
       - name: Install cpanminus
-        run: cpan App::cpanminus
+        run: cpan App::cpanminus@1.7048
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer
+        run: cpanm PAR::Packer~1.064
 
       - name: check perl
         run: |
