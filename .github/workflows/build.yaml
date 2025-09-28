@@ -34,7 +34,7 @@ jobs:
         run: cpan App::cpanminus
 
       - name: Install PAR::Packer
-        run: cpanm PAR::Packer --force
+        run: cpanm PAR::Packer
 
       - name: check perl
         run: |
@@ -46,6 +46,7 @@ jobs:
           rm C:\strawberry\c\lib\libglut.a
           rm C:\strawberry\c\lib\liblzma.a
           rm C:\strawberry\c\lib\libjpeg.a
+          ls c:\strawberry\c\lib
         shell: pwsh
 
       - name: check perl packer
