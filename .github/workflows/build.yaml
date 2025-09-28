@@ -41,14 +41,6 @@ jobs:
           perl -version
           ls c:\strawberry\c\lib
 
-      - name: Remove conflicting libglut
-        run: |
-          rm C:\strawberry\c\lib\libglut.a
-          rm C:\strawberry\c\lib\liblzma.a
-          rm C:\strawberry\c\lib\libjpeg.a
-          ls c:\strawberry\c\lib
-        shell: pwsh
-
       - name: check perl packer
         run: |
           ls c:\strawberry\perl\site\bin
