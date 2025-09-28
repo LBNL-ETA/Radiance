@@ -22,6 +22,14 @@ jobs:
         with:
           perl-version: "5.32"
 
+      - name: Cache CPAN modules
+        uses: actions/cache@v4
+        with:
+          path: C:\strawberry\perl\site
+          key: ${{ runner.os }}-perl-5.32-par-packer-v1
+          restore-keys: |
+            ${{ runner.os }}-perl-5.32-par-packer-v1
+
       - name: Install cpanminus
         run: cpan App::cpanminus
 
