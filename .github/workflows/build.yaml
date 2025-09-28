@@ -38,12 +38,11 @@ jobs:
 
       - name: check perl
         run: |
-          perl -version
-          ls c:\strawberry\c\lib
+          cpanm PAR::Packer --force
 
       - name: check perl packer
         run: |
-          ls c:\strawberry\perl\site\bin
+          perl -version
           pp --version
 
       - name: Install Qt
@@ -64,10 +63,10 @@ jobs:
 
       - name: list
         run: |
-          echo "List src\util============================="
-          ls src\util
-          echo "List src\px============================="
-          ls src\px
+          echo "List src/util============================="
+          ls src/util
+          echo "List src/px============================="
+          ls src/px
 
       - name: Build installer
         run: |
