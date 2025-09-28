@@ -13,33 +13,33 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Install NSIS
+        run: choco install nsis --version=3.11
 
       - name: Install Perl
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: "5.32"
 
+      - name: Cache CPAN modules
+        uses: actions/cache@v4
+        with:
+          path: C:\strawberry\perl\vendor
+          key: ${{ runner.os }}-perl-5.32-cpanm-1.7048-par-packer-1.064
+
       - name: Install cpanminus
-        run: cpan App::cpanminus
+        run: cpan App::cpanminus@1.7048
 
       - name: Install PAR::Packer
-        run: |
-          cpanm PAR::Packer --force
+        run: cpanm PAR::Packer~1.064
 
       - name: check perl packer
         run: |
           perl -version
           pp --version
-
-      - name: override update version
-        run: |
-          git fetch
-          git checkout cvsimport
-          cp checkVersion.py ../checkVersion.py
-          git checkout master
-          cp ../checkVersion.py checkVersion.py
-          python checkVersion.py
-        shell: bash
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -47,16 +47,13 @@ jobs:
           version: "5.15.2"
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
-      - name: Configure and Build
+      - name: Configure and Compile
         run: |
           cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_LIBTIFF=ON `
-            -DTIFF_INCLUDE_DIR:PATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff/libtiff" `
-            -DTIFF_LIBRARY:FILEPATH="${{ github.workspace }}/build/libtiff-prefix/src/libtiff-build/libtiff/tiff.lib" `
             -DBUILD_PABOPTO_UTILS=ON `
-            -DBUILD_QT=ON `
-            -DCMAKE_SYSTEM_VERSION=10.0
+            -DBUILD_QT=ON
           cmake --build build --config Release --verbose
         shell: pwsh
 
@@ -67,13 +64,10 @@ jobs:
           echo "List src/px============================="
           ls src/px
 
-      - name: set up QT path
-        run: |
-          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
-          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
-
       - name: Build installer
-        run: cmake --build build --config Release --target PACKAGE
+        run: |
+          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
+          cmake --build build --config Release --target PACKAGE
         shell: pwsh
 
       - name: Zip Compiled Artifact
@@ -108,16 +102,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: master
-
-      - name: override update version
-        run: |
-          git fetch
-          git checkout cvsimport
-          cp checkVersion.py ../checkVersion.py
-          git checkout master
-          cp ../checkVersion.py checkVersion.py
-          python checkVersion.py
-        shell: bash
 
       - name: Install XQuartz
         run: |
@@ -178,16 +162,6 @@ jobs:
         with:
           ref: master
 
-      - name: override update version
-        run: |
-          git fetch
-          git checkout cvsimport
-          cp checkVersion.py ../checkVersion.py
-          git checkout master
-          cp ../checkVersion.py checkVersion.py
-          python3 checkVersion.py
-        shell: bash
-
       - name: Install XQuartz
         run: |
           wget https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.8.5/XQuartz-2.8.5.pkg
@@ -245,16 +219,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: master
-
-      - name: override update version
-        run: |
-          git fetch
-          git checkout cvsimport
-          cp checkVersion.py ../checkVersion.py
-          git checkout master
-          cp ../checkVersion.py checkVersion.py
-          python checkVersion.py
-        shell: bash
 
       - name: Install CMake
         uses: ilammy/msvc-dev-cmd@v1
