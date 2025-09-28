@@ -33,6 +33,8 @@ jobs:
       - name: Remove conflicting libglut
         run: |
           rm C:\strawberry\c\lib\libglut.a
+          rm C:\strawberry\c\lib\liblzma.a
+          rm C:\strawberry\c\lib\libjpeg.a
         shell: pwsh
 
       - name: check perl packer
@@ -66,7 +68,7 @@ jobs:
             -DBUILD_LIBTIFF=ON `
             -DBUILD_PABOPTO_UTILS=ON `
             -DBUILD_QT=ON
-          cmake --build build --config Release --target ALL_BUILD --verbose
+          cmake --build build --config Release --verbose
         shell: pwsh
 
       - name: list
