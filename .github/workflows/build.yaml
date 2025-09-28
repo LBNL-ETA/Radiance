@@ -91,7 +91,9 @@ jobs:
           ls src\px
 
       - name: Build installer
-        run: cmake --build build --config Release --target PACKAGE
+        run: |
+          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
+          cmake --build build --config Release --target PACKAGE
         shell: pwsh
 
       - name: Zip Compiled Artifact
