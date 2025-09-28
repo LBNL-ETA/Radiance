@@ -36,10 +36,6 @@ jobs:
       - name: Install PAR::Packer
         run: cpanm PAR::Packer~1.064
 
-      - name: check perl
-        run: |
-          cpanm PAR::Packer --force
-
       - name: check perl packer
         run: |
           perl -version
@@ -51,7 +47,7 @@ jobs:
           version: "5.15.2"
           # mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
 
-      - name: Compile
+      - name: Configure and Compile
         run: |
           cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
             -DCMAKE_BUILD_TYPE=Release `
