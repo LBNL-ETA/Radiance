@@ -30,6 +30,11 @@ jobs:
           perl -version
           ls c:\strawberry\c\lib
 
+      - name: Remove conflicting libglut
+        run: |
+          rm C:\strawberry\c\lib\libglut.a
+        shell: pwsh
+
       - name: check perl packer
         run: |
           ls c:\strawberry\perl\site\bin
