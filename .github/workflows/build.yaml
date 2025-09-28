@@ -78,11 +78,6 @@ jobs:
           echo "List src\px============================="
           ls src\px
 
-      - name: set up QT path
-        run: |
-          setx path "%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\bin"
-          setx path “%path%;D:\a\Radiance\Qt\5.12.8\msvc2017_64\lib”
-
       - name: Build installer
         uses: lukka/run-cmake@v2
         with:
