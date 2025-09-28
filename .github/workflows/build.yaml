@@ -17,18 +17,6 @@ jobs:
       - name: Install NSIS
         run: choco install nsis
 
-      - name: Check for NSIS
-        shell: pwsh
-        run: |
-          echo "--- Checking for makensis.exe ---"
-          if (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe") {
-            echo "makensis.exe found at default location."
-          } else {
-            echo "makensis.exe NOT found at default location."
-          }
-          echo "--- System PATH ---"
-          $env:PATH -split ';' | ForEach-Object { Write-Output $_ }
-
       - name: Install Perl
         uses: shogo82148/actions-setup-perl@v1
         with:
