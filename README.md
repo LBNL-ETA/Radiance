@@ -1,17 +1,24 @@
-![Import + Build + Test](https://github.com/LBNL-ETA/Radiance/workflows/Import%20from%20CVS%20and%20Build%20+%20Test/badge.svg) 
+[![Build + Test](https://github.com/LBNL-ETA/Radiance/actions/workflows/build.yaml/badge.svg)](https://github.com/LBNL-ETA/Radiance/actions/workflows/build.yaml)
 [![GitHub All Releases](https://img.shields.io/github/downloads/LBNL-ETA/Radiance/total?label=Download%20Release)](https://github.com/LBNL-ETA/Radiance/releases)
+
 # Radiance
+
 A Validated Lighting Simulation Tool
 
-The master repo is a mirror of the CVS source tree [](http://www.radiance-online.org)http://www.radiance-online.org, and updates everyday at 0 AM UTC. 
+This repository is a mirror of the official Radiance CVS source tree from [radiance-online.org](http://www.radiance-online.org). It is automatically updated every day at 00:00 UTC.
 
 ## Source
-The source of radiance is located under [**master branch**](https://github.com/LBNL-ETA/Radiance/tree/master), and you should **NEVER** work on this Radiance master branch directly. Any manual edits on this radiance branch will be overridden and would potentially break the auto-update script.
 
-All files are imported from Radiance CVS via git-cvsimport, and this is a one-way sync. Any updates in this master branch will NOT affect CVS source. 
+The source code is located on the [`master` branch](https://github.com/LBNL-ETA/Radiance/tree/master).
 
-Unit testing is included in every build and OS system. Please visit https://github.com/LBNL-ETA/Radiance/tree/master/test to check all tests. 
+**Important:** Do not commit directly to the `master` branch. This branch is a one-way sync from the official CVS repository. Any manual edits will be overwritten by the daily import process.
+
+## Testing
+
+Unit tests are run automatically for every build on Windows, macOS (x86-64 and arm64), and Linux. You can view the test suite in the [test directory](https://github.com/LBNL-ETA/Radiance/tree/master/test).
 
 ## Installer
-An installer will be built for Winodws, Mac OSX, and Linux, and released weekly, please visit: https://github.com/LBNL-ETA/Radiance/releases to download. Installers are listed under assets of each release.
 
+Installers for Windows, macOS (x86-64 and arm64), and Linux are built and published with each new commit to `master`.
+
+You can download the latest installers from the [**Releases** page](https://github.com/LBNL-ETA/Radiance/releases). Installers are listed under the "Assets" section of each release.
