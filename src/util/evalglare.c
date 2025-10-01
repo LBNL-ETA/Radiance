@@ -1,7 +1,7 @@
 #ifndef lint
 static const char RCSid[] = "$Id$"; 
 #endif
-/* EVALGLARE V3.05
+/* EVALGLARE V3.06
  * Evalglare Software License, Version 3.0x
  *
  * Copyright (c) 1995 - 2022 Fraunhofer ISE, EPFL.
@@ -401,10 +401,16 @@ syntax now: -Q n_images n_extrascans_per_image n_images*( imagename x y  n_extra
 - changing abs_max,Lveil from float to double
   */
 
+/* evalglare.c, v3.06  2024/06/25
+- fix bug missing border pixel when cutting with -G
+  */
+
+
+
 
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "3.05 release 25.06.2024 by J.Wienold, EPFL"
+#define VERSION "3.06 release 01.10.2025 by J.Wienold, EPFL"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -960,8 +966,8 @@ void cut_view_1(pict*p)
 {
 int x,y;
 double border,ang,teta,phi,phi2;
-		  for(x=0;x<pict_get_xsize(p)-1;x++)
-		   for(y=0;y<pict_get_ysize(p)-1;y++) {
+		  for(x=0;x<pict_get_xsize(p);x++)
+		   for(y=0;y<pict_get_ysize(p);y++) {
 			if (pict_get_hangle(p,x,y,p->view.vdir,p->view.vup,&ang)) {
 				if (pict_is_validpixel(p, x, y)) {
                        			pict_get_vangle(p,x,y,p->view.vdir,p->view.vup,&phi2);
@@ -1014,8 +1020,8 @@ void cut_view_2(pict*p)
 
 int x,y;
 double border,ang,teta,phi,phi2;
-		  for(x=0;x<pict_get_xsize(p)-1;x++)
-		   for(y=0;y<pict_get_ysize(p)-1;y++) {
+		  for(x=0;x<pict_get_xsize(p);x++)
+		   for(y=0;y<pict_get_ysize(p);y++) {
 			if (pict_get_hangle(p,x,y,p->view.vdir,p->view.vup,&ang)) {
 				if (pict_is_validpixel(p, x, y)) {
                        			pict_get_vangle(p,x,y,p->view.vdir,p->view.vup,&phi2);
@@ -1070,8 +1076,8 @@ void cut_view_3(pict*p)
 
 int x,y;
 double border,ang,teta,phi,phi2,lum,newlum;
-		  for(x=0;x<pict_get_xsize(p)-1;x++)
-		   for(y=0;y<pict_get_ysize(p)-1;y++) {
+		  for(x=0;x<pict_get_xsize(p);x++)
+		   for(y=0;y<pict_get_ysize(p);y++) {
 			if (pict_get_hangle(p,x,y,p->view.vdir,p->view.vup,&ang)) {
 			     if (DOT(pict_get_cached_dir(p,x,y),p->view.vdir) >= 0.0) {
                        			pict_get_vangle(p,x,y,p->view.vdir,p->view.vup,&phi2);
@@ -1698,7 +1704,7 @@ int main(int argc, char **argv)
 	abs_max = 0;
 	fixargv0(argv[0]);
 	E_v_contr = 0.0;
-	strcpy(version, "3.05 release 25.06.2024 by J.Wienold");
+	strcpy(version, "3.06 release 01.10.2025 by J.Wienold");
         low_light_corr=1.0;
  	output = 0;
 	calc_vill = 0;
