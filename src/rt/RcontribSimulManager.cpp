@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.11 2025/01/02 16:16:49 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -213,6 +213,10 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 {
 	if (!modn | !outspec || !*modn | !*outspec) {
 		error(WARNING, "ignoring bad call to AddModifier()");
+		return false;
+	}
+	if (*outspec == '!') {
+		error(USER, "command output not supported by RcontribSimulManager");
 		return false;
 	}
 	if (!nChan) {				// initial call?

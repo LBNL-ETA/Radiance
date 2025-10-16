@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.18 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -347,14 +347,16 @@ main(int argc, char *argv[])
 		myRCmanager.outOp = RCOnew;
 					// rval = # rows recovered
 	rval = myRCmanager.PrepOutput();
-					// check if recovered everything
-	if (rval >= myRCmanager.GetRowMax()) {
-		error(WARNING, "nothing left to compute");
-		quit(0);
-	}
-	rxcontrib(rval);		/* trace ray contributions (loop) */
 
-	quit(0);	/* exit clean */
+	if (rval < 0)			// PrepOutput() failure?
+		error(USER, "issue loading or creating output(s)");
+					// in case we recovered everything
+	if (rval >= myRCmanager.GetRowMax())
+		error(WARNING, "nothing left to compute");
+	else
+		rxcontrib(rval);	// trace ray contributions (loop)
+
+	quit(0);	// exit clean
 
 badopt:
 	fprintf(stderr,
