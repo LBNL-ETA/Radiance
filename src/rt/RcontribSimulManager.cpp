@@ -606,7 +606,7 @@ putModContrib(const LUENT *lp, void *p)
 		}
 		} break;
 	default:
-		error(CONSISTENCY, "unsupported output type in sendModContrib()");
+		error(CONSISTENCY, "unsupported output type in putModContrib()");
 		return -1;
 	}
 						// clear for next tally
@@ -737,9 +737,10 @@ RcontribSimulManager::RunChild()
 			error(CONSISTENCY, "bad accumulator count in child");
 			exit(1);
 		}
-		if (rass.ac > accum)
-			vecList = (FVECT *)erealloc(vecList,
-						sizeof(FVECT)*2*rass.ac);
+		if (rass.ac > accum) {
+			efree(vecList);
+			vecList = (FVECT *)emalloc(sizeof(FVECT)*2*rass.ac);
+		}
 		accum = rass.ac;
 		rInPos = rass.row;
 
