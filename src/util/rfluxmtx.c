@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.60 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -22,7 +22,10 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.60 2025/06/03 21:31:51 greg Exp
 #define MAXRCARG	10000
 #endif
 
-int		verbose = 0;		/* verbose mode (< 0 no warnings) */
+#define		NOWARN		1
+#define		VERBO		2
+
+int		verbose = 0;		/* verbose/warning mode */
 
 char		*rcarg[MAXRCARG+1] = {"rcontrib", "-fo+"};
 int		nrcargs = 2;
@@ -42,7 +45,7 @@ char		*kquarterfn = "klems_quarter.cal";
 char		*ciefn = "cieskyscan.cal";
 
 					/* string indicating parameters */
-const char	PARAMSTART[] = "@rfluxmtx";
+#define	PARAMSTART	"@rfluxmtx"
 
 				/* surface type IDs */
 #define ST_NONE		0
@@ -139,7 +142,7 @@ oconv_command(int ac, char *av[])
 	
 	if (ac-- <= 0)
 		return(NULL);
-	if (verbose < 0) {	/* turn off warnings */
+	if (verbose & NOWARN) {	/* warnings off? */
 		strcpy(cp, "-w ");
 		cp += 3;
 	}
@@ -190,7 +193,7 @@ popen_arglist(char *av[], char *mode)
 		fputs(": command line too long in popen_arglist()\n", stderr);
 		return(NULL);
 	}
-	if (verbose > 0)
+	if (verbose & VERBO)
 		fprintf(stderr, "%s: opening pipe %s: %s\n",
 				progname, (*mode=='w') ? "to" : "from", cmd);
 	return(popen(cmd, mode));
@@ -209,7 +212,7 @@ my_exec(char *av[])
 		fputs(": command line too long in my_exec()\n", stderr);
 		return(1);
 	}
-	if (verbose > 0)
+	if (verbose & VERBO)
 		fprintf(stderr, "%s: running: %s\n", progname, cmd);
 	return(system(cmd));
 }
@@ -228,7 +231,7 @@ popen_arglist(char *av[], char *mode)
 		fprintf(stderr, "%s: only one i/o pipe at a time!\n", progname);
 		return(NULL);
 	}
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		char	cmd[4096];
 		if (!convert_commandline(cmd, sizeof(cmd), av))
 			strcpy(cmd, "COMMAND TOO LONG TO SHOW");
@@ -273,7 +276,7 @@ my_exec(char *av[])
 		fprintf(stderr, "%s: cannot locate %s\n", progname, av[0]);
 		return(1);
 	}
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		char	cmd[4096];
 		if (!convert_commandline(cmd, sizeof(cmd), av))
 			strcpy(cmd, "COMMAND TOO LONG TO SHOW");
@@ -909,7 +912,7 @@ prepare_sampler(void)
 		return(-1);
 	}
 					/* misplaced output file spec. */
-	if ((curparams.outfn != NULL) & (verbose >= 0))
+	if ((curparams.outfn != NULL) & !(verbose & NOWARN))
 		fprintf(stderr, "%s: warning - ignoring output file in sender ('%s')\n",
 				progname, curparams.outfn);
 					/* check/set basis hemisphere */
@@ -1065,7 +1068,7 @@ add_surface(int st, const char *oname, FILE *fp)
 		snew->area *= PI*snew->area;
 		break;
 	}
-	if ((snew->area <= FTINY*FTINY) & (verbose >= 0)) {
+	if ((snew->area <= FTINY*FTINY) & !(verbose & NOWARN)) {
 		fprintf(stderr, "%s: warning - zero area for surface '%s'\n",
 				progname, oname);
 		free(snew);
@@ -1255,7 +1258,7 @@ main(int argc, char *argv[])
 		na = 1;	
 		switch (argv[a][1]) {	/* !! Keep consistent !! */
 		case 'v':		/* verbose mode */
-			verbose = 1;
+			verbose ^= VERBO;
 			na = 0;
 			continue;
 		case 'f':		/* special case for -fo, -ff, etc. */
@@ -1307,8 +1310,12 @@ main(int argc, char *argv[])
 			na = 0;
 			continue;
 		case 'w':		/* options without arguments */
-			if (!argv[a][2] || strchr("+1tTyY", argv[a][2]) == NULL)
-				verbose = -1;
+			if (!argv[a][2])
+				verbose ^= NOWARN;
+			else if (strchr("+1tTyY", argv[a][2]) != NULL)
+				verbose &= ~NOWARN;
+			else
+				verbose |= NOWARN;
 			break;
 		case 'V':
 		case 'u':
@@ -1428,7 +1435,7 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 	flockfile(rcfp);
 #endif
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		fprintf(stderr, "%s: sampling %d directions", progname, nsbins);
 		if (curparams.nsurfs > 1)
 			fprintf(stderr, " (%d elements)\n", curparams.nsurfs);
