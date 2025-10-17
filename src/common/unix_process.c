@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.19 2024/06/04 21:47:55 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -123,7 +123,7 @@ close_processes(	/* close pipes and wait for processes to finish */
 )
 {
 	int	togo = nproc;
-	int	status, rtn_status = 0;
+	int	status = 0, rtn_status = 0;
 	RT_PID	pid;
 	int	i;
 
@@ -135,7 +135,6 @@ close_processes(	/* close pipes and wait for processes to finish */
 		} else 
 			togo -= (pd[i].pid < 0);
 	if (nproc == 1) {			/* await specific process? */
-		status = 0;
 		if (waitpid(pd->pid, &status, 0) != pd->pid)
 			return(-1);
 		*pd = sp_inactive;
@@ -144,13 +143,12 @@ close_processes(	/* close pipes and wait for processes to finish */
 						/* else unordered wait */
 	while (togo > 0 && (pid = wait(&status)) >= 0) {
 		for (i = nproc; i-- > 0; )
-			if (pd[i].pid == pid) {
-				pd[i] = sp_inactive;
-				--togo;
-				break;
-			}
+			if (pd[i].pid == pid)
+				break;		/* found it! */
 		if (i < 0)
-			continue;		/* child we don't know? */
+			continue;		/* or child not in our list */
+		pd[i] = sp_inactive;
+		--togo;
 		status = status>>8 & 0xff;
 		if (status)			/* record non-zero status */
 			rtn_status = status;
