@@ -108,11 +108,6 @@ public:
 
 typedef double		DCOLORV;	// color accumulator type
 
-/// Modifier channel for recording contributions (no constructor/destructor)
-struct RcontribMod;
-
-/// Allocate rcontrib accumulator
-extern RcontribMod *	NewRcMod(const char *prms = NULL, const char *binexpr = NULL, int ncbins = 1);
 /// Free an RcontribMod
 extern lut_free_t	FreeRcMod;
 

@@ -54,28 +54,8 @@ struct RowAssignment {
 
 static const char	ROW_DONE[] = "ROW FINISHED\n";
 
-// Get format identifier
-const char *
-formstr(int f)
-{
-	switch (f) {
-	case 'a': return("ascii");
-	case 'f': return("float");
-	case 'd': return("double");
-	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
-	}
-	return("unknown");
-}
-
-// Our default data share function
-RdataShare *
-defDataShare(const char *name, RCOutputOp op, size_t siz)
-{
-	return new RdataShareMap(name, RSDOflags[op], siz);
-}
-
-// Allocate rcontrib accumulator
-RcontribMod *
+// allocate rcontrib accumulator
+static RcontribMod *
 NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
 	if (!prms) prms = "";
@@ -112,7 +92,7 @@ NewRcMod(const char *prms, const char *binexpr, int ncbins)
 	return mp;
 }
 
-// Free an RcontribMod
+// Free an RcontribMod (public for RcontribSimulManager constructor)
 void
 FreeRcMod(void *p)
 {
@@ -120,6 +100,26 @@ FreeRcMod(void *p)
 	EPNODE *	bep = (*(RcontribMod *)p).binv;
 	if (bep) epfree(bep, true);
 	efree(p);
+}
+
+// Get format identifier
+const char *
+formstr(int f)
+{
+	switch (f) {
+	case 'a': return("ascii");
+	case 'f': return("float");
+	case 'd': return("double");
+	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
+	}
+	return("unknown");
+}
+
+// Our default data share function
+RdataShare *
+defDataShare(const char *name, RCOutputOp op, size_t siz)
+{
+	return new RdataShareMap(name, RSDOflags[op], siz);
 }
 
 // Set output format ('f', 'd', or 'c')
