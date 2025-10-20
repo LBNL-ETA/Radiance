@@ -110,6 +110,7 @@ clear_params(PARAMS *p, int reset_only)
 		free(sdel);
 	}
 	if (reset_only) {
+		p->slist = NULL;
 		p->nsurfs = 0;
 		memset(p->nrm, 0, sizeof(FVECT));
 		memset(p->vup, 0, sizeof(FVECT));
@@ -507,6 +508,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		params = savqstr(sbuf);
 		binv = "cbin";
 		nbins = "Ncbins";
 	} else {
@@ -904,56 +906,54 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 
 /* Prepare hemisphere basis sampler that will send rays to rcontrib */
 static int
-prepare_sampler(void)
+prepare_sampler(PARAMS *p)
 {
-	if (curparams.slist == NULL) {	/* missing sample surface! */
-		fputs(progname, stderr);
-		fputs(": no sender surface!\n", stderr);
+	if (p->slist == NULL) {		/* missing sample surface! */
+		error(USER, "no sender surface");
 		return(-1);
 	}
 					/* misplaced output file spec. */
-	if ((curparams.outfn != NULL) & !(verbose & NOWARN))
-		fprintf(stderr, "%s: warning - ignoring output file in sender ('%s')\n",
-				progname, curparams.outfn);
+	if (p->outfn[0]) {
+		sprintf(errmsg, "ignoring output file in sender ('%s')",
+				p->outfn);
+		error(WARNING, errmsg);
+	}
 					/* check/set basis hemisphere */
-	if (!curparams.hemis[0]) {
-		fputs(progname, stderr);
-		fputs(": missing sender sampling type!\n", stderr);
+	if (!p->hemis[0]) {
+		error(USER, "missing sender sampling type");
 		return(-1);
 	}
-	if (normalize(curparams.nrm) == 0) {
-		fputs(progname, stderr);
-		fputs(": undefined normal for sender sampling\n", stderr);
+	if (normalize(p->nrm) == 0) {
+		error(USER, "undefined normal for sender sampling");
 		return(-1);
 	}
-	if (normalize(curparams.vup) == 0) {
-		if (fabs(curparams.nrm[2]) < .7)
-			curparams.vup[2] = 1;
+	if (normalize(p->vup) == 0) {
+		if (fabs(p->nrm[2]) < .7)
+			p->vup[2] = 1;
 		else
-			curparams.vup[1] = 1;
+			p->vup[1] = 1;
 	}
-	fcross(curparams.udir, curparams.vup, curparams.nrm);
-	if (normalize(curparams.udir) == 0) {
-		fputs(progname, stderr);
-		fputs(": up vector coincides with sender normal\n", stderr);
+	fcross(p->udir, p->vup, p->nrm);
+	if (normalize(p->udir) == 0) {
+		error(USER, "up vector coincides with sender normal");
 		return(-1);
 	}
-	fcross(curparams.vdir, curparams.nrm, curparams.udir);
-	if (curparams.sign == '-') {	/* left-handed coordinate system? */
-		curparams.udir[0] *= -1.;
-		curparams.udir[1] *= -1.;
-		curparams.udir[2] *= -1.;
+	fcross(p->vdir, p->nrm, p->udir);
+	if (p->sign == '-') {		/* left-handed coordinate system? */
+		p->udir[0] *= -1.;
+		p->udir[1] *= -1.;
+		p->udir[2] *= -1.;
 	}
-	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1'))
-		curparams.sample_basis = sample_uniform;
-	else if (tolower(curparams.hemis[0]) == 's' &&
-				tolower(curparams.hemis[1]) == 'c')
-		curparams.sample_basis = sample_shirchiu;
-	else if ((tolower(curparams.hemis[0]) == 'r') |
-			(tolower(curparams.hemis[0]) == 't'))
-		curparams.sample_basis = sample_reinhart;
-	else if (tolower(curparams.hemis[0]) == 'k') {
-		switch (curparams.hemis[1]) {
+	if ((tolower(p->hemis[0]) == 'u') | (p->hemis[0] == '1'))
+		p->sample_basis = sample_uniform;
+	else if (tolower(p->hemis[0]) == 's' &&
+				tolower(p->hemis[1]) == 'c')
+		p->sample_basis = sample_shirchiu;
+	else if ((tolower(p->hemis[0]) == 'r') |
+			(tolower(p->hemis[0]) == 't'))
+		p->sample_basis = sample_reinhart;
+	else if (tolower(p->hemis[0]) == 'k') {
+		switch (p->hemis[1]) {
 		case '1':
 		case '2':
 		case '4':
@@ -961,28 +961,28 @@ prepare_sampler(void)
 		case 'f':
 		case 'F':
 		case '\0':
-			curparams.hemis[1] = '1';
+			p->hemis[1] = '1';
 			break;
 		case 'h':
 		case 'H':
-			curparams.hemis[1] = '2';
+			p->hemis[1] = '2';
 			break;
 		case 'q':
 		case 'Q':
-			curparams.hemis[1] = '4';
+			p->hemis[1] = '4';
 			break;
 		default:
 			goto unrecognized;
 		}
-		curparams.hemis[2] = '\0';
-		curparams.sample_basis = sample_klems;
+		p->hemis[2] = '\0';
+		p->sample_basis = sample_klems;
 	} else
 		goto unrecognized;
 					/* return number of bins */
-	return((*curparams.sample_basis)(&curparams,0,NULL));
+	return((*p->sample_basis)(p,0,NULL));
 unrecognized:
 	fprintf(stderr, "%s: unrecognized sender sampling: h=%s\n",
-			progname, curparams.hemis);
+			progname, p->hemis);
 	return(-1);
 }
 
@@ -1420,7 +1420,7 @@ main(int argc, char *argv[])
 	curmod[0] = '\0';
 	if (load_scene(sendfn, add_send_object) < 0)
 		return(1);
-	if ((nsbins = prepare_sampler()) <= 0)
+	if ((nsbins = prepare_sampler(&curparams)) <= 0)
 		return(1);
 	CHECKARGC(3);			/* add row count and octree */
 	rcarg[nrcargs++] = "-y";
