@@ -908,23 +908,24 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 static int
 prepare_sampler(PARAMS *p)
 {
-	if (p->slist == NULL) {		/* missing sample surface! */
-		error(USER, "no sender surface");
+	if (p->slist == NULL) {	/* missing sample surface! */
+		fputs(progname, stderr);
+		fputs(": no sender surface!\n", stderr);
 		return(-1);
 	}
 					/* misplaced output file spec. */
-	if (p->outfn[0]) {
-		sprintf(errmsg, "ignoring output file in sender ('%s')",
-				p->outfn);
-		error(WARNING, errmsg);
-	}
+	if ((p->outfn != NULL) & !(verbose & NOWARN))
+		fprintf(stderr, "%s: warning - ignoring output file in sender ('%s')\n",
+				progname, p->outfn);
 					/* check/set basis hemisphere */
 	if (!p->hemis[0]) {
-		error(USER, "missing sender sampling type");
+		fputs(progname, stderr);
+		fputs(": missing sender sampling type!\n", stderr);
 		return(-1);
 	}
 	if (normalize(p->nrm) == 0) {
-		error(USER, "undefined normal for sender sampling");
+		fputs(progname, stderr);
+		fputs(": undefined normal for sender sampling\n", stderr);
 		return(-1);
 	}
 	if (normalize(p->vup) == 0) {
@@ -935,11 +936,12 @@ prepare_sampler(PARAMS *p)
 	}
 	fcross(p->udir, p->vup, p->nrm);
 	if (normalize(p->udir) == 0) {
-		error(USER, "up vector coincides with sender normal");
+		fputs(progname, stderr);
+		fputs(": up vector coincides with sender normal\n", stderr);
 		return(-1);
 	}
 	fcross(p->vdir, p->nrm, p->udir);
-	if (p->sign == '-') {		/* left-handed coordinate system? */
+	if (p->sign == '-') {	/* left-handed coordinate system? */
 		p->udir[0] *= -1.;
 		p->udir[1] *= -1.;
 		p->udir[2] *= -1.;
