@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.17 2025/07/02 16:54:44 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -122,7 +122,7 @@ RpictSimulManager::NewFrame(const VIEW &v, int xydim[2], double *ap, const int *
 					// set up tiling?
 	if (tgrid && (tgrid[0] > 0) & (tgrid[1] > 0) & (tgrid[0]*tgrid[1] > 1)) {
 		if ((8*tgrid[0] >= xydim[0]) | (8*tgrid[1] >= xydim[1])) {
-			error(WARNING, "Excessive tiling for image size");
+			error(WARNING, "excessive tiling for image size");
 			return false;
 		}
 		xydim[0] -= xydim[0] % (tgsize[0] = tgrid[0]);

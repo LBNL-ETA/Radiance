@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.24 2024/11/20 17:46:25 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -303,7 +303,7 @@ RtraceSimulManager::UpdateMode()
 		ourRTsimMan = NULL;
 	} else if (ourRTsimMan != this) {
 		if (ourRTsimMan)
-			error(WARNING, "Competing top-level simulation managers?");
+			error(WARNING, "competing top-level simulation managers?");
 		ourRTsimMan = this;
 	}
 	return true;
@@ -363,7 +363,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 		return -1;
 
 	if (rID0 && curFlags&RTdoFIFO)
-		error(INTERNAL, "Ray number assignment unsupported with FIFO");
+		error(INTERNAL, "ray number assignment unsupported with FIFO");
 
 	while (n-- > 0) {		// queue each ray
 		VCOPY(res.rorg, orig_direc[0]);

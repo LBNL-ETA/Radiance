@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.87 2025/06/20 03:43:17 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -52,7 +52,7 @@ marksources(void)			/* find and mark source objects */
 	int  ns;
 					/* call us only once! */
 	if (nsources)
-		error(CONSISTENCY, "Multiple calls to marksources!");
+		error(CONSISTENCY, "multiple calls to marksources!");
 					/* initialize dispatch table */
 	initstypes();
 					/* find direct sources */
@@ -150,7 +150,7 @@ distantsources(void)			/* only mark distant sources */
 	int  ns;
 					/* call us only once! */
 	if (nsources)
-		error(CONSISTENCY, "Multiple calls to distantsources!");
+		error(CONSISTENCY, "multiple calls to distantsources!");
 					/* initialize dispatch table */
 	initstypes();
 					/* sources needed for sourcehit() */

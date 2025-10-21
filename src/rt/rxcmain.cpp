@@ -125,7 +125,7 @@ setformat(const char *fmt)
 	if (!fmt[2])
 		return;
 fmterr:
-	sprintf(errmsg, "Unsupported i/o format: -f%s", fmt);
+	sprintf(errmsg, "unsupported i/o format: -f%s", fmt);
 	error(USER, errmsg);
 }
 
