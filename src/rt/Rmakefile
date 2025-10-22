@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.103 2025/06/04 20:32:25 greg Exp $
+# RCSid: $Id$
 #
 # Compiles for ray tracing programs.
 #
@@ -74,6 +74,11 @@ RdataShareFile.cpp RdataShareMap.cpp
 
 RXPCOBJS = rxpiece.o RpictSimulManager.o RtraceSimulManager.o srcdraw.o
 RXPCSRC = rxpiece.cpp RpictSimulManager.cpp RtraceSimulManager.cpp srcdraw.c
+
+RXFMOBJS = rxfluxmtx.o RcontribSimulManager.o RtraceSimulManager.o \
+RdataShareFile.o RdataShareMap.o
+RXFMSRC = rxfluxmtx.cpp RcontribSimulManager.cpp RtraceSimulManager.cpp \
+RdataShareFile.cpp RdataShareMap.cpp
 
 RLOBJS = raycalls.o raypcalls.o rayfifo.o
 RLSRC = raycalls.c raypcalls.c rayfifo.c
@@ -173,6 +178,11 @@ $(DESTDIR)/rxpiece:	$(RXPCOBJS) $(RCLIB) $(RLIB)
 	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/rxpiece $(RXPCOBJS) $(RCLIB) \
 $(RLIB) $(CXXLIBS)
 
+$(DESTDIR)/rxfluxmtx:	$(RXFMOBJS) $(RCLIB) $(RLIB)
+	$(CXX) $(CXXFLAGS) -o $(DESTDIR)/rxfluxmtx $(RXFMOBJS) $(RCLIB) \
+$(RLIB) $(CXXLIBS)
+
+
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
 
@@ -250,7 +260,7 @@ raycalls.o raypcalls.o rayfifo.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
 text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o rcmain.o \
 rcontrib.o rc2.o rc3.o RtraceSimulManager.o RpictSimulManager.o \
-rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o m_wgmdf.o \
+rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o m_wgmdf.o rxfluxmtx.o \
 RcontribSimulManager.o RpictSimulManager.o RtraceSimulManager.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/octree.h \
@@ -274,7 +284,7 @@ pmapooc.o pmapsrc.o pmcontrib2.o m_mirror.o \
 raytrace.o rtrace.o rv2.o rv3.o source.o \
 srcdraw.o srcobstr.o virtuals.o:	otspecial.h
 
-rpmain.o rtmain.o rvmain.o rpict.o \
+rpmain.o rtmain.o rvmain.o rpict.o rxfluxmtx.o \
 srcdraw.o:	../common/view.h ../common/resolu.h
 
 rpict.o:	../common/hilbert.h
@@ -318,6 +328,9 @@ srcobstr.o:	source.h
 
 m_bsdf.o:	ambient.h source.h func.h \
 ../common/calcomp.h ../common/bsdf.h ../common/random.h
+
+rxfluxmtx.o:	func.h ../common/bsdf.h ../common/bsdf_m.h \
+../common/random.h ../common/triangulate.h
 
 rcmain.o rcontrib.o rc2.o rc3.o:	rcontrib.h \
 ../common/platform.h ../common/paths.h ../common/lookup.h \
@@ -476,7 +489,7 @@ oocbuild.o: oocbuild.c oocbuild.h oocsort.h oococt.h
 
 oocnn.o: oocnn.c oocnn.h oococt.h oocsort.h
 
-rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o \
+rxtrace.o rxtmain.o rxpiece.o rxpmain.o rxcmain.o rxfluxmtx.o \
 RcontribSimulManager.o RpictSimulManager.o \
 RtraceSimulManager.o:	RtraceSimulManager.h \
 ../common/abitmap.h
@@ -484,7 +497,7 @@ RtraceSimulManager.o:	RtraceSimulManager.h \
 RpictSimulManager.o rxpiece.o rxpmain.o:	RpictSimulManager.h \
 ../common/view.h ../common/depthcodec.h ../common/abitmap.h
 
-rxcmain.o RcontribSimulManager.o:	RcontribSimulManager.h RdataShare.h \
+rxcmain.o RcontribSimulManager.o rxfluxmtx.o:	RcontribSimulManager.h RdataShare.h \
 ../common/lookup.h ../common/rtprocess.h
 
 RdataShareFile.o RdataShareMap.o:	RdataShare.h \
