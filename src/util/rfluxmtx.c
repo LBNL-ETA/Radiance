@@ -450,9 +450,12 @@ finish_receiver(void)
 	}
 					/* determine sample type/bin */
 	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1')) {
-		sprintf(sbuf, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
-		binv = savqstr(sbuf);
+		if (curparams.slist->styp != ST_SOURCE) {
+			sprintf(sbuf, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
+				curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
+			binv = savqstr(sbuf);
+		} else
+			binv = "0";
 		nbins = "1";		/* uniform sampling -- one bin */
 		uniform = 1;
 	} else if (tolower(curparams.hemis[0]) == 's' &&
