@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.27 2025/01/18 03:49:00 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -117,16 +117,16 @@ typedef struct {
  *				i passed to vproj runs from 0 to nproj-1.
  */
 
-typedef struct {
-	int  (*vproj)();	/* project virtual sources */
+typedef struct {		/* project virtual sources */
+	int  (*vproj)(MAT4,OBJREC*,SRCREC*,int);
 	int  nproj;		/* number of possible projections */
 } VSMATERIAL;		/* virtual source material functions */
 
 typedef struct {
-	void	(*setsrc)();	/* set light source for object */
-	void	(*partit)();	/* partition light source object */
-	double  (*getpleq)();	/* plane equation for surface */
-	double  (*getdisk)();	/* maximum disk for surface */
+	void	(*setsrc)(SRCREC*,OBJREC*);	/* set light source for object */
+	void	(*partit)(SRCINDEX*,RAY*);	/* partition light source object */
+	double  (*getpleq)(FVECT,OBJREC*);	/* plane equation for surface */
+	double  (*getdisk)(FVECT,OBJREC*);	/* maximum disk for surface */
 } SOBJECT;		/* source object functions */
 
 typedef union {
