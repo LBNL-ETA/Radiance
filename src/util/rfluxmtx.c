@@ -1450,7 +1450,7 @@ main(int argc, char *argv[])
 	return(pclose_al(rcfp) < 0);	/* all finished! */
 userr:
 	if (a < argc-2)
-		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
+		fprintf(stderr, "%s: unsupported option '%s'\n", progname, argv[a]);
 	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	return(1);
