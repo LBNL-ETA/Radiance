@@ -116,9 +116,16 @@ formstr(int f)
 	return("unknown");
 }
 
-// Our default data share function
+// Standard file data share function
 RdataShare *
-defDataShare(const char *name, RCOutputOp op, size_t siz)
+fileDataShare(const char *name, RCOutputOp op, size_t siz)
+{
+	return new RdataShareFile(name, RSDOflags[op], siz);
+}
+
+// Memory-mapped data share function
+RdataShare *
+mapDataShare(const char *name, RCOutputOp op, size_t siz)
 {
 	return new RdataShareMap(name, RSDOflags[op], siz);
 }

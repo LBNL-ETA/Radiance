@@ -82,15 +82,15 @@ struct PARAMS {
 	int		(*sample_basis)(PARAMS *p, int b, FVECT orig_dir[]);
 };
 
-PARAMS		curparams;
-char		curmod[MAXSTR];
-char		newparams[1024];
+static PARAMS		curparams;
+static char		curmod[MAXSTR];
+static char		newparams[1024];
 
 typedef int	SURFSAMP(FVECT, SURF *, double);
 
-SURFSAMP	ssamp_bad, ssamp_poly, ssamp_ring;
+static SURFSAMP	ssamp_bad, ssamp_poly, ssamp_ring;
 
-SURFSAMP	*orig_in_surf[4] = {
+static SURFSAMP	*orig_in_surf[4] = {
 		ssamp_bad, ssamp_poly, ssamp_ring, ssamp_bad
 	};
 
@@ -99,7 +99,7 @@ double		dstrpix = 0;		// pixel jitter
 double		dblur = 0;		// depth-of-field
 
 /* Clear parameter set */
-void
+static void
 clear_params(PARAMS *p, bool reset_only = true)
 {
 	while (p->slist != NULL) {
@@ -119,7 +119,7 @@ clear_params(PARAMS *p, bool reset_only = true)
 }
 
 /* Get surface type from name */
-int
+static int
 surf_type(const char *otype)
 {
 	if (!strcmp(otype, "polygon"))
@@ -132,7 +132,7 @@ surf_type(const char *otype)
 }
 
 /* Add arguments to oconv command */
-char *
+static char *
 oconv_command(int ac, char *av[])
 {
 	static char	oconvbuf[4096] = "!oconv -f ";
@@ -179,7 +179,7 @@ overrun:
 }
 
 /* Get normalized direction vector from string specification */
-int
+static int
 get_direction(FVECT dv, const char *s)
 {
 	int	sign = 1;
@@ -219,7 +219,7 @@ nextchar:
 }
 
 /* Parse program parameters (directives) */
-int
+static int
 parse_params(PARAMS *p, char *pargs)
 {
 	char	*cp = pargs;
@@ -298,7 +298,7 @@ parse_params(PARAMS *p, char *pargs)
 }
 
 /* Add receiver modifier and associated parameters */
-void
+static void
 finish_receiver()
 {
 	bool		uniform = false;
@@ -412,7 +412,7 @@ finish_receiver()
 }
 
 /* Make randomly oriented tangent plane axes for given normal direction */
-void
+static void
 make_axes(FVECT uva[2], const FVECT nrm)
 {
 	int	i;
@@ -423,7 +423,7 @@ make_axes(FVECT uva[2], const FVECT nrm)
 }
 
 /* Illegal sender surfaces end up here */
-int
+static int
 ssamp_bad(FVECT orig, SURF *sp, double x)
 {
 	sprintf(errmsg, "illegal sender surface '%s'", sp->sname);
@@ -432,7 +432,7 @@ ssamp_bad(FVECT orig, SURF *sp, double x)
 }
 
 /* Generate origin on ring surface from uniform random variable */
-int
+static int
 ssamp_ring(FVECT orig, SURF *sp, double x)
 {
 	FVECT	*uva = (FVECT *)sp->priv;
@@ -460,7 +460,7 @@ ssamp_ring(FVECT orig, SURF *sp, double x)
 }
 
 /* Add triangle to polygon's list (call-back function) */
-int
+static int
 add_triangle(const Vert2_list *tp, int a, int b, int c)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)tp->p;
@@ -473,7 +473,7 @@ add_triangle(const Vert2_list *tp, int a, int b, int c)
 }
 
 /* Generate origin on polygon surface from uniform random variable */
-int
+static int
 ssamp_poly(FVECT orig, SURF *sp, double x)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)sp->priv;
@@ -545,7 +545,7 @@ memerr:
 }
 
 /* Compute sample origin based on projected areas of sender subsurfaces */
-int
+static int
 sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 {
 	static double	*projsa;
@@ -586,7 +586,7 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 }
 
 /* Uniform sample generator */
-int
+static int
 sample_uniform(PARAMS *p, int b, FVECT orig_dir[])
 {
 	int	n = myRCmanager.accum;
@@ -613,7 +613,7 @@ sample_uniform(PARAMS *p, int b, FVECT orig_dir[])
 }
 
 /* Shirly-Chiu sample generator */
-int
+static int
 sample_shirchiu(PARAMS *p, int b, FVECT orig_dir[])
 {
 	int	n = myRCmanager.accum;
@@ -641,7 +641,7 @@ sample_shirchiu(PARAMS *p, int b, FVECT orig_dir[])
 }
 
 /* Reinhart/Tregenza sample generator */
-int
+static int
 sample_reinhart(PARAMS *p, int b, FVECT orig_dir[])
 {
 #define T_NALT	7
@@ -691,7 +691,7 @@ sample_reinhart(PARAMS *p, int b, FVECT orig_dir[])
 }
 
 /* Klems sample generator */
-int
+static int
 sample_klems(PARAMS *p, int b, FVECT orig_dir[])
 {
 	static const char	bname[4][20] = {
@@ -739,7 +739,7 @@ sample_klems(PARAMS *p, int b, FVECT orig_dir[])
 }
 
 /* Prepare hemisphere basis sampler that will send rays to rcontrib */
-int
+static int
 prepare_sampler(PARAMS *p)
 {
 	if (p->slist == NULL) {		/* missing sample surface! */
@@ -821,7 +821,7 @@ unrecognized:
 }
 
 /* Compute normal and area for polygon */
-int
+static int
 finish_polygon(SURF *p)
 {
 	const int	nv = p->nfargs / 3;
@@ -843,7 +843,7 @@ finish_polygon(SURF *p)
 }
 
 /* Add a surface to our current parameters */
-void
+static void
 add_surface(int st, const char *oname, FILE *fp)
 {
 	SURF	*snew;
@@ -919,7 +919,7 @@ badnorm:
 }
 
 /* Parse a receiver object (look for modifiers to add) */
-int
+static int
 add_recv_object(FILE *fp)
 {
 	int		st;
@@ -955,7 +955,7 @@ add_recv_object(FILE *fp)
 }
 
 /* Parse a sender object */
-int
+static int
 add_send_object(FILE *fp)
 {
 	int		st;
@@ -995,7 +995,7 @@ add_send_object(FILE *fp)
 }
 
 /* Load a Radiance scene using the given callback function for objects */
-int
+static int
 load_scene(const char *inspec, int (*ocb)(FILE *))
 {
 	int	rv = 0;
@@ -1087,7 +1087,7 @@ eputs(				/* put string to stderr */
 }
 
 /* set input/output format */
-void
+static void
 setformat(const char *fmt)
 {
 	switch (fmt[0]) {
@@ -1127,7 +1127,7 @@ fmterr:
 	error(USER, errmsg);
 }
 
-inline double
+static inline double
 pixjitter()
 {
 	return(0.5 + dstrpix*(frandom()-0.5));
@@ -1135,7 +1135,7 @@ pixjitter()
 
 // Compute a set of view rays for the given pixel accumulator
 bool
-viewRays(FVECT orig_dir[], int x, int y)
+viewRayBundle(FVECT orig_dir[], int x, int y)
 {
 	for (int n = 0; n < myRCmanager.accum; orig_dir += 2, n++) {
 		const double	d = viewray(orig_dir[0], orig_dir[1], &ourview,
@@ -1160,7 +1160,7 @@ viewRays(FVECT orig_dir[], int x, int y)
 
 // Load a set of rays for accumulation (do not normalize direction)
 int
-getRays(FVECT orig_dir[])
+getRayBundle(FVECT orig_dir[])
 {
 	int	n;
 						// read directly if possible
@@ -1198,7 +1198,7 @@ getRays(FVECT orig_dir[])
 }
 
 /* Set default options */
-void
+static void
 default_options()
 {
 	rand_samp = 1;
@@ -1216,7 +1216,7 @@ default_options()
 }
 
 /* Set overriding options */
-void
+static void
 override_options()
 {
 	shadthresh = 0;
@@ -1549,7 +1549,7 @@ main(int argc, char *argv[])
 		for (i = myRCmanager.yres; i--; )	// from the top!
 			for (int x = 0; x < myRCmanager.xres; x++) {
 				report_progress();
-				if (!viewRays(rayarr, x, i))
+				if (!viewRayBundle(rayarr, x, i))
 					quit(1);
 				if (myRCmanager.ComputeRecord(rayarr) != myRCmanager.accum)
 					error(USER, "failed call to ComputeRecord()");
@@ -1568,7 +1568,7 @@ main(int argc, char *argv[])
 		}
 		for (i = 0; i < myRCmanager.GetRowMax(); i++) {
 			report_progress();
-			if (getRays(rayarr) != myRCmanager.accum) {
+			if (getRayBundle(rayarr) != myRCmanager.accum) {
 				sprintf(errmsg, "ray read error after %d of %d",
 						myRCmanager.GetRowCount(),
 						myRCmanager.GetRowMax());

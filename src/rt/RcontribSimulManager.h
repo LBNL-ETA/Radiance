@@ -158,8 +158,12 @@ extern int	RSDOflags[];
 /// Call-back function type to create named data channel (freed using "delete" operator)
 typedef RdataShare *	RcreateDataShareF(const char *name, RCOutputOp op, size_t siz);
 
-/// Our default data share function
-extern RcreateDataShareF	defDataShare;
+/// Provided data share function
+extern RcreateDataShareF	fileDataShare, mapDataShare;
+
+#ifndef defDataShare
+#define defDataShare		mapDataShare	// default data share creator
+#endif
 
 /// Modifiable ray-tracing flags for rcontrib
 #define RCcontrib		(RTmask+1)	// compute contributions? (r.t. coefficients)
