@@ -128,7 +128,7 @@ HEADERS = ambient.h ray.h otspecial.h source.h
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/rcontrib \
 $(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump \
-$(DESTDIR)/rxpiece
+$(DESTDIR)/rxpiece $(DESTDIR)/rxfluxmtx
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
