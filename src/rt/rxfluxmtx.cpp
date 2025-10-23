@@ -1158,43 +1158,87 @@ viewRayBundle(FVECT orig_dir[], int x, int y)
 	return true;
 }
 
-// Load a set of rays for accumulation (do not normalize direction)
-int
+// skip specified number of bytes, return false if EOF
+static bool
+skipBytes(size_t n2skip)
+{
+	while (n2skip--)
+		if (getchar() == EOF)
+			return false;
+	return true;
+}
+
+// skip specified number of whitespace-separated words, return false if EOF
+static bool
+skipWords(int n2skip)
+{
+	int	c;
+
+	while (n2skip--) {
+		do {
+			c = getchar();
+		} while (isspace(c));
+		do {
+			if (c == EOF) return false;
+			c = getchar();
+		} while (!isspace(c));
+	}
+	return true;
+}
+
+// Skip a set of input rays
+bool
+skipRayBundle()
+{
+	switch (inpfmt) {
+	case 'd':
+		return skipBytes(sizeof(double)*6*myRCmanager.accum);
+	case 'f':
+		return skipBytes(sizeof(float)*6*myRCmanager.accum);
+	case 'a':
+		return skipWords(6*myRCmanager.accum);
+	}
+	error(INTERNAL, "unsupported input format");
+	return false;
+}
+
+// Load a set of rays for accumulation (do not normalize directions)
+bool
 getRayBundle(FVECT orig_dir[])
 {
-	int	n;
 						// read directly if possible
 	if (inpfmt == "_fd"[sizeof(RREAL)/sizeof(float)])
-		return(getbinary(orig_dir[0], sizeof(FVECT)*2,
-					myRCmanager.accum, stdin));
+		return (getbinary(orig_dir[0], sizeof(FVECT)*2,
+				myRCmanager.accum, stdin) == myRCmanager.accum);
 
-	for (n = 0; n < myRCmanager.accum; orig_dir += 2, n++) {
+	for (int n = 0; n < myRCmanager.accum; orig_dir += 2, n++)
 		switch (inpfmt) {
 #ifdef SMLFLT
 		case 'd': { double	dvin[6];
 			if (getbinary(dvin, sizeof(dvin), 1, stdin) != 1)
-				break;
+				return false;
 			for (int i = 6; i--; ) orig_dir[0][i] = dvin[i];
-			} continue;
+			} break;
 #else
 		case 'f': { float	fvin[6];
 			if (getbinary(fvin, sizeof(fvin), 1, stdin) != 1)
-				break;
+				return false;
 			for (int i = 6; i--; ) orig_dir[0][i] = fvin[i];
-			} continue;
+			} break;
 #endif
 		case 'a':
 			if (scanf(FVFORMAT, &orig_dir[0][0], &orig_dir[0][1],
 					&orig_dir[0][2]) != 3)
-				break;
+				return false;
 			if (scanf(FVFORMAT, &orig_dir[1][0], &orig_dir[1][1],
 					&orig_dir[1][2]) != 3)
-				break;
-			continue;
+				return false;
+			break;
+		default:
+			error(INTERNAL, "unsupported input format");
 		}
-		break;
-	}
-	return(n);
+
+	return true;
 }
 
 /* Set default options */
@@ -1287,10 +1331,12 @@ main(int argc, char *argv[])
 #define	 check_bool(olen,var)		switch (argv[a][olen]) { \
 				case '\0': var = !var; break; \
 				case 'y': case 'Y': case 't': case 'T': \
-				case '+': case '1': var = 1; break; \
+				case '+': case '1': var = true; break; \
 				case 'n': case 'N': case 'f': case 'F': \
-				case '-': case '0': var = 0; break; \
+				case '-': case '0': var = false; break; \
 				default: goto userr; }
+	bool		force_open = false;
+	bool		recover = false;
 	bool		gotView = false;
 	double		pixaspect = 1.;
 	int		nproc = 1;
@@ -1407,11 +1453,16 @@ main(int argc, char *argv[])
 			check_bool(2,rval);
 			myRCmanager.SetFlag(RTimmIrrad, rval);
 			break;
-		case 'f':			/* format */
-			if (argv[a][2] == 'o')
-				goto userr;	/* -fo is not optional */
+		case 'f':			/* format or force overwrite */
+			if (argv[a][2] == 'o') {
+				check_bool(3,force_open);
+				break;
+			}
 			setformat(argv[a]+2);
 			myRCmanager.SetDataFormat(outfmt);
+			break;
+		case 'r':			// recover flag
+			check_bool(2,recover);
 			break;
 		case 'o':			/* output file */
 			check(2,"s");
@@ -1512,8 +1563,8 @@ main(int argc, char *argv[])
 			if (strlen(buf) > VIEWSTRL+3)
 				myRCmanager.AddHeader(buf);
 		}
-		if ((pixaspect > .005) && (pixaspect < .995) |
-					(pixaspect > 1.005)) {
+		if ((pixaspect > .005) & ((pixaspect < .995) |
+					  (pixaspect > 1.005))) {
 			sprintf(buf, "%s%f", ASPECTSTR, pixaspect);
 			myRCmanager.AddHeader(buf);
 		}
@@ -1522,14 +1573,36 @@ main(int argc, char *argv[])
 	if (load_scene(argv[a], add_recv_object) < 0)
 		quit(1);
 	finish_receiver();		// makes final AddModifier() call
-					// prepare output(s)
-	myRCmanager.outOp = RCOforce;	// mandatory rcontrib -fo+ mode
-	if (myRCmanager.PrepOutput() < 0)
-		error(USER, "issue creating output file(s)");
-	if (verby)			// get output file count?
+					// prepare output files
+	if (recover) {
+		if (force_open) {
+			error(WARNING, "-r+ mode overrides -fo+");
+			force_open = false;
+		}
+		myRCmanager.outOp = RCOrecover;
+	} else if (force_open)
+		myRCmanager.outOp = RCOforce;
+	else
+		myRCmanager.outOp = RCOnew;
+					// rval = # rows recovered
+	rval = myRCmanager.PrepOutput();
+	if (rval < 0)			// PrepOutput() failure?
+		error(USER, "issue loading or creating output");
+					// in case output is complete
+	if (rval >= myRCmanager.GetRowMax()) {
+		error(WARNING, "nothing left to compute");
+		quit(0);
+	}
+	if (verby) {			// get output file count?
+		if (rval > 0) {
+			sprintf(errmsg, "recovered %d of %d rows\n",
+					rval, myRCmanager.GetRowMax());
+			eputs(errmsg);
+		}
 		for (const RcontribOutput *op = myRCmanager.GetOutput();
 				op != NULL; op = op->Next())
 			++nout;
+	}
 	if (nproc > 1) {		// set #processes
 		if (verby) {
 			sprintf(errmsg, "starting %d subprocesses\n", nproc);
@@ -1539,15 +1612,19 @@ main(int argc, char *argv[])
 	}
 	if (gotView) {			// picture generation mode?
 		if (verby) {
-			sprintf(errmsg, "computing %d %dx%d pictures\n",
+			sprintf(errmsg, "%s %d %dx%d pictures\n",
+					myRCmanager.GetRowCount() ? "completing" : "computing",
 					nout, myRCmanager.xres, myRCmanager.yres);
 			if (myRCmanager.accum > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/pixel\n",
 						myRCmanager.accum);
 			eputs(errmsg);
 		}
-		for (i = myRCmanager.yres; i--; )	// from the top!
-			for (int x = 0; x < myRCmanager.xres; x++) {
+		i = myRCmanager.GetRowCount()/myRCmanager.xres;
+		int	xstart = myRCmanager.GetRowCount() - i*myRCmanager.xres;
+		i = myRCmanager.yres - i;
+		while (i--)		// compute pixel rows from yres down
+			for (int x = xstart, xstart = 0; x < myRCmanager.xres; x++) {
 				report_progress();
 				if (!viewRayBundle(rayarr, x, i))
 					quit(1);
@@ -1558,34 +1635,40 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 		flockfile(stdin);
 #endif
+					// skip completed rows
+		for (i = 0; i < myRCmanager.GetRowCount(); i++)
+			if (!skipRayBundle()) {
+				sprintf(errmsg, "read error from stdin at row %d", i);
+				error(SYSTEM, errmsg);
+			}
 		if (verby) {
 			sprintf(errmsg, "computing %d rows in %d matrices\n",
-					myRCmanager.GetRowMax(), nout);
+					myRCmanager.GetRowMax()-i, nout);
 			if (myRCmanager.accum > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/row\n",
 						myRCmanager.accum);
 			eputs(errmsg);
 		}
-		for (i = 0; i < myRCmanager.GetRowMax(); i++) {
+		for ( ; i < myRCmanager.GetRowMax(); i++) {
 			report_progress();
-			if (getRayBundle(rayarr) != myRCmanager.accum) {
-				sprintf(errmsg, "ray read error after %d of %d",
-						myRCmanager.GetRowCount(),
-						myRCmanager.GetRowMax());
+			if (!getRayBundle(rayarr)) {
+				sprintf(errmsg, "read error from stdin at row %d of %d",
+						i, myRCmanager.GetRowMax());
 				error(USER, errmsg);
 			}
 			if (myRCmanager.ComputeRecord(rayarr) != myRCmanager.accum)
 				error(USER, "failed call to ComputeRecord()");
 		}
 	} else {			// else surface-sampling mode
+		i = myRCmanager.GetRowCount();
 		if (verby) {
 			sprintf(errmsg, "sampling %d directions in %d matrices with %d samples/direction\n",
-					myRCmanager.yres, nout, myRCmanager.accum);
+					myRCmanager.yres-i, nout, myRCmanager.accum);
 			if (sendparams.nsurfs > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " (%d surface elements)\n", sendparams.nsurfs);
 			eputs(errmsg);
 		}
-		for (i = 0; i < myRCmanager.yres; i++) {
+		for ( ; i < myRCmanager.yres; i++) {
 			report_progress();
 			if (!(*sendparams.sample_basis)(&sendparams, i, rayarr))
 				quit(1);
@@ -1599,9 +1682,9 @@ main(int argc, char *argv[])
 	report_progress((report_intvl > 0) | verby);
 	quit(0);			/* waits on children */
 userr:
-	if (a < argc-2)
-		fprintf(stderr, "%s: unsupported option '%s'\n", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-W] [rxcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
+	if (argv[a][0] == '-')
+		fprintf(stderr, "%s: unsupported/misplaced option '%s'\n", progname, argv[a]);
+	fprintf(stderr, "Usage: %s [-W] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	quit(1);
 }
