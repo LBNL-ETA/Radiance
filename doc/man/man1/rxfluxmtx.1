@@ -1,20 +1,20 @@
 .\" RCSid "$Id$"
-.TH RFLUXMTX 1 07/22/14 RADIANCE
+.TH RXFLUXMTX 1 10/23/2025 RADIANCE
 .SH NAME
-rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
+rxfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
 .SH SYNOPSIS
-.B rfluxmtx
+.B rxfluxmtx
 [
-.B \-v
-][
+.B \-W
+] [
 .B "rcontrib options"
 ]
-.B "{ sender.rad | - }"
+.B "{ sender.rad | view | - }"
 .B receivers.rad
 .B "[ -i system.oct ]"
 .B "[ system.rad .. ]"
 .SH DESCRIPTION
-.I Rfluxmtx
+.I rxfluxmtx
 samples rays uniformly over the surface given in
 .I sender.rad
 and records rays arriving at surfaces in the file
@@ -25,27 +25,46 @@ A system octree to which the receivers will be appended may be given with a
 option following the receiver file.
 Additional system surfaces may be given in one or more
 .I system.rad
-files, which are compiled before the receiver file into an octree sent to the
-.I rcontrib(1)
-program to do the actual work.
-If a single hyphen ('-') is given in place of the sender file, then
-.I rfluxmtx
-passes ray samples from its standard input directly to
-.I rcontrib
-without interpretation.
-By default, all resulting matrix data are interleaved and sent to the standard output
-in ASCII format, but this behavior is typically overridden using inline options
-as described below.
+files, which are compiled before the receiver file into an octree used
+to perform the simulation.
+.PP
+If a single hyphen ('-') is given in place of the view or sender file, then
+.I rxfluxmtx
+computes matrix rows based upon the provided ray sample origins and directions,
+which may be surface normals if the
+.I \-I+
+option is applied.
+The
+.I \-y
+option is required to specify the number of output rows for pass-through mode.
+.PP
+Alternatively, a view specification may be given on the command-line
+to produce coefficient picture output, in which case both the
+.I \-x
+and
+.I \-y
+options must be present to set the desired picture dimensions.
+The related
+.I \-pj,
+.I \-pd,
+and
+.I \-pa
+options may be used to set the pixel jitter, depth-of-field, and
+aspect ratio, respectively.
+This avoids the need to call
+.I vwrays(1),
+as required by
+.I rfluxmtx.
 .PP
 The
-.I \-v
-option turns on verbose reporting for the number of samples and the executed
-.I rcontrib
-command.
-All other supported options are passed on to
+.I \-W+
+option turns on verbose mode, and the
+.I \-t
+option sets the number of seconds between progress reports, similar to
 .I rcontrib(1).
 However, the
-.I \-fo,
+.I rcontrib
+options
 .I \-p,
 .I \-b,
 .I \-bn,
@@ -53,28 +72,21 @@ However, the
 and
 .I \-M
 options are controlled by
-.I rfluxmtx
+.I rxfluxmtx
 and may not be set by the user.
-(Recovery mode is not supported, and existing output is always overwritten.)\0
-Further, the
-.I \-x,
-.I \-y,
-and
-.I \-ld
-options are ignored unless
-.I rfluxmtx
-is invoked in the pass-through mode,
-in which case they may be needed to generate RADIANCE views from
-.I vwrays(1).
+.PP
 The sample count, unless set by the
 .I \-c
-option, defaults to 10000 when a sender file is given, or to 1 for pass-through mode.
+option, defaults to 10000 when a sender file is given, or to 1 for 
+view and pass-through modes.
 .SH VARIABLES
 The sender and receiver scene files given to
-.I rfluxmtx
+.I rxfluxmtx
 contain controlling parameters in special comments of the form:
 .nf
 
+	#@rxfluxmtx variable=value ..
+or:
 	#@rfluxmtx variable=value ..
 
 .fi
@@ -129,14 +141,17 @@ vector.
 .TP
 .BI o =output_spec
 Send the matrix data for this receiver to the indicated file or command.
-Single or double quotes may be used to contain strings with spaces, and
-commands must begin with an exclamation mark ('!').
+Single or double quotes may be used to contain strings with spaces.
+Command (piped) output is not supported.
 The file format will be determined by the command-line
 .I \-fio
-option and will include an information header unless the
-.I \-h
-option was used to turn headers off.
-(The input format specification is ignored for senders.)\0
+option, which may use a single letter for identical input and output formats.
+The input file specification matters only in pass-through mode, for which
+ASCII input is supported.
+ASCII output is unsupported, since it interferes with
+efficient recovery in the
+.I \-r
+mode.
 .PP
 In normal execution, only a single sender surface is sampled, but it may be
 comprised of any number of subsurfaces, as in a triangle mesh or similar.
@@ -165,7 +180,7 @@ larger profile at low angles of incidence.
 Rays always emanate from the back side of the sender surface and arrive at the
 front side of receiver surfaces.
 In this way, a receiver surface may be reused as a sender in a subsequent
-.I rfluxmtx
+.I rxfluxmtx
 calculation and the resulting matrices will concatenate properly.
 (Note that it is important to keep receiver surfaces together, otherwise a
 "duplicate modifier" error will result.)\0
@@ -173,9 +188,30 @@ calculation and the resulting matrices will concatenate properly.
 To generate a flux transfer matrix connecting input and output apertures
 on a light pipe:
 .IP "" .2i
-rfluxmtx int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
+rxfluxmtx int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
+.PP
+To generate a set of DC view component pictures with 9 samples/pixel:
+.IP "" .2i
+rxfluxmtx -vf v1.vf -x 512 -y 512 -c 9 -fc reinhart_M4.rad -i scene1.oct
+.PP
+To compute a workplane irradiance matrix for each window in a space:
+.IP "" .2i
+rxfluxmtx -faf - windows_kf.rad -i scene2.oct < workplane_pts.txt
+.SH NOTES
+The main differences between
+.I rfluxmtx(1)
+and
+.I rxfluxmtx
+is that the latter does not run a separate
+.I rcontrib
+process.
+Instead, it relies on a unix-only C++ class definition that offers full
+control over i/o.
+This allows an unlimited number of receivers, a
+.I \-r
+recovery option, and simplifies internal operations.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
 genBSDF(1), getinfo(1), pvsum(1), rcalc(1), rcollate(1), rcomb(1), rcontrib(1),
-rcrop(1), rmtxop(1), rxfluxmtx(1), vwrays(1), wrapBSDF(1)
+rcrop(1), rfluxmtx(1), rmtxop(1), vwrays(1), wrapBSDF(1)
