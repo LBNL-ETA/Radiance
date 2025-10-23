@@ -467,11 +467,6 @@ getRayBundle(FVECT *orig_dir = NULL)
 		error(INTERNAL, "unsupported format in getRayBundle()");
 		return false;
 	}
-	n2go = myRCmanager.accum;	// normalize directions
-	while (n2go-- > 0) {
-		orig_dir -= 2;
-		normalize(orig_dir[1]);
-	}
 	return true;
 }
 
