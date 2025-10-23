@@ -1459,7 +1459,6 @@ main(int argc, char *argv[])
 				break;
 			}
 			setformat(argv[a]+2);
-			myRCmanager.SetDataFormat(outfmt);
 			break;
 		case 'r':			// recover flag
 			check_bool(2,recover);
@@ -1569,6 +1568,8 @@ main(int argc, char *argv[])
 			myRCmanager.AddHeader(buf);
 		}
 	}
+					// set output format
+	myRCmanager.SetDataFormat(outfmt);
 					/* assign receiver modifiers */
 	if (load_scene(argv[a], add_recv_object) < 0)
 		quit(1);
@@ -1682,7 +1683,7 @@ main(int argc, char *argv[])
 	report_progress((report_intvl > 0) | verby);
 	quit(0);			/* waits on children */
 userr:
-	if (argv[a][0] == '-')
+	if (a < argc && argv[a][0] == '-')
 		fprintf(stderr, "%s: unsupported/misplaced option '%s'\n", progname, argv[a]);
 	fprintf(stderr, "Usage: %s [-W] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
