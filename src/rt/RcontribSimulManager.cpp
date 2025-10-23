@@ -58,6 +58,7 @@ static const char	ROW_DONE[] = "ROW FINISHED\n";
 static RcontribMod *
 NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
+	if (binexpr && !*binexpr) binexpr = NULL;
 	if (!prms) prms = "";
 	if ((ncbins > 1) & !binexpr) {
 		error(USER, "missing bin expression");

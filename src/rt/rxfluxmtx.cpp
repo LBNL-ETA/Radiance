@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id$";
 
 #include <ctype.h>
 #include <signal.h>
+#include <time.h>
 #include "RcontribSimulManager.h"
 #include "bsdf.h"
 #include "bsdf_m.h"
@@ -33,6 +34,8 @@ const char	*sigerr[NSIG];		/* signal error messages */
 
 int	inpfmt = 'a';			/* input format */
 int	outfmt = 'f';			/* output format */
+
+int	report_intvl = 0;		/* reporting interval (seconds) */
 
 RcontribSimulManager	myRCmanager;	// global rcontrib simulation manager
 
@@ -300,7 +303,7 @@ finish_receiver()
 {
 	bool		uniform = false;
 	const char	*calfn = NULL;
-	char		binv[64] = "";
+	char		binv[64] = "0";
 	char		params[128] = "";
 	const char	*binf = NULL;
 	const char	*nbins = NULL;
@@ -321,8 +324,9 @@ finish_receiver()
 	}
 					/* determine sample type/bin */
 	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1')) {
-		sprintf(binv, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
+		if (curparams.slist->styp != ST_SOURCE)
+			sprintf(binv, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
+				curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
 		uniform = true;		/* uniform sampling -- one bin */
 	} else if (tolower(curparams.hemis[0]) == 's' &&
 				tolower(curparams.hemis[1]) == 'c') {
@@ -622,8 +626,8 @@ sample_shirchiu(PARAMS *p, int b, FVECT orig_dir[])
 
 	while (n--) {			/* stratified sampling */
 		SDmultiSamp(samp3, 3, (n+frandom())/myRCmanager.accum);
-		square2disk(duvw, (b/p->hsiz + samp3[1])/curparams.hsiz,
-				(b%p->hsiz + samp3[2])/curparams.hsiz);
+		square2disk(duvw, (b/p->hsiz + samp3[1])/p->hsiz,
+				(b%p->hsiz + samp3[2])/p->hsiz);
 		duvw[2] = sqrt(1. - duvw[0]*duvw[0] - duvw[1]*duvw[1]);
 		for (i = 3; i--; )
 			orig_dir[1][i] = -duvw[0]*p->udir[i] -
@@ -1251,6 +1255,28 @@ sigdie(			/* set fatal signal */
 	sigerr[signo] = msg;
 }
 
+// report progress
+void
+report_progress(bool force = false)
+{
+	static time_t	last_report=0, tstart=time(0);
+	time_t		tnow;
+
+	if (!force & (report_intvl <= 0))
+		return;
+
+	tnow = time(0);
+	if (!force & (tnow < last_report + report_intvl))
+		return;
+
+	sprintf(errmsg, "%.2f%% done after %.3f hours\n",
+			100. * myRCmanager.GetRowFinished() /
+				(double)myRCmanager.GetRowMax(),
+			(tnow - tstart)*(1./3600.));
+	eputs(errmsg);
+	last_report = tnow;
+}
+
 /* Run rfluxmtx equivalent without leaning on r[x]contrib */
 int
 main(int argc, char *argv[])
@@ -1287,7 +1313,7 @@ main(int argc, char *argv[])
 					/* set rcontrib defaults */
 	default_options();
 					/* get command-line options */
-	for (a = 1; a < argc-2; a++) {
+	for (a = 1; a < argc; a++) {
 					/* check for argument expansion */
 		while ((rval = expandarg(&argc, &argv, a)) > 0)
 			;
@@ -1395,18 +1421,24 @@ main(int argc, char *argv[])
 			check(2,"i");
 			myRCmanager.accum = atoi(argv[++a]);
 			break;
+		case 't':			/* reporting interval */
+			check(2,"i");
+			report_intvl = atoi(argv[++a]);
+			break;
 		default:		/* anything else is verbotten */
 			goto userr;
 		}
 	}
-	if (a > argc-2)
+	if (a > argc-1)
 		goto userr;
 
 	override_options();		/* override critical options */
 
-	if (!gotView)
+	if (!gotView) {
 		sendfn = argv[a++];
-	else if (argv[a][0] == '-')
+		if (a > argc-1)
+			goto userr;
+	} else if (argv[a][0] == '-')
 		error(USER, "view specification incompatible with pass-through mode");
 					/* assign sender & receiver inputs */
 	if (gotView) {			// picture output?
@@ -1499,21 +1531,24 @@ main(int argc, char *argv[])
 				op != NULL; op = op->Next())
 			++nout;
 	if (nproc > 1) {		// set #processes
-		if (verby)
-			fprintf(stderr, "%s: starting %d subprocesses\n", progname, nproc);
+		if (verby) {
+			sprintf(errmsg, "starting %d subprocesses\n", nproc);
+			eputs(errmsg);
+		}
 		myRCmanager.SetThreadCount(nproc);
 	}
 	if (gotView) {			// picture generation mode?
 		if (verby) {
-			fprintf(stderr, "%s: computing %d %dx%d pictures",
-					progname, nout, myRCmanager.xres, myRCmanager.yres);
+			sprintf(errmsg, "computing %d %dx%d pictures\n",
+					nout, myRCmanager.xres, myRCmanager.yres);
 			if (myRCmanager.accum > 1)
-				fprintf(stderr, " with %d samples/pixel\n", myRCmanager.accum);
-			else
-				fputc('\n', stderr);
+				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/pixel\n",
+						myRCmanager.accum);
+			eputs(errmsg);
 		}
 		for (i = myRCmanager.yres; i--; )	// from the top!
 			for (int x = 0; x < myRCmanager.xres; x++) {
+				report_progress();
 				if (!viewRays(rayarr, x, i))
 					quit(1);
 				if (myRCmanager.ComputeRecord(rayarr) != myRCmanager.accum)
@@ -1523,11 +1558,16 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 		flockfile(stdin);
 #endif
-		if (verby)
-			fprintf(stderr,
-				"%s: computing %d rows in %d matrices with %d samples/row\n",
-				progname, myRCmanager.GetRowMax(), nout, myRCmanager.accum);
-		for (i = myRCmanager.GetRowMax(); i-- > 0; ) {
+		if (verby) {
+			sprintf(errmsg, "computing %d rows in %d matrices\n",
+					myRCmanager.GetRowMax(), nout);
+			if (myRCmanager.accum > 1)
+				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/row\n",
+						myRCmanager.accum);
+			eputs(errmsg);
+		}
+		for (i = 0; i < myRCmanager.GetRowMax(); i++) {
+			report_progress();
 			if (getRays(rayarr) != myRCmanager.accum) {
 				sprintf(errmsg, "ray read error after %d of %d",
 						myRCmanager.GetRowCount(),
@@ -1539,15 +1579,14 @@ main(int argc, char *argv[])
 		}
 	} else {			// else surface-sampling mode
 		if (verby) {
-			fprintf(stderr,
-				"%s: sampling %d directions in %d matrices with %d samples/direction",
-					progname, myRCmanager.yres, nout, myRCmanager.accum);
+			sprintf(errmsg, "sampling %d directions in %d matrices with %d samples/direction\n",
+					myRCmanager.yres, nout, myRCmanager.accum);
 			if (sendparams.nsurfs > 1)
-				fprintf(stderr, " (%d surface elements)\n", sendparams.nsurfs);
-			else
-				fputc('\n', stderr);
+				sprintf(errmsg+strlen(errmsg)-1, " (%d surface elements)\n", sendparams.nsurfs);
+			eputs(errmsg);
 		}
 		for (i = 0; i < myRCmanager.yres; i++) {
+			report_progress();
 			if (!(*sendparams.sample_basis)(&sendparams, i, rayarr))
 				quit(1);
 			if (myRCmanager.ComputeRecord(rayarr) != myRCmanager.accum)
@@ -1556,10 +1595,12 @@ main(int argc, char *argv[])
 		clear_params(&sendparams);
 	}
 	delete [] rayarr;
-	quit(0);			/* flushes and waits on children */
+	myRCmanager.FlushQueue();
+	report_progress((report_intvl > 0) | verby);
+	quit(0);			/* waits on children */
 userr:
 	if (a < argc-2)
-		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
+		fprintf(stderr, "%s: unsupported option '%s'\n", progname, argv[a]);
 	fprintf(stderr, "Usage: %s [-W] [rxcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	quit(1);
@@ -1571,7 +1612,8 @@ quit(
 	int  code
 )
 {
-	myRCmanager.FlushQueue();	// leave nothing in queue
+	if (!code)
+		myRCmanager.ClearModifiers();
 
 	exit(code);
 }

@@ -569,7 +569,8 @@ quit(
 	int  code
 )
 {
-	myRCmanager.FlushQueue();	// leave nothing in queue
+	if (!code)
+		myRCmanager.ClearModifiers();
 
 	exit(code);
 }
