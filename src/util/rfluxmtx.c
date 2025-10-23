@@ -1269,7 +1269,8 @@ main(int argc, char *argv[])
 		case 'f':		/* special case for -fo, -ff, etc. */
 			switch (argv[a][2]) {
 			case '\0':		/* cal file */
-				goto userr;
+				na = 2;
+				break;
 			case 'o':		/* force output */
 				goto userr;
 			case 'a':		/* output format */
@@ -1331,6 +1332,7 @@ main(int argc, char *argv[])
 		case 's':
 		case 'o':
 		case 't':
+		case 'e':
 			na = 2;
 			break;
 		case 'b':		/* special case */
