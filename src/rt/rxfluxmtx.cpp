@@ -1627,14 +1627,16 @@ main(int argc, char *argv[])
 		i /= myRCmanager.xres;
 		int	xstart = myRCmanager.GetRowCount() - i*myRCmanager.xres;
 		i = myRCmanager.yres - i;
-		while (i--)		// compute pixel rows from yres down
-			for (int x = xstart; x < myRCmanager.xres; xstart = 0, x++) {
+		while (i--) {		// compute pixel rows from top down
+			for (int x = xstart; x < myRCmanager.xres; x++) {
 				report_progress();
 				if (!viewRayBundle(rayarr, x, i))
 					quit(1);
 				if (myRCmanager.ComputeRecord(rayarr) != myRCmanager.accum)
 					error(USER, "failed call to ComputeRecord()");
 			}
+			xstart = 0;	// all rows after first start at x=0
+		}
 	} else if (sendfn == NULL) {	// pass-through mode?
 #ifdef getc_unlocked
 		flockfile(stdin);
@@ -1646,8 +1648,8 @@ main(int argc, char *argv[])
 				error(SYSTEM, errmsg);
 			}
 		if (verby) {
-			sprintf(errmsg, "computing %d rows in %d matrices\n",
-					myRCmanager.GetRowMax()-i, nout);
+			sprintf(errmsg, "computing %d%s rows in %d matrices\n",
+					myRCmanager.GetRowMax()-i, i ? " remaining" : "", nout);
 			if (myRCmanager.accum > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/row\n",
 						myRCmanager.accum);
@@ -1666,8 +1668,9 @@ main(int argc, char *argv[])
 	} else {			// else surface-sampling mode
 		i = myRCmanager.GetRowCount();
 		if (verby) {
-			sprintf(errmsg, "sampling %d directions in %d matrices with %d samples/direction\n",
-					myRCmanager.yres-i, nout, myRCmanager.accum);
+			sprintf(errmsg, "sampling %d%s directions in %d matrices with %d samples/direction\n",
+					myRCmanager.yres-i, i ? " remaining" : "",
+					nout, myRCmanager.accum);
 			if (sendparams.nsurfs > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " (%d surface elements)\n", sendparams.nsurfs);
 			eputs(errmsg);
@@ -1684,7 +1687,7 @@ main(int argc, char *argv[])
 	delete [] rayarr;
 	myRCmanager.FlushQueue();
 	report_progress((report_intvl > 0) | verby);
-	quit(0);			/* waits on children */
+	quit(0);			/* waits on any children */
 userr:
 	if (a < argc && argv[a][0] == '-')
 		fprintf(stderr, "%s: unsupported/misplaced option '%s'\n", progname, argv[a]);
