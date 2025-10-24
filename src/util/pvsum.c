@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvsum.c,v 2.6 2025/06/28 17:30:50 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *	pvsum.c - add together spectral and/or float pictures
@@ -10,13 +10,15 @@ static const char RCSid[] = "$Id: pvsum.c,v 2.6 2025/06/28 17:30:50 greg Exp $";
 #include "rtio.h"
 #include "resolu.h"
 #include "platform.h"
-#include "paths.h"
 #include "random.h"
 #include "rmatrix.h"
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/mman.h>
 #include <sys/wait.h>
 #endif
+
+#define  VIEWSTR	"VIEW="		/* borrowed from common/view.h */
+#define  VIEWSTRL	5
 
 int	nprocs = 1;			/* # of calculation processes (Unix) */
 int	in_type = DTfromHeader;		/* input data type */
@@ -27,6 +29,8 @@ char	*out_spec = NULL;		/* output file specification */
 int	iswapped = 0;			/* input data is byte-swapped? */
 int	ncomp = 3;			/* # input components */
 int	xres=0, yres=0;			/* input image dimensions */
+char	viewspec[128] = "";		/* VIEW= line from first header */
+char	pixasp[48] = "";		/* PIXASPECT= line from header */
 
 RMATRIX	*cmtx = NULL;			/* coefficient matrix */
 
@@ -78,6 +82,14 @@ iheadline(char *s, void *p)
 	i = isbigendian(s);
 	if (i >= 0) {
 		iswapped = (i != nativebigendian());
+		return(1);
+	}
+	if (!strncmp(s, VIEWSTR, VIEWSTRL)) {
+		strcpy(viewspec, s);
+		return(1);
+	}
+	if (isaspect(s)) {
+		strcpy(pixasp, s);
 		return(1);
 	}
 	return(0);
@@ -245,6 +257,10 @@ open_output(char *ospec, int fno)
 		fputnow(fp);
 	if (fno >= 0)
 		fprintf(fp, "FRAME=%d\n", fno);
+	if (viewspec[0])
+		fputs(viewspec, fp);
+	if (pixasp[0])
+		fputs(pixasp, fp);
 	switch (out_type) {
 	case DTfloat:
 	case DTdouble:
@@ -380,6 +396,10 @@ writerr:
 	return(0);
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+#define	multi_process	solo_process
+#else
+
 /* allocate a scrambled index array of the specified length */
 int *
 scramble(int n)
@@ -407,10 +427,6 @@ scramble(int n)
 int
 multi_process(void)
 {
-#if defined(_WIN32) || defined(_WIN64)
-	fputs("Bad call to multi_process()\n", stderr);
-	return(0);
-#else
 	int	coff = nprocs;
 	int	odd = 0;
 	char	fbuf[512];
@@ -539,8 +555,9 @@ multi_process(void)
 writerr:
 	fprintf(stderr, "%s: write error\n", fbuf);
 	return(0);
-#endif
 }
+
+#endif		/* ! Windows */
 
 int
 main(int argc, char *argv[])

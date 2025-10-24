@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.110 2025/04/19 17:12:59 greg Exp $
+# RCSid: $Id$
 #
 # Radiance makefile for utility programs
 #
@@ -231,6 +231,8 @@ rad.o ranimate.o:	../common/vars.h
 
 ranimove1.o ranimove2.o vwrays.o:	../common/random.h
 
+pvsum.o:	../common/random.h ../common/platform.h ../common/paths.h
+
 rad.o:	../common/paths.h
 
 ranimate.o netproc.o:	netproc.h
@@ -275,10 +277,10 @@ x11findwind.c:	../common/x11findwind.c
 
 rttree_reduce.o:	../common/rtio.h ../common/rterror.h
 
-rmatrix.o:	rmatrix.h cmatrix.h ../common/resolu.h
+rmatrix.o:	rmatrix.h cmatrix.h ../common/resolu.h ../common/color.h
 
 pvsum.o rcomb.o rmtxop.o:	rmatrix.h cmatrix.h \
-../common/rtio.h ../common/resolu.h
+../common/rtio.h ../common/resolu.h ../common/color.h
 
 wrapBSDF.o:	../common/rtio.h ../common/rtprocess.h ../common/ezxml.h \
 ../common/bsdf.h ../common/bsdf_m.h ../common/fvect.h ../common/ccolor.h
