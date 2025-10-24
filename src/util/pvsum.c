@@ -32,6 +32,9 @@ int	xres=0, yres=0;			/* input image dimensions */
 char	viewspec[128] = "";		/* VIEW= line from first header */
 char	pixasp[48] = "";		/* PIXASPECT= line from header */
 
+int	gargc;				/* global argc */
+char	**gargv;			/* global argv */
+
 RMATRIX	*cmtx = NULL;			/* coefficient matrix */
 
 /* does the given spec contain integer format? */
@@ -255,6 +258,7 @@ open_output(char *ospec, int fno)
 		fputs(cmtx->info, fp);
 	else
 		fputnow(fp);
+	printargs(gargc, gargv, fp);	/* this command */
 	if (fno >= 0)
 		fprintf(fp, "FRAME=%d\n", fno);
 	if (viewspec[0])
@@ -563,6 +567,9 @@ int
 main(int argc, char *argv[])
 {
 	int	a;
+
+	gargc = argc;			/* for header output */
+	gargv = argv;
 
 	for (a = 1; a < argc-1 && argv[a][0] == '-'; a++)
 		switch (argv[a][1]) {
