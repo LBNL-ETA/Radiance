@@ -120,6 +120,11 @@ formstr(int f)
 RdataShare *
 fileDataShare(const char *name, RCOutputOp op, size_t siz)
 {
+	if (op == RCOrecover && access(name, R_OK|W_OK) < 0) {
+		sprintf(errmsg, "cannot recover from '%s'", name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
 	return new RdataShareFile(name, RSDOflags[op], siz);
 }
 
@@ -127,6 +132,11 @@ fileDataShare(const char *name, RCOutputOp op, size_t siz)
 RdataShare *
 mapDataShare(const char *name, RCOutputOp op, size_t siz)
 {
+	if (op == RCOrecover && access(name, R_OK|W_OK) < 0) {
+		sprintf(errmsg, "cannot recover from '%s'", name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
 	return new RdataShareMap(name, RSDOflags[op], siz);
 }
 
@@ -387,7 +397,7 @@ RcontribSimulManager::PrepOutput()
 			if (rd < 0)
 				return -1;
 			if (rd >= op->nRows) {
-				if (remWarnings >= 0) {
+				if (remWarnings > 0) {
 					sprintf(errmsg, "recovered output '%s' is complete",
 							op->GetName());
 					error(WARNING, --remWarnings ? errmsg : "etc...");

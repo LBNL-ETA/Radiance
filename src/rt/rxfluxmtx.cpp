@@ -1495,6 +1495,8 @@ main(int argc, char *argv[])
 		const char *	err = setview(&ourview);
 		if (err != NULL)
 			error(USER, err);
+		if (myRCmanager.HasFlag(RTimmIrrad))
+			error(USER, "-I+ not allowed in view generation mode");
 		normaspect(viewaspect(&ourview), &pixaspect,
 				&myRCmanager.xres, &myRCmanager.yres);
 		if ((myRCmanager.xres <= 0) | (myRCmanager.yres <= 0))
@@ -1509,7 +1511,7 @@ main(int argc, char *argv[])
 			myRCmanager.accum = 1;
 	} else {			// else surface sampling
 		if (do_irrad | myRCmanager.HasFlag(RTimmIrrad))
-			error(USER, "-i, -I not allowed in surface-sampling mode");
+			error(USER, "-i+, -I+ not allowed in surface-sampling mode");
 		myRCmanager.SetFlag(RTlimDist, false);
 		if (load_scene(sendfn, add_send_object) < 0)
 			quit(1);
@@ -1612,20 +1614,21 @@ main(int argc, char *argv[])
 		myRCmanager.SetThreadCount(nproc);
 	}
 	if (gotView) {			// picture generation mode?
+		i = myRCmanager.GetRowCount();
 		if (verby) {
 			sprintf(errmsg, "%s %d %dx%d pictures\n",
-					myRCmanager.GetRowCount() ? "completing" : "computing",
+					i ? "completing" : "computing",
 					nout, myRCmanager.xres, myRCmanager.yres);
 			if (myRCmanager.accum > 1)
 				sprintf(errmsg+strlen(errmsg)-1, " with %d samples/pixel\n",
 						myRCmanager.accum);
 			eputs(errmsg);
 		}
-		i = myRCmanager.GetRowCount()/myRCmanager.xres;
+		i /= myRCmanager.xres;
 		int	xstart = myRCmanager.GetRowCount() - i*myRCmanager.xres;
 		i = myRCmanager.yres - i;
 		while (i--)		// compute pixel rows from yres down
-			for (int x = xstart, xstart = 0; x < myRCmanager.xres; x++) {
+			for (int x = xstart; x < myRCmanager.xres; xstart = 0, x++) {
 				report_progress();
 				if (!viewRayBundle(rayarr, x, i))
 					quit(1);
