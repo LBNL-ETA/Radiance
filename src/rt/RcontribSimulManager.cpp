@@ -449,7 +449,7 @@ RcontribOutput::NewHeader(const RcontribSimulManager *rcp)
 	sprintf(hdr+begData, "%s%d\n", NCOMPSTR, NCSAMP);
 	begData += strlen(hdr+begData);
 	if (NCSAMP > 3) {
-		sprintf(hdr+begData, "%s %f %f %f %f\n", WLSPLTSTR,
+		sprintf(hdr+begData, "%s %g %g %g %g\n", WLSPLTSTR,
 				WLPART[0], WLPART[1], WLPART[2], WLPART[3]);
 		begData += strlen(hdr+begData);
 	}
