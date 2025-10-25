@@ -414,7 +414,7 @@ RcontribSimulManager::PrepOutput()
 	}
 	rowsDone.NewBitMap(outList->nRows);	// create row completion map
 	rowsDone.ClearBits(0, rInPos, true);
-	return rInPos;
+	return nrDone = rInPos;
 }
 
 // Create header in open write-only channel
@@ -534,10 +534,9 @@ RcontribOutput::CheckHeader(const RcontribSimulManager *rcp)
 		return -1;
 	}
 						// check #columns
-	if (((cp = findArgs(hdr, "NCOLS=", begData)) && atoi(cp)*esiz != rowBytes) ||
-			!rcp->xres | (rowBytes > esiz)) {
-		sprintf(errmsg, "expected NCOLS=%d in '%s'",
-				int(rowBytes/esiz), GetName());
+	if ((cp = findArgs(hdr, "NCOLS=", begData)) ? (atoi(cp)*esiz != rowBytes)
+						    : (!rcp->xres | (rowBytes > esiz))) {
+		sprintf(errmsg, "expected NCOLS=%d in '%s'", int(rowBytes/esiz), GetName());
 		error(USER, errmsg);
 		return -1;
 	}
@@ -579,7 +578,7 @@ RcontribSimulManager::ResetRow(int r)
 			return false;
 
 	rowsDone.ClearBits(r, rInPos-r, false);
-	rInPos = r;
+	nrDone = rInPos = r;
 	return true;
 }
 
@@ -738,11 +737,11 @@ RcontribSimulManager::UpdateRowsDone(int r)
 		error(WARNING, "redundant call to UpdateRowsDone()");
 		return false;
 	}
-	int	nDone = GetRowFinished();
-	if (nDone <= r)
+	GetRowFinished();
+	if (nrDone <= r)
 		return true;			// nothing to update, yet
 	for (RcontribOutput *op = outList; op; op = op->next)
-		if (!op->SetRowsDone(nDone))
+		if (!op->SetRowsDone(nrDone))
 			return false;
 	return true;				// up-to-date
 }
