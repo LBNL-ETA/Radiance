@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareFile.cpp,v 2.3 2024/12/09 22:26:01 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RdataShareFile.cpp
@@ -153,7 +153,7 @@ RdataShareFile::Resize(size_t new_siz)
 		return osiz = sbuf.st_size;
 	}				// else attempt to resize file
 	if (ftruncate(fd, new_siz) < 0) {
-		sprintf(errmsg, "cannot truncate '%s'", chName);
+		sprintf(errmsg, "cannot resize '%s'", chName);
 		return 0;
 	}
 	return osiz = new_siz;

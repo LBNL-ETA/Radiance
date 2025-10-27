@@ -125,7 +125,17 @@ fileDataShare(const char *name, RCOutputOp op, size_t siz)
 		error(SYSTEM, errmsg);
 		return NULL;
 	}
-	return new RdataShareFile(name, RSDOflags[op], siz);
+	RdataShare *	rds = new RdataShareFile(name, RSDOflags[op],
+						 siz*(op != RCOforce));
+						 
+	if (!rds || (op == RCOforce && rds->Resize(siz) < siz)) {
+		delete rds;
+		sprintf(errmsg, "cannot create %lu byte output file '%s'",
+					(unsigned long)siz, name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	return rds;
 }
 
 // Memory-mapped data share function
@@ -137,7 +147,17 @@ mapDataShare(const char *name, RCOutputOp op, size_t siz)
 		error(SYSTEM, errmsg);
 		return NULL;
 	}
-	return new RdataShareMap(name, RSDOflags[op], siz);
+	RdataShare *	rds = new RdataShareMap(name, RSDOflags[op],
+						 siz*(op != RCOforce));
+
+	if (!rds || (op == RCOforce && rds->Resize(siz) < siz)) {
+		delete rds;
+		sprintf(errmsg, "cannot create %lu byte output map '%s'",
+					(unsigned long)siz, name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	return rds;
 }
 
 // Set output format ('f', 'd', or 'c')
