@@ -2865,3 +2865,5 @@ Created rxfluxmtx tool that avoids unnecessary interprocess
 communication by supporting direct calls to RcontribSimulManager
 class and provides view rendering as well as surface sampling
 and pass-through modes.
+
+Added -m option to pvsum to optimize memory cache performance.

@@ -1,4 +1,4 @@
-.\" RCSid $Id: pvsum.1,v 1.4 2025/05/22 21:39:42 greg Exp $"
+.\" RCSid $Id$"
 .TH PVSUM 1 12/09/09 RADIANCE
 .SH NAME
 pvsum - sum component Radiance pictures based on vector or matrix
@@ -10,6 +10,8 @@ pvsum - sum component Radiance pictures based on vector or matrix
 .B "\-o{f|c}
 ][
 .B "\-N nproc"
+][
+.B "-m cacheGB"
 ]
 .B ispec
 [
@@ -69,7 +71,7 @@ handles a concatenated series of float or spectral pictures.)\0
 .PP
 The
 .I \-N
-option may be used on Unix systems to specify the number of
+option may be used to specify the number of
 processes to employ in the summations.
 This setting has an upper limit equal to
 the count of matrix columns, but
@@ -77,22 +79,38 @@ the optimal number of processes depends on several factors.
 Setting the process count above the number of physical cores may
 offer some benefit on large input collections if
 their total size significantly exceeds the available system RAM.
-Experimentation with this setting is therefore encouraged.
+.PP
+Alternatively, one can set
+.I \-N
+to the number of cores and the
+.I \-m
+option to the free memory cache available in GBytes.
+(This will be less than the total RAM, due to the operating
+system and other processes.)\0
+When
+.I \-m
+is set,
+.I pvsum
+will make multiple accumulation passes as needed to stay within
+the available cache space.
+.PP
+Experimentation with these settings is encouraged.
 .SH EXAMPLES
-To compute Window2's contribution to an interior view at 12 noon on the summer solstice:
+To compute Window2's contribution to an interior view at 12 noon on the 
+summer solstice:
 .IP "" .2i
 gensky 6 21 12 | genskyvec | rmtxop Blinds30.xml
 Window2.dmx - | pvsum view%03d.hdr > view_6-21-12.hdr
 .PP
 To compute a set of hourly spectral pictures at SFO airport
 from a weather tape and set of Tregenza component pictures using
-10 processes:
+10 processes and 6.5 GBytes of memory:
 .IP "" .2i
-gensdaymtx -of sfo.epw | pvsum -o timestep%04d.hsr -N 10 tregcomp%03d.hsr
+gensdaymtx -of sfo.epw | pvsum -o timestep%04d.hsr -N 10 -m 6.5 tregcomp%03d.hsr
 .SH NOTES
 This tool overlaps with
 .I dctimestep,
-but provides some missing capabilities.
+but provides some missing capabilities and performance features.
 Foremost,
 .I pvsum
 reads and can produce spectral pictures and matrices, whereas
@@ -100,9 +118,9 @@ reads and can produce spectral pictures and matrices, whereas
 expects and requires 3-component pictures and matrices throughout.
 In addition,
 .I pvsum
-accelerates picture sums on Unix systems with more
+accelerates picture sums on systems with more
 memory and CPU cores.
-Operations were simplified by focusing on the Daylight Coefficient
+Operations are simplified by focusing on the Daylight Coefficient
 command form, where the DC matrix is represented as a collection of
 pictures.
 Finally,
@@ -114,4 +132,4 @@ Greg Ward
 .SH "SEE ALSO"
 dcglare(1), dctimestep(1), gendaymtx(1), gensdaymtx(1), genskyvec(1), getinfo(1),
 mkillum(1), ra_rgbe(1), rcollate(1), rcomb(1), rcontrib(1), rcrop(1),
-rfluxmtx(1), rmtxop(1), rtrace(1), vwrays(1)
+rfluxmtx(1), rmtxop(1), rtrace(1), rxfluxmtx(1), vwrays(1)

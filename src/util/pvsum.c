@@ -35,7 +35,8 @@ char	pixasp[48] = "";		/* PIXASPECT= line from header */
 int	gargc;				/* global argc */
 char	**gargv;			/* global argv */
 
-RMATRIX	*cmtx = NULL;			/* coefficient matrix */
+RMATRIX	*cmtx;				/* coefficient matrix */
+int	row0, rowN;			/* rows for current pass */
 
 /* does the given spec contain integer format? */
 int
@@ -125,8 +126,8 @@ get_iotypes(void)
 		long	data_start = ftell(fp);		/* make sure input flat */
 		off_t	dend = lseek(fileno(fp), 0, SEEK_END);
 		if (dend < data_start + 4L*xres*yres) {
-			fputs("Warning - multi-processing requires flat input files\n",
-					stderr);
+			fprintf(stderr, "%s: warning - multi-processing requires flat input files\n",
+					gargv[0]);
 			nprocs = 1;
 		}
 	}
@@ -143,14 +144,14 @@ get_iotypes(void)
 		rmx_free(cmtx);
 		cmtx = nmtx;
 	} else if (cmtx->ncomp != ncomp) {
-		fprintf(stderr, "operation %s needs %d components, has %d\n",
-				cmtx->ncols == 1 ? "vector" : "matrix",
+		fprintf(stderr, "%s: operation %s needs %d components, has %d\n",
+				gargv[0], cmtx->ncols == 1 ? "vector" : "matrix",
 				ncomp, cmtx->ncomp);
 		return(0);
 	}
 	if ((in_type != DTrgbe) & (in_type != DTxyze) & (in_type != DTspec) &
 			(in_type != DTfloat)) {
-		fprintf(stderr, "%s unsupported input data type: %s\n",
+		fprintf(stderr, "%s: unsupported input data type '%s'\n",
 				fbuf, cm_fmt_id[in_type]);
 		return(0);
 	}
@@ -162,24 +163,33 @@ get_iotypes(void)
 	return(1);
 }
 
+struct hdata {
+	int	xr, yr;		/* resolution */
+	int	fno;		/* frame # */
+	char	fmt[MAXFMTLEN];	/* format */
+};
+
 /* check subsequent headers match initial file */
 int
 checkline(char *s, void *p)
 {
 	static int	exposWarned = 0;
-	int		*xyres = (int *)p;
-	char		fmt[MAXFMTLEN];
+	struct hdata	*hp = (struct hdata *)p;
 
 	if (!strncmp(s, "NCOLS=", 6)) {
-		xyres[0] = atoi(s+6);
-		if (xyres[0] <= 0)
+		hp->xr = atoi(s+6);
+		if (hp->xr <= 0)
 			return(-1);
 		return(1);
 	}
 	if (!strncmp(s, "NROWS=", 6)) {
-		xyres[1] = atoi(s+6);
-		if (xyres[1] <= 0)
+		hp->yr = atoi(s+6);
+		if (hp->yr <= 0)
 			return(-1);
+		return(1);
+	}
+	if (!strncmp(s, "FRAME=", 6)) {
+		hp->fno = atoi(s+6);
 		return(1);
 	}
 	if (isncomp(s)) {
@@ -189,49 +199,96 @@ checkline(char *s, void *p)
 	}
 	if (isexpos(s)) {
 		if (!exposWarned && fabs(1. - exposval(s)) > 0.04) {
-			fputs("Warning - ignoring EXPOSURE setting(s)\n",
-					stderr);
+			fprintf(stderr, "%s: warning - ignoring EXPOSURE setting(s)\n",
+					gargv[0]);
 			exposWarned++;
 		}
 		return(1);
 	}
-	if (formatval(fmt, s)) {
-		if (strcmp(fmt, cm_fmt_id[in_type]))
-			return(-1);
+	if (formatval(hp->fmt, s))
 		return(1);
-	}
+
 	return(0);
 }
 
-/* open and check input file */
+/* open and check input/output file, read/write mode if fno >= 0 */
 FILE *
-open_input(char *fname)
+open_iofile(char *fname, int fno)
 {
-	int	xyres[2];
-	FILE	*fp = fopen(fname, "rb");
+	struct hdata	hd;
+	FILE		*fp = fopen(fname, fno>=0 ? "r+b" : "rb");
 
 	if (!fp) {
-		fprintf(stderr, "%s: cannot open for reading\n", fname);
+		fprintf(stderr, "%s: cannot open for reading%s\n",
+				fname, fno>=0 ? "/writing" : "");
 		return(NULL);
 	}
-	xyres[0] = xyres[1] = 0;
-	if (getheader(fp, checkline, xyres) < 0) {
+	hd.xr = hd.yr = 0;
+	hd.fno = -1;
+	hd.fmt[0] = '\0';
+	if (getheader(fp, checkline, &hd) < 0) {
 		fprintf(stderr, "%s: bad/inconsistent header\n", fname);
 		fclose(fp);
 		return(NULL);
 	}
-	if ((xyres[0] <= 0) | (xyres[1] <= 0) &&
-			!fscnresolu(&xyres[0], &xyres[1], fp)) {
+	if ((hd.fno >= 0) & (fno >= 0) & (hd.fno != fno)) {
+		fprintf(stderr, "%s: unexpected frame number (%d != %d)\n",
+				fname, hd.fno, fno);
+		fclose(fp);
+		return(NULL);
+	}
+	if (strcmp(hd.fmt, cm_fmt_id[fno>=0 ? out_type : in_type])) {
+		fprintf(stderr, "%s: wrong format\n", fname);
+		fclose(fp);
+		return(NULL);
+	}
+	if ((hd.xr <= 0) | (hd.yr <= 0) &&
+			!fscnresolu(&hd.xr, &hd.yr, fp)) {
 		fprintf(stderr, "%s: missing resolution\n", fname);
 		fclose(fp);
 		return(NULL);
 	}
-	if ((xyres[0] != xres) | (xyres[1] != yres)) {
+	if ((hd.xr != xres) | (hd.yr != yres)) {
 		fprintf(stderr, "%s: mismatched resolution\n", fname);
 		fclose(fp);
 		return(NULL);
 	}
 	return(fp);
+}
+
+/* read in previous pixel data from output and rewind to data start */
+int
+reload_data(float *osum, FILE *fp)
+{
+	long	dstart;
+
+	if (!osum | !fp)
+		return(0);
+	if ((dstart = ftell(fp)) < 0) {
+		fprintf(stderr, "%s: ftell() error in reload_data()\n",
+				gargv[0]);
+		return(0);
+	}
+	if (in_type == DTfloat) {
+		if (fread(osum, sizeof(float)*ncomp, (size_t)xres*yres, fp) !=
+				(size_t)xres*yres) {
+			fprintf(stderr, "%s: fread() error\n", gargv[0]);
+			return(0);
+		}
+	} else {
+		int	y;
+		for (y = 0; y < yres; y++, osum += ncomp*xres)
+			if (freadsscan(osum, ncomp, xres, fp) < 0) {
+				fprintf(stderr, "%s: freadsscan() error\n", gargv[0]);
+				return(0);
+			}
+	}
+	if (fseek(fp, dstart, SEEK_SET) < 0) {
+		fprintf(stderr, "%s: fseek() error in reload_data()\n",
+				gargv[0]);
+		return(0);
+	}
+	return(1);
 }
 
 /* open output file or command (if !NULL) and write info header */
@@ -245,7 +302,7 @@ open_output(char *ospec, int fno)
 		fp = stdout;
 	} else if (ospec[0] == '!') {
 		if (!(fp = popen(ospec+1, "w"))) {
-			fprintf(stderr, "Cannot start: %s\n", ospec);
+			fprintf(stderr, "%s: cannot start: %s\n", gargv[0], ospec);
 			return(NULL);
 		}
 	} else if (!(fp = fopen(ospec, "w"))) {
@@ -292,7 +349,7 @@ open_output(char *ospec, int fno)
 		fprtresolu(xres, yres, fp);
 		break;
 	default:
-		fputs("Unsupported output type!\n", stderr);
+		fprintf(stderr, "%s: unsupported output type!\n", gargv[0]);
 		return(NULL);
 	}
 	if (fflush(fp) < 0) {
@@ -313,22 +370,48 @@ solo_process(void)
 	int	c;
 
 	if (!osum | !iscan) {
-		fprintf(stderr, "Cannot allocate %dx%d %d-component accumulator\n",
-				xres, yres, ncomp);
+		fprintf(stderr, "%s: annot allocate %dx%d %d-component accumulator\n",
+				gargv[0], xres, yres, ncomp);
 		return(0);
 	}
 	if (sizeof(float) != sizeof(COLORV)) {
-		fputs("Code Error 1 in solo_process()\n", stderr);
+		fprintf(stderr, "%s: Code Error 1 in solo_process()\n", gargv[0]);
 		return(0);
 	}
-	for (c = 0; c < cmtx->ncols; c++) {	/* run through each column/output */
+					/* run through each column/output */
+	for (c = 0; c < cmtx->ncols; c++) {
+		int	rc = rowN - row0;
 		FILE	*fout;
 		int	y;
-		int	rc = cmtx->nrows;
-		if (c > 0)		/* clear accumulator? */
+					/* open output (load if multipass) */
+		if (out_spec) {		/* file or command */
+			if (cmtx->ncols > 1 && !hasFormat(out_spec)) {
+				fprintf(stderr, "%s: sequential result must go to stdout\n",
+						gargv[0]);
+				return(0);
+			}
+			sprintf(fbuf, out_spec, c);
+			if (row0) {	/* another pass -- get prev. data */
+				fout = open_iofile(fbuf, c);
+				if (!reload_data(osum, fout))
+					return(0);
+			} else		/* else new output (clobber prev. files) */
+				fout = open_output(fbuf, c-(cmtx->ncols==1));
+		} else {			/* else stdout */
+			if ((out_type == DTfloat) & (cmtx->ncols > 1)) {
+				fprintf(stderr, "%s: float outputs must have separate destinations\n",
+						gargv[0]);
+				return(0);
+			}
+			strcpy(fbuf, "<stdout>");
+			fout = open_output(NULL, c-(cmtx->ncols==1));
+		}
+		if (!fout)
+			return(0);	/* assume error was reported */
+		if (!row0 & (c > 0))	/* clear accumulator? */
 			memset(osum, 0, sizeof(float)*ncomp*xres*yres);
 		while (rc-- > 0) {	/* run through each input file */
-			const int	r = c&1 ? rc : cmtx->nrows-1 - rc;
+			const int	r = c&1 ? row0 + rc : rowN-1 - rc;
 			const rmx_dtype	*cval = rmx_val(cmtx, r, c);
 			FILE		*finp;
 			int		i, x;
@@ -337,7 +420,7 @@ solo_process(void)
 			if (i < 0)	/* this coefficient is zero, skip */
 				continue;
 			sprintf(fbuf, in_spec, r);
-			finp = open_input(fbuf);
+			finp = open_iofile(fbuf, -1);
 			if (!finp)
 				return(0);
 			for (y = 0; y < yres; y++) {
@@ -353,25 +436,7 @@ solo_process(void)
 						dst[i] += cval[i]*iscan[x*ncomp + i];
 			}
 			fclose(finp);
-		}			/* write out accumulated column result... */
-		if (out_spec) {		/* ...to file or command */
-			if (cmtx->ncols > 1 && !hasFormat(out_spec)) {
-				fputs("Sequential result must go to stdout\n", stderr);
-				return(0);
-			}
-			sprintf(fbuf, out_spec, c);
-			fout = open_output(fbuf, c-(cmtx->ncols==1));
-		} else {		/* ...to stdout */
-			if ((out_type == DTfloat) & (cmtx->ncols > 1)) {
-				fputs("Float outputs must have separate destinations\n",
-						stderr);
-				return(0);
-			}
-			strcpy(fbuf, "<stdout>");
-			fout = open_output(NULL, c-(cmtx->ncols==1));
-		}
-		if (!fout)
-			return(0);	/* assume error was reported */
+		}			/* write accumulated picture */
 		if (out_type != DTfloat) {
 			for (y = 0; y < yres; y++)
 				if (fwritesscan(osum + (size_t)y*xres*ncomp,
@@ -383,7 +448,7 @@ solo_process(void)
 
 		if (fbuf[0] == '!') {
 			if (pclose(fout) != 0) {
-				fprintf(stderr, "Bad status from: %s\n", fbuf);
+				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
 				return(0);
 			}
 		} else if (fout != stdout && fclose(fout) == EOF)
@@ -412,7 +477,7 @@ scramble(int n)
 	int	i;
 
 	if (!scarr) {
-		fprintf(stderr, "Out of memory in scramble(%d)\n", n);
+		fprintf(stderr, "%s: out of memory in scramble(%d)\n", gargv[0], n);
 		exit(1);
 	}
 	for (i = n; i--; )
@@ -433,43 +498,73 @@ multi_process(void)
 {
 	int	coff = nprocs;
 	int	odd = 0;
+	float	*osum = NULL;
+	int	*syarr = NULL;
 	char	fbuf[512];
-	float	*osum;
-	int	*syarr;
 	int	c;
 					/* sanity check */
 	if (sizeof(float) != sizeof(COLORV)) {
-		fputs("Code Error 1 in multi_process()\n", stderr);
+		fprintf(stderr, "%s: code Error 1 in multi_process()\n", gargv[0]);
 		return(0);
 	}
 	while (--coff > 0) {		/* parent births children */
 		int	pid = fork();
 		if (pid < 0) {
-			fputs("fork() call failed!\n", stderr);
+			fprintf(stderr, "%s: fork() call failed!\n", gargv[0]);
 			return(0);
 		}
 		if (pid == 0) break;	/* child gets to work */
 	}
-	osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
-	if (!osum) {
-		fprintf(stderr, "Cannot allocate %dx%d %d-component accumulator\n",
-				xres, yres, ncomp);
-		return(0);
+	if (!row0 | (out_type != DTfloat)) {
+		osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
+		if (!osum) {
+			fprintf(stderr, "%s: cannot allocate %dx%d %d-component accumulator\n",
+					gargv[0], xres, yres, ncomp);
+			return(0);
+		}
 	}
 	srandom(113*coff + 5669);	/* randomize row access for this process */
 	syarr = scramble(yres);
 					/* run through our unique set of columns */
 	for (c = coff; c < cmtx->ncols; c += nprocs) {
+		int	rc = rowN - row0;
+		void	*omap = NULL;
+		size_t	omaplen = 0;
+		long	dstart;
 		FILE	*fout;
 		int	y;
-		int	rc = cmtx->nrows;
-		if (c > coff)		/* clear accumulator? */
-			memset(osum, 0, sizeof(float)*ncomp*xres*yres);
+					/* create/load output */
+		sprintf(fbuf, out_spec, c);
+		if (row0) {		/* making another pass? */
+			fout = open_iofile(fbuf, c);
+			if (!fout) return(0);
+			if (out_type == DTfloat) {
+				dstart = ftell(fout);
+				if ((dstart < 0) | (dstart % sizeof(float))) {
+					fprintf(stderr, "%s: bad seek/alignment\n", fbuf);
+					return(0);
+				}
+				omaplen = dstart + sizeof(float)*ncomp*xres*yres;
+				omap = mmap(NULL, omaplen, PROT_READ|PROT_WRITE,
+						MAP_FILE|MAP_SHARED, fileno(fout), 0);
+				if (omap == MAP_FAILED) {
+					fprintf(stderr, "%s: cannot map file '%s'\n",
+							gargv[0], fbuf);
+					return(0);
+				}
+				osum = (float *)((char *)omap + dstart);
+			} else if (!reload_data(osum, fout))
+				return(0);
+		} else {		/* else new output (clobber prev. files) */
+			fout = open_output(fbuf, c);
+			if (!fout) return(0);
+			if (c > coff)	/* clear accumulator? */
+				memset(osum, 0, sizeof(float)*ncomp*xres*yres);
+		}
 		while (rc-- > 0) {	/* map & sum each input file */
-			const int	r = odd ? rc : cmtx->nrows-1 - rc;
+			const int	r = odd ? row0 + rc : rowN-1 - rc;
 			const rmx_dtype	*cval = rmx_val(cmtx, r, c);
-			long		dstart;
-			size_t		maplen;
+			size_t		imaplen;
 			void		*imap;
 			FILE		*finp;
 			float		*dst;
@@ -479,7 +574,7 @@ multi_process(void)
 			if (i < 0)	/* this coefficient is zero, skip */
 				continue;
 			sprintf(fbuf, in_spec, r);
-			finp = open_input(fbuf);
+			finp = open_iofile(fbuf, -1);
 			if (!finp)
 				return(0);
 			dstart = ftell(finp);
@@ -492,8 +587,8 @@ multi_process(void)
 				return(0);
 			}
 			i = in_type==DTfloat ? ncomp*(int)sizeof(float) : ncomp+1;
-			maplen = dstart + (size_t)yres*xres*i;
-			imap = mmap(NULL, maplen, PROT_READ,
+			imaplen = dstart + (size_t)yres*xres*i;
+			imap = mmap(NULL, imaplen, PROT_READ,
 					MAP_FILE|MAP_SHARED, fileno(finp), 0);
 			fclose(finp);		/* will read from map (randomly) */
 			if (imap == MAP_FAILED) {
@@ -520,39 +615,41 @@ multi_process(void)
 					dst[i] += cval[i]*(cvp[i]+(rmx_dtype).5)*fe;
 				}
 			    }
-			munmap(imap, maplen);
-		}			/* write accumulated column picture/matrix */
-		sprintf(fbuf, out_spec, c);
-		fout = open_output(fbuf, c);
-		if (!fout)
-			return(0);	/* assume error was reported */
+			munmap(imap, imaplen);
+		}			/* write accumulated column picture */
 		if (out_type != DTfloat) {
 			for (y = 0; y < yres; y++)
 				if (fwritesscan(osum + (size_t)y*xres*ncomp,
 							ncomp, xres, fout) < 0)
 					goto writerr;
+		} else if (omap) {
+			if (munmap(omap, omaplen) < 0)
+				goto writerr;
+			osum = NULL;
 		} else if (fwrite(osum, sizeof(float)*ncomp, (size_t)xres*yres, fout) !=
 					(size_t)xres*yres)
 			goto writerr;
 
 		if (fbuf[0] == '!') {
 			if (pclose(fout) != 0) {
-				fprintf(stderr, "Bad status from: %s\n", fbuf);
+				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
 				return(0);
 			}
 		} else if (fclose(fout) == EOF)
 			goto writerr;
 		odd = !odd;		/* go back & forth to milk page cache */
 	}
-	free(osum);
+	if (osum) free(osum);
 	free(syarr);
-	if (coff)			/* child processes return here... */
-		return(1);
+	if (coff)			/* child exits here... */
+		_exit(0);
 	c = 0;				/* ...but parent waits for children */
 	while (++coff < nprocs) {
 		int	st;
-		if (wait(&st) < 0)
+		if (wait(&st) < 0) {
+			fprintf(stderr, "%s: warning - wait() call failed unexpectedly\n", gargv[0]);
 			break;
+		}
 		if (st) c = st;
 	}
 	return(c == 0);
@@ -566,6 +663,8 @@ writerr:
 int
 main(int argc, char *argv[])
 {
+	double	cacheGB = 0;
+	int	rintvl;
 	int	a;
 
 	gargc = argc;			/* for header output */
@@ -588,6 +687,9 @@ main(int argc, char *argv[])
 				goto badopt;
 			}
 			break;
+		case 'm':		/* cache size in GigaBytes */
+			cacheGB = atof(argv[++a]);
+			break;
 		case 'N':		/* number of desired processes */
 		case 'n':		/* quietly supported alternate */
 			nprocs = atoi(argv[++a]);
@@ -605,6 +707,12 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	cmtx = rmx_load(argv[a+1]);	/* loads from stdin if a+1==argc */
 	if (cmtx == NULL)
 		return(1);		/* error reported */
+	cacheGB *= (cmtx->ncols > 1);
+	if (cacheGB > 0 && (!out_spec || *out_spec == '!')) {
+		fprintf(stderr, "%s: -m option incompatible with output to %s\n",
+				argv[0], out_spec ? "command" : "stdout");
+		return(1);
+	}
 	if (nprocs > cmtx->ncols)
 		nprocs = cmtx->ncols;
 #if defined(_WIN32) || defined(_WIN64)
@@ -631,11 +739,28 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	}
 	if (!get_iotypes())
 		return(1);
-	if (!(nprocs == 1 ? solo_process() : multi_process()))
-		return(1);
+	if (cacheGB > 1e-4) {		/* figure out # of passes => rintvl */
+		size_t	inp_bytes = (in_type==DTfloat ? sizeof(float)*ncomp
+						: (size_t)(ncomp+1)) * xres*yres;
+		size_t	mem_bytes = sizeof(float)*ncomp*xres*yres;
+		int	npasses = (double)inp_bytes*cmtx->nrows /
+				(cacheGB*(1L<<30) - (double)mem_bytes*nprocs) + 1;
+		if ((npasses <= 0) | (npasses*8 >= cmtx->nrows))
+			npasses = 1;	/* let's not go there... */
+		rintvl = cmtx->nrows / npasses;
+		rintvl += (rintvl*npasses < cmtx->nrows);
+	} else
+		rintvl = cmtx->nrows;
+					/* make our passes */
+	for (row0 = 0; row0 < cmtx->nrows; row0 += rintvl) {
+		if ((rowN = row0 + rintvl) > cmtx->nrows)
+			rowN = cmtx->nrows;
+		if (nprocs==1 ? !solo_process() : !multi_process())
+			return(1);
+	}
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-oc | -of][-o ospec][-N nproc] inpspec [mtx]\n",
+	fprintf(stderr, "Usage: %s [-oc | -of][-o ospec][-N nproc][-m cacheGB] inpspec [mtx]\n",
 				argv[0]);
 	return(1);
 }
