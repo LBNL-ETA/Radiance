@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.135 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -908,7 +908,7 @@ lowqopts(			/* low quality rendering options */
 		op = addarg(op, "-ds .4");
 	else
 		op = addarg(op, "-ds 0");
-	op = addarg(op, "-dt .2 -dc .25 -dr 0 -ss 0 -st .5");
+	op = addarg(op, "-dt .1 -dc .5 -dr 0 -ss 0 -st .5");
 	if (vdef(AMBFILE)) {
 		sprintf(op, " -af %s", vval(AMBFILE));
 		op += strlen(op);
@@ -983,7 +983,7 @@ medqopts(			/* medium quality rendering options */
 		op = addarg(op, "-ds .2 -dj .9");
 	else
 		op = addarg(op, "-ds .3");
-	op = addarg(op, "-dt .1 -dc .5 -dr 1 -ss 1 -st .1");
+	op = addarg(op, "-dt .07 -dc .7 -dr 1 -ss 1 -st .1");
 	if ( (overture = vint(INDIRECT)) ) {
 		sprintf(op, " -ab %d", overture);
 		op += strlen(op);
@@ -1061,7 +1061,7 @@ hiqopts(				/* high quality rendering options */
 		op = addarg(op, "-ds .1 -dj .9");
 	else
 		op = addarg(op, "-ds .2");
-	op = addarg(op, "-dt .05 -dc .75 -dr 3 -ss 16 -st .01");
+	op = addarg(op, "-dt .04 -dc .9 -dr 3 -ss 16 -st .01");
 	sprintf(op, " -ab %d", overture=vint(INDIRECT)+1);
 	op += strlen(op);
 	if (vdef(AMBFILE)) {
