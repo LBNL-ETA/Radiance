@@ -722,7 +722,8 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	if (cacheGB > 1e-4) {		/* figure out # of passes => rintvl */
 		size_t	inp_bytes = (in_type==DTfloat ? sizeof(float)*ncomp
 						: (size_t)(ncomp+1)) * xres*yres;
-		size_t	over_bytes = sizeof(float)*ncomp*xres*yres +
+		size_t	over_bytes = rmx_array_size(cmtx) +
+					sizeof(float)*ncomp*xres*yres +
 					2*(out_type==DTfloat ? sizeof(float)*ncomp
 						: (size_t)(ncomp+1)) * xres*yres;
 		int	npasses = (double)inp_bytes*cmtx->nrows /
