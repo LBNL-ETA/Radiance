@@ -507,13 +507,14 @@ multi_process(void)
 		fprintf(stderr, "%s: code Error 1 in multi_process()\n", gargv[0]);
 		return(0);
 	}
-	while (--coff > 0) {		/* parent births children */
+	fflush(NULL);			/* parent births helper subprocs */
+	while (--coff > 0) {
 		int	pid = fork();
 		if (pid < 0) {
 			fprintf(stderr, "%s: fork() call failed!\n", gargv[0]);
 			return(0);
 		}
-		if (pid == 0) break;	/* child gets to work */
+		if (!pid) break;	/* new child gets to work */
 	}
 	if (!row0 | (out_type != DTfloat)) {
 		osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
@@ -639,11 +640,11 @@ multi_process(void)
 			goto writerr;
 		odd = !odd;		/* go back & forth to milk page cache */
 	}
+	if (coff) _exit(0);		/* child exits here */
+					/* but parent waits for children */
 	if (osum) free(osum);
 	free(syarr);
-	if (coff)			/* child exits here... */
-		_exit(0);
-	c = 0;				/* ...but parent waits for children */
+	c = 0;
 	while (++coff < nprocs) {
 		int	st;
 		if (wait(&st) < 0) {
