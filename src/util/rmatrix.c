@@ -255,47 +255,8 @@ rmx_load_double(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
-static int
-rmx_load_rgbe(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
-{
-	COLR	*scan;
-	COLOR	col;
-	int	j;
-
-	if (rm->ncomp != 3)
-		return(0);
-	scan = (COLR *)tempbuffer(sizeof(COLR)*rm->ncols);
-	if (!scan)
-		return(0);
-	if (freadcolrs(scan, rm->ncols, fp) < 0)
-		return(0);
-	for (j = 0; j < rm->ncols; j++) {
-		colr_color(col, scan[j]);
-		*drp++ = colval(col,RED);
-		*drp++ = colval(col,GRN);
-		*drp++ = colval(col,BLU);
-	}
-	return(1);
-}
-
 #if DTrmx_native==DTfloat
-static int
-rmx_load_spec(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
-{
-	COLRV	*scan;
-	int	j;
-
-	if ((rm->ncomp < 3) | (rm->ncomp > MAXCOMP))
-		return(0);
-	scan = (COLRV *)tempbuffer((rm->ncomp+1)*rm->ncols);
-	if (!scan)
-		return(0);
-	if (freadscolrs(scan, rm->ncomp, rm->ncols, fp) < 0)
-		return(0);
-	for (j = 0; j < rm->ncols; j++, drp += rm->ncomp)
-		scolr2scolor(drp, scan+j*(rm->ncomp+1), rm->ncomp);
-	return(1);
-}
+#define rmx_load_spec(dp,rm,fp)	(freadsscan(dp,(rm)->ncomp,(rm)->ncols,fp) >= 0)
 #else
 static int
 rmx_load_spec(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
@@ -365,7 +326,6 @@ rmx_load_row(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 		return(rmx_load_double(drp, rm, fp));
 	case DTrgbe:
 	case DTxyze:
-		return(rmx_load_rgbe(drp, rm, fp));
 	case DTspec:
 		return(rmx_load_spec(drp, rm, fp));
 	default:
@@ -539,20 +499,7 @@ rmx_write_rgbe(const rmx_dtype *dp, int ncomp, int len, FILE *fp)
 }
 
 #if DTrmx_native==DTfloat
-static int
-rmx_write_spec(const rmx_dtype *dp, int ncomp, int len, FILE *fp)
-{
-	COLRV	*scan;
-	int	j;
-
-	if ((ncomp < 3) | (ncomp > MAXCOMP)) return(0);
-	scan = (COLRV *)tempbuffer((ncomp+1)*len);
-	if (!scan) return(0);
-	for (j = 0; j < len; j++, dp += ncomp)
-		scolor2scolr(scan+j*(ncomp+1), dp, ncomp);
-
-	return(fwritescolrs(scan, ncomp, len, fp) >= 0);
-}
+#define rmx_write_spec(dp,nc,ln,fp)	(fwritesscan(dp,nc,ln,fp) >= 0)
 #else
 static int
 rmx_write_spec(const rmx_dtype *dp, int ncomp, int len, FILE *fp)
