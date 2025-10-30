@@ -624,10 +624,13 @@ multi_process(void)
 	while (++coff < nprocs) {
 		int	st;
 		if (wait(&st) < 0) {
-			fprintf(stderr, "%s: warning - wait() call failed unexpectedly\n", gargv[0]);
+			fprintf(stderr, "%s: warning - child disappeared\n", gargv[0]);
 			break;
 		}
-		if (st) c = st;
+		if (st) {
+			fprintf(stderr, "%s: bad exit status from child\n", gargv[0]);
+			c = st;
+		}
 	}
 	return(c == 0);
 writerr:
@@ -719,16 +722,22 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	if (cacheGB > 1e-4) {		/* figure out # of passes => rintvl */
 		size_t	inp_bytes = (in_type==DTfloat ? sizeof(float)*ncomp
 						: (size_t)(ncomp+1)) * xres*yres;
-		size_t	mem_bytes = sizeof(float)*ncomp*xres*yres;
+		size_t	over_bytes = sizeof(float)*ncomp*xres*yres +
+					2*(out_type==DTfloat ? sizeof(float)*ncomp
+						: (size_t)(ncomp+1)) * xres*yres;
 		int	npasses = (double)inp_bytes*cmtx->nrows /
-				(cacheGB*(1L<<30) - (double)mem_bytes*nprocs) + 1;
-		if ((npasses <= 0) | (npasses*8 >= cmtx->nrows))
-			npasses = 1;	/* let's not go there... */
+				(cacheGB*(1L<<30) - (double)over_bytes*nprocs) + 1;
+		if ((npasses <= 0) | (npasses*6 >= cmtx->nrows)) {
+			fprintf(stderr,
+			    "%s: warning - insufficient cache space for multi-pass\n",
+					argv[0]);
+			npasses = 1;
+		}
 		rintvl = cmtx->nrows / npasses;
 		rintvl += (rintvl*npasses < cmtx->nrows);
 	} else
 		rintvl = cmtx->nrows;
-					/* make our passes */
+					/* make our output accumulation passes */
 	for (row0 = 0; row0 < cmtx->nrows; row0 += rintvl) {
 		if ((rowN = row0 + rintvl) > cmtx->nrows)
 			rowN = cmtx->nrows;
