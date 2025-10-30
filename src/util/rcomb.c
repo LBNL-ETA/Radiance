@@ -419,7 +419,12 @@ open_input(ROPMAT *rop)
 		rop->infp = popen(rop->inspec+1, "r");
 	else
 		rop->infp = fopen(rop->inspec, "rb");
-
+	
+	if (!rop->infp) {
+		fprintf(stderr, "Cannot open for reading: %s\n",
+				rop->inspec);
+		return(0);
+	}
 	if (!rmx_load_header(&rop->imx, rop->infp)) {
 		fprintf(stderr, "Bad header from: %s\n", rop->inspec);
 		return(0);
