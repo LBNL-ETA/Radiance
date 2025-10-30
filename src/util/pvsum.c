@@ -269,7 +269,7 @@ reload_data(float *osum, FILE *fp)
 				gargv[0]);
 		return(0);
 	}
-	if (in_type == DTfloat) {
+	if (out_type == DTfloat) {
 		if (fread(osum, sizeof(float)*ncomp, (size_t)xres*yres, fp) !=
 				(size_t)xres*yres) {
 			fprintf(stderr, "%s: fread() error\n", gargv[0]);
@@ -395,7 +395,7 @@ solo_process(void)
 				fout = open_iofile(fbuf, c);
 				if (!reload_data(osum, fout))
 					return(0);
-			} else		/* else new output (clobber prev. files) */
+			} else		/* else new output (clobbers prev. file) */
 				fout = open_output(fbuf, c-(cmtx->ncols==1));
 		} else {			/* else stdout */
 			if ((out_type == DTfloat) & (cmtx->ncols > 1)) {
@@ -516,47 +516,26 @@ multi_process(void)
 		}
 		if (!pid) break;	/* new child gets to work */
 	}
-	if (!row0 | (out_type != DTfloat)) {
-		osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
-		if (!osum) {
-			fprintf(stderr, "%s: cannot allocate %dx%d %d-component accumulator\n",
-					gargv[0], xres, yres, ncomp);
-			return(0);
-		}
+	osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
+	if (!osum) {
+		fprintf(stderr, "%s: cannot allocate %dx%d %d-component accumulator\n",
+				gargv[0], xres, yres, ncomp);
+		return(0);
 	}
 	srandom(113*coff + 5669);	/* randomize row access for this process */
 	syarr = scramble(yres);
 					/* run through our unique set of columns */
 	for (c = coff; c < cmtx->ncols; c += nprocs) {
 		int	rc = rowN - row0;
-		void	*omap = NULL;
-		size_t	omaplen = 0;
-		long	dstart;
 		FILE	*fout;
 		int	y;
 					/* create/load output */
 		sprintf(fbuf, out_spec, c);
 		if (row0) {		/* making another pass? */
 			fout = open_iofile(fbuf, c);
-			if (!fout) return(0);
-			if (out_type == DTfloat) {
-				dstart = ftell(fout);
-				if ((dstart < 0) | (dstart % sizeof(float))) {
-					fprintf(stderr, "%s: bad seek/alignment\n", fbuf);
-					return(0);
-				}
-				omaplen = dstart + sizeof(float)*ncomp*xres*yres;
-				omap = mmap(NULL, omaplen, PROT_READ|PROT_WRITE,
-						MAP_FILE|MAP_SHARED, fileno(fout), 0);
-				if (omap == MAP_FAILED) {
-					fprintf(stderr, "%s: cannot map file '%s'\n",
-							gargv[0], fbuf);
-					return(0);
-				}
-				osum = (float *)((char *)omap + dstart);
-			} else if (!reload_data(osum, fout))
+			if (!reload_data(osum, fout))
 				return(0);
-		} else {		/* else new output (clobber prev. files) */
+		} else {		/* else new output (clobbers prev. file) */
 			fout = open_output(fbuf, c);
 			if (!fout) return(0);
 			if (c > coff)	/* clear accumulator? */
@@ -565,6 +544,7 @@ multi_process(void)
 		while (rc-- > 0) {	/* map & sum each input file */
 			const int	r = odd ? row0 + rc : rowN-1 - rc;
 			const rmx_dtype	*cval = rmx_val(cmtx, r, c);
+			long		dstart;
 			size_t		imaplen;
 			void		*imap;
 			FILE		*finp;
@@ -623,10 +603,6 @@ multi_process(void)
 				if (fwritesscan(osum + (size_t)y*xres*ncomp,
 							ncomp, xres, fout) < 0)
 					goto writerr;
-		} else if (omap) {
-			if (munmap(omap, omaplen) < 0)
-				goto writerr;
-			osum = NULL;
 		} else if (fwrite(osum, sizeof(float)*ncomp, (size_t)xres*yres, fout) !=
 					(size_t)xres*yres)
 			goto writerr;
@@ -642,7 +618,7 @@ multi_process(void)
 	}
 	if (coff) _exit(0);		/* child exits here */
 					/* but parent waits for children */
-	if (osum) free(osum);
+	free(osum);
 	free(syarr);
 	c = 0;
 	while (++coff < nprocs) {
