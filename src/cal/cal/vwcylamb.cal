@@ -21,7 +21,10 @@
 
 	The default up vector is +Z, and default view direction is +X
 	There are no default settings for xres and yres, so these are
-	minimum requirements.  The default vh is 360 degrees.
+	minimum requirements.  The default vh is 360 degrees.  The pj
+	variable may be set from 0-1 to control pixel jitter which is
+	0 by default.  A third argument may be given to cnt to cause
+	multiple samples of the same pixel for rcontrib -c and similar.
 }
 				{ Aforementioned defaults }
 vdx = 1;
@@ -33,6 +36,11 @@ vuy = 0;
 vuz = 1;
 
 vh = 360;
+
+pj = 0;
+				{ random pixel jitter }
+pjh = .5 + pj*(rand(.3858*recno-19.3) - .5);
+pjv = .5 + pj*(rand(-.7714*recno+114.9) - .5);
 				{ normalized "right" vector }
 vrxu = vdy*vuz - vdz*vuy;
 vryu = vdz*vux - vdx*vuz;
@@ -53,12 +61,12 @@ vuxn = vry*vdzn - vrz*vdyn;
 vuyn = vrz*vdxn - vrx*vdzn;
 vuzn = vrx*vdyn - vry*vdxn;
 				{ XYZ directions before rotation }
-phi = PI/180*vh*(.5 - ($2+.5)/xres);
-Z = 1 - 2/yres*($1+.5);
+phi = PI/180*vh*(($2+pjh)/xres - .5);
+Z = 1 - 2/yres*($1+pjv);
 xyn = sqrt(1 - Z*Z);
 X = xyn*cos(phi);
 Y = xyn*sin(phi);
 				{ pixel view direction }
-Dx = X*vdxn - Y*vrx + Z*vuxn;
-Dy = X*vdyn - Y*vry + Z*vuyn;
-Dz = X*vdzn - Y*vrz + Z*vuzn;
+Dx = X*vdxn + Y*vrx + Z*vuxn;
+Dy = X*vdyn + Y*vry + Z*vuyn;
+Dz = X*vdzn + Y*vrz + Z*vuzn;
