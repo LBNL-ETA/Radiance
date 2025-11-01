@@ -1,0 +1,64 @@
+{ RCSid $Id$ }
+{
+	Lambert's cylidrical equal-area projection
+	Essentially, matches -vth vertically and -vta horizontally
+
+	Greg Ward, Anyhere Software
+
+	Vertical angle is fixed as 180-degrees, and the horizontal
+	size should be PI times the vertical for 360-degree panorama,
+	proportionally less for lesser view angles.
+
+	Typical usage is:
+
+		cnt $vres $hres \
+		| rcalc -f vwcylamb.cal -e "vdx=$xdir;vdy=$ydir;vdz=$zdir" \
+			-e "vux=$xup;vuy=$yup;vuz=$zup" \
+			-e "xres:$hres;yres:$vres" \
+			-e \$1=$vpx -e \$2=$vpy -e \$3=$vpz \
+			-e '$4=Dx;$5=Dy;$6=Dz' \
+		| rtrace -x $hres -y $vres [options] octree > result
+
+	The default up vector is +Z, and default view direction is +X
+	There are no default settings for xres and yres, so these are
+	minimum requirements.  The default vh is 360 degrees.
+}
+				{ Aforementioned defaults }
+vdx = 1;
+vdy = 0;
+vdz = 0;
+
+vux = 0;
+vuy = 0;
+vuz = 1;
+
+vh = 360;
+				{ normalized "right" vector }
+vrxu = vdy*vuz - vdz*vuy;
+vryu = vdz*vux - vdx*vuz;
+vrzu = vdx*vuy - vdy*vux;
+vrnf = 1/sqrt(vrxu*vrxu + vryu*vryu + vrzu*vrzu);
+
+vrx = vrxu*vrnf;
+vry = vryu*vrnf;
+vrz = vrzu*vrnf;
+				{ normalized view vector }
+vdnf = 1/sqrt(vdx*vdx + vdy*vdy + vdz*vdz);
+
+vdxn = vdx*vdnf;
+vdyn = vdy*vdnf;
+vdzn = vdz*vdnf;
+				{ normalized effective "up" }
+vuxn = vry*vdzn - vrz*vdyn;
+vuyn = vrz*vdxn - vrx*vdzn;
+vuzn = vrx*vdyn - vry*vdxn;
+				{ XYZ directions before rotation }
+phi = PI/180*vh*(.5 - ($2+.5)/xres);
+Z = 1 - 2/yres*($1+.5);
+xyn = sqrt(1 - Z*Z);
+X = xyn*cos(phi);
+Y = xyn*sin(phi);
+				{ pixel view direction }
+Dx = X*vdxn - Y*vrx + Z*vuxn;
+Dy = X*vdyn - Y*vry + Z*vuyn;
+Dz = X*vdzn - Y*vrz + Z*vuzn;
