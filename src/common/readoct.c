@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.37 2025/06/07 05:09:45 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -126,7 +126,7 @@ readoct(				/* read in octree file or stream */
 	    }
 	}
 				/* close the input */
-	if (inpspec[0] == '!') {
+	if (infn[0] == '!') {
 		if (pclose(infp) != 0) {
 			sprintf(errmsg, "bad status from \"%s\"", inpspec);
 			error(WARNING, errmsg);
