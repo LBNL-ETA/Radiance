@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.19 2019/06/10 13:56:52 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Initialization file for Radiance.
 
@@ -93,7 +93,7 @@ and(a,b) : if( a, b, a );
 or(a,b) : if( a, a, b );
 not(a) : if( a, -1, 1 );
 xor(a,b) : if( a, not(b), b );
-abs(x) : if( x, x, -x );
+abs(x) : max(x, -x);
 sgn(x) : if( x, 1, if(-x, -1, 0) );
 sq(x) : x*x;
 inside(a,x,b) : and(x-a,b-x);
@@ -104,10 +104,10 @@ linterp(t,p0,p1) : (1-t)*p0 + t*p1;
 
 noop(v) : v;
 clip(v) : bound(0,v,1);
-noneg(v) : if(v,v,0);
-red(r,g,b) : if(r,r,0);
-green(r,g,b) : if(g,g,0);
-blue(r,g,b) : if(b,b,0);
+noneg(v) : max(v,0);
+red(r,g,b) : max(r,0);
+green(r,g,b) : max(g,0);
+blue(r,g,b) : max(b,0);
 grey(r,g,b) : noneg(.265074126*r + .670114631*g + .064811243*b);
 clip_r(r,g,b) : bound(0,r,1);
 clip_g(r,g,b) : bound(0,g,1);
