@@ -155,12 +155,12 @@ The input and output file formats are controlled by the
 option, which may use a single letter for identical i/o formats.
 The input format matters only in pass-through mode, for which
 ASCII input is supported.
-ASCII output is unsupported, since it interferes with
-efficient recovery in the
-.I \-r
-mode.
 The default setting is
 .I \-faf.
+ASCII output is unsupported, since it interferes with
+efficient recovery when using the
+.I \-r
+option.
 .PP
 In normal execution, only a single sender surface is sampled, but it may be
 comprised of any number of subsurfaces, as in a triangle mesh or similar.
@@ -197,7 +197,7 @@ calculation and the resulting matrices will concatenate properly.
 To generate a flux transfer matrix connecting input and output apertures
 on a light pipe:
 .IP "" .2i
-rxfluxmtx int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
+rxfluxmtx -o lpipe.mtx int_aperture.rad ext_aperture.rad lpipe.rad
 .PP
 To generate a set of DC view component pictures with 9 jittered samples/pixel:
 .IP "" .2i
@@ -218,7 +218,7 @@ Instead, it relies on a unix-only C++ class definition that offers full
 control over i/o.
 This allows an unlimited number of receivers, a
 .I \-r
-recovery option, and simplifies internal operations.
+recovery option, and streamlines operations.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
