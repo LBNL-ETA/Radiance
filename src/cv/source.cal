@@ -1,4 +1,4 @@
-{ RCSid: $Id: source.cal,v 2.10 2008/01/24 23:15:46 greg Exp $ }
+{ RCSid: $Id$ }
 {
 	Source distribution coordinates (degrees).
 
@@ -25,29 +25,29 @@
 or
 	A2,A3		- diameter and height of Z-aligned cylinder (meters)
 }
-					{ local definitions }
+						{ local definitions }
 boxprojection = abs(Dx)*A3*A4 + abs(Dy)*A2*A4 + abs(Dz)*A2*A3;
 lboxprojection = (	noneg(abs(Px-Dx*Ts)-A2/2)*A3*A4 +
 			noneg(abs(Py-Dy*Ts)-A3/2)*A2*A4 +
 			noneg(abs(Pz-Dz*Ts)-A4/2)*A2*A3 ) / Ts;
 cylprojection = A2*A3*sqrt(1-Dz*Dz) + PI/4*A2*A2*abs(Dz);
 
-flatcorr(v) = corr(v) / Rdot;		{ correction for flat sources }
-corr(v) = if(AC-.5, A1*v, v);		{ multiplier correction }
-boxcorr(v) = A1 * v / boxprojection;	{ correction for emitting box }
-lboxcorr(v) = A1 * v / lboxprojection;	{ local box correction }
-cylcorr(v) = A1 * v / cylprojection;	{ cylinder correction }
+flatcorr(v) = corr(v) / Rdot;			{ correction for flat sources }
+corr(v) = noneg(if(AC-.5, A1*v, v));		{ multiplier correction }
+boxcorr(v) = noneg(A1*v) / boxprojection;	{ correction for emitting box }
+lboxcorr(v) = noneg(A1*v) / lboxprojection;	{ local box correction }
+cylcorr(v) = noneg(A1*v) / cylprojection;	{ cylinder correction }
 
 src_theta = Acos(Dz) / DEGREE;			{ 0-180 }
 src_phi = mod( Atan2(-Dy, -Dx) / DEGREE, 360 );	{ 0-360 }
 				{ bilateral symmetry }
-src_phi2 = tri( src_phi, 180 );		{ 0-180 }
+src_phi2 = tri( src_phi, 180 );			{ 0-180 }
 				{ quadrilateral symmetry }
-src_phi4 = tri( src_phi, 90 );		{ 0-90 }
+src_phi4 = tri( src_phi, 90 );			{ 0-90 }
 
-				{ Type B photometry coordinates }
+						{ Type B photometry coordinates }
 srcB_vert = atan2( -Dx, Dz ) / DEGREE;
 srcB_horiz = atan2( Dy, Dz ) / DEGREE;
-				{ w/ symmetry }
+						{ w/ symmetry }
 srcB_vert2 = abs( srcB_vert );
 srcB_horiz2 = abs( srcB_horiz );
