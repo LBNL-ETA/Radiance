@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: debugcal.csh,v 2.8 2021/08/26 18:00:39 greg Exp $
+# RCSid: $Id$
 #
 # Script to debug cal files for Radiance
 #
@@ -16,7 +16,7 @@ endif
 rtrace -h- -fad -x 1 -odNplLcn $1 | rcalc -id16 -u \
 		-e 'Dx=$1;Dy=$2;Dz=$3;Nx=$4;Ny=$5;Nz=$6;Px=$7;Py=$8;Pz=$9' \
 		-e 'T=$10;Ts=$11;Lu=$12;Lv=$13;NxP=$14;NyP=$15;NzP=$16'\
-		-e 'S:1;Tx:0;Ty:0;Tz:0:Ix:1;Iy:0;Iz:0;Jx:0;Jy:1;Jz:0;Kx:0;Ky:0;Kz:1' \
+		-e 'S:1;Tx:0;Ty:0;Tz:0;Ix:1;Iy:0;Iz:0;Jx:0;Jy:1;Jz:0;Kx:0;Ky:0;Kz:1' \
 		-e 'Rdot=-Dx*Nx-Dy*Ny-Dz*Nz' -e 'RdotP=-Dx*NxP-Dy*NyP-Dz*NzP' \
 		-e 'CrP=A1;CgP=A2;CbP=A3' -e 'DxA:0;DyA:0;DzA:0' \
 		-f rayinit.cal $argv[2-]:q
