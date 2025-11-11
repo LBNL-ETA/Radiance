@@ -203,6 +203,9 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	if (!mp)
 		return 0;		// not in our modifier list
 
+	if (rcp->HasFlag(RCcontrib) && sintens(r->rcol) <= FTINY)
+		return 0;		// zero contribution
+
 	int			bi = 0;	// get bin index
 	if (mp->binv) {
 		worldfunc(RCCONTEXT, r);
