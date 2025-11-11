@@ -289,7 +289,13 @@ trace_contrib(RAY *r)
 	if (mp == NULL)				/* not in our list? */
 		return;
 						/* zero contribution? */
-	if (contrib && sintens(r->rcol) <= FTINY)
+	if (contrib) {
+		for (i = NCSAMP; i--; )
+			if (r->rcoef[i]*r->rcol[i] > FTINY)
+				break;		/* something non-zero */
+		if (i < 0)
+			return;
+	} else if (sintens(r->rcoef) <= FTINY)
 		return;
 
 	worldfunc(RCCONTEXT, r);		/* else set context */

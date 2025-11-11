@@ -203,10 +203,17 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	if (!mp)
 		return 0;		// not in our modifier list
 
-	if (rcp->HasFlag(RCcontrib) && sintens(r->rcol) <= FTINY)
-		return 0;		// zero contribution
+	int	i;			// pre-emptive check for zero
+	if (rcp->HasFlag(RCcontrib)) {
+		for (i = NCSAMP; i--; )
+			if (r->rcoef[i]*r->rcol[i] > FTINY)
+				break;
+		if (i < 0)
+			return 0;	// zero contribution
+	} else if (sintens(r->rcoef) <= FTINY)
+		return 0;		// zero coefficient
 
-	int			bi = 0;	// get bin index
+	int	bi = 0;			// get bin index
 	if (mp->binv) {
 		worldfunc(RCCONTEXT, r);
 		set_eparams(mp->params);
@@ -226,7 +233,7 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	if (rcp->HasFlag(RCcontrib))
 		smultscolor(contr, r->rcol);	// -> value contribution
 
-	for (int i = 0; i < NCSAMP; i++)
+	for (i = 0; i < NCSAMP; i++)
 		*dvp++ += contr[i];		// accumulate color/spectrum
 	return 1;
 }
