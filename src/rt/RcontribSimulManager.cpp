@@ -191,20 +191,21 @@ RcontribSimulManager::SetDataFormat(int ty)
 int
 RcontribSimulManager::RctCall(RAY *r, void *cd)
 {
-	if (!r->ro || r->ro->omod == OVOID)	// hit nothing?
-		return 0;
-						// shadow ray not on source?
-	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
-		return 0;
+	int	i;
 
-	const char *		mname = objptr(r->ro->omod)->oname;
+	if (!r->ro || (i = r->ro->omod) == OVOID)
+		return 0;		// hit nothing
+
+	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
+		return 0;		// shadow ray not on source
+
+	const char *		mname = objptr(i)->oname;
 	RcontribSimulManager *	rcp = (RcontribSimulManager *)cd;
 	RcontribMod *		mp = (RcontribMod *)lu_find(&rcp->modLUT,mname)->data;
 	if (!mp)
 		return 0;		// not in our modifier list
 
-	int	i;			// pre-emptive check for zero
-	if (rcp->HasFlag(RCcontrib)) {
+	if (rcp->HasFlag(RCcontrib)) {	// pre-emptive check for zero
 		for (i = NCSAMP; i--; )
 			if (r->rcoef[i]*r->rcol[i] > FTINY)
 				break;
