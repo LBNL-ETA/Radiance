@@ -141,7 +141,7 @@ RdataShareMap::Resize(size_t new_siz)
 		new_siz = sbuf.st_size;
 	}
 	if (new_siz > osiz) {		// need to extend & remap
-		int	fd = open(chName, mode&RDSread ? O_RDWR : O_WRONLY);
+		int	fd = open(chName, O_RDWR);
 		if (fd < 0) {
 			sprintf(errmsg, "cannot reopen '%s'", chName);
 			error(SYSTEM, errmsg);
