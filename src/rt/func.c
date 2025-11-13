@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.44 2025/06/23 15:11:04 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -336,29 +336,26 @@ chanvalue(			/* return channel n to calcomp */
 	if (--n < 0)
 		goto badchan;
 
-	if (n <= 2)			/* ray direction */
+	if (n < 3)			/* ray direction */
 
 		return( (	fray->rdir[0]*funcxf.xfm[0][n] +
 				fray->rdir[1]*funcxf.xfm[1][n] +
 				fray->rdir[2]*funcxf.xfm[2][n]	)
 			 / funcxf.sca );
 
-	if (n <= 5)			/* surface normal */
+	if (n < 6)			/* surface normal */
 
 		return( (	fray->ron[0]*funcxf.xfm[0][n-3] +
 				fray->ron[1]*funcxf.xfm[1][n-3] +
 				fray->ron[2]*funcxf.xfm[2][n-3]	)
 			 / funcxf.sca );
 
-	if (n <= 8) {			/* intersection point */
-		if (fray->rot >= FHUGE*.99)
-			return(0.0);	/* XXX should be runtime error? */
+	if (n < 9)			/* intersection point */
 
 		return( fray->rop[0]*funcxf.xfm[0][n-6] +
 				fray->rop[1]*funcxf.xfm[1][n-6] +
 				fray->rop[2]*funcxf.xfm[2][n-6] +
 					     funcxf.xfm[3][n-6] );
-	}
 
 	if (n == 9)			/* total distance */
 		return(raydist(fray,PRIMARY) * funcxf.sca);
@@ -371,22 +368,22 @@ chanvalue(			/* return channel n to calcomp */
 	if (n == 11)			/* scale */
 		return(funcxf.sca);
 
-	if (n <= 14)			/* origin */
+	if (n < 15)			/* origin */
 		return(funcxf.xfm[3][n-12]);
 
-	if (n <= 17)			/* i unit vector */
+	if (n < 18)			/* i unit vector */
 		return(funcxf.xfm[0][n-15] / funcxf.sca);
 
-	if (n <= 20)			/* j unit vector */
+	if (n < 21)			/* j unit vector */
 		return(funcxf.xfm[1][n-18] / funcxf.sca);
 
-	if (n <= 23)			/* k unit vector */
+	if (n < 24)			/* k unit vector */
 		return(funcxf.xfm[2][n-21] / funcxf.sca);
 
 	if (n == 24)			/* single ray (shadow) distance */
 		return((fray->rot+raydist(fray->parent,SHADOW)) * funcxf.sca);
 
-	if (n <= 26)			/* local (u,v) coordinates */
+	if (n < 27)			/* local (u,v) coordinates */
 		return(fray->uv[n-25]);
 badchan:
 	error(USER, "illegal channel number");
