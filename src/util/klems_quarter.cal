@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_quarter.cal,v 1.6 2022/07/14 02:52:02 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Compute interior bin for quarter Klems BSDF basis (0-40)
 	Returns -1 for wrong-side rays
@@ -7,32 +7,39 @@
 
 	7/18/2014	G. Ward
 }
-DEGREE : PI/180;
+DEGREE` : PI/180;
+mod`(n,d) : n - floor(n/d)*d;
 Acos(x) : if(x-1, 0, if(-1-x, PI, acos(x))) / DEGREE;
-posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
-Atan2(y,x) : posangle(atan2(y,x));
 
 kqpola(r) : select(r, 9, 27, 45, 63, 90);
+KQAPS : kqpola(3) - kqpola(2);
 kqnaz(r) : select(r, 1, 8, 12, 12, 8);
 kqaccum(r) : if(r-.5, kqnaz(r) + kqaccum(r-1), 0);
 kqfindrow(r, pol) : if(r-kqpola(0)+.5, r,
 		if(pol-kqpola(r), kqfindrow(r+1, pol), r) );
 
-kqazn(azi,inc) : if((360-.5*inc)-azi, floor((azi+.5*inc)/inc), 0);
+RHS = 1;	{ Set to -1 for left-handed system }
+JTR = 0;	{ Sharp bin boundaries by default }
+				{ Uniform perturbation function }
+kjtr(n) = if(JTR, JTR*(.5 - rand(n*(9.54*Dx - 5.11*Dy + 1.37*Dz - 6.71))), 0);
 
-kqbin2(pol,azi) = if(pol-90, -1,
+kazn(azi,inc) = floor( mod(azi + inc*(.5+kjtr(2)), 360) / inc );
+
+kqbin2(pol,azi) =
 	select(kqfindrow(1, pol),
-		kqazn(azi,360/kqnaz(1)),
-		kqaccum(1) + kqazn(azi,360/kqnaz(2)),
-		kqaccum(2) + kqazn(azi,360/kqnaz(3)),
-		kqaccum(3) + kqazn(azi,360/kqnaz(4)),
-		kqaccum(4) + kqazn(azi,360/kqnaz(5))
-	) );
+		kazn(azi,360/kqnaz(1)),
+		kqaccum(1) + kazn(azi,360/kqnaz(2)),
+		kqaccum(2) + kazn(azi,360/kqnaz(3)),
+		kqaccum(3) + kazn(azi,360/kqnaz(4)),
+		kqaccum(4) + kazn(azi,360/kqnaz(5))
+	);
 
-RHS = 1;	{ set to -1 for left-handed system }
+kqbin1(zv,yv,xv) = if(zv, kqbin2(min(max(0, Acos(zv) + KQAPS*kjtr(1)), 90),
+				atan2(yv,xv)/DEGREE),
+			-1);
 
-kqbin(Nx,Ny,Nz,Ux,Uy,Uz) = kqbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
-	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz + (Nx*Dx+Ny*Dy+Nz*Dz)*(Nx*Ux+Ny*Uy+Nz*Uz),
-		-RHS*(Dx*(Uy*Nz-Uz*Ny) + Dy*(Uz*Nx-Ux*Nz) + Dz*(Ux*Ny-Uy*Nx))));
+kqbin(Nx,Ny,Nz,Ux,Uy,Uz) = kqbin1(-Dx*Nx-Dy*Ny-Dz*Nz,
+	-Dx*Ux-Dy*Uy-Dz*Uz + (Nx*Dx+Ny*Dy+Nz*Dz)*(Nx*Ux+Ny*Uy+Nz*Uz),
+		-RHS*(Dx*(Uy*Nz-Uz*Ny) + Dy*(Uz*Nx-Ux*Nz) + Dz*(Ux*Ny-Uy*Nx)));
 				
 Nkqbins : kqaccum(kqnaz(0));	{ Number of bins for one elevation }

@@ -1,8 +1,10 @@
-{ RCSid $Id: cieskyscan.cal,v 2.1 2024/02/08 02:26:01 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Compute CIE standard sky scanner bin (cbin)
 	Different azimuth origin, alignment, and winding than Tregenza/Reinhart
 
+	RHS		- right-handed system?
+	JTR		- bin jitter/mixing amount
 	Dx,Dy,Dz	- Incident direction (normalized, towards surface face)
 	rNx,rNy,rNz	- Surface normal (normalized, away from surface)
 	Ux,Uy,Uz	- Up direction vector (does not need to be normalized)
@@ -12,13 +14,14 @@
 	Feburary 2024	G. Ward
 }
 				{ Useful factors and functions }
-DEGREE : PI/180;
+DEGREE` : PI/180;
+mod`(n,d) : n - floor(n/d)*d;
 Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x))) / DEGREE;
-posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
-Atan2(y,x) : posangle(atan2(y,x));
-
+Atan2(y,x) : mod( atan2(y,x)/DEGREE, 360);
 				{ Set to -1 for left-handed coordinate system }
 RHS = 1;
+				{ Sharp bin boundaries by default }
+JTR = 0;
 				{ Default axis orientation (+Y == north) }
 rNx = 0; rNy = 0; rNz = -1;
 Ux = 0; Uy = 1; Uz = 0;
@@ -33,21 +36,25 @@ c_azi = Atan2(-inc_rx,-inc_ry);
 calpha : 90/7.5;		{ Separation between rows in degrees }
 				{ Number of patches per row }
 cnaz(r) : select(r+1, 30, 30, 24, 24, 18, 12, 6, 1);
+CNR : cnaz(-1);
 
 caccum(r) : if(r-.5, cnaz(r-1) + caccum(r-1), 0);
+				{ Random perturbation for final bin # }
+jtr1 = JTR*(.5 - rand(1.958*Dx - 5.386*Dy - 3.772*Dz));
+jtr2 = JTR*(.5 - rand(-6.334*Dx - 2.165*Dy + 7.953*Dz));
 
-c_row = floor(r_alt/calpha);
+c_row = if(JTR, min(max(0,floor(r_alt/calpha + jtr1)),CNR-1),
+		floor(r_alt/calpha));
 
 c_inc = 360/cnaz(c_row);
 
+c_aznf = floor( mod(c_azi+if(JTR,jtr2*c_inc,0), 360) / c_inc );
+
 fwd_row = floor(c_row/2+1.25) - c_row/2 - .75;
 
-c_azn = if(359.9999 - c_azi,
-		if(fwd_row, floor(c_azi/c_inc),
-			cnaz(c_row)-1 - floor(c_azi/c_inc)),
-		0);
+c_azn = if(fwd_row, c_aznf, cnaz(c_row)-1 - c_aznf);
 
 				{ Final bin value, -1 for "ground" }
 cbin = if (r_alt, caccum(c_row) + c_azn, -1);
 
-Ncbins : caccum(8);		{ total number of bins }
+Ncbins : caccum(CNR);		{ total number of bins }

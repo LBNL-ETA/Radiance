@@ -1344,6 +1344,7 @@ main(int argc, char *argv[])
 	char		*outfn = NULL;
 	FVECT		*rayarr = NULL;
 	const char	*sendfn = "";
+	double		binjitter = 0;
 	PARAMS		sendparams;
 	int		rval;
 	int		a, i;
@@ -1383,6 +1384,12 @@ main(int argc, char *argv[])
 		switch (argv[a][1]) {	/* !! Keep consistent !! */
 		case 'W':			/* verbose mode */
 			check_bool(2,verby);
+			break;
+		case 'b':			/* bin jitter? */
+			if (argv[a][2] != 'j')
+				goto userr;
+			check(3,"f");
+			binjitter = atof(argv[++a]);
 			break;
 		case 'v':			// view file
 			if (argv[a][2] != 'f')
@@ -1576,6 +1583,8 @@ main(int argc, char *argv[])
 	if (load_scene(argv[a], add_recv_object) < 0)
 		quit(1);
 	finish_receiver();		// makes final AddModifier() call
+	if (binjitter > FTINY)		// global bin jitter?
+		varset(const_cast<char *>("JTR"), '=', binjitter);
 					// prepare output files
 	if (recover) {
 		if (force_open) {
@@ -1691,7 +1700,7 @@ main(int argc, char *argv[])
 userr:
 	if (a < argc && argv[a][0] == '-')
 		fprintf(stderr, "%s: unsupported/misplaced option '%s'\n", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-W] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
+	fprintf(stderr, "Usage: %s [-W][-bj frac] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	quit(1);
 }

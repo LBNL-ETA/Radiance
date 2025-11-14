@@ -7,6 +7,8 @@ rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
 [
 .B \-v
 ][
+.B "-bj frac"
+][
 .B "rcontrib options"
 ]
 .B "{ sender.rad | - }"
@@ -42,6 +44,12 @@ The
 option turns on verbose reporting for the number of samples and the executed
 .I rcontrib
 command.
+The
+.I \-bj
+option sets the amount of bin jittering, which blurs the boundaries of
+receiver bins and is generally recommended when creating a view that may
+include direct visibility of the receiver surface(s).
+(The default jitter is 0, leaving sharp bin boundaries.)\0
 All other supported options are passed on to
 .I rcontrib(1).
 However, the

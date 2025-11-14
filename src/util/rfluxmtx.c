@@ -44,6 +44,7 @@ char		*khalffn = "klems_half.cal";
 char		*kquarterfn = "klems_quarter.cal";
 char		*ciefn = "cieskyscan.cal";
 
+char		*binjitter = NULL;
 					/* string indicating parameters */
 #define	PARAMSTART	"@rfluxmtx"
 
@@ -99,7 +100,7 @@ SURFSAMP	*orig_in_surf[4] = {
 	};
 
 /* Clear parameter set */
-static void
+void
 clear_params(PARAMS *p, int reset_only)
 {
 	while (p->slist != NULL) {
@@ -121,7 +122,7 @@ clear_params(PARAMS *p, int reset_only)
 }
 
 /* Get surface type from name */
-static int
+int
 surf_type(const char *otype)
 {
 	if (!strcmp(otype, "polygon"))
@@ -134,7 +135,7 @@ surf_type(const char *otype)
 }
 
 /* Add arguments to oconv command */
-static char *
+char *
 oconv_command(int ac, char *av[])
 {
 	static char	oconvbuf[2048] = "!oconv -f ";
@@ -184,7 +185,7 @@ overrun:
 #if defined(_WIN32) || defined(_WIN64)
 
 /* Open a pipe to/from a command given as an argument list */
-static FILE *
+FILE *
 popen_arglist(char *av[], char *mode)
 {
 	char	cmd[10240];
@@ -203,7 +204,7 @@ popen_arglist(char *av[], char *mode)
 #define	pclose_al	pclose
 
 /* Execute system command (Windows version) */
-static int
+int
 my_exec(char *av[])
 {
 	char	cmd[10240];
@@ -223,7 +224,7 @@ my_exec(char *av[])
 static SUBPROC	rt_proc = SP_INACTIVE;	/* we only support one of these */
 
 /* Open a pipe to a command using an argument list */
-static FILE *
+FILE *
 popen_arglist(char *av[], char *mode)
 {
 	int	fd;
@@ -254,7 +255,7 @@ popen_arglist(char *av[], char *mode)
 }
 
 /* Close command pipe (returns -1 on error to match pclose) */
-static int
+int
 pclose_al(FILE *fp)
 {
 	int	prob = (fclose(fp) == EOF);
@@ -268,7 +269,7 @@ pclose_al(FILE *fp)
 }
 
 /* Execute system command in our stead (Unix version) */
-static int
+int
 my_exec(char *av[])
 {
 	char	*compath;
@@ -291,7 +292,7 @@ my_exec(char *av[])
 #endif
 
 /* Get normalized direction vector from string specification */
-static int
+int
 get_direction(FVECT dv, const char *s)
 {
 	int	sign = 1;
@@ -331,7 +332,7 @@ nextchar:
 }
 
 /* Parse program parameters (directives) */
-static int
+int
 parse_params(PARAMS *p, char *pargs)
 {
 	char	*cp = pargs;
@@ -409,8 +410,20 @@ parse_params(PARAMS *p, char *pargs)
 	return(-1);	/* pro forma return */
 }
 
+/* Append bin jitter to the parameter string */
+int
+addbinjitter(char *s)
+{
+	if (binjitter == NULL)
+		return(0);
+	s += strlen(s);
+	strcpy(s, ",JTR=");
+	strcpy(s+5, binjitter);
+	return(1);
+}
+
 /* Add receiver arguments (directives) corresponding to the current modifier */
-static void
+void
 finish_receiver(void)
 {
 	char	sbuf[256];
@@ -472,6 +485,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 		binv = "scbin";
 		nbins = "SCdim*SCdim";
@@ -483,6 +497,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 		binv = "rbin";
 		nbins = "Nrbins";
@@ -511,6 +526,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 		binv = "cbin";
 		nbins = "Ncbins";
@@ -521,6 +537,7 @@ finish_receiver(void)
 	}
 	if (tolower(curparams.hemis[0]) == 'k') {
 		sprintf(sbuf, "RHS=%c1", curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 	}
 	if (!uniform) {
@@ -565,7 +582,7 @@ finish_receiver(void)
 }
 
 /* Make randomly oriented tangent plane axes for given normal direction */
-static void
+void
 make_axes(FVECT uva[2], const FVECT nrm)
 {
 	int	i;
@@ -579,7 +596,7 @@ make_axes(FVECT uva[2], const FVECT nrm)
 }
 
 /* Illegal sender surfaces end up here */
-static int
+int
 ssamp_bad(FVECT orig, SURF *sp, double x)
 {
 	fprintf(stderr, "%s: illegal sender surface '%s'\n",
@@ -588,7 +605,7 @@ ssamp_bad(FVECT orig, SURF *sp, double x)
 }
 
 /* Generate origin on ring surface from uniform random variable */
-static int
+int
 ssamp_ring(FVECT orig, SURF *sp, double x)
 {
 	FVECT	*uva = (FVECT *)sp->priv;
@@ -617,7 +634,7 @@ ssamp_ring(FVECT orig, SURF *sp, double x)
 }
 
 /* Add triangle to polygon's list (call-back function) */
-static int
+int
 add_triangle(const Vert2_list *tp, int a, int b, int c)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)tp->p;
@@ -630,7 +647,7 @@ add_triangle(const Vert2_list *tp, int a, int b, int c)
 }
 
 /* Generate origin on polygon surface from uniform random variable */
-static int
+int
 ssamp_poly(FVECT orig, SURF *sp, double x)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)sp->priv;
@@ -703,7 +720,7 @@ memerr:
 }
 
 /* Compute sample origin based on projected areas of sender subsurfaces */
-static int
+int
 sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 {
 	static double	*projsa;
@@ -750,7 +767,7 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 }
 
 /* Uniform sample generator */
-static int
+int
 sample_uniform(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
@@ -778,7 +795,7 @@ sample_uniform(PARAMS *p, int b, FILE *fp)
 }
 
 /* Shirly-Chiu sample generator */
-static int
+int
 sample_shirchiu(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
@@ -807,7 +824,7 @@ sample_shirchiu(PARAMS *p, int b, FILE *fp)
 }
 
 /* Reinhart/Tregenza sample generator */
-static int
+int
 sample_reinhart(PARAMS *p, int b, FILE *fp)
 {
 #define T_NALT	7
@@ -859,7 +876,7 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 }
 
 /* Klems sample generator */
-static int
+int
 sample_klems(PARAMS *p, int b, FILE *fp)
 {
 	static const char	bname[4][20] = {
@@ -908,7 +925,7 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 }
 
 /* Prepare hemisphere basis sampler that will send rays to rcontrib */
-static int
+int
 prepare_sampler(PARAMS *p)
 {
 	if (p->slist == NULL) {	/* missing sample surface! */
@@ -992,7 +1009,7 @@ unrecognized:
 }
 
 /* Compute normal and area for polygon */
-static int
+int
 finish_polygon(SURF *p)
 {
 	const int	nv = p->nfargs / 3;
@@ -1014,7 +1031,7 @@ finish_polygon(SURF *p)
 }
 
 /* Add a surface to our current parameters */
-static void
+void
 add_surface(int st, const char *oname, FILE *fp)
 {
 	SURF	*snew;
@@ -1095,7 +1112,7 @@ badnorm:
 }
 
 /* Parse a receiver object (look for modifiers to add to rcontrib command) */
-static int
+int
 add_recv_object(FILE *fp)
 {
 	int		st;
@@ -1133,7 +1150,7 @@ add_recv_object(FILE *fp)
 }
 
 /* Parse a sender object */
-static int
+int
 add_send_object(FILE *fp)
 {
 	int		st;
@@ -1177,7 +1194,7 @@ add_send_object(FILE *fp)
 }
 
 /* Load a Radiance scene using the given callback function for objects */
-static int
+int
 load_scene(const char *inspec, int (*ocb)(FILE *))
 {
 	int	rv = 0;
@@ -1241,7 +1258,7 @@ main(int argc, char *argv[])
 	char	*xrs=NULL, *yrs=NULL, *ldopt=NULL;
 	char	*iropt = NULL;
 	char	*sendfn;
-	char	sampcntbuf[32], nsbinbuf[32];
+	char	sampcntbuf[32], nsbinbuf[32], binjitbuf[32];
 	FILE	*rcfp;
 	int	nsbins;
 	int	a, i;
@@ -1336,6 +1353,11 @@ main(int argc, char *argv[])
 			na = 2;
 			break;
 		case 'b':		/* special case */
+			if (argv[a][2] == 'j') {
+				binjitter = argv[++a];
+				na = 0;
+				continue;
+			}
 			if (argv[a][2] != 'v') goto userr;
 			break;
 		case 'l':		/* special case */
@@ -1456,7 +1478,7 @@ main(int argc, char *argv[])
 userr:
 	if (a < argc-2)
 		fprintf(stderr, "%s: unsupported option '%s'\n", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
+	fprintf(stderr, "Usage: %s [-v][-bj frac][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	return(1);
 }

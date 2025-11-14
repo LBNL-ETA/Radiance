@@ -2867,3 +2867,8 @@ class and provides view rendering as well as surface sampling
 and pass-through modes.
 
 Added -m option to pvsum to optimize memory cache performance.
+
+Added -bj option to rfluxmtx and rxfluxmtx to blur bin boundaries
+by jittering sample directions.  Setting -bj 1 is statistically
+equivalent to linear interpolation of receiver bins, rather than
+the default piecewise constant representation (-bj 0).

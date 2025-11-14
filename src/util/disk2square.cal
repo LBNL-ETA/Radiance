@@ -1,4 +1,4 @@
-{ RCSid $Id: disk2square.cal,v 2.6 2024/10/30 17:25:37 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Convert between unit square and disk, using Shirley-Chiu mapping
 
@@ -66,6 +66,7 @@ out_square_y = (out_square_b + 1)/2;
 	The following forumulas compute Shirley-Chiu bin "scbin" based on:
 
 	RHS		- right-handed system (-1 for left-handed coords)
+	JTR		- bin jitter/mixing amount (0 for sharp boundaries)
 	Dx,Dy,Dz	- Incident direction (normalized, towards surface front)
 	rNx,rNy,rNz	- Surface normal (normalized, away from surface)
 	Ux,Uy,Uz	- Up direction vector (does not need to be normalized)
@@ -74,6 +75,7 @@ out_square_y = (out_square_b + 1)/2;
 	ordered with the "up" direction changing fastest.
 }
 RHS = 1;
+JTR = 0;
 				{ Compute oriented axis values }
 inc_dz = -Dx*rNx-Dy*rNy-Dz*rNz;
 inc_rx = -RHS*(Dx*(Uy*rNz-Uz*rNy) + Dy*(Uz*rNx-Ux*rNz) + Dz*(Ux*rNy-Uy*rNx));
@@ -83,7 +85,13 @@ inc_radf = if(inc_den2-1e-7, sqrt((1 - inc_dz*inc_dz)/inc_den2), 0);
 				{ Pass to formulas in first section }
 in_disk_x = inc_rx*inc_radf;
 in_disk_y = -inc_ry*inc_radf;
+				{ Random perturbation for final bin # }
+jtr1 = JTR*(.5 - rand(1.958*Dx - 5.386*Dy - 3.772*Dz));
+jtr2 = JTR*(.5 - rand(-6.334*Dx - 2.165*Dy + 7.953*Dz));
+
+yndx = if(JTR, min(max(0,floor(out_square_x*SCdim + jtr1)),SCdim-1),
+		floor(out_square_x*SCdim));
+xndx = if(JTR, min(max(0,floor(out_square_y*SCdim + jtr2)),SCdim-1),
+		floor(out_square_y*SCdim));
 				{ Compute final bin (-1 if behind surface) }
-scbin = if(inc_dz,
-		floor(out_square_x*SCdim)*SCdim + floor(out_square_y*SCdim),
-		-1);
+scbin = if(inc_dz, yndx*SCdim + xndx, -1);

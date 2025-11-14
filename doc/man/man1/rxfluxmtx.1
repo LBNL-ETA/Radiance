@@ -6,6 +6,8 @@ rxfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
 .B rxfluxmtx
 [
 .B \-W
+][
+.B "-bj frac"
 ] [
 .B "rcontrib options"
 ]
@@ -62,6 +64,9 @@ option turns on verbose mode, and the
 .I \-t
 option sets the number of seconds between progress reports, similar to
 .I rcontrib(1).
+Likewise, the
+.I \-c
+option specifies the number of times to repeat each sample.
 However, the
 .I rcontrib
 options
@@ -74,6 +79,18 @@ and
 options are controlled by
 .I rxfluxmtx
 and may not be set by the user.
+.PP
+The
+.I \-bj
+option sets the amount of bin jittering, which blurs the boundaries of
+receiver bins and is generally recommended when creating a view that may
+include direct visibility of the receiver surface(s).
+It is best used in combination with the
+.I \-c
+and
+.I \-pj
+options described above.
+(The default jitter is 0, leaving sharp bin boundaries.)\0
 .PP
 The sample count, unless set by the
 .I \-c
