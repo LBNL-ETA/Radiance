@@ -612,14 +612,16 @@ egetstatement(void)			/* get next statement */
     	if (optimized)
     	    epoptimize(ep);		/* optimize new statement */
 	qname = qualname(dfn_name(ep), 0);
-	if (esupport&(E_REDEFW | (ep->type==':')*E_RCONST) &&
+	if (esupport&(E_REDEFW|E_RCONST) &&
 			(vdef = varlookup(qname)) != NULL) {
 	    if (vdef->def != NULL && epcmp(ep, vdef->def)) {
-		wputs(qname);
-		if (vdef->def->type == ':')
+		if (vdef->def->type == ':') {
+		    wputs(qname);
 		    wputs(": constant redefined\n");
-		else
+		} else if (esupport&E_REDEFW) {
+		    wputs(qname);
 		    wputs(": redefined\n");
+		}
 	    } else if ((ep->v.kid->type == FUNC) & (vdef->lib != NULL)) {
 		wputs(qname);
 		wputs(": definition hides library function\n");
