@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.41 2025/01/01 19:02:08 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  Store variable definitions.
@@ -137,19 +137,19 @@ varset(		/* set a variable's value */
 					/* get qualified name */
     qname = qualname(vname, 0);
 					/* check for quick set */
-    if ((ep1 = dlookup(qname)) != NULL && ep1->v.kid->type == SYM &&
-		(ep1->type == ':') <= (assign == ':')) {
+    if ((ep1 = dlookup(qname)) != NULL && ep1->type == '=' &&
+				ep1->v.kid->type == SYM) {
 	ep2 = ep1->v.kid->sibling;
 	if (ep2->type == NUM) {
 	    ep2->v.num = val;
 	    ep1->type = assign;
 	    return;
-	}
+	}				/* else, redefine vname */
     }
-    if (ep1 != NULL && esupport&E_REDEFW) {
+    if (ep1 != NULL && esupport&(E_REDEFW | (ep1->type==':')*E_RCONST)) {
 	wputs(qname);
 	if (ep1->type == ':')
-	    wputs(": reset constant expression\n");
+	    wputs(": reset constant\n");
 	else
 	    wputs(": reset expression\n");
     }
@@ -612,14 +612,15 @@ egetstatement(void)			/* get next statement */
     	if (optimized)
     	    epoptimize(ep);		/* optimize new statement */
 	qname = qualname(dfn_name(ep), 0);
-	if (esupport&E_REDEFW && (vdef = varlookup(qname)) != NULL) {
+	if (esupport&(E_REDEFW | (ep->type==':')*E_RCONST) &&
+			(vdef = varlookup(qname)) != NULL) {
 	    if (vdef->def != NULL && epcmp(ep, vdef->def)) {
 		wputs(qname);
 		if (vdef->def->type == ':')
-		    wputs(": redefined constant expression\n");
+		    wputs(": constant redefined\n");
 		else
 		    wputs(": redefined\n");
-	    } else if (ep->v.kid->type == FUNC && vdef->lib != NULL) {
+	    } else if ((ep->v.kid->type == FUNC) & (vdef->lib != NULL)) {
 		wputs(qname);
 		wputs(": definition hides library function\n");
 	    }
