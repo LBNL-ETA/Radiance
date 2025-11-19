@@ -349,9 +349,10 @@ report_depth(char *nm)			/* report current function call depth */
 {
 	char	msg[RMAXWORD+48];
 
-	sprintf(msg, "%s(): depth level at %lu\n", nm, next_dreport);
+	sprintf(msg, "%s(): depth level at %lu\n", nm, curdepth);
 	wputs(msg);
-	next_dreport *= 10;
+	if (curdepth >= next_dreport)
+		next_dreport *= 10;
 }
 
 
