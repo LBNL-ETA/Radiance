@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.27 2024/09/16 17:31:14 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -28,6 +28,14 @@ typedef struct {
     double  (*f)(char *);	/* pointer to function */
 }  ELIBR;		/* a library function */
 
+typedef struct vardef {
+	    char  *name;		/* variable name */
+	    int	 nlinks;		/* number of references */
+	    struct epnode  *def;	/* definition */
+	    ELIBR  *lib;		/* library definition */
+	    struct vardef  *next;	/* next in hash list */
+}  VARDEF;		/* a variable definition */
+
 typedef struct epnode {
     union {
 	struct epnode  *kid;	/* first child */
@@ -35,20 +43,12 @@ typedef struct epnode {
 	char  *name;		/* symbol name */
 	int  chan;		/* channel number */
 	unsigned long  tick;	/* timestamp */
-	struct vardef {
-	    char  *name;		/* variable name */
-	    int	 nlinks;		/* number of references */
-	    struct epnode  *def;	/* definition */
-	    ELIBR  *lib;		/* library definition */
-	    struct vardef  *next;	/* next in hash list */
-	}  *ln;			/* link */
+	VARDEF  *ln;		/* variable definition link */
     } v;		/* value */
     struct epnode  *sibling;	/* next child this level */
     short  type;		/* node type */
     short  nkids;		/* child count (neg if array) */
 }  EPNODE;	/* an expression node */
-
-typedef struct vardef  VARDEF;	/* a variable definition */
 
 #define  nekids(ep)	abs((ep)->nkids)
 
