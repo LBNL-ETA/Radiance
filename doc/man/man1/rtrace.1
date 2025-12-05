@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.44 2025/07/22 19:43:59 greg Exp $"
+.\" RCSid "$Id$"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -748,6 +748,10 @@ Produce a single output channel corresponding to scotopic luminance.
 .TP
 .BR \-pM
 Produce a single output channel corresponding to melanopic luminance.
+.TP
+.BR \-pA
+Produce a single output channel corresponding to the total radiometric flux
+over the rendered spectrum.
 .TP
 .BI -e \ efile
 Send error messages and progress reports to

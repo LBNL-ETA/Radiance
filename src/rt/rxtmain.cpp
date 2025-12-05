@@ -265,20 +265,26 @@ main(int  argc, char  *argv[])
 			case 'Y':			/* photopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_photopic;
 				out_scalefactor = WHTEFFICACY;
+				sens_curve = scolor_photopic;
 				break;
 			case 'S':			/* scotopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_scotopic;
 				out_scalefactor = WHTSCOTOPIC;
+				sens_curve = scolor_scotopic;
 				break;
 			case 'M':			/* melanopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_melanopic;
 				out_scalefactor = WHTMELANOPIC;
+				sens_curve = scolor_melanopic;
+				break;
+			case 'A':			/* radiometric average */
+				if (argv[i][3])
+					goto badopt;
+				out_scalefactor = 1;
+				sens_curve = scolor_mean;
 				break;
 			default:
 				goto badopt;
