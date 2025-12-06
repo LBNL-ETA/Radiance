@@ -235,7 +235,7 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	    *ep = *ep1;
 	    efree(ep1);		/* not epfree()! */
 	}
-    if ((epar->nkids <= 2) | !(esupport & E_RCONST))
+    if (!(esupport & E_RCONST))
     	return;
     ep1 = NULL;			/* combine constants in sum/product */
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
@@ -246,14 +246,21 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	}
     if (ep1 == NULL)
 	return;
-    ep1->v.num = combined;	/* drop following constants */
+    ep1->v.num = combined;	/* assumes commutative property, also */
     while (ep1->sibling != NULL)
     	if (ep1->sibling->type == NUM) {
 	    ep = ep1->sibling;
 	    ep1->sibling = ep->sibling;
-	    efree(ep);
+	    epar->nkids--;
+	    efree(ep);		/* drop subsumed constant */
         } else
 	    ep1 = ep1->sibling;
+
+    if (epar->nkids == 1) {	/* late constant expression? */
+    	ep = epar->v.kid;
+    	*epar = *ep;
+    	efree(ep);
+    }
 }
 
 
