@@ -684,9 +684,14 @@ getE1(void)			/* E1 -> E1 ADDOP E2 */
 	escan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE2());
-	if (esupport&E_RCONST &&
-			(ep1->type == NUM) & (ep1->sibling->type == NUM))
+	if (esupport&E_RCONST && ep1->sibling->type == NUM) {
+	    if (ep1->type == NUM) {
 		ep2 = rconst(ep2);
+	    } else if (ep2->type == '-') {
+	    	ep1->sibling->v.num *= -1;
+	    	ep2->type = '+';	/* associative&commutative */
+	    }
+	}
 	ep1 = ep2;
     }
     return(ep1);
