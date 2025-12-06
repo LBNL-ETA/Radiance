@@ -218,14 +218,15 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	EPNODE *epar
 )
 {
-    EPNODE	*ep;
+    EPNODE	*ep, *ep1, *ep2;
+    double	combined;
 
-    if (epar->nkids < 0)	/* can't handle array allocations */
+    if (epar->nkids <= 0)	/* can't handle array allocations */
     	return;
 
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
-    	while (ep->type == epar->type && ep->nkids > 0) {
-	    EPNODE	*ep1 = ep->v.kid;
+    	while ((ep->type == epar->type) & (ep->nkids > 0)) {
+	    ep1 = ep->v.kid;
 	    while (ep1->sibling != NULL)
 	    	ep1 = ep1->sibling;
 	    ep1->sibling = ep->sibling;
@@ -234,6 +235,27 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	    *ep = *ep1;
 	    efree(ep1);		/* not epfree()! */
 	}
+    if ((epar->nkids <= 2) | !(esupport & E_RCONST))
+    	return;
+    ep1 = NULL;			/* combine numbers in sum/product */
+    for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
+	if (ep->type == NUM) {
+	    if (ep1 == NULL) combined = (ep1 = ep)->v.num;
+	    else if (epar->type == '+') combined += ep->v.num;
+	    else combined *= ep->v.num;
+	}
+    if (ep1 == NULL)
+	return;
+    ep1->v.num = combined;	/* elide others */
+    while (ep1->sibling != NULL)
+    	if (ep1->sibling->type == NUM) {
+	    ep2 = ep1->sibling;
+	    ep1->sibling = ep2->sibling;
+	    efree(ep2);
+	    if (--epar->nkids <= 2)
+	        break;
+        } else
+		ep1 = ep1->sibling;
 }
 
 
