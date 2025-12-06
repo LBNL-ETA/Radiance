@@ -60,6 +60,7 @@ initfunc(void)	/* initialize function evaluation */
 	setprismfuncs();
 	loadfunc(rayinitcal);
 	rayinitcal[0] = '\0';
+	doptimize(1);		/* optimize definitions */
 }
 
 
@@ -285,7 +286,6 @@ loadfunc(			/* load definition file */
 		error(SYSTEM, errmsg);
 	}
 	fcompile(ffname);
-	doptimize(1);		/* optimize definitions */
 }
 
 
