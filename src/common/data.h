@@ -1,4 +1,4 @@
-/* RCSid $Id: data.h,v 2.1 2024/08/02 18:47:25 greg Exp $ */
+/* RCSid $Id$ */
 /*
  * Header for data file loading and computation routines.
  */
@@ -22,7 +22,7 @@ typedef struct datarray {
 	union {
 		DATATYPE  *d;			/* float data */
 		COLR  *c;			/* RGBE data */
-		uby8  *s;			/* spectral data */
+		COLRV  *s;			/* spectral data */
 		void  *p;			/* generic pointer */
 	}  arr;				/* the data */
 	struct dadim {			/* put this last */

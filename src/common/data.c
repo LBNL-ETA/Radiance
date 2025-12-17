@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.5 2025/06/07 05:09:45 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -340,7 +340,7 @@ getspec(		/* load hyperspectral image as data */
 		error(WARNING, errmsg);
 	}
 #endif
-	if ((pp->arr.s = (uby8 *)malloc(i)) == NULL)
+	if ((pp->arr.s = (COLRV *)malloc(sizeof(COLRV)*i)) == NULL)
 		goto memerr;
 	for (y = ns; y-- > 0; )			/* read each scanline */
 		if (freadscolrs(pp->arr.s + y*sl*(si.nc+1), si.nc, sl, fp) < 0)
