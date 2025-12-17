@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.15 2024/03/12 16:54:51 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -251,22 +251,23 @@ p_specfile(			/* constant spectrum from 1-D data file */
 	if ((scval = (COLORV *)m->os) == NULL) {
 		DATARRAY	*dp;
 		COLORV		*sinp;
+		int		n;
 		double		step;
-		int		i;
 		if (m->oargs.nsargs != 1)
 			objerror(m, USER, "bad # arguments");
 		dp = getdata(m->oargs.sarg[0]);
 		if (dp->nd != 1)
 			objerror(m, USER, "data file must be 1-dimensional");
 
-		sinp = (COLORV *)malloc(sizeof(COLORV)*dp->dim[0].ne);
+		n = (dp->dim[0].p == NULL) ? dp->dim[0].ne : 2*dp->dim[0].ne;
+		sinp = (COLORV *)malloc(sizeof(COLORV)*n);
 		scval = (COLORV *)malloc(sizeof(COLORV)*NCSAMP);
 		if ((sinp == NULL) | (scval == NULL))
 			objerror(m, SYSTEM, "out of memory");
-		step = dp->dim[0].siz / (dp->dim[0].ne - 1.0);
-		for (i = dp->dim[0].ne; i-- > 0; ) {
-			double	wl = dp->dim[0].org + i*step;
-			sinp[i] = (COLORV)datavalue(dp, &wl);
+		step = dp->dim[0].siz / (n - 1.0);
+		while (n--) {
+			double	wl = dp->dim[0].org + n*step;
+			sinp[n] = (COLORV)datavalue(dp, &wl);
 		}
 		convertscolorcol(scval, sinp, dp->dim[0].ne,
 				dp->dim[0].org-.5*step,
