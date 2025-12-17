@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fputword.c,v 3.11 2024/08/03 15:32:59 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Write word to stream, quoting as necessary
@@ -13,14 +13,13 @@ static const char	RCSid[] = "$Id: fputword.c,v 3.11 2024/08/03 15:32:59 greg Exp
 
 #include "rtio.h"
 
+/* put (quoted) word to file stream */
 void
-fputword(s, fp)			/* put (quoted) word to file stream */
-char  *s;
-FILE  *fp;
+fputword(char *s, FILE *fp)
 {
-	int		hasspace = 0;
-	int		quote = 0;
-	register char	*cp;
+	int	hasspace = 0;
+	int	quote = 0;
+	char	*cp;
 					/* check if quoting needed */
 	for (cp = s; *cp; cp++)
 		if (isspace(*cp))
