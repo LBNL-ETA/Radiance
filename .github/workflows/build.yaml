@@ -95,7 +95,7 @@ jobs:
 
   build_OSX:
     name: "Build for OSX"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 20
 
     steps:
@@ -519,7 +519,7 @@ jobs:
   Test_OSX_1:
     needs: [build_OSX]
     name: "Test for OSX 1"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -622,7 +622,7 @@ jobs:
   Test_OSX_2:
     needs: [build_OSX]
     name: "Test for OSX 2"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -675,7 +675,7 @@ jobs:
   Test_OSX_3:
     needs: [build_OSX]
     name: "Test for OSX 3"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -728,7 +728,7 @@ jobs:
   Test_OSX_4:
     needs: [build_OSX]
     name: "Test for OSX 4"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
