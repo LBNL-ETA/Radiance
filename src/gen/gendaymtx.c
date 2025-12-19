@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.44 2025/06/07 05:09:45 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  gendaymtx.c
@@ -640,11 +640,13 @@ main(int argc, char *argv[])
 					-RadToDeg(s_longitude));
 		printf("NROWS=%d\n", nskypatch);
 		printf("NCOLS=%d\n", nstored);
+		if (avgSky)
+			printf("NAVERAGED=%d\n", ntsteps);
 		printf("NCOMP=3\n");
 		if ((outfmt == 'f') | (outfmt == 'd'))
 			fputendian(stdout);
 		fputformat((char *)getfmtname(outfmt), stdout);
-		putchar('\n');
+		fputc('\n', stdout);
 	}
 					/* patches are rows (outer sort) */
 	for (i = 0; i < nskypatch; i++) {
