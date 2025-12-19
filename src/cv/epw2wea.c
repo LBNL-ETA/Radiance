@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: epw2wea.c,v 2.6 2024/08/05 18:02:07 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*  Copyright (c) 2003
  *  National Research Council Canada
@@ -73,7 +73,7 @@ int main( int argc, char  *argv[])
 	fprintf(WEA_FILE,"latitude %s\n",latitude);
 	fscanf(EPW_FILE,",%[^,]s",longitude);
 
-	fprintf(WEA_FILE,"longitude %.2f\n",-1.0*atof(longitude));
+	fprintf(WEA_FILE,"longitude %f\n",-1.0*atof(longitude));
 	fscanf(EPW_FILE,",%[^,]s",time_zone);
 	fprintf(WEA_FILE,"time_zone %.0f\n",-15.0*atoi(time_zone));
 	fscanf(EPW_FILE,",%s[^\n]",elevation);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.37 2024/11/07 17:09:18 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -943,9 +943,9 @@ fpcomment(FILE *fp, char *prefix, char *s) {
   while (*s) {			/* While there are characters left to output */
     fprintf(fp, "%s", prefix);	/* Output the prefix */
     for (; *s && *s != '\n'; s++) /* Output a line */
-      putc(*s, fp);
+      fputc(*s, fp);
     if (*s == '\n') {		/* Including the newline, if any */
-      putc(*s, fp);
+      fputc(*s, fp);
       s++;
     }
   }
@@ -968,14 +968,14 @@ putheader(
 {
 	int	i;
 
-	putc('#', out);
+	fputc('#', out);
 	for (i = 0; i < gargc; i++) {
-		putc(' ', out);
+		fputc(' ', out);
 		fputs(gargv[i], out);
 	}
 	fputs("\n# Dimensions in ", out);
 	fputs(units, out);
-	putc('\n', out);
+	fputc('\n', out);
 }
 
 /* ies2rad - convert an IES LM-63 file to a Radiance light source desc.
@@ -1044,7 +1044,7 @@ ies2rad(		/* convert IES file */
 		/* Output the header line as a comment in the .rad file. */
 		fputs("#<", outfp);
 		fputs(buf, outfp);
-		putc('\n', outfp);
+		fputc('\n', outfp);
 
 		/* For post-1986 version files, process a keyword
 		 * line.  Otherwise, just scan the line for a lamp
@@ -2073,10 +2073,10 @@ cvdata(
 				fprintf(out, "0 0 %d", npts[i]);
 				for (j = 0; j < npts[i]; j++) {
 					if (j%4 == 0)
-						putc('\n', out);
+						fputc('\n', out);
 					fprintf(out, "\t%g", pt[i][j]);
 				}
-				putc('\n', out);
+				fputc('\n', out);
 			}
 		}
 		/* Free the storage containing the angle values. */
@@ -2088,12 +2088,12 @@ cvdata(
 	 * a line. */
 	for (i = 0; i < total; i++) {
 		if (i%4 == 0)
-			putc('\n', out);
+			fputc('\n', out);
 		if (!scnflt(in, &val))
 			return(-1);
 		fprintf(out, "\t%g", val*mult);
 	}
-	putc('\n', out);
+	fputc('\n', out);
 	return(0);
 }
 
@@ -2215,7 +2215,7 @@ cvgeometry(
 		fclose(outfp);
 		return(0);
 	}
-	putc('\n', outfp);
+	fputc('\n', outfp);
 	strcpy(buf, "mgf2rad ");		/* build mgf2rad command */
 	cp = buf+8;
 	if (!FEQ(sinf->mult, 1.0)) {
