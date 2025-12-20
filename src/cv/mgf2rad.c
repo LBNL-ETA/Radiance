@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.36 2025/05/23 17:02:07 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -628,8 +628,8 @@ material(void)			/* get (and print) current material */
 				colval(radrgb,GRN), colval(radrgb,BLU));
 		fprintf(matfp, "\t%f %f %f\n", colval(td_rgb,RED),
 				colval(td_rgb,GRN), colval(td_rgb,BLU));
-		if (c_cmaterial->sided)
-			putsided(mname);
+		/* if (c_cmaterial->sided)
+			putsided(mname); */
 		return(mname);
 	}
 					/* check for trans */
@@ -658,8 +658,8 @@ material(void)			/* get (and print) current material */
 				colval(radrgb,GRN), colval(radrgb,BLU));
 		fprintf(matfp, "\t%f %f %f %f\n", c_cmaterial->rs, a5, a6,
 				c_cmaterial->ts/(c_cmaterial->ts + c_cmaterial->td));
-		if (c_cmaterial->sided)
-			putsided(mname);
+		/* if (c_cmaterial->sided)
+			putsided(mname); */
 		return(mname);
 	}
 					/* check for plastic */
@@ -671,8 +671,8 @@ material(void)			/* get (and print) current material */
 		fprintf(matfp, "5 %f %f %f %f %f\n", colval(radrgb,RED),
 				colval(radrgb,GRN), colval(radrgb,BLU),
 				c_cmaterial->rs, c_cmaterial->rs_a);
-		if (c_cmaterial->sided)
-			putsided(mname);
+		/* if (c_cmaterial->sided)
+			putsided(mname); */
 		return(mname);
 	}
 					/* else it's metal */
@@ -694,8 +694,8 @@ material(void)			/* get (and print) current material */
 			colval(radrgb,GRN), colval(radrgb,BLU),
 			c_cmaterial->rs/(c_cmaterial->rd + c_cmaterial->rs),
 			c_cmaterial->rs_a);
-	if (c_cmaterial->sided)
-		putsided(mname);
+	/* if (c_cmaterial->sided)
+		putsided(mname); */
 	return(mname);
 }
 
