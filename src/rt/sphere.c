@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sphere.c,v 2.10 2023/03/16 00:25:24 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  sphere.c - compute ray intersection with spheres.
@@ -63,15 +63,13 @@ o_sphere(			/* compute intersection with sphere */
 			break;
 	if (i >= nroots)
 		return(0);			/* no positive root */
-	if (rayreject(so, r, t, 0))
+	if (rayreject(so, r, t, 1 - 2*((i>0)^(so->otype==OBJ_BUBBLE))))
 		return(0);			/* previous hit better */
 
 	r->ro = so;
 	r->rot = t;
 					/* compute normal */
-	a = ap[3];
-	if (so->otype == OBJ_BUBBLE)
-		a = -a;			/* reverse */
+	a = ap[3] * (1 - 2*(so->otype==OBJ_BUBBLE));
 	for (i = 0; i < 3; i++) {
 		r->rop[i] = r->rorg[i] + r->rdir[i]*t;
 		r->ron[i] = (r->rop[i] - ap[i]) / a;

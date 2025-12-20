@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.13 2024/11/05 00:20:02 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -101,12 +101,13 @@ o_cone(			/* intersect ray with cone */
 						/* check endpoints */
 		VSUM(rox, r->rorg, r->rdir, root[rn]);
 		VSUB(rdx, rox, CO_P0(co));
-		b = DOT(rdx, co->ad); 
+		b = DOT(rdx, co->ad);
 		if (b < 0.0)
 			continue;		/* before p0 */
 		if (b > co->al)
 			continue;		/* after p1 */
-		if (rayreject(o, r, root[rn], 0))
+		if (rayreject(o, r, root[rn],
+			   1 - 2*((rn>0)^(o->otype==OBJ_CUP|o->otype==OBJ_TUBE))))
 			break;			/* previous hit better */
 		r->ro = o;
 		r->rot = root[rn];

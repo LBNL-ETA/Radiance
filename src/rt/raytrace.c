@@ -570,8 +570,8 @@ rayreject(		/* check if candidate hit is worse than current */
 	} else if (r->rod <= 0) {
 		return(0);		/* new hit front, old did not */
 	}
-			/* earlier modifier definition wins tie */
-	return (r->ro->omod >= o->omod);
+			/* later modifier definition wins tie */
+	return(r->ro->omod >= o->omod);
 }
 
 void
