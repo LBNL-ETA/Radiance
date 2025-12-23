@@ -1,4 +1,4 @@
-{ RCSid $Id: spline.cal,v 1.3 2019/06/10 13:56:52 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Calculation of view parameters for walk-throughs.
 	Uses Catmull-Rom spline.
@@ -13,16 +13,16 @@
 		s(f)	- spline value for f at t where f(i) is value at T(i)
 }
 
-
 or(a,b) : if(a, a, b);
 
 hermite(p0,p1,r0,r1,t) :	p0 * ((2*t-3)*t*t+1) +
 				p1 * (-2*t+3)*t*t +
 				r0 * (((t-2)*t+1)*t) +
 				r1 * ((t-1)*t*t);
-Ttot : sum(T,T(0));
 
 sum(f,n) : if(n-.5, f(n)+sum(f,n-1), 0);
+
+Ttot : sum(T,T(0));
 
 tfrac =	(t-sum(T,below))/T(above);
 
