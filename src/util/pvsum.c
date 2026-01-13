@@ -366,7 +366,7 @@ solo_process(void)
 {
 	float	*osum = (float *)calloc((size_t)xres*yres, sizeof(float)*ncomp);
 	COLORV	*iscan = (COLORV *)malloc(sizeof(COLORV)*ncomp*xres);
-	char	fbuf[512];
+	char	fnout[256], fninp[256];
 	int	c;
 
 	if (!osum | !iscan) {
@@ -390,11 +390,11 @@ solo_process(void)
 						gargv[0]);
 				return(0);
 			}
-			sprintf(fbuf, out_spec, c);
+			sprintf(fnout, out_spec, c);
 			if (!row0) {	/* new output (clobbers prev. file) */
-				fout = open_output(fbuf, c-(cmtx->ncols==1));
+				fout = open_output(fnout, c-(cmtx->ncols==1));
 			} else {	/* else another pass -- get prev. data */
-				fout = open_iofile(fbuf, c);
+				fout = open_iofile(fnout, c);
 				if (!reload_data(osum, fout))
 					return(0);
 			}
@@ -404,7 +404,7 @@ solo_process(void)
 						gargv[0]);
 				return(0);
 			}
-			strcpy(fbuf, "<stdout>");
+			strcpy(fnout, "<stdout>");
 			fout = open_output(NULL, c-(cmtx->ncols==1));
 		}
 		if (!fout)
@@ -420,8 +420,8 @@ solo_process(void)
 				if (cval[i] != 0) break;
 			if (i < 0)	/* this coefficient is zero, skip */
 				continue;
-			sprintf(fbuf, in_spec, r);
-			finp = open_iofile(fbuf, -1);
+			sprintf(fninp, in_spec, r);
+			finp = open_iofile(fninp, -1);
 			if (!finp)
 				return(0);
 			for (y = 0; y < yres; y++) {
@@ -447,9 +447,9 @@ solo_process(void)
 					(size_t)xres*yres)
 			goto writerr;
 
-		if (out_spec && out_spec[0] == '!') {
+		if (fnout[0] == '!') {
 			if (pclose(fout) != 0) {
-				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
+				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fnout);
 				return(0);
 			}
 		} else if (fout != stdout && fclose(fout) == EOF)
@@ -459,10 +459,10 @@ solo_process(void)
 	free(iscan);
 	return(1);
 readerr:
-	fprintf(stderr, "%s: read error\n", fbuf);
+	fprintf(stderr, "%s: read error\n", fninp);
 	return(0);
 writerr:
-	fprintf(stderr, "%s: write error\n", fbuf);
+	fprintf(stderr, "%s: write error\n", fnout);
 	return(0);
 }
 
@@ -501,7 +501,7 @@ multi_process(void)
 	int	odd = 0;
 	float	*osum = NULL;
 	int	*syarr = NULL;
-	char	fbuf[512];
+	char	fnout[256], fninp[256];
 	int	c;
 					/* sanity check */
 	if (sizeof(float) != sizeof(COLORV)) {
@@ -531,14 +531,14 @@ multi_process(void)
 		FILE	*fout;
 		int	y;
 					/* create/load output */
-		sprintf(fbuf, out_spec, c);
+		sprintf(fnout, out_spec, c);
 		if (!row0) {		/* new output (clobbers prev. file) */
-			fout = open_output(fbuf, c);
+			fout = open_output(fnout, c);
 			if (!fout) return(0);
 			if (c > coff)	/* clear accumulator? */
 				memset(osum, 0, sizeof(float)*ncomp*xres*yres);
 		} else {		/* else reload for another pass */
-			fout = open_iofile(fbuf, c);
+			fout = open_iofile(fnout, c);
 			if (!reload_data(osum, fout))
 				return(0);
 		}
@@ -555,17 +555,17 @@ multi_process(void)
 				if (cval[i] != 0) break;
 			if (i < 0)	/* this coefficient is zero, skip */
 				continue;
-			sprintf(fbuf, in_spec, r);
-			finp = open_iofile(fbuf, -1);
+			sprintf(fninp, in_spec, r);
+			finp = open_iofile(fninp, -1);
 			if (!finp)
 				return(0);
 			dstart = ftell(finp);
 			if (dstart < 0) {
-				fprintf(stderr, "%s: ftell() failed!\n", fbuf);
+				fprintf(stderr, "%s: ftell() failed!\n", fninp);
 				return(0);
 			}
 			if (in_type == DTfloat && dstart%sizeof(float)) {
-				fprintf(stderr, "%s: float header misalignment\n", fbuf);
+				fprintf(stderr, "%s: float header misalignment\n", fninp);
 				return(0);
 			}
 			i = in_type==DTfloat ? ncomp*(int)sizeof(float) : ncomp+1;
@@ -574,7 +574,7 @@ multi_process(void)
 					MAP_FILE|MAP_SHARED, fileno(finp), 0);
 			fclose(finp);		/* will read from map (randomly) */
 			if (imap == MAP_FAILED) {
-				fprintf(stderr, "%s: unable to map input file\n", fbuf);
+				fprintf(stderr, "%s: unable to map input file\n", fninp);
 				return(0);
 			}
 			if (in_type == DTfloat)
@@ -608,9 +608,9 @@ multi_process(void)
 					(size_t)xres*yres)
 			goto writerr;
 
-		if (out_spec[0] == '!') {
+		if (fnout[0] == '!') {
 			if (pclose(fout) != 0) {
-				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
+				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fnout);
 				return(0);
 			}
 		} else if (fclose(fout) == EOF)
@@ -635,7 +635,7 @@ multi_process(void)
 	}
 	return(c == 0);
 writerr:
-	fprintf(stderr, "%s: write error\n", fbuf);
+	fprintf(stderr, "%s: write error\n", fnout);
 	return(0);
 }
 
