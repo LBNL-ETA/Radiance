@@ -391,12 +391,13 @@ solo_process(void)
 				return(0);
 			}
 			sprintf(fbuf, out_spec, c);
-			if (row0) {	/* another pass -- get prev. data */
+			if (!row0) {	/* new output (clobbers prev. file) */
+				fout = open_output(fbuf, c-(cmtx->ncols==1));
+			} else {	/* else another pass -- get prev. data */
 				fout = open_iofile(fbuf, c);
 				if (!reload_data(osum, fout))
 					return(0);
-			} else		/* else new output (clobbers prev. file) */
-				fout = open_output(fbuf, c-(cmtx->ncols==1));
+			}
 		} else {			/* else stdout */
 			if ((out_type == DTfloat) & (cmtx->ncols > 1)) {
 				fprintf(stderr, "%s: float outputs must have separate destinations\n",
@@ -446,7 +447,7 @@ solo_process(void)
 					(size_t)xres*yres)
 			goto writerr;
 
-		if (fbuf[0] == '!') {
+		if (out_spec && out_spec[0] == '!') {
 			if (pclose(fout) != 0) {
 				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
 				return(0);
@@ -531,15 +532,15 @@ multi_process(void)
 		int	y;
 					/* create/load output */
 		sprintf(fbuf, out_spec, c);
-		if (row0) {		/* making another pass? */
-			fout = open_iofile(fbuf, c);
-			if (!reload_data(osum, fout))
-				return(0);
-		} else {		/* else new output (clobbers prev. file) */
+		if (!row0) {		/* new output (clobbers prev. file) */
 			fout = open_output(fbuf, c);
 			if (!fout) return(0);
 			if (c > coff)	/* clear accumulator? */
 				memset(osum, 0, sizeof(float)*ncomp*xres*yres);
+		} else {		/* else reload for another pass */
+			fout = open_iofile(fbuf, c);
+			if (!reload_data(osum, fout))
+				return(0);
 		}
 		while (rc-- > 0) {	/* map & sum each input file */
 			const int	r = odd ? row0 + rc : rowN-1 - rc;
@@ -607,7 +608,7 @@ multi_process(void)
 					(size_t)xres*yres)
 			goto writerr;
 
-		if (fbuf[0] == '!') {
+		if (out_spec[0] == '!') {
 			if (pclose(fout) != 0) {
 				fprintf(stderr, "%s: bad status from: %s\n", gargv[0], fbuf);
 				return(0);
