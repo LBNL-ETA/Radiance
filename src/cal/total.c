@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.16 2022/03/24 22:26:50 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -13,12 +13,12 @@ static const char	RCSid[] = "$Id: total.c,v 1.16 2022/03/24 22:26:50 greg Exp $"
 #include  "platform.h"
 #include  "rtio.h"
 
-#define  MAXCOL		8192		/* maximum number of columns */
+#define  MAXCOL		81920		/* maximum number of columns */
 
 #define  ADD		0		/* add numbers */
 #define  MULT		1		/* multiply numbers */
-#define  MAX		2		/* maximum */
-#define  MIN		3		/* minimum */
+#define  VMAX		2		/* maximum */
+#define  VMIN		3		/* minimum */
 
 double  init_val[] = {0., 1., -1e12, 1e12};	/* initial values */
 
@@ -62,10 +62,10 @@ char  *argv[]
 					power = atof(argv[a]+2);
 					break;
 				case 'u':
-					func = MAX;
+					func = VMAX;
 					break;
 				case 'l':
-					func = MIN;
+					func = VMIN;
 					break;
 				case 't':
 					tabc = argv[a][2];
@@ -141,11 +141,11 @@ char  *argv[]
 		exit(1);
 	}
 	if (mean) {
-		if (func == MAX) {
+		if (func == VMAX) {
 			fprintf(stderr, "%s: average maximum?!\n", argv[0]);
 			exit(1);
 		}
-		if (func == MIN) {
+		if (func == VMIN) {
 			fprintf(stderr, "%s: average minimum?!\n", argv[0]);
 			exit(1);
 		}
@@ -304,11 +304,11 @@ char  *fname
 					if (rsign[n])
 						tally[n] += log(inpval[n]);
 					break;
-				case MAX:
+				case VMAX:
 					if (inpval[n] > tally[n])
 						tally[n] = inpval[n];
 					break;
-				case MIN:
+				case VMIN:
 					if (inpval[n] < tally[n])
 						tally[n] = inpval[n];
 					break;
