@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.62 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -444,8 +444,8 @@ init(void)					/* perform final setup */
 	} else
 		varset(vwhteff, ':', WHTEFFICACY);
 						/* these may be overridden */
-	varset(vxres, ':', (double)xmax);
-	varset(vyres, ':', (double)ymax);
+	varset(vxres, '=', (double)xmax);
+	varset(vyres, '=', (double)ymax);
 }
 
 
