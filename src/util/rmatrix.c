@@ -806,9 +806,10 @@ RMATRIX *
 rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 {
 	RMATRIX	*mres;
+	double	val[MAXCOMP];
 	int	i, j, k, h;
 
-	if (!m1 | !m2 || !m1->mtx | !m2->mtx |
+	if (!m1 | !m2 || !m1->mtx | !m2->mtx | (m1->ncomp > MAXCOMP) |
 			(m1->ncomp != m2->ncomp) | (m1->ncols != m2->nrows))
 		return(NULL);
 	mres = rmx_alloc(m1->nrows, m2->ncols, m1->ncomp);
@@ -820,14 +821,17 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	else
 		rmx_addinfo(mres, rmx_mismatch_warn);
 	for (i = mres->nrows; i--; )
-	    for (j = mres->ncols; j--; )
-	        for (k = mres->ncomp; k--; ) {
-		    double	d = 0;
-		    for (h = m1->ncols; h--; )
-			d += (double)rmx_val(m1,i,h)[k] *
-					rmx_val(m2,h,j)[k];
-		    rmx_lval(mres,i,j)[k] = (rmx_dtype)d;
+	    for (j = mres->ncols; j--; ) {
+		memset(val, 0, sizeof(double)*mres->ncomp);
+		for (h = m1->ncols; h--; ) {
+		    const rmx_dtype	*p1 = rmx_val(m1,i,h);
+		    const rmx_dtype	*p2 = rmx_val(m2,h,j);
+		    for (k = 0; k < mres->ncomp; k++)
+			val[k] += (double)*p1++ * *p2++;
 		}
+		for (k = mres->ncomp; k--; )
+		    rmx_lval(mres,i,j)[k] = (rmx_dtype)val[k];
+	    }
 	return(mres);
 }
 
