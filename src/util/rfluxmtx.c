@@ -405,7 +405,7 @@ parse_params(PARAMS *p, char *pargs)
 		}
 		break;
 	}
-	fprintf(stderr, "%s: bad parameter string: %s", progname, pargs);
+	fprintf(stderr, "%s: bad parameter string:%s", progname, pargs);
 	exit(1);
 	return(-1);	/* pro forma return */
 }

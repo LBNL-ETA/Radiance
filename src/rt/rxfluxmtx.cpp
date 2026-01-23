@@ -292,7 +292,7 @@ parse_params(PARAMS *p, char *pargs)
 		}
 		break;
 	}
-	sprintf(errmsg, "bad parameter string: %s", pargs);
+	sprintf(errmsg, "bad parameter string:%s", pargs);
 	error(USER, errmsg);
 	return(-1);	/* pro forma return */
 }
