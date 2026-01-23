@@ -102,6 +102,9 @@ loadEPW.o -lrtrad $(MLIB)
 genglaze: genglaze.o
 	$(CC) $(CFLAGS) -o genglaze genglaze.o -lrtrad $(MLIB)
 
+testEPW:	loadEPW.c loadEPW.h
+	$(CC) $(CFLAGS) -DTEST_MAIN -o testEPW loadEPW.c $(MLIB)
+
 mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
