@@ -479,7 +479,8 @@ add_direct
 		float *pdest = parr + NSSAMP * near_patch[i];
 		int k;
 		for (k = 0; k < NSSAMP; k++) {
-			*pdest++ += sun_radiance[k] * wta[i] / wtot;
+			*pdest++ += sun_radiance[k] * wta[i] / wtot
+					* SOLOMG / rh_dom[near_patch[i]];
 		}
 	}
 }
@@ -819,8 +820,8 @@ main
 		}
 		sun_ct = fdot(view_point, sundir) / ER;
 
-		dni = erec.dirillum;
-		dhi = erec.diffillum;
+		dni = EPWisset(&erec,dirillum) ? erec.dirillum : -1.;
+		dhi = EPWisset(&erec,diffillum) ? erec.diffillum : -1.;
 
 		mtx_offset = NSSAMP * nskypatch * nstored;
 		nstored += 1;
