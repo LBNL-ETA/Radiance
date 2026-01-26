@@ -2874,3 +2874,9 @@ equivalent to linear interpolation of receiver bins, rather than
 the default piecewise constant representation (-bj 0).
 
 Added rtrace -pA option for total radiometric flux output.
+
+Fixed major bug in gensdaymtx that was causing the solar contributions
+to be about 40x what they should have been.
+
+Fixed major bug in genssky where it was not using the correct location
+information.
