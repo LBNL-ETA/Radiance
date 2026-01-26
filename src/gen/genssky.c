@@ -701,10 +701,6 @@ main
 	}
 	got_meridian = cvthour(argv[3], &tsolar, &hour);
 
-	if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
-		fprintf(stderr, "Cannot compute solar angle\n");
-		exit(1);
-	}
 
 	for (i = 4; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -776,6 +772,11 @@ main
 			"longitude\n",
 			progname,
 			(s_longitude - s_meridian) * 12 / PI);
+	}
+
+	if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
+		fprintf(stderr, "Cannot compute solar angle\n");
+		exit(1);
 	}
 
 	Atmosphere clear_atmos = init_atmos(aod, grefl);
