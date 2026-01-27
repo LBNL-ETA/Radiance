@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: expandarg.c,v 2.11 2019/12/28 18:05:13 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Get additional command arguments from file or environment.
@@ -8,8 +8,6 @@ static const char	RCSid[] = "$Id: expandarg.c,v 2.11 2019/12/28 18:05:13 greg Ex
  */
 
 #include "copyright.h"
-
-#include <errno.h>
 
 #include "rtio.h"
 #include "rtmisc.h"
@@ -35,7 +33,6 @@ expandarg(		/* expand list at argument n */
 					/* check argument */
 	if (n >= *acp)
 		return(0);
-	errno = 0;	
 	if ((*avp)[n][0] == filexpchr) {		/* file name */
 		ace = wordfile(ave, MAXARGEXP, (*avp)[n]+1);
 		if (ace < 0)

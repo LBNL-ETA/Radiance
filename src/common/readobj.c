@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.31 2025/06/24 21:04:16 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -271,7 +271,6 @@ newobject(void)				/* get a new object */
 	if ((nobjects & (OBJBLKSIZ-1)) == 0) {	/* new block */
 		i = nobjects >> OBJBLKSHFT;
 		optimize_objblock(i-1);		/* optimize previous block */
-		errno = 0;
 		if (i >= MAXOBJBLK)
 			return(OVOID);
 		objblock[i] = (OBJREC *)calloc(OBJBLKSIZ+OBJMEMOPT,

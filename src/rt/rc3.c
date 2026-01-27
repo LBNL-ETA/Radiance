@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.26 2024/07/02 23:54:16 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -382,7 +382,6 @@ tryagain:				/* catch up with output? */
 	if (!nr)			/* nothing to wait for? */
 		return(-1);
 	if ((nr > 1) | (pmode == &polling)) {
-		errno = 0;
 		nr = select(n, &readset, NULL, &errset, pmode);
 		if (!nr) {
 			pmode = NULL;	/* try again, blocking this time */
@@ -488,7 +487,6 @@ next_child_ready()
 		if (kidpr[i].r >= n)
 			n = kidpr[i].r + 1;
 	}
-	errno = 0;
 	n = select(n, NULL, &writeset, &errset, NULL);
 	if (n < 0)
 		error(SYSTEM, "select() error in next_child_ready()");

@@ -47,6 +47,7 @@ static double  ebotch(EPNODE *);
 unsigned int  esupport =		/* what to support */
 		E_VARIABLE | E_FUNCTION ;
 
+int  calexpr_errno;			/* used under Windows */
 int  eofc = 0;				/* optional end-of-file character */
 int  nextc;				/* lookahead character */
 

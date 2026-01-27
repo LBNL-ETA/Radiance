@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.38 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -88,7 +88,6 @@ rview(void)				/* do a view */
 	for ( ; ; ) {			/* quit in command() */
 		while (hresolu <= 1<<pdepth && vresolu <= 1<<pdepth)
 			command("done: ");
-		errno = 0;
 		if (hresolu <= psample<<pdepth && vresolu <= psample<<pdepth) {
 			sprintf(buf, "%d sampling...\n", 1<<pdepth);
 			(*dev->comout)(buf);

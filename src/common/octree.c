@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: octree.c,v 2.8 2009/11/01 04:41:55 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  octree.c - routines dealing with octrees and cubes.
@@ -27,7 +27,6 @@ octalloc()			/* allocate an octree */
 	}
 	freet = treetop;
 	if (octti(freet) == 0) {
-		errno = 0;
 		if (octbi(freet) >= MAXOBLK)
 			return(EMPTY);
 		if ((octblock[octbi(freet)] = (OCTREE *)malloc(

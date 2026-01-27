@@ -2886,3 +2886,8 @@ applied to Phong-smoothed surfaces.  This has been a long-standing
 issue, and the fix is a bit of a hack as it relies on the first
 surface modifier being named "Phong", which corresponds to the
 current output of genrev and gensurf when using the -s option.
+
+TW did some profiling on Windows and found a lot of time being
+spent in setting and checking errno, which is a system call there
+(unlike Unix).  A workaround was found that reduces this time and
+can make a 35% or better speed-up with rcontrib.
