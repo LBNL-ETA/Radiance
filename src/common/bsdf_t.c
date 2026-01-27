@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.54 2022/01/25 01:34:20 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  bsdf_t.c
@@ -19,6 +19,7 @@ static const char RCSid[] = "$Id: bsdf_t.c,v 3.54 2022/01/25 01:34:20 greg Exp $
 #include "bsdf.h"
 #include "bsdf_t.h"
 #include "hilbert.h"
+#include "random.h"
 
 /* Callback function type for SDtraverseTre() */
 typedef int	SDtreCallback(float val, const double *cmin, double csiz,
@@ -931,7 +932,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* convert Hilbert index to vector */
 	hilbert_i2c(2, nBitsC, hndx, hcoord);
 	for (i = 2; i--; )
-		gpos[i] = ((double)hcoord[i] + rand()*(1./(RAND_MAX+.5))) /
+		gpos[i] = ((double)hcoord[i] + frandom()) /
 				(double)((bitmask_t)1 << nBitsC);
 	square2disk(gpos, gpos[0], gpos[1]);
 					/* compute Z-coordinate */

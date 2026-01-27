@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.17 2021/12/07 23:49:50 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id: testBSDF.c,v 1.17 2021/12/07 23:49:50 greg Exp
 #include <math.h>
 #include <ctype.h>
 #include "rtio.h"
+#include "random.h"
 #include "bsdf.h"
 
 static void
@@ -166,7 +167,7 @@ main(int argc, char *argv[])
 			while (i-- > 0) {
 				VCOPY(vout, vin);
 				if (SDreportError(SDsampBSDF(&val, vout,
-						(i+rand()*(1./(RAND_MAX+.5)))/(double)n,
+						(i+rand()*frandom())/(double)n,
 						sflags, bsdf), stderr))
 					break;
 				printf("%.8f %.8f %.8f ", vout[0], vout[1], vout[2]);

@@ -1,4 +1,4 @@
-# RCSid $Id: CMakeLists.txt,v 1.25 2025/07/24 01:24:01 greg Exp $
+# RCSid $Id$
 
 set(rtrad_SOURCES
   addobjnotify.c
@@ -110,7 +110,7 @@ if(UNIX)
     list(APPEND rtrad_SOURCES strnstr.c strlcpy.c)
   endif()
 else()
-  list(APPEND rtrad_SOURCES win_process.c win_popen.c win_usleep.c strnstr.c strlcpy.c strncasecmp.c)
+  list(APPEND rtrad_SOURCES win_process.c win_popen.c win_usleep.c strnstr.c strlcpy.c strncasecmp.c random.c)
 endif()
 
 add_library(rtrad ${rtrad_SOURCES})

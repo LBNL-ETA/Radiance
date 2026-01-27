@@ -2891,3 +2891,10 @@ TW did some profiling on Windows and found a lot of time being
 spent in setting and checking errno, which is a system call there
 (unlike Unix).  A workaround was found that reduces this time and
 can make a 35% or better speed-up with rcontrib.
+
+TW replaced calls to rand() under Windows with better, faster
+random number generator.  Unix not affected as rand48() works
+well enough.
+
+Made a list of tools that do and do not support hyperspectral
+data and put it in "doc/notes/hyperspectral.txt".

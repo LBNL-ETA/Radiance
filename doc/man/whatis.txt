@@ -1,0 +1,149 @@
+# RCSid $Id$
+
+arch2rad(1)              - convert Architrion text file to RADIANCE description
+bgraph(1)                - do a set of batch graphs to a metafile
+bsdf2klems(1)            - generate XML Klems matrix description of a BSDF
+bsdf2rad(1)              - create a RADIANCE visualization of a BSDF representation
+bsdf2ttree(1)            - generate XML tensor tree description of a BSDF
+bsdfview(1)              - view a BSDF representation
+cnt(1)                   - index counter
+compamb(1)               - compute good ambient value for a rad input file
+cv(1)                    - convert between metafile formats
+dayfact(1)               - compute illuminance and daylight factor on workplane
+dcglare(1)               - compute glare in annual simulation time-step(s) via matrix multiplication
+dctimestep(1)            - compute annual simulation time-step(s) via matrix multiplication
+dgraph(1)                - do a set of graphs to a dumb terminal
+epw2wea(1)               - weather file converter
+ev(1)                    - evaluate expressions
+evalglare(1), evalglare (version v2.10)(1) - determines and evaluates glare sources within a 180 degree fisheye HDR image
+falsecolor(1)            - make a false color RADIANCE picture
+fieldcomb(1)             - combine two or more field frames for video animation
+findglare(1)             - locate glare sources in a RADIANCE scene
+gcomp(1)                 - do computations on a graph file
+genBSDF(1)               - generate BSDF description from Radiance or MGF input
+genblinds(1)             - generate a RADIANCE description of venetian blinds
+genbox(1)                - generate a RADIANCE or Wavefront description of a box
+genclock(1)              - generate a RADIANCE description of a clock
+gendaylit(1)             - generates a RADIANCE description of the daylight sources using Perez models for direct and diffuse components
+gendaymtx(1)             - generate an annual Perez sky matrix from a weather tape
+genglaze(1)              - calculate multi-layer glazing optical properties
+genklemsamp(1)           - generate ray samples over surfaces using Klems BSDF basis
+genprism(1)              - generate a RADIANCE description of a prism
+genrev(1)                - generate a RADIANCE description of surface of revolution
+gensdaymtx(1)            - generate an annual spectral sky matrix from a weather tape
+gensky(1)                - generate a RADIANCE description of the sky
+genskyvec(1)             - compute patch radiance averages for a specific sky
+genssky(1)               - generates a RADIANCE description of the spectral daylight sources
+gensurf(1)               - generate a RADIANCE or Wavefront description of a curved surface
+genworm(1)               - generate a RADIANCE description of a functional worm
+getbbox(1)               - compute bounding box for RADIANCE scene
+getinfo(1)               - get header information from a RADIANCE file
+glare(1)                 - perform glare and visual comfort calculations
+glarendx(1)              - calculate glare index
+glrad(1)                 - render a RADIANCE scene using OpenGL
+histo(1)                 - compute 1-dimensional histogram of N data columns
+icalc(1)                 - interactive calculator
+ies2rad(1)               - convert IES luminaire data to RADIANCE description
+igraph(1)                - interactive graphing program
+lampcolor(1)             - compute spectral radiance for diffuse emitter
+lookamb(1)               - examine ambient file values
+ltpict(1)                - render a four-view image of a light source
+ltview(1)                - view photometry of a light source
+macbethcal(1)            - compute color compensation based on measured Macbeth chart
+meta2bmp(1)              - convert metafile to Windows Bitmap (BMP) File
+meta2tga(1)              - convert metafile to Targa image format
+mgf2meta(1)              - convert Materials and Geometry Format file to Metafile graphics
+mgf2rad(1)               - convert Materials and Geometry Format file to RADIANCE description
+mkillum(1)               - compute illum sources for a RADIANCE scene
+mkpmap(1)                - generate RADIANCE photon map
+mksource(1)              - compute distant sources for RADIANCE image-based lighting
+neaten(1)                - neaten up output columns
+normpat(1)               - normalize RADIANCE pictures for use as patterns
+normtiff(1)              - tone-map and convert RADIANCE picture or HDR TIFF to standard TIFF
+obj2mesh(1)              - create a compiled RADIANCE mesh file from Wavefront .OBJ input
+obj2rad(1)               - convert Wavefront .OBJ file to RADIANCE description
+objline(1)               - create metafile line drawings of RADIANCE object(s)
+objview(1)               - view RADIANCE object(s)
+oconv(1)                 - create an octree from a RADIANCE scene description
+pabopto2bsdf(1)          - convert BSDF measurements to a scattering interpolant representation
+pabopto2xyz(1)           - convert a collection of single-channel BSDF measurements to CIE-XYZ colorimetry
+pcomb(1)                 - combine RADIANCE pictures and/or float matrices
+pcompos(1)               - composite RADIANCE pictures
+pcond(1)                 - condition a RADIANCE picture for output
+pdfblur(1)               - generate views for depth-of-field blurring
+pexpand(1)               - expand requested commands in metafile
+pextrem(1)               - find minimum and maximum values in RADIANCE picture
+pfilt(1)                 - filter a RADIANCE picture
+pflip(1)                 - flip a RADIANCE picture
+phisto(1)                - compute a luminance histogram from one or more RADIANCE pictures
+pinterp(1)               - interpolate/extrapolate view from pictures
+pkgBSDF(1)               - package BSDFs provided as XML for Radiance
+plotin(1)                - convert plot(5) to metafile(5) primitives
+pmapdump(1)              - generate RADIANCE scene description or point list representing photon positions and (optionally) flux
+pmblur(1)                - generate views for camera motion blurring
+pmblur2(1)               - apply motion blur to a frame from an animation
+pmdblur(1)               - generate views for combined camera motion and depth blurring
+protate(1)               - rotate a RADIANCE picture
+psign(1)                 - produce a RADIANCE picture from text
+psketch(1)               - apply non-photorealistic rendering to select objects in picture
+psmeta(1)                - convert metafile to PostScript
+psort(1)                 - sort primitives in metafile as requested
+pvalue(1)                - convert RADIANCE picture to/from alternate formats
+pvsum(1)                 - sum component Radiance pictures based on vector or matrix
+ra_bmp(1)                - convert RADIANCE picture to/from Windows BMP image
+ra_gif(1)                - convert RADIANCE picture to Compuserve GIF
+ra_pict(1)               - convert Radiance pictures to Macintosh PICT files
+ra_ppm(1)                - convert RADIANCE picture to/from a Poskanzer Portable Pixmap
+ra_ps(1)                 - convert RADIANCE picture to a PostScript file
+ra_rgbe(1)               - convert between different RADIANCE picture types
+ra_t16(1)                - convert RADIANCE picture to/from Targa 16 or 24-bit image file
+ra_t8(1)                 - convert RADIANCE picture to/from Targa 8-bit image file
+ra_tiff(1)               - convert RADIANCE picture to/from a TIFF color or greyscale image
+ra_xyze(1)               - convert between RADIANCE RGBE and XYZE formats
+rad(1)                   - render a RADIANCE scene
+rad2mgf(1)               - convert RADIANCE scene description to Materials and Geometry Format
+raddepend(1)             - find RADIANCE scene dependencies
+ran2tiff(1)              - expose and convert a RADIANCE animation to TIFF frames
+ranimate(1)              - compute a RADIANCE animation
+ranimove(1)              - render a RADIANCE animation with motion
+rcalc(1)                 - record calculator
+rcode2bmp(1)             - convert identifier, depth, and normal maps to BMP images
+rcode_depth(1)           - encode/decode 16-bit depth map
+rcode_ident(1)           - store identifiers in an indexed map and retrieve from same
+rcode_norm(1)            - encode/decode 32-bit surface normal map
+rcollate(1)              - resize or re-order matrix data
+rcomb(1)                 - combine and convert matrices a row at a time
+rcontrib(1)              - compute contribution coefficients in a RADIANCE scene
+rcrop(1)                 - crop RADIANCE matrix or picture
+replmarks(1)             - replace triangular markers in a RADIANCE scene description
+rfluxmtx(1)              - compute flux transfer matrix(es) for RADIANCE scene
+rhcopy(1)                - copy ray information to/from a holodeck
+rhinfo(1)                - print information about a RADIANCE holodeck file
+rholo(1)                 - generate/view a RADIANCE holodeck
+rhoptimize(1)            - optimize beam locations in holodeck file
+rhpict(1)                - render a RADIANCE picture from a holodeck file
+rlam(1)                  - laminate records from multiple files
+rmtxop(1)                - concatenate, add, multiply, divide, transpose, scale, and convert matrices
+robjutil(1)              - operate on Wavefront .OBJ file
+rpict(1)                 - generate a RADIANCE picture
+rpiece(1)                - render pieces of a RADIANCE picture
+rsensor(1)               - compute sensor signal from a RADIANCE scene
+rsplit(1)                - splits standard input into multiple output files or streams
+rtpict(1)                - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
+rtrace(1)                - trace rays in RADIANCE scene
+rvu(1)                   - generate RADIANCE images interactively
+rxfluxmtx(1)             - compute flux transfer matrix(es) for RADIANCE scene
+rxpiece(1)               - render tiles in a RADIANCE picture/depth buffer
+tabfunc(1)               - convert table to functions for rcalc, etc
+tmesh2rad(1)             - convert a triangular mesh to a RADIANCE scene description
+total(1)                 - sum up columns
+trad(1)                  - graphical user interface to Radiance rad(1) program
+ttyimage(1)              - RADIANCE driver for dumb ASCII terminal
+vwrays(1)                - compute rays for a given picture or view
+vwright(1)               - normalize a RADIANCE view, shift it to the right
+wrapBSDF(1)              - put XML wrapper around WINDOW6 BSDF data
+x11meta(1)               - output metafile graphics to X11
+xform(1)                 - transform a RADIANCE scene description
+xglaresrc(1)             - dislpay glare sources under X11
+ximage(1)                - RADIANCE picture display for X window system
+xshowtrace(1)            - interactively show rays traced on RADIANCE image under X11

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.13 2024/01/04 16:14:50 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Spectral color handling routines
@@ -9,10 +9,7 @@ static const char RCSid[] = "$Id: ccolor.c,v 3.13 2024/01/04 16:14:50 greg Exp $
 #include <stdlib.h>
 #include <math.h>
 #include "ccolor.h"
-
-#undef frand
-#define frand()	(rand()*(1./(RAND_MAX+.5)))
-
+#include "random.h"
 					/* Sharp primary matrix */
 float	XYZtoSharp[3][3] = {
 	{ 1.2694, -0.0988, -0.1706},
@@ -189,9 +186,9 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 				pos++;
 			}
 			if ((wl+.01 >= wl0) & (wl-.01 <= wl0))
-				clr->ssamp[i] = scale*va[pos] + frand();
+				clr->ssamp[i] = scale*va[pos] + frandom();
 			else		/* interpolate if necessary */
-				clr->ssamp[i] = frand() + scale / wlstep *
+				clr->ssamp[i] = frandom() + scale / wlstep *
 						( va[pos]*(wl0+wlstep - wl) +
 							va[pos+1]*(wl - wl0) );
 			clr->ssum += clr->ssamp[i];
@@ -278,7 +275,7 @@ c_ccvt(C_COLOR *clr, int fl)
 		clr->ssum = 0;
 		for (i = 0; i < C_CNSS; i++) {
 			clr->ssamp[i] = x*cie_xp.ssamp[i] + y*cie_yp.ssamp[i]
-					+ z*cie_zp.ssamp[i] + frand();
+					+ z*cie_zp.ssamp[i] + frandom();
 			if (clr->ssamp[i] < 0)		/* out of gamut! */
 				clr->ssamp[i] = 0;
 			else
@@ -337,7 +334,7 @@ c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 		scale = C_CMAXV / scale;
 		cres->ssum = 0;
 		for (i = 0; i < C_CNSS; i++)
-			cres->ssum += cres->ssamp[i] = scale*cmix[i] + frand();
+			cres->ssum += cres->ssamp[i] = scale*cmix[i] + frandom();
 		cres->flags = C_CDSPEC|C_CSSPEC;
 	} else {					/* CIE xy mixing */
 		c_ccvt(c1, C_CSXY);
@@ -427,7 +424,7 @@ c_bbtemp(C_COLOR *clr, double tk)
 	clr->ssum = 0;
 	for (i = 0; i < C_CNSS; i++) {
 		wl = (C_CMINWL + i*C_CWLI)*1e-9;
-		clr->ssum += clr->ssamp[i] = sf*bbsp(wl,tk) + frand();
+		clr->ssum += clr->ssamp[i] = sf*bbsp(wl,tk) + frandom();
 	}
 	clr->flags = C_CDSPEC|C_CSSPEC;
 	return(1);
@@ -449,10 +446,10 @@ c_encodeChroma(C_COLOR *clr)
 
 	c_ccvt(clr, C_CSXY);
 	df = UV_NORMF/(-2.*clr->cx + 12.*clr->cy + 3.);
-	ub = 4.*clr->cx*df + frand();
+	ub = 4.*clr->cx*df + frandom();
 	if (ub > 0xff) ub = 0xff;
 	else ub *= (ub > 0);
-	vb = 9.*clr->cy*df + frand();
+	vb = 9.*clr->cy*df + frandom();
 	if (vb > 0xff) vb = 0xff;
 	else vb *= (vb > 0);
 

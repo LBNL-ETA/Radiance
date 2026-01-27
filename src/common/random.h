@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.24 2022/04/21 02:52:40 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -12,14 +12,10 @@ extern "C" {
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
-#if (RAND_MAX <= 65536)
-#define random()	((long)rand()<<16^(long)rand()<<6^(long)rand()>>4)
-#else
-#define random()	rand()
-#endif
-#define srandom(s)	srand((unsigned)(s))
-
-#define frandom()	(rand()*(1./(RAND_MAX+.5)))
+				/* defined in random.c */
+extern void	srandom(unsigned long s);
+extern long	random(void);
+extern double	frandom(void);
 
 #else
 
@@ -51,4 +47,3 @@ extern void	multisamp(double t[], int n, double r);
 }
 #endif
 #endif /* _RAD_RANDOM_H_ */
-
