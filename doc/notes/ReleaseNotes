@@ -2880,3 +2880,9 @@ to be about 40x what they should have been.
 
 Fixed major bug in genssky where it was not using the correct location
 information.
+
+Fixed issue with perturbed ray transmission in transparent materials
+applied to Phong-smoothed surfaces.  This has been a long-standing
+issue, and the fix is a bit of a hack as it relies on the first
+surface modifier being named "Phong", which corresponds to the
+current output of genrev and gensurf when using the -s option.

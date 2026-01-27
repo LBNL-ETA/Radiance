@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_wgmdf.c,v 2.14 2025/06/20 18:05:30 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  Shading function for programmable Ward-Geisler-Moroder-Duer material.
@@ -575,7 +575,8 @@ m_wgmdf(OBJREC *m, RAY *r)
 				specthresh >= pbright(wd.ts.scol)-FTINY);
 					/* get through direction */
 	if (wd.specfl & SP_TRAN && wd.ts.mo.hastexture &&
-			!(r->crtype & (SHADOW|AMBIENT))) {
+			!(r->crtype & (SHADOW|AMBIENT)) &&
+			!usesPhongSmoothing(r->ro)) {
 		for (i = 0; i < 3; i++)	/* perturb */
 			wd.prdir[i] = r->rdir[i] - wd.ts.mo.pnorm[i] + r->ron[i];
 		if ((DOT(wd.prdir,r->ron) > 0) ^ (r->rod > 0))

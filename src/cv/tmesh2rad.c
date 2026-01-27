@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.18 2021/04/15 23:51:04 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -39,7 +39,7 @@ static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.18 2021/04/15 23:51:04 greg Ex
 #define VOIDID		"void"		/* this is defined in object.h */
 
 #define PATNAME		"T-pat"		/* triangle pattern name (reused) */
-#define TEXNAME		"T-nor"		/* triangle texture name (reused) */
+#define TEXNAME		"Phong"		/* triangle texture name (reused) */
 
 #define V_DEFINED	01		/* this vertex is defined */
 #define V_HASNORM	02		/* vertex has surface normal */

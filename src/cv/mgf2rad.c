@@ -499,7 +499,7 @@ do_tri(		/* put out smoothed triangle */
 					/* compute barycentric coords. */
 	if (comp_baryc(&bvecs, v1, v2, v3) < 0)
 		return;				/* degenerate triangle! */
-	printf("\n%s texfunc T-nor\n", mat);	/* put out texture */
+	printf("\n%s texfunc Phong\n", mat);	/* put out texture */
 	printf("4 dx dy dz %s\n0\n", TCALNAME);
 	xf_rotvect(n1, cv1->n);
 	xf_rotvect(n2, cv2->n);

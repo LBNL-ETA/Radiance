@@ -1,4 +1,4 @@
-/* RCSid $Id: rtotypes.h,v 1.8 2024/12/09 00:44:29 greg Exp $ */
+/* RCSid $Id$ */
 /*
  * External functions implementing Radiance object types
  */
@@ -9,6 +9,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+		/* test if RAY's ro surface uses Phong smoothing */
+#define	usesPhongSmoothing(ro)	!strcmp(objptr((ro)->omod)->oname,"Phong")
 
 typedef int otype_implf(OBJREC *o, RAY *r);
 

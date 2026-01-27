@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.33 2025/06/07 05:09:45 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Convert a Wavefront .OBJ file to Radiance format.
@@ -22,7 +22,7 @@ static const char	RCSid[] = "$Id: obj2rad.c,v 2.33 2025/06/07 05:09:45 greg Exp 
 
 
 #define PATNAME		"M-pat"		/* mesh pattern name (reused) */
-#define TEXNAME		"M-nor"		/* mesh texture name (reused) */
+#define TEXNAME		"Phong"		/* mesh texture name (reused) */
 #define DEFOBJ		"unnamed"	/* default object name */
 #define DEFMAT		"white"		/* default material name */
 

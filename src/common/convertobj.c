@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: convertobj.c,v 2.7 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  convertobj.c
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: convertobj.c,v 2.7 2025/06/03 21:31:51 greg Ex
 #include "rterror.h"
 #include "objutil.h"
 
-#define TEXNAME		"T-nor"
+#define TEXNAME		"Phong"
 
 static int      fcnt = 0;			/* face output counter */
 

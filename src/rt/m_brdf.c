@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.44 2024/12/18 17:57:06 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -271,7 +271,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, TRANS, r, sctmp) == 0) {
-		if (hastexture && !(r->crtype & (SHADOW|AMBIENT))) {
+		if (hastexture && !(r->crtype & (SHADOW|AMBIENT)) &&
+					!usesPhongSmoothing(r->ro)) {
 						/* perturb direction */
 			VSUB(sr.rdir, r->rdir, r->pert);
 			if (normalize(sr.rdir) == 0.0) {

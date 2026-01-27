@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.90 2025/06/20 18:05:30 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -248,7 +248,8 @@ m_normal(			/* color a ray that hit something normal */
 			if (!(nd.specfl & SP_PURE) &&
 					specthresh >= nd.tspec-FTINY)
 				nd.specfl |= SP_TBLT;
-			if (!hastexture || r->crtype & (SHADOW|AMBIENT)) {
+			if (!hastexture || r->crtype & (SHADOW|AMBIENT) ||
+						usesPhongSmoothing(r->ro)) {
 				VCOPY(nd.prdir, r->rdir);
 			} else {
 							/* perturb */

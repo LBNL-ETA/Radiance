@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.29 2023/11/15 18:02:52 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -121,7 +121,8 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		smultscolor(scoef, r->pcol);	/* modify by pattern */
 						/* transmitted ray */
 		if (rayorigin(&p, TRANS, r, scoef) == 0) {
-			if (!(r->crtype & (SHADOW|AMBIENT)) && hastexture) {
+			if (hastexture && !(r->crtype & (SHADOW|AMBIENT))
+					&& !usesPhongSmoothing(r->ro)) {
 				VSUM(p.rdir, r->rdir, r->pert, 2.*(1.-rindex));
 				if (normalize(p.rdir) == 0.0) {
 					objerror(m, WARNING, "bad perturbation");

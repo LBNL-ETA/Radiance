@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.26 2024/12/19 23:25:28 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /* 
 
@@ -23,6 +23,7 @@ static const char RCSid[] = "$Id: pmapmat.c,v 2.26 2024/12/19 23:25:28 greg Exp 
 #include "pmapdata.h"
 #include "pmaprand.h"
 #include "otypes.h"
+#include "rtotypes.h"
 #include "data.h"
 #include "func.h"
 #include "bsdf.h"
@@ -437,7 +438,7 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
       /* Specular transmission */
       nd.specfl |= SP_TRAN;
       
-      if (hastexture) {
+      if (hastexture && !usesPhongSmoothing(rayIn -> ro)) {
          /* Perturb */
          for (i = 0; i < 3; i++)
             nd.prdir [i] = rayIn -> rdir [i] - rayIn -> pert [i];
@@ -536,7 +537,8 @@ static int anisoSpecPhotonScatter (ANISODAT *nd, RAY *rayOut)
    if (rayOut -> rtype & TRANS) {
       /* Specular transmission */
 
-      if (DOT(rayIn -> pert, rayIn -> pert) <= sqr(FTINY)) 
+      if (DOT(rayIn -> pert, rayIn -> pert) <= sqr(FTINY) ||
+      			usesPhongSmoothing(rayIn -> ro)) 
          VCOPY(nd -> prdir, rayIn -> rdir);
       else {
          /* perturb */
