@@ -1,0 +1,79 @@
+# RCSid "$Id$"
+
+Hyperspectral rendering was introduced to Radiance in version 6.0,
+released in the second half of 2025.
+
+Not all Radiance commands fully support hyperspectral data where they
+should.  This note tracks which programs and tools fully support
+hyperspectral, which tools partially support it, and which do not.
+Partial support typically means a tool reads hyperspectral data but
+does not write it, and colors may be very approximate.
+Tools that could support hyperspectral data but do not may fail
+if fed such data.  Utilities that have no potential for interaction 
+with hyperspectral data are left off these lists for brevity.
+
+Lists are sorted alphabetically rather than by application areas.
+
+=============================
+Tools that fully support hyperspectral data:
+
+genglaze(1)              - calculate multi-layer glazing optical properties
+gensdaymtx(1)            - generate an annual spectral sky matrix from a weather tape
+genssky(1)               - generates a RADIANCE description of the spectral daylight sources
+mgf2rad(1)               - convert Materials and Geometry Format file to RADIANCE description
+oconv(1)                 - create an octree from a RADIANCE scene description
+pfilt(1)                 - filter a RADIANCE picture
+pvsum(1)                 - sum component Radiance pictures based on vector or matrix
+ra_xyze(1)               - convert between RADIANCE RGBE and XYZE formats
+rcollate(1)              - resize or re-order matrix data
+rcomb(1)                 - combine and convert matrices a row at a time
+rcontrib(1)              - compute contribution coefficients in a RADIANCE scene
+rcrop(1)                 - crop RADIANCE matrix or picture
+rfluxmtx(1)              - compute flux transfer matrix(es) for RADIANCE scene
+rmtxop(1)                - concatenate, add, multiply, divide, transpose, scale, and convert matrices
+rpict(1)                 - generate a RADIANCE picture
+rsensor(1)               - compute sensor signal from a RADIANCE scene
+rtpict(1)                - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
+rtrace(1)                - trace rays in RADIANCE scene
+rvu(1)                   - generate RADIANCE images interactively
+rxfluxmtx(1)             - compute flux transfer matrix(es) for RADIANCE scene
+rxpiece(1)               - render tiles in a RADIANCE picture/depth buffer
+xform(1)                 - transform a RADIANCE scene description
+
+=============================
+Tools that partially support hyperspectral data:
+
+lookamb(1)               - examine ambient file values
+pcond(1)                 - condition a RADIANCE picture for output
+pextrem(1)               - find minimum and maximum values in RADIANCE picture
+phisto(1)                - compute a luminance histogram from one or more RADIANCE pictures
+pvalue(1)                - convert RADIANCE picture to/from alternate formats
+ra_bmp(1)                - convert RADIANCE picture to/from Windows BMP image
+ra_ps(1)                 - convert RADIANCE picture to a PostScript file
+ra_rgbe(1)               - convert between different RADIANCE picture types
+ra_tiff(1)               - convert RADIANCE picture to/from a TIFF color or greyscale image
+rcode2bmp(1)             - convert identifier, depth, and normal maps to BMP images
+ximage(1)                - RADIANCE picture display for X window system
+
+=============================
+Tools that could but do not support hyperspectral data:
+
+dctimestep(1)            - compute annual simulation time-step(s) via matrix multiplication
+gendaylit(1)             - generates a RADIANCE description of the daylight sources using Perez models for direct and diffuse components
+genskyvec(1)             - compute patch radiance averages for a specific sky
+ies2rad(1)               - convert IES luminaire data to RADIANCE description
+lampcolor(1)             - compute spectral radiance for diffuse emitter
+mksource(1)              - compute distant sources for RADIANCE image-based lighting
+pcomb(1)                 - combine RADIANCE pictures and/or float matrices
+pcompos(1)               - composite RADIANCE pictures
+pflip(1)                 - flip a RADIANCE picture
+pinterp(1)               - interpolate/extrapolate view from pictures
+pmapdump(1)              - generate RADIANCE scene description or point list representing photon positions and (optionally) flux
+protate(1)               - rotate a RADIANCE picture
+ra_gif(1)                - convert RADIANCE picture to Compuserve GIF
+ra_pict(1)               - convert Radiance pictures to Macintosh PICT files
+ra_ppm(1)                - convert RADIANCE picture to/from a Poskanzer Portable Pixmap
+rad2mgf(1)               - convert RADIANCE scene description to Materials and Geometry Format
+ranimove(1)              - render a RADIANCE animation with motion
+rpiece(1)                - render pieces of a RADIANCE picture
+ttyimage(1)              - RADIANCE driver for dumb ASCII terminal
