@@ -35,7 +35,9 @@ int  tabc = '\t';			/* default separator */
 int  subtotal = 0;			/* produce subtotals? */
 int  nrecsout = 0;			/* number of records produced */
 
-static int execute(char *fname);
+char  inpbuf[16*MAXCOL];		/* global to avoid using up stack */
+
+int execute(char *fname);
 
 int
 main(
@@ -162,20 +164,19 @@ char  *argv[]
 }
 
 
-static int
+int
 getrecord(			/* read next input record */
 	double field[MAXCOL],
 	FILE *fp
 )
 {
-	char  buf[16*MAXCOL];
 	char  *cp, *num;
 	int   nf;
 						/* reading binary input? */
 	if (nbicols > 0)
 		return(getbinary(field, sizeof(double), nbicols, fp));
 	if (nbicols < 0) {
-		float	*fbuf = (float *)buf;
+		float	*fbuf = (float *)inpbuf;
 		int	i;
 		nf = getbinary(fbuf, sizeof(float), -nbicols, fp);
 		for (i = nf; i-- > 0; )
@@ -183,7 +184,7 @@ getrecord(			/* read next input record */
 		return(nf);
 	}
 						/* reading ASCII input */
-	cp = fgets(buf, sizeof(buf), fp);
+	cp = fgets(inpbuf, sizeof(inpbuf), fp);
 	if (cp == NULL)
 		return(0);
 	for (nf = 0; nf < MAXCOL; nf++) {
@@ -205,7 +206,7 @@ getrecord(			/* read next input record */
 }
 
 
-static void
+void
 putrecord(			/* write out results record */
 	const double *field,
 	int n,
@@ -235,16 +236,18 @@ putrecord(			/* write out results record */
 		fflush(fp);			/* flush unless -r */
 }
 
+				/* global so as not to use up stack */
+double	inpval[MAXCOL];
+double	tally[MAXCOL];
+short	rsign[MAXCOL];
+double  result[MAXCOL];
 
-static int
+
+int
 execute(			/* compute result */
 char  *fname
 )
 {
-	double	inpval[MAXCOL];
-	double	tally[MAXCOL];
-	short	rsign[MAXCOL];
-	double  result[MAXCOL];
 	int  n;
 	int  nread, ncol;
 	long  nlin, ltotal;
