@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: phisto.pl,v 2.2 2022/02/04 20:11:49 greg Exp $
+# RCSid $Id$
 #
 # Compute foveal histogram for picture set
 #
@@ -8,7 +8,8 @@
 use strict;
 my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 use File::Temp qw/ :mktemp  /;
-my $minop = 'L=$1*179;$1=if(L-1e-7,log10(L)-.01,-7)';
+my $minfilt = 'cond=$1-1e-7;$1=$1';
+my $minop = '$1=log10($1*179)-.01';
 my $maxop = '$1=log10($1*179)+.01';
 my $tf;
 if ($windoz) {
@@ -26,7 +27,7 @@ if ($windoz) {
 			die "Bad picture '$_'\n" if ( $? );
 		}
 	}
-	my $Lmin=`total -l $tf | rcalc -e "$minop"`;
+	my $Lmin=`rcalc -e "$minfilt" | total -l | rcalc -e "$minop"`;
 	my $Lmax=`total -u $tf | rcalc -e "$maxop"`;
 	chomp $Lmin;
 	chomp $Lmax;
@@ -45,7 +46,7 @@ if ($windoz) {
 			die "Bad picture '$_'\n" if ( $? );
 		}
 	}
-	my $Lmin=`total -if -l $tf | rcalc -e '$minop'`;
+	my $Lmin=`rcalc -if -e '$minfilt' -of $tf | total -if -l | rcalc -e '$minop'`;
 	my $Lmax=`total -if -u $tf | rcalc -e '$maxop'`;
 	chomp $Lmin;
 	chomp $Lmax;
