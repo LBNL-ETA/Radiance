@@ -1,4 +1,4 @@
-{ RCSid $Id: rskysrc.cal,v 1.3 2019/11/27 18:44:43 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Reinhart sky patch positions & solid angles
 
@@ -7,7 +7,7 @@
 	Based on tregsrc.cal
 	MF constant controls patch density, and should be assigned in advance
 
-	Input is Rbin from 1-(144*MF^2+1) and optional x1 x2 random variables
+	Input is Rbin from 0 (ground) to Rmax and optional x1 x2 random variables
 	Output is Dx Dy Dz theta (degree full angle of source)
 }
 DEGREE : PI/180;
@@ -28,22 +28,26 @@ Rfindrow(r, rem) : if(rem-rnaz(r)-.5, Rfindrow(r+1, rem-rnaz(r)), r);
 Rrow = if(Rbin-(Rmax-.5), RowMax, Rfindrow(0, Rbin));
 Rcol = Rbin - raccum(Rrow) - 1;
 
-
 Razi_width = 2*PI / rnaz(Rrow);
 
 RAH : alpha*DEGREE;
 
-Razi = (Rcol + x2 - .5)*Razi_width;
-Ralt = (Rrow + x1)*RAH;
-
-Romega = if(Rmax-.5-Rbin, 
+Razi = if(Rbin-.5, (Rcol + x2 - .5)*Razi_width, 2*PI*x2);
+Ralt = if(Rbin-.5, if(Rmax-.5-Rbin, (Rrow + x1)*RAH, (PI-(1-x1)*RAH)/2),
+		asin(-x1));
+				{ solid angle }
+Romega = if(.5-Rbin, 2*PI, if(Rmax-.5-Rbin,
 	Razi_width*(sin(RAH*(Rrow+1)) - sin(RAH*Rrow)),
-	2*PI*(1 - cos(RAH/2)) );
+	2*PI*(1 - cos(RAH/2)) ) );
+				{ projected solid angle }
+pRomega = if(.5-Rbin, PI, if(Rmax-.5-Rbin,
+	Razi_width*.5*(cos(RAH*Rrow)^2 - cos(RAH*(Rrow+1))^2),
+	PI*sin(RAH/2)^2 ) );
 
 cos_ralt = cos(Ralt);
-
+				{ direction for source Rbin }
 Dx = sin(Razi)*cos_ralt;
 Dy = cos(Razi)*cos_ralt;
 Dz = sqrt(1 - cos_ralt*cos_ralt);
-
+				{ source diameter in degrees }
 theta = 2/DEGREE * acos(1 - Romega/(2*PI));
