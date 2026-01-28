@@ -88,7 +88,7 @@ genclock:	genclock.o
 	$(CC) $(CFLAGS) -o genclock genclock.o $(MLIB)
 
 genbranch:	genbranch.o
-	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
+	$(CC) $(CFLAGS) -o genbranch genbranch.o -lrtrad $(MLIB)
 
 # Assume rt is built before this
 genssky:	genssky.o sun.o atmos.o

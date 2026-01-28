@@ -68,7 +68,7 @@ add_executable(genclock genclock.c)
 target_link_libraries(genclock ${LIB_M})
 
 add_executable(genbranch genbranch.c)
-target_link_libraries(genbranch ${LIB_M})
+target_link_libraries(genbranch rtrad ${LIB_M})
 
 install(TARGETS
   genblinds
