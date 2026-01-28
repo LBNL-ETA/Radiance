@@ -424,9 +424,10 @@ main(int  argc, char  *argv[])
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
 			fputncomp(rval, stdout);
-		if (NCSAMP > 3)
-			fputwlsplit(WLPART, stdout);
-		if ((out_prims != stdprims) & (out_prims != NULL))
+		if (out_prims == NULL) {
+			if (sens_curve == NULL)
+				fputwlsplit(WLPART, stdout);
+		} else if (out_prims != stdprims)
 			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
