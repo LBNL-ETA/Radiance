@@ -202,7 +202,7 @@ RdataShareFile::ReleaseMemory(void *dp, int fl)
 	if ((fl & (RDSwrite|RDSextend)) == RDSwrite && bp->pos + bp->len > osiz) {
 		sprintf(errmsg, "write request past EOF in '%s'", chName);
 		error(CONSISTENCY, errmsg);
-		return NULL;
+		return false;
 	}
 	if (fl & mode & RDSwrite) {	// writing to file?
 		if (pwrite(fd, bp->buf, bp->len, bp->pos) != bp->len) {
