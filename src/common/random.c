@@ -2,7 +2,19 @@
 static const char RCSid[] = "$Id$";
 #endif
 /*
- * Fast random number generator (for lame Windows)
+ * Fast random number generator
+ * for systems without drand48(), i.e., Windows
+ *
+ * Algorithm: xorshift64* (xorshift 64-bit Star)
+ * Author: Sebastiano Vigna (vigna@acm.org)
+ * Based on the original xorshift work by George Marsaglia.
+ *
+ * Reference:
+ * S. Vigna, "An experimental exploration of Marsaglia's xorshift
+ *	generators, scrambled",
+ * ACM Transactions on Mathematical Software 42(4), 2016.
+ *
+ * Source: https://prng.di.unimi.it/
  */
 
 #include <stdint.h>
