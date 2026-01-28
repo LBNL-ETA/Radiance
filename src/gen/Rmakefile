@@ -41,7 +41,7 @@ genbox:	genbox.o
 	$(CC) $(CFLAGS) -o genbox genbox.o -lwfobj -lrtrad $(MLIB)
 
 genmarble:	genmarble.o ../common/random.h
-	$(CC) $(CFLAGS) -o genmarble genmarble.o $(MLIB)
+	$(CC) $(CFLAGS) -o genmarble genmarble.o -lrtrad $(MLIB)
 
 gensky:	gensky.o sun.o
 	$(CC) $(CFLAGS) -o gensky gensky.o sun.o -lrtrad $(MLIB)

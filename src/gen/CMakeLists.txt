@@ -1,4 +1,4 @@
-# RCSid $Id: CMakeLists.txt,v 2.19 2025/07/24 01:24:01 greg Exp $
+# RCSid $Id$
 
 # Locate the threads package
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -14,7 +14,7 @@ add_executable(genbox genbox.c)
 target_link_libraries(genbox wfobj rtrad ${LIB_M})
 
 add_executable(genmarble genmarble.c ../common/random.h)
-target_link_libraries(genmarble ${LIB_M})
+target_link_libraries(genmarble rtrad ${LIB_M})
 
 add_executable(genglaze genglaze.c ../common/data.h)
 target_link_libraries(genglaze rtrad ${LIB_M})
