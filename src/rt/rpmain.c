@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.41 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -84,9 +84,7 @@ main(int  argc, char  *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	char  *err;

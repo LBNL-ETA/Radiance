@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.28 2025/04/22 18:08:48 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -131,9 +131,7 @@ getrenderopt(		/* get next render option */
 				return(-1)
 #define	 check_bool(olen,var)		switch (av[0][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: return(-1); }
 	static char  **amblp;		/* pointer to build ambient list */

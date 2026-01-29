@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.35 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -58,9 +58,7 @@ main(
 	int	i;
 #define	check_bool(flg)		switch (argv[i][2]) { \
 				case '\0': what2do ^= flg; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': what2do |= flg; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': what2do &= ~(flg); break; \
 				default: goto userr; }
 

@@ -59,15 +59,15 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 	# Check booleans
 	for my $boopt (@boolO) {
-		if ("$ARGV[0]" =~ ('^' . $boopt . '[-+01tfynTFYN]?$')) {
+		if ("$ARGV[0]" =~ ('^' . $boopt . '[-+01]?$')) {
 			if ("$ARGV[0]" eq '-i') {
 				$irrad = ! $irrad;
-			} elsif ("$ARGV[0]" =~ /^-i[-+01tfynTFYN]/) {
-				$irrad = ("$ARGV[0]" =~ /^-i[+1tyTY]/);
+			} elsif ("$ARGV[0]" =~ /^-i[-+01]/) {
+				$irrad = ("$ARGV[0]" =~ /^-i[+1]/);
 			} elsif ("$ARGV[0]" eq '-co') {
 				$specout = ! $specout;
-			} elsif ("$ARGV[0]" =~ /^-co[-+01tfynTFYN]/) {
-				$specout = ("$ARGV[0]" =~ /^-co[+1tyTY]/);
+			} elsif ("$ARGV[0]" =~ /^-co[-+01]/) {
+				$specout = ("$ARGV[0]" =~ /^-co[+1]/);
 			}
 			push(@rpictA, $ARGV[0]) if ("$ARGV[0]" !~ /^-co/);
 			push @rtraceA, shift(@ARGV);

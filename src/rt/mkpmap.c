@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.15 2025/06/20 03:43:17 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 
 
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.15 2025/06/20 03:43:17 greg Exp $
        (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")
    ======================================================================
    
-   $Id: mkpmap.c,v 2.15 2025/06/20 03:43:17 greg Exp $    
+   $Id$    
 */
 
 
@@ -162,9 +162,9 @@ int main (int argc, char* argv [])
    #define check_bool(olen, var) switch (argv [i][olen]) { \
       case '\0': \
          var = !var; break; \
-      case 'y': case 'Y': case 't': case 'T': case '+': case '1': \
+      case '+': case '1': \
          var = 1; break; \
-      case 'n': case 'N': case 'f': case 'F': case '-': case '0': \
+      case '-': case '0': \
          var = 0; break; \
       default: \
          goto badopt; \

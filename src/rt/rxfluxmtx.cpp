@@ -1330,9 +1330,7 @@ main(int argc, char *argv[])
 				goto userr
 #define	 check_bool(olen,var)		switch (argv[a][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = true; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = false; break; \
 				default: goto userr; }
 	bool		force_open = false;
@@ -1382,16 +1380,17 @@ main(int argc, char *argv[])
 			continue;
 		}
 		switch (argv[a][1]) {	/* !! Keep consistent !! */
-		case 'W':			/* verbose mode */
-			check_bool(2,verby);
-			break;
 		case 'b':			/* bin jitter? */
 			if (argv[a][2] != 'j')
 				goto userr;
 			check(3,"f");
 			binjitter = atof(argv[++a]);
 			break;
-		case 'v':			// view file
+		case 'v':			// view file or verbose
+			if (strchr("+-10", argv[a][2]) != NULL) {
+				check_bool(2,verby);
+				break;
+			}
 			if (argv[a][2] != 'f')
 				goto userr;
 			check(3,"s");

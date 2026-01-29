@@ -2902,3 +2902,8 @@ data and put it in "doc/notes/hyperspectral.txt".
 TW introduced experimental multi-processing capability for
 rcontrib under Windows.  Not fully tested against hangs, but
 same semantics as -n option under Unix.
+
+Changed rxfluxmtx -W option to -v for consistency, but had
+to eliminate boolean switch values other than 0, 1, +, and -,
+which are the only ones people use, hopefully.  Lettered
+boolean flag settings have always been confusing.

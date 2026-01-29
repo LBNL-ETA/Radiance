@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.18 2021/02/18 17:08:50 rschregle Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 
 /* 
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.18 2021/02/18 17:08:50 rschregl
        (KAKENHI JP19KK0115, "Three-Dimensional Light Flow")   
    ======================================================================
    
-   $Id: pmapdump.c,v 2.18 2021/02/18 17:08:50 rschregle Exp $
+   $Id$
 */
 
 
@@ -88,10 +88,10 @@ static int setBool(char *str, unsigned pos, unsigned *var)
       case '\0': 
          *var = !*var; 
          break;
-      case 'y': case 'Y': case 't': case 'T': case '+': case '1': 
+      case '+': case '1':
          *var = 1; 
          break;
-      case 'n': case 'N': case 'f': case 'F': case '-': case '0': 
+      case '-': case '0': 
          *var = 0; 
          break;
       default: 
