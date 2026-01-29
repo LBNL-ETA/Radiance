@@ -2898,3 +2898,7 @@ well enough.
 
 Made a list of tools that do and do not support hyperspectral
 data and put it in "doc/notes/hyperspectral.txt".
+
+TW introduced experimental multi-processing capability for
+rcontrib under Windows.  Not fully tested against hangs, but
+same semantics as -n option under Unix.

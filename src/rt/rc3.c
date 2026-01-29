@@ -7,10 +7,15 @@ static const char RCSid[] = "$Id$";
  */
 
 #include <signal.h>
+#include "random.h"
 #include "rcontrib.h"
 #include "selcall.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#define MAXIQ 65536
+#else
 #define	MAXIQ		(int)(PIPE_BUF/(sizeof(FVECT)*2))
+#endif
 
 /* Modifier contribution queue (results waiting to be output) */
 typedef struct s_binq {
@@ -23,6 +28,9 @@ typedef struct s_binq {
 static BINQ	*out_bq = NULL;		/* output bin queue */
 static BINQ	*free_bq = NULL;	/* free queue entries */
 
+#if defined(_WIN32) || defined(_WIN64)
+static HANDLE kid_h[MAXPROCESS]; /* win32 handles for child output */
+#endif
 static SUBPROC	kidpr[MAXPROCESS];	/* our child processes */
 
 static struct {
@@ -264,6 +272,49 @@ queue_results(int k)
 	kida[k].nr = 0;			/* mark child as available */
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+
+static void
+reseed_worker(int wid)
+{
+	unsigned long seed;
+	seed = (unsigned long)getpid() ^ (unsigned long)(wid+1)*0x9e3779b9u;
+	if (rand_samp)
+		seed ^= (unsigned long)time(0);
+	srandom(seed);
+	initurand(rand_samp ? 0 : 2048);
+}
+
+static char **
+worker_argv(int wid, char **idstrp)
+{
+	char idbuf[32];
+	char **av;
+	int i,j;
+
+	snprintf(idbuf, sizeof(idbuf), "%d", wid);
+	*idstrp = strdup(idbuf);
+	if (*idstrp == NULL)
+		error(SYSTEM, "out of memory in worker_argv()");
+
+	/*
+	 * Insert worker flag right after argv[0] so we don't accidentally break option arguments 
+	 */
+	av = (char **)calloc(gargc + 3, sizeof(char *));
+	if (av == NULL)
+		error(SYSTEM, "out of memory in worker_argv()");
+
+	j = 0;
+	av[j++] = gargv[0];
+	av[j++] = "-W";
+	av[j++] = *idstrp;
+	for (i = 1; i < gargc; i++)
+		av[j++] = gargv[i];
+	av[j] = NULL;
+	return(av);
+}
+
+#endif /* _WIN32 || _WIN64 */
 
 /* callback to set output spec to NULL (stdout) */
 static int
@@ -280,6 +331,38 @@ in_rchild()
 {
 	int	rval;
 
+#if defined(_WIN32) || defined(_WIN64)
+	if (rc_worker) {				/* spawned worker process */
+		nchild = -1;
+		nproc = 1;
+		lu_doall(&modconttab, &set_stdout, NULL);
+		lu_done(&ofiletab);
+		inpfmt = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
+		outfmt = 'd';
+		header = 0;
+		yres = 0;
+		raysleft = 0;
+		if (accumulate == 1) {
+			waitflush = xres = 1;
+			account = accumulate = 1;
+		} else {
+			waitflush = xres = 0;
+			account = accumulate = 0;
+		}
+		reseed_worker(rc_worker_id);
+		return(1);
+	}
+	while (nchild < nproc) {	/* fork until target reached */
+		{
+			char	*idstr = NULL;
+			char	**av = worker_argv(nchild, &idstr);
+			rval = open_process(&kidpr[nchild], av);
+			free(idstr);
+			free(av);
+		}
+		if (rval <= 0)
+			error(SYSTEM, "open_process() call failed");
+#else
 	while (nchild < nproc) {	/* fork until target reached */
 		errno = 0;
 		rval = open_process(&kidpr[nchild], NULL);
@@ -306,12 +389,18 @@ in_rchild()
 			}
 			return(1);	/* return "true" in child */
 		}
+#endif
 		if (rval != PIPE_BUF)
 			error(CONSISTENCY, "bad value from open_process()");
 					/* connect to child's output */
 		kida[nchild].infp = fdopen(kidpr[nchild].r, "rb");
 		if (kida[nchild].infp == NULL)
 			error(SYSTEM, "out of memory in in_rchild()");
+#if defined(_WIN32) || defined(_WIN64)
+		kid_h[nchild] = (HANDLE)_get_osfhandle(kidpr[nchild].r);
+		if (kid_h[nchild] == INVALID_HANDLE_VALUE)
+			error(SYSTEM, "bad child pipe handle");
+#endif
 		kida[nchild++].nr = 0;	/* mark as available */
 	}
 #ifdef getc_unlocked
@@ -343,6 +432,68 @@ end_children(int immed)
 
 
 /* Wait for the next available child, managing output queue simultaneously */
+#if defined(_WIN32) || defined(_WIN64)
+static int
+next_child_nq(int flushing)
+{
+	static size_t	kid_recbytes = 0;	/* expected bytes per worker record */
+	int	i;
+	int	anybusy;
+	int	nqr;
+	int	firstfree;
+
+	if (kid_recbytes == 0) {
+		for (i = 0; i < nmods; i++) {
+			MODCONT	*mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
+			kid_recbytes += (size_t)DCOLORSIZ * (size_t)mp->nbins;
+		}
+	}
+
+	for (;;) {
+		if (!flushing) {
+			for (i = nchild; i--;) {
+				if (!kida[i].nr)
+					return(i);
+			}
+		}
+		nqr = queue_ready();		/* manage output while waiting */
+		if (nqr > 0) {
+			if (!flushing && nqr > nchild) {
+				output_catchup(nqr - nchild);
+			} else {
+				output_catchup(0);
+			}
+		}
+
+		anybusy = 0;
+		firstfree = -1;
+		{
+			DWORD	avail;
+			/*
+			 * Drain all workers with pending output so we don't serialize execution on pipe backpressure.
+			 */
+			for (i = nchild; i--; ) {
+				if (!kida[i].nr)
+					continue;
+				anybusy = 1;
+				avail = 0;
+				if (!PeekNamedPipe(kid_h[i], NULL, 0, NULL, &avail, NULL))
+					error(SYSTEM, "PeekNamedPipe() failed");
+				if ((size_t)avail >= kid_recbytes) {
+					queue_results(i);
+					if (firstfree < 0)
+						firstfree = i;
+				}
+			}
+		}
+		if (!flushing && firstfree >= 0)
+			return(firstfree);
+		if (!anybusy)			/* nothing to wait for */
+			return(-1);
+		Sleep(0);
+	}
+}
+#else
 static int
 next_child_nq(int flushing)
 {
@@ -382,6 +533,7 @@ tryagain:				/* catch up with output? */
 	if (!nr)			/* nothing to wait for? */
 		return(-1);
 	if ((nr > 1) | (pmode == &polling)) {
+		errno = 0;
 		nr = select(n, &readset, NULL, &errset, pmode);
 		if (!nr) {
 			pmode = NULL;	/* try again, blocking this time */
@@ -400,17 +552,26 @@ tryagain:				/* catch up with output? */
 	}
 	return(n);			/* first available child */
 }
+#endif
 
 
 /* Run parental oversight loop */
 void
 parental_loop()
 {
-	const int	qlimit = (accumulate == 1) ? 1 : MAXIQ-1;
+	const int	qlimit = (accumulate == 1) ? 1 :
+				(accumulate > 0) & (accumulate < MAXIQ) ?
+						accumulate : MAXIQ-1;
 	int		ninq = 0;
-	FVECT		orgdir[2*MAXIQ];
 	int		i, n;
 					/* load rays from stdin & process */
+#if defined(_WIN32) || defined(_WIN64)
+	FVECT	*orgdir = (FVECT *)malloc(sizeof(FVECT)*2*(qlimit+1));
+	if (orgdir == NULL)
+		error(SYSTEM, "out of memory in parental_loop()");
+#else
+	FVECT	orgdir[2*MAXIQ];
+#endif
 #ifdef getc_unlocked
 	flockfile(stdin);		/* avoid lock/unlock overhead */
 #endif
@@ -454,6 +615,8 @@ parental_loop()
 	}
 	while (next_child_nq(1) >= 0)		/* empty results queue */
 		;
+	if (using_stdout)
+		fflush(stdout);
 	if (account < accumulate) {
 		error(WARNING, "partial accumulation in final record");
 		free_binq(out_bq);		/* XXX just ignore it */
@@ -463,8 +626,80 @@ parental_loop()
 	lu_done(&ofiletab);
 	if (raysleft)
 		error(USER, "unexpected EOF on input");
+
+#if defined(_WIN32) || defined(_WIN64)
+	free(orgdir);
+#endif
+
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+
+/* Modified parental loop for full accumulation mode (-c 0) */
+void
+feeder_loop()
+{
+	static int	ignore_warning_given = 0;
+	int			ninq =0;
+	FVECT		orgdir[2*MAXIQ];
+	FVECT		terminator[2];
+	int			i, n;
+
+	memset(terminator, 0, sizeof(FVECT)*2);
+	/* load rays from stdin & process */
+#ifdef getc_unlocked
+	flockfile(stdin);		/* avoid lock/unlock overhead */
+#endif
+	while (getvec(orgdir[2*ninq]) == 0 && getvec(orgdir[2*ninq+1]) == 0) {
+		if (orgdir[2*ninq+1][0] == 0.0 &&	/* asking for flush? */
+			(orgdir[2*ninq+1][1] == 0.0) &
+			(orgdir[2*ninq+1][2] == 0.0)) {
+			if (!ignore_warning_given++)
+				error(WARNING, "dummy ray(s) ignored during accumulation\n");
+			continue;
+		}
+		if (++ninq >= MAXIQ) {
+			i = next_child_nq(0);		/* manages output */
+			n = sizeof(FVECT) * 2 * ninq;	/*give assignment */
+			if (writebuf(kidpr[i].w, orgdir, n) != n)
+				error(SYSTEM, "pipe write error");
+			if (writebuf(kidpr[i].w, terminator, sizeof(FVECT)*2) != sizeof(FVECT)*2)
+				error(SYSTEM, "pipe write error");
+			kida[i].r1 = lastray + 1;
+			lastray += kida[i].nr = ninq;
+			if (lastray < lastdone)		/* RNUMBER wrapped */
+				lastdone = lastray = 0;
+			ninq = 0;
+		}
+		if (!morays())
+			break;				/* preemptive EOI */
+	}
+	if (ninq) {				/* polish off input */
+		i = next_child_nq(0);		/* manage output */
+		n = sizeof(FVECT)*2 * ninq;
+		if (writebuf(kidpr[i].w, orgdir, n) != n)
+			error(SYSTEM, "pipe write error");
+		if (writebuf(kidpr[i].w, terminator, sizeof(FVECT)*2) != sizeof(FVECT)*2)
+			error(SYSTEM, "pipe write error");
+		kida[i].r1 = lastray + 1;
+		lastray += kida[i].nr = ninq;
+		ninq = 0;
+	}
+	while (next_child_nq(1) >= 0)		/* empty results queue */
+		;
+	if (recover)				/* and from before? */
+		queue_modifiers();
+	end_children(0);			/* free up file descriptors */
+	for (i = 0; i < nmods; i++)
+		mod_output(out_bq->mca[i]);	/*output accumulated record */
+	end_record();
+	free_binq(out_bq);			/* clean up */
+	lu_done(&ofiletab);
+	if (raysleft)
+		error(USER, "unexpected EOF on input");
+}
+
+#else
 
 /* Wait for the next available child by monitoring "to" pipes */
 static int
@@ -487,6 +722,7 @@ next_child_ready()
 		if (kidpr[i].r >= n)
 			n = kidpr[i].r + 1;
 	}
+	errno = 0;
 	n = select(n, NULL, &writeset, &errset, NULL);
 	if (n < 0)
 		error(SYSTEM, "select() error in next_child_ready()");
@@ -563,3 +799,5 @@ feeder_loop()
 	if (raysleft)
 		error(USER, "unexpected EOF on input");
 }
+
+#endif /* !(_WIN32 || _WIN64) */
