@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.20 2025/06/07 05:09:46 greg Exp $ */
+/* RCSid $Id$ */
 
 /*
  * Header file for rcontrib modules
@@ -16,6 +16,9 @@ extern char		*octname;	/* global octree name */
 
 extern int		nproc;		/* number of processes requested */
 extern int		nchild;		/* number of children (-1 in child) */
+
+extern int		rc_worker;	/* internal worker mode? */
+extern int		rc_worker_id;	/* internal worker identifier */
 
 extern int		inpfmt;		/* input format */
 extern int		outfmt;		/* output format */
