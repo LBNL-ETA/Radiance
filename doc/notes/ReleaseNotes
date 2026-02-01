@@ -2907,3 +2907,6 @@ Changed rxfluxmtx -W option to -v for consistency, but had
 to eliminate boolean switch values other than 0, 1, +, and -,
 which are the only ones people use, hopefully.  Lettered
 boolean flag settings have always been confusing.
+
+The above changes were included in official LBNL patch
+release 6.0.2.
