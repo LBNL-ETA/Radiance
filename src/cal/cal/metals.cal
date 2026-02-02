@@ -1,4 +1,4 @@
-{ RCSid $Id: metals.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
+{ RCSid $Id$ }
 {
 	Complex indices of refraction for 4 metals:
 
@@ -14,12 +14,9 @@
 	The functions below permit the computation of
 	spectral reflectance at any incident angle and
 	wavelength in the 380-775 nm range.
-}
 
-spec_copper(ct,wl) : spec_refl(copper_nr,copper_ni,ct,wl);
-spec_gold(ct,wl) : spec_refl(gold_nr,gold_ni,ct,wl);
-spec_aluminum(ct,wl) : spec_refl(aluminum_nr,aluminum_ni,ct,wl);
-spec_silver(ct,wl) : spec_refl(silver_nr,silver_ni,ct,wl);
+	Skip to the bottom to see actual metal definitions.
+}
 
 {
 	Fresnel's equations
@@ -150,3 +147,30 @@ silver_ni`p24654(i):select(i,1.801357,1.801357,1.824736,
 4.598441,4.635663,4.672859,4.710108,4.747403,4.784542,4.82189,
 4.859458,4.897254,4.935289,4.973571,5.012111,5.050918,5.09);
 silver_ni(x):interp_arr`((x-380)/5+1,silver_ni`p24654);
+
+{
+     Final metal evaluation functions.
+
+	"ct" argument is cosine of polar angle to normal,
+	"wl" is wavelength in nanometers
+}
+spec_copper(ct,wl) : spec_refl(copper_nr,copper_ni,ct,wl);
+spec_gold(ct,wl) : spec_refl(gold_nr,gold_ni,ct,wl);
+spec_aluminum(ct,wl) : spec_refl(aluminum_nr,aluminum_ni,ct,wl);
+spec_silver(ct,wl) : spec_refl(silver_nr,silver_ni,ct,wl);
+
+{
+	Here is how it might be applied in a Radiance
+	"specfunc" primitive:
+
+	void specfunc copper_refl
+	2 copper_refl metals.cal
+	0
+	2 380 775
+
+	Wavelength order doesn't matter, but has to be this range.
+}
+copper_refl(wl) = spec_copper(Rdot, wl);
+gold_refl(wl) = spec_gold(Rdot, wl);
+aluminum_refl(wl) = spec_aluminum(Rdot, wl);
+silver_refl(wl) = spec_silver(Rdot, wl);
