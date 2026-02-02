@@ -21,8 +21,9 @@
 {
 	Fresnel's equations
 }
-sq(x) : x*x;
-Sqrt(x) : if(x,sqrt(x),0);
+sq`(x) : x*x;
+Sqrt`(x) : if(x,sqrt(x),0);
+abs`(x) : max(x, -x);
 fuvA(ct,nr,nk) : sq(nr)*(1-sq(nk)) - (1-sq(ct));
 fuvB(ct,nr,nk) : sqrt(sq(fuvA(ct,nr,nk)) + 4*sq(sq(nr)*nk));
 fu2(ct,nr,nk) : (fuvA(ct,nr,nk) + fuvB(ct,nr,nk))/2;
@@ -170,7 +171,7 @@ spec_silver(ct,wl) : spec_refl(silver_nr,silver_ni,ct,wl);
 
 	Wavelength order doesn't matter, but has to be this range.
 }
-copper_refl(wl) = spec_copper(Rdot, wl);
-gold_refl(wl) = spec_gold(Rdot, wl);
-aluminum_refl(wl) = spec_aluminum(Rdot, wl);
-silver_refl(wl) = spec_silver(Rdot, wl);
+copper_refl(wl) = spec_copper(abs(Rdot), wl);
+gold_refl(wl) = spec_gold(abs(Rdot), wl);
+aluminum_refl(wl) = spec_aluminum(abs(Rdot), wl);
+silver_refl(wl) = spec_silver(abs(Rdot), wl);
