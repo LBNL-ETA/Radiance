@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.13 2024/01/17 17:35:35 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -122,6 +122,9 @@ p_specfunc(			/* compute spectral pattern */
 		return(0);
 	}
 	wlstep = (wlmax - wlmin)/(double)MAXCSAMP;
+	wl = 0.25/(double)NCSAMP*(WLPART[0] - WLPART[3]);
+	if (wlstep < wl)		/* too fine to matter? */
+		wlstep = wl;
 	getfunc(m, 1, 0, 0);
 	setfunc(m, r);
 	errno = 0;
