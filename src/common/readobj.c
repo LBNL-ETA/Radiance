@@ -128,6 +128,12 @@ getobject(				/* read the next object */
 					name, sbuf);
 		error(USER, errmsg);
 	}
+	if (ismodifier(objp->otype) &&
+			!strcmp(sbuf, VOIDID) | !strcmp(sbuf, ALIASMOD)) {
+		sprintf(errmsg, "(%s): illegal modifier name \"%s\"",
+					name, sbuf);
+		error(USER, errmsg);
+	}
 	objp->oname = savqstr(sbuf);
 					/* get arguments */
 	if (objp->otype == MOD_ALIAS) {
