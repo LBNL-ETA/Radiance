@@ -2910,3 +2910,8 @@ boolean flag settings have always been confusing.
 
 The above changes were included in official LBNL patch
 release 6.0.2.
+
+Created csv2radspec tool to convert the Climate & Comfort Lab's
+Spectral Materials Database <https://spectraldb.com/> CSV file
+<https://github.com/C38C/SpectralDB/raw/refs/heads/main/spectraldb.csv>
+to a set of Radiance materials.
