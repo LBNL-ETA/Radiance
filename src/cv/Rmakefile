@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.60 2025/05/21 17:23:07 greg Exp $
+# RCSid $Id$
 #
 # Makefile for conversion programs
 #
@@ -128,6 +128,9 @@ epw2wea:	epw2wea.o
 robjutil:	robjutil.o
 	$(CC) $(CFLAGS) -o robjutil robjutil.o \
 -lwfobj -lrtrad $(MLIB)
+
+csv2radspec:	csv2radspec.c
+	$(CC) $(CFLAGS) -o csv2radspec csv2radspec.c -lrtrad
 
 mgf2rad.o:	mgf2rad.c ../common/mgf_parser.h ../common/tmesh.h \
 ../common/color.h

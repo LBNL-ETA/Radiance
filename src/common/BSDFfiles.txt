@@ -1,4 +1,7 @@
+# RCSid: $Id$
 copyright.h
+platform.h
+paths.h
 random.h
 bsdf.h
 bsdf.c

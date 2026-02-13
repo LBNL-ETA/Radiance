@@ -76,6 +76,7 @@ set(rtrad_SOURCES
   portio.c
   process.c
   quit.c
+  readCSV.c
   readfargs.c
   readmesh.c
   readobj.c

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.94 2025/06/03 21:31:51 greg Exp $
+# RCSid: $Id$
 #
 # Makefile for ray tracing library routines
 #
@@ -24,7 +24,7 @@ PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	idmap.o fltdepth.o jitteraperture.o
 
 UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o loadbsdf.o \
-	disk2square.o hilbert.o interp2d.o triangulate.o data.o
+	disk2square.o hilbert.o interp2d.o triangulate.o data.o readCSV.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
@@ -254,3 +254,6 @@ objtriangulate.o:	objutil.h rterror.h triangulate.h
 readwfobj.o:	objutil.h rtio.h rterror.h fvect.h
 
 writewfobj.o:	objutil.h rterror.h
+
+readCSV.o:	readCSV.h
+
