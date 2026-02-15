@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.14 2020/02/28 05:18:49 greg Exp $";
+static char RCSid[]="$Id$";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -87,6 +87,7 @@ start_process(SUBPROC *proc, char *cmdstr)
 {
 	BOOL res;
 	int Pflags = 0;
+	const DWORD pipe_bufsiz = 1u<<20; /* 1MB pipe buffer to reduce blocking */
 	SECURITY_ATTRIBUTES SAttrs;
 	STARTUPINFO SInfo;
 	PROCESS_INFORMATION PInfo;
@@ -112,15 +113,13 @@ start_process(SUBPROC *proc, char *cmdstr)
 
 	/* make pipe, assign to stdout */
 	/* we'll check for errors after CreateProcess()...*/
-	res = CreatePipe(&hFromChildRead, &hFromChildWrite, &SAttrs, 0);
-	res = SetStdHandle(STD_OUTPUT_HANDLE, hFromChildWrite);
+	res = CreatePipe(&hFromChildRead, &hFromChildWrite, &SAttrs, pipe_bufsiz);
 	/* create non-inheritable dup of local end */
 	res = DuplicateHandle(hCurProc, hFromChildRead, hCurProc, &hRead,
 			0, FALSE, DUPLICATE_SAME_ACCESS);
 	CloseHandle(hFromChildRead); hFromChildRead = NULL;
 
-	res = CreatePipe(&hToChildRead, &hToChildWrite, &SAttrs, 0);
-	res = SetStdHandle(STD_INPUT_HANDLE, hToChildRead);
+	res = CreatePipe(&hToChildRead, &hToChildWrite, &SAttrs, pipe_bufsiz);
 	res = DuplicateHandle(hCurProc, hToChildWrite, hCurProc, &hWrite,
 			0, FALSE, DUPLICATE_SAME_ACCESS);
 	CloseHandle(hToChildWrite); hToChildWrite = NULL;
@@ -357,4 +356,3 @@ main( int argc, char **argv )
 	close_process(&proc);
 }
 #endif
-
