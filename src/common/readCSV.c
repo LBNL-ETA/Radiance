@@ -186,7 +186,7 @@ read_csvrec(FILE *fp, CSVREC *toappend)
 		nguess = nfread;
 	return rp;			/* return the new record */
 field2big:
-	fprintf(stderr, "Field may not exceed %ld bytes\n", sizeof(field));
+	fprintf(stderr, "Field exceeds %ld bytes\n", sizeof(field));
 	free_csv(rp);
 	errno = EOVERFLOW;
 	return NULL;
@@ -199,6 +199,7 @@ read_csvfile(char *fname)
 	FILE	*fp = stdin;
 	int	lineno = 0;
 	CSVREC	*csv = NULL;
+	CSVREC	*rp;
 	int	ok;
 
 	if (fname && *fname) {
@@ -212,21 +213,17 @@ read_csvfile(char *fname)
 #endif
 	lineno = 1;
 	errno = 0;
-	csv = read_csvrec(fp, NULL);
-	if (!csv) {
-		fclose(fp);
-		goto loaderr;
-	}
-	do {
+	rp = csv = read_csvrec(fp, NULL);
+	while (rp) {
 		++lineno;
 		errno = 0;
-	} while (read_csvrec(fp, csv));
-
-	ok = feof(fp);
+		rp = read_csvrec(fp, rp);
+	}
+	ok = csv && feof(fp);
 	if (fp != stdin)
 		fclose(fp);
 #ifdef getc_unlocked
-	else
+	else if (ok)
 		funlockfile(stdin);
 #endif
 	if (ok) return csv;
