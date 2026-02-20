@@ -2915,3 +2915,8 @@ Created csv2radspec tool to convert the Climate & Comfort Lab's
 Spectral Materials Database <https://spectraldb.com/> CSV file
 <https://github.com/C38C/SpectralDB/raw/refs/heads/main/spectraldb.csv>
 to a set of Radiance materials.
+
+Added long overdue optimization of photometry calculations
+needed by ies2rad and implemented in "source.cal".  The new
+calculations are implemented through custom functions in
+src/rt/func.c.

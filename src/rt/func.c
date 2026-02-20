@@ -33,7 +33,8 @@ static RAY  *fray = NULL;	/* current function ray */
 
 static char  rayinitcal[] = INITFILE;
 
-static double  l_erf(char *), l_erfc(char *), l_arg(char *);
+static double  l_erf(char *), l_erfc(char *), l_arg(char *),
+		l_source_corr(char *), l_source_angle(char *);
 
 
 void
@@ -56,6 +57,9 @@ initfunc(void)	/* initialize function evaluation */
 	funset("arg", 1, '=', l_arg);
 	funset("erf", 1, ':', l_erf);
 	funset("erfc", 1, ':', l_erfc);
+	funset("source_corr", 2, '=', l_source_corr);
+	funset("source_theta", 1, '=', l_source_angle);
+	funset("source_phi", 1, '=', l_source_angle);
 	setnoisefuncs();
 	setprismfuncs();
 	loadfunc(rayinitcal);
@@ -138,7 +142,7 @@ getfunc(	/* get function for this modifier */
 		calcontext(f->ctx = "");	/* "." means no file */
 	} else {
 		strcpy(sbuf,arg[ff]);		/* file name is context */
-		if (i > LCALSUF && !strcmp(sbuf+i-LCALSUF, CALSUF))
+		if (i > LCALSUF && !strcasecmp(sbuf+i-LCALSUF, CALSUF))
 			sbuf[i-LCALSUF] = '\0';	/* remove suffix */
 		calcontext(f->ctx = savestr(sbuf));
 		if (!vardefined(REFVNAME)) {	/* file loaded? */
@@ -295,8 +299,7 @@ l_arg(char *nm)			/* return nth real argument */
 	int  n;
 
 	if (fobj == NULL)
-		error(USER,
-			"bad call to arg(n) - illegal constant in .cal file?");
+		error(USER, "bad call to arg(n) - illegal constant in .cal file?");
 
 	n = argument(1) + .5;		/* round to integer */
 
@@ -322,6 +325,91 @@ static double
 l_erfc(char *nm)		/* cumulative error function */
 {
 	return(erfc(argument(1)));
+}
+
+
+static double
+l_source_corr(char *nm)		/* photometry correction */
+{
+#define rarg	(fobj->oargs.farg)
+#define nrargs	(fobj->oargs.nfargs)
+	double	d, d1, rv;
+
+	if ((fobj == NULL) | (fray == NULL))
+		error(USER,
+		    "bad call to source_corr() -- illegal constant in .cal file?");
+
+	switch((int)(argument(2)+.5)) {
+	case 0:			/* basic correction */
+		return(nrargs > 0 ? rarg[0]*argument(1) : argument(1));
+	case 1:			/* flat emitter correction */
+		return( (nrargs > 0 ? rarg[0]*argument(1) : argument(1))
+				/ fray->rod );
+	case 2:			/* box source correction */
+		if (nrargs < 4)
+			goto notenough;
+		return( argument(1) * rarg[0] /
+			(fabs(chanvalue(1))*rarg[2]*rarg[3] +
+			 fabs(chanvalue(2))*rarg[1]*rarg[3] +
+			 fabs(chanvalue(3))*rarg[1]*rarg[2]) );
+	case 3:			/* local box source correction */
+		if (nrargs < 4)
+			goto notenough;
+		d = chanvalue(25);	/* Ts (shadow distance) */
+		d1 = fabs(chanvalue(7) - chanvalue(1)*d) - rarg[1]*.5;
+		rv = d1*rarg[2]*rarg[3]*(d1 > 0);
+		d1 = fabs(chanvalue(8) - chanvalue(2)*d) - rarg[2]*.5;
+		rv += d1*rarg[1]*rarg[3]*(d1 > 0);
+		d1 = fabs(chanvalue(9) - chanvalue(3)*d) - rarg[3]*.5;
+		rv += d1*rarg[1]*rarg[2]*(d1 > 0);
+		return( argument(1) * rarg[0] / rv );
+	case 4:			/* cylindrical source correction */
+		if (nrargs < 3)
+			goto notenough;
+		d = chanvalue(3);
+		rv = rarg[1]*rarg[2]*sqrt(1. - d*d) +
+				.25*PI*rarg[1]*rarg[1]*fabs(d);
+		return( argument(1) * rarg[0] / rv );
+	}
+	objerror(fobj, USER, "illegal first argument in source_corr()");
+notenough:
+	objerror(fobj, USER, "missing real argument(s) for source_corr()");
+	return(0.0);	/* pro forma */
+#undef rarg
+#undef nrargs
+}
+
+
+static double
+l_source_angle(char *nm)	/* photometry angle */
+{
+	double	angle;
+
+	if ((fray == NULL) | (fobj == NULL)) {
+		sprintf(errmsg,
+		    "bad call to %s() -- illegal constant in .cal file?", nm);
+		error(USER, errmsg);
+	}
+	if (!strcmp(nm, "source_theta")) {
+		double	Dz = chanvalue(3);
+		if (Dz >= 1.) return(0.);
+		if (Dz <= -1.) return(180.);
+		return(180./PI * acos(Dz));
+	}
+	angle = 180./PI * atan2(-chanvalue(2), -chanvalue(1));
+	angle += 360.*(angle < 0);
+
+	switch ((int)(argument(1) + .5)) {
+	case 90:		/* quad symmetry */
+		angle -= 180.*(angle >= 180.);
+		return(angle < 90. ? angle : 180.-angle);
+	case 180:		/* bilateral symmetry */
+		return(angle < 180. ? angle : 360.-angle);
+	case 360:		/* no symmetry */
+		return(angle);
+	}
+	objerror(fobj, USER, "bad call to source_phi()");
+	return(0.0);
 }
 
 

@@ -22,9 +22,12 @@
 
 	A1		- optional multipier
 	A2,A3,A4	- X,Y,Z dimensions of axis-aligned box (in meters!)
-or
+or:
 	A2,A3		- diameter and height of Z-aligned cylinder (meters)
 }
+{------------------------------------------------------------------------------
+	The following correction functions have been subsumed by source_corr():
+
 						{ local definitions }
 boxprojection = abs(Dx)*A3*A4 + abs(Dy)*A2*A4 + abs(Dz)*A2*A3;
 lboxprojection = (	noneg(abs(Px-Dx*Ts)-A2/2)*A3*A4 +
@@ -32,11 +35,22 @@ lboxprojection = (	noneg(abs(Px-Dx*Ts)-A2/2)*A3*A4 +
 			noneg(abs(Pz-Dz*Ts)-A4/2)*A2*A3 ) / Ts;
 cylprojection = A2*A3*sqrt(1-Dz*Dz) + PI/4*A2*A2*abs(Dz);
 
-flatcorr(v) = corr(v) / Rdot;			{ correction for flat sources }
 corr(v) = noneg(if(AC-.5, A1*v, v));		{ multiplier correction }
+flatcorr(v) = corr(v) / Rdot;			{ correction for flat sources }
 boxcorr(v) = noneg(A1*v) / boxprojection;	{ correction for emitting box }
 lboxcorr(v) = noneg(A1*v) / lboxprojection;	{ local box correction }
 cylcorr(v) = noneg(A1*v) / cylprojection;	{ cylinder correction }
+------------------------------------------------------------------------------}
+
+corr(v)		= source_corr(v, 0);
+flatcorr(v)	= source_corr(v, 1);
+boxcorr(v)	= source_corr(v, 2);
+lboxcorr(v)	= source_corr(v, 3);
+cylcorr(v)	= source_corr(v, 4);
+
+{------------------------------------------------------------------------------
+	The following angle functions have been subsumed by
+		source_theta(), source_phi():
 
 src_theta = Acos(Dz) / DEGREE;			{ 0-180 }
 src_phi = mod( Atan2(-Dy, -Dx) / DEGREE, 360 );	{ 0-360 }
@@ -44,10 +58,15 @@ src_phi = mod( Atan2(-Dy, -Dx) / DEGREE, 360 );	{ 0-360 }
 src_phi2 = tri( src_phi, 180 );			{ 0-180 }
 				{ quadrilateral symmetry }
 src_phi4 = tri( src_phi, 90 );			{ 0-90 }
+------------------------------------------------------------------------------}
 
+src_theta = source_theta(180);
+src_phi = source_phi(360);
+src_phi2 = source_phi(180);
+src_phi4 = source_phi(90);
 						{ Type B photometry coordinates }
-srcB_vert = atan2( -Dx, Dz ) / DEGREE;
-srcB_horiz = atan2( Dy, Dz ) / DEGREE;
+srcB_vert = Atan2( -Dx, Dz ) / DEGREE;
+srcB_horiz = Atan2( Dy, Dz ) / DEGREE;
 						{ w/ symmetry }
 srcB_vert2 = abs( srcB_vert );
 srcB_horiz2 = abs( srcB_horiz );
