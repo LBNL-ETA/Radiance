@@ -331,53 +331,70 @@ l_erfc(char *nm)		/* cumulative error function */
 static double
 l_source_corr(char *nm)		/* photometry correction */
 {
-#define rarg	(fobj->oargs.farg)
+#define rarg(i)	(fobj->oargs.farg[(i)-1])
 #define nrargs	(fobj->oargs.nfargs)
-	double	d, d1, rv;
+#define Dx	chanvalue(1)	/* XXX make sure these are consistent */
+#define Dy	chanvalue(2)
+#define Dz	chanvalue(3)
+#define Px	chanvalue(7)
+#define Py	chanvalue(8)
+#define Pz	chanvalue(9)
+	double	adj_val = argument(1);
+	double	d, den, Ts;
 
 	if ((fobj == NULL) | (fray == NULL))
 		error(USER,
 		    "bad call to source_corr() -- illegal constant in .cal file?");
 
+	if (nrargs > 1)		/* apply scaling adjustment if any */
+		adj_val *= rarg(1);
+	if (adj_val <= 0)	/* check for non-positive value */
+		return(0.0);
+				/* apply geometric correction */
 	switch((int)(argument(2)+.5)) {
-	case 0:			/* basic correction */
-		return(nrargs > 0 ? rarg[0]*argument(1) : argument(1));
+	case 0:			/* no geometric correction */
+		return(adj_val);
 	case 1:			/* flat emitter correction */
-		return( (nrargs > 0 ? rarg[0]*argument(1) : argument(1))
-				/ fray->rod );
+		return( adj_val / fray->rod );
 	case 2:			/* box source correction */
 		if (nrargs < 4)
 			goto notenough;
-		return( argument(1) * rarg[0] /
-			(fabs(chanvalue(1))*rarg[2]*rarg[3] +
-			 fabs(chanvalue(2))*rarg[1]*rarg[3] +
-			 fabs(chanvalue(3))*rarg[1]*rarg[2]) );
+		return( adj_val /
+			(fabs(Dx)*rarg(3)*rarg(4) +
+			 fabs(Dy)*rarg(2)*rarg(4) +
+			 fabs(Dz)*rarg(2)*rarg(3)) );
 	case 3:			/* local box source correction */
 		if (nrargs < 4)
 			goto notenough;
-		d = chanvalue(25);	/* Ts (shadow distance) */
-		d1 = fabs(chanvalue(7) - chanvalue(1)*d) - rarg[1]*.5;
-		rv = d1*rarg[2]*rarg[3]*(d1 > 0);
-		d1 = fabs(chanvalue(8) - chanvalue(2)*d) - rarg[2]*.5;
-		rv += d1*rarg[1]*rarg[3]*(d1 > 0);
-		d1 = fabs(chanvalue(9) - chanvalue(3)*d) - rarg[3]*.5;
-		rv += d1*rarg[1]*rarg[2]*(d1 > 0);
-		return( argument(1) * rarg[0] / rv );
+		Ts = chanvalue(25);	/* shadow distance */
+		d = fabs(Px - Dx*Ts) - rarg(2)*.5;
+		den = d*rarg(3)*rarg(4)*(d > 0);
+		d = fabs(Py - Dy*Ts) - rarg(3)*.5;
+		den += d*rarg(2)*rarg(4)*(d > 0);
+		d = fabs(Pz - Dz*Ts) - rarg(4)*.5;
+		den += d*rarg(2)*rarg(3)*(d > 0);
+		return( adj_val * Ts / den );
 	case 4:			/* cylindrical source correction */
 		if (nrargs < 3)
 			goto notenough;
-		d = chanvalue(3);	/* Dz */
+		d = Dz;
 		if (d >= 1.) d = 1.-FTINY;
-		rv = rarg[1]*rarg[2]*sqrt(1. - d*d) +
-				.25*PI*rarg[1]*rarg[1]*fabs(d);
-		return( argument(1) * rarg[0] / rv );
+		den = rarg(2)*rarg(3)*sqrt(1. - d*d) +
+				.25*PI*rarg(2)*rarg(2)*fabs(d);
+		return( adj_val / den );
 	}
-	objerror(fobj, USER, "illegal first argument in source_corr()");
+	objerror(fobj, USER, "illegal second argument in source_corr()");
 notenough:
 	objerror(fobj, USER, "missing real argument(s) for source_corr()");
 	return(0.0);	/* pro forma */
-#undef rarg
+#undef Pz
+#undef Py
+#undef Px
+#undef Dz
+#undef Dy
+#undef Dx
 #undef nrargs
+#undef rarg
 }
 
 
@@ -397,6 +414,7 @@ l_source_angle(char *nm)	/* photometry angle */
 		if (Dz <= -1.) return(180.);
 		return(180./PI * acos(Dz));
 	}
+				/* else computing azimuth */
 	angle = 180./PI * atan2(-chanvalue(2), -chanvalue(1));
 	angle += 360.*(angle < 0);
 
