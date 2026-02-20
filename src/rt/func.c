@@ -366,7 +366,8 @@ l_source_corr(char *nm)		/* photometry correction */
 	case 4:			/* cylindrical source correction */
 		if (nrargs < 3)
 			goto notenough;
-		d = chanvalue(3);
+		d = chanvalue(3);	/* Dz */
+		if (d >= 1.) d = 1.-FTINY;
 		rv = rarg[1]*rarg[2]*sqrt(1. - d*d) +
 				.25*PI*rarg[1]*rarg[1]*fabs(d);
 		return( argument(1) * rarg[0] / rv );
