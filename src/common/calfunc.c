@@ -14,7 +14,6 @@ static const char	RCSid[] = "$Id$";
 
 #include  <stdio.h>
 #include  <string.h>
-#include  <errno.h>
 #include  <stdlib.h>
 #include  <math.h>
 
@@ -364,7 +363,6 @@ libfunc(				/* execute library function */
 {
     ELIBR  *lp;
     double  d;
-    int  lasterrno;
 
     if (vp != NULL)
 	lp = vp->lib;
@@ -375,7 +373,6 @@ libfunc(				/* execute library function */
 	eputs("(): undefined function\n");
 	quit(1);
     }
-    lasterrno = errno;
     errno = 0;
     d = (*lp->f)(lp->fname);
 #ifdef  isnan
@@ -396,7 +393,6 @@ libfunc(				/* execute library function */
 		wputs("(): error in call\n");
 	return(0.0);
     }
-    errno = lasterrno;
     return(d);
 }
 

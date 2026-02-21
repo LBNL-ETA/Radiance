@@ -20,7 +20,6 @@ static const char	RCSid[] = "$Id$";
 #include "copyright.h"
 
 #include  <ctype.h>
-#include  <errno.h>
 #include  <math.h>
 #include  <stdlib.h>
 
@@ -47,7 +46,7 @@ static double  ebotch(EPNODE *);
 unsigned int  esupport =		/* what to support */
 		E_VARIABLE | E_FUNCTION ;
 
-int  calexpr_errno;			/* used under Windows */
+int  cal_errno;				/* often used instead of errno */
 int  eofc = 0;				/* optional end-of-file character */
 int  nextc;				/* lookahead character */
 
@@ -385,9 +384,7 @@ epow(
 {
     EPNODE  *ep1 = ep->v.kid;
     double  d;
-    int	 lasterrno;
 
-    lasterrno = errno;
     errno = 0;
     d = pow(evalue(ep1), evalue(ep1->sibling));
 #ifdef  isnan
@@ -402,7 +399,6 @@ epow(
 	wputs("Illegal power\n");
 	return(0.0);
     }
-    errno = lasterrno;
     return(d);
 }
 

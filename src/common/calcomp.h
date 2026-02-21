@@ -78,11 +78,11 @@ extern unsigned int  esupport;
 extern EPNODE	*ecurfunc;
 extern int  nextc;
 extern int  eofc;
-extern int  calexpr_errno;		/* used under Windows */
+extern int  cal_errno;			/* often used instead of errno */
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef isnan
 #undef errno
-#define errno	calexpr_errno
+#define errno	cal_errno
 #endif
 					/* defined in biggerlib.c */
 extern void biggerlib(void);
