@@ -36,6 +36,9 @@ static char  rayinitcal[] = INITFILE;
 static double  l_erf(char *), l_erfc(char *), l_arg(char *),
 		l_source_corr(char *), l_source_angle(char *);
 
+static char	source_theta_nm[] = "source_theta";
+static char	source_phi_nm[] = "source_phi";
+
 
 void
 initfunc(void)	/* initialize function evaluation */
@@ -58,8 +61,8 @@ initfunc(void)	/* initialize function evaluation */
 	funset("erf", 1, ':', l_erf);
 	funset("erfc", 1, ':', l_erfc);
 	funset("source_corr", 2, '=', l_source_corr);
-	funset("source_theta", 1, '=', l_source_angle);
-	funset("source_phi", 1, '=', l_source_angle);
+	funset(source_theta_nm, 1, '=', l_source_angle);
+	funset(source_phi_nm, 1, '=', l_source_angle);
 	setnoisefuncs();
 	setprismfuncs();
 	loadfunc(rayinitcal);
@@ -342,10 +345,11 @@ l_source_corr(char *nm)		/* photometry correction */
 	double	adj_val = argument(1);
 	double	d, den, Ts;
 
-	if ((fobj == NULL) | (fray == NULL))
-		error(USER,
-		    "bad call to source_corr() -- illegal constant in .cal file?");
-
+	if ((fray == NULL) | (fobj == NULL)) {
+		sprintf(errmsg,
+		    "bad call to %s() -- illegal constant in .cal file?", nm);
+		error(USER, errmsg);
+	}
 	if (nrargs > 1)		/* apply scaling adjustment if any */
 		adj_val *= rarg(1);
 	if (adj_val <= 0)	/* check for non-positive value */
@@ -383,9 +387,10 @@ l_source_corr(char *nm)		/* photometry correction */
 				.25*PI*rarg(2)*rarg(2)*fabs(d);
 		return( adj_val / den );
 	}
-	objerror(fobj, USER, "illegal second argument in source_corr()");
+	sprintf(errmsg, "illegal second argument to %s()", nm);
+	objerror(fobj, USER, errmsg);
 notenough:
-	objerror(fobj, USER, "missing real argument(s) for source_corr()");
+	objerror(fobj, USER, "missing real argument(s)");
 	return(0.0);	/* pro forma */
 #undef Pz
 #undef Py
@@ -408,7 +413,7 @@ l_source_angle(char *nm)	/* photometry angle */
 		    "bad call to %s() -- illegal constant in .cal file?", nm);
 		error(USER, errmsg);
 	}
-	if (!strcmp(nm, "source_theta")) {
+	if (nm == source_theta_nm) {
 		double	Dz = chanvalue(3);
 		if (Dz >= 1.) return(0.);
 		if (Dz <= -1.) return(180.);
@@ -427,8 +432,9 @@ l_source_angle(char *nm)	/* photometry angle */
 	case 360:		/* no symmetry */
 		return(angle);
 	}
-	objerror(fobj, USER, "bad call to source_phi()");
-	return(0.0);
+	sprintf(errmsg, "bad argument to %s()", nm);
+	objerror(fobj, USER, errmsg);
+	return(0.0);	/* pro forma */
 }
 
 
