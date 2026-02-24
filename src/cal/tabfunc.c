@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.11 2024/02/28 03:17:23 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -31,12 +31,10 @@ RREAL	(*ordinate)[MAXTAB];		/* dependent values (other columns) */
 int	tabsize = 0;			/* final table size (number of rows) */
 char	locID[16];			/* local identifier (for uniqueness) */
 
-/*extern char	*fgets(), *fskip(), *absc_exp();*/
-
-static void load_data(FILE *fp);
-static void print_funcs(char *xe);
-static void putlist(register RREAL *av, int al, register int pos);
-static char * absc_exp(void);
+void load_data(FILE *fp);
+void print_funcs(char *xe);
+void putlist(RREAL *av, int al, int pos);
+char * absc_exp(void);
 
 int
 main(
@@ -72,7 +70,7 @@ char	**argv
 }
 
 
-static void
+void
 load_data(			/* load tabular data from fp */
 FILE	*fp
 )
@@ -80,8 +78,8 @@ FILE	*fp
 	int	lineno;
 	char	*err;
 	char	inpbuf[MAXLINE];
-	register char	*cp;
-	register int	i;
+	char	*cp;
+	int	i;
 
 	tabsize = lineno = 0;
 	inpbuf[MAXLINE-2] = '\n';
@@ -120,13 +118,13 @@ fatal:
 }
 
 
-static char *
+char *
 absc_exp(void)			/* produce expression for abscissa */
 {
 	static char	ourexp[64];
 	double	step, eps;
 	int	uniform, increasing;
-	register int	i;
+	int	i;
 
 	if (tabsize < 2)
 		return("1");
@@ -177,13 +175,13 @@ absc_exp(void)			/* produce expression for abscissa */
 }
 
 
-static void
+void
 print_funcs(			/* print functions */
 char	*xe
 )
 {
 	int	xelen;
-	register int	i;
+	int	i;
 
 	xelen = strlen(xe);
 	for (i = 0; i < nfuncs; i++) {
@@ -205,11 +203,11 @@ char	*xe
 }
 
 
-static void
+void
 putlist(		/* put out array of values */
-register RREAL	*av,
+RREAL	*av,
 int	al,
-register int	pos
+int	pos
 )
 {
 	char	obuf[32];
