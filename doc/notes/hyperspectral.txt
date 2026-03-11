@@ -31,14 +31,14 @@ rcontrib(1)              - compute contribution coefficients in a RADIANCE scene
 rcrop(1)                 - crop RADIANCE matrix or picture
 rfluxmtx(1)              - compute flux transfer matrix(es) for RADIANCE scene
 rmtxop(1)                - concatenate, add, multiply, divide, transpose, scale, and convert matrices
-rpict(1)                 - generate a RADIANCE picture
 rsensor(1)               - compute sensor signal from a RADIANCE scene
-rtpict(1)                - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
-rtrace(1)                - trace rays in RADIANCE scene
-rvu(1)                   - generate RADIANCE images interactively
+rtpict(1)*               - generate a RADIANCE picture, hyperspectral image, or layers using rtrace
+rtrace(1)*               - trace rays in RADIANCE scene
 rxfluxmtx(1)             - compute flux transfer matrix(es) for RADIANCE scene
-rxpiece(1)               - render tiles in a RADIANCE picture/depth buffer
+rxpiece(1)*              - render tiles in a RADIANCE picture/depth buffer
 xform(1)                 - transform a RADIANCE scene description
+
+* Except for photon maps
 
 =============================
 Tools that partially support hyperspectral data:
@@ -53,6 +53,9 @@ ra_ps(1)                 - convert RADIANCE picture to a PostScript file
 ra_rgbe(1)               - convert between different RADIANCE picture types
 ra_tiff(1)               - convert RADIANCE picture to/from a TIFF color or greyscale image
 rcode2bmp(1)             - convert identifier, depth, and normal maps to BMP images
+rpict(1)                 - generate a RADIANCE picture
+rpiece(1)                - render pieces of a RADIANCE picture
+rvu(1)                   - generate RADIANCE images interactively
 ximage(1)                - RADIANCE picture display for X window system
 
 =============================
@@ -63,6 +66,7 @@ gendaylit(1)             - generates a RADIANCE description of the daylight sour
 genskyvec(1)             - compute patch radiance averages for a specific sky
 ies2rad(1)               - convert IES luminaire data to RADIANCE description
 lampcolor(1)             - compute spectral radiance for diffuse emitter
+mkpmap(1)                - generate RADIANCE photon map
 mksource(1)              - compute distant sources for RADIANCE image-based lighting
 pcomb(1)                 - combine RADIANCE pictures and/or float matrices
 pcompos(1)               - composite RADIANCE pictures
@@ -75,5 +79,4 @@ ra_pict(1)               - convert Radiance pictures to Macintosh PICT files
 ra_ppm(1)                - convert RADIANCE picture to/from a Poskanzer Portable Pixmap
 rad2mgf(1)               - convert RADIANCE scene description to Materials and Geometry Format
 ranimove(1)              - render a RADIANCE animation with motion
-rpiece(1)                - render pieces of a RADIANCE picture
 ttyimage(1)              - RADIANCE driver for dumb ASCII terminal
