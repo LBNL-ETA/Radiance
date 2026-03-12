@@ -313,8 +313,12 @@ close_processes(SUBPROC pd[], int nproc) {
 
 	for (i = 0; i < nproc; i++) {
 		if (pd[i].flags & PF_RUNNING) {
-			ocres = close(pd[i].w);
-			icres = close(pd[i].r);
+			ocres = 0;
+			icres = 0;
+			if (pd[i].w >= 0)
+				ocres = close(pd[i].w);
+			if (pd[i].r >= 0)
+				icres = close(pd[i].r);
 			pd[i].flags = 0;
 			if(ocres != 0 || icres != 0) {
 				/* something went wrong: enforce infanticide */

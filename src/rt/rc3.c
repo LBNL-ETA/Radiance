@@ -335,6 +335,8 @@ in_rchild()
 	if (rc_worker) {				/* spawned worker process */
 		nchild = -1;
 		nproc = 1;
+		SET_FILE_BINARY(stdin);
+		SET_FILE_BINARY(stdout);
 		lu_doall(&modconttab, &set_stdout, NULL);
 		lu_done(&ofiletab);
 		inpfmt = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
@@ -421,13 +423,18 @@ end_children(int immed)
 	for (i = nchild*immed; i-- > 0; )
 		kill(kidpr[nchild].pid, SIGKILL);
 #endif
+	for (i = nchild; i-- > 0; ) {
+		if (kida[i].infp != NULL) {
+			fclose(kida[i].infp);
+			kida[i].infp = NULL;
+		}
+		kidpr[i].r = -1;
+	}
 	if ((i = close_processes(kidpr, nchild)) > 0 && !immed) {
 		sprintf(errmsg, "rendering process returned bad status (%d)",
 					i);
 			error(WARNING, errmsg);
 	}
-	while (nchild-- > 0)
-		fclose(kida[nchild].infp);
 }
 
 
@@ -477,8 +484,21 @@ next_child_nq(int flushing)
 					continue;
 				anybusy = 1;
 				avail = 0;
-				if (!PeekNamedPipe(kid_h[i], NULL, 0, NULL, &avail, NULL))
+				if (!PeekNamedPipe(kid_h[i], NULL, 0, NULL, &avail, NULL)) {
+					DWORD	exitCode = STILL_ACTIVE;
+					HANDLE	hp = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, kidpr[i].pid);
+					if (hp != NULL) {
+						if (GetExitCodeProcess(hp, &exitCode) && exitCode == 0) {
+							CloseHandle(hp);
+							kida[i].nr = 0;
+							if (firstfree < 0)
+								firstfree = i;
+							continue;
+						}
+						CloseHandle(hp);
+					}
 					error(SYSTEM, "PeekNamedPipe() failed");
+				}
 				if ((size_t)avail >= kid_recbytes) {
 					queue_results(i);
 					if (firstfree < 0)

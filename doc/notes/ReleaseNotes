@@ -2920,3 +2920,5 @@ Added long overdue optimization of photometry calculations
 needed by ies2rad and implemented in "source.cal".  The new
 calculations are implemented through custom functions in
 src/rt/func.c.
+
+TW fixed hang in new rcontrib multi-processing code for Windows.
