@@ -53,6 +53,7 @@ ra_ps(1)                 - convert RADIANCE picture to a PostScript file
 ra_rgbe(1)               - convert between different RADIANCE picture types
 ra_tiff(1)               - convert RADIANCE picture to/from a TIFF color or greyscale image
 rcode2bmp(1)             - convert identifier, depth, and normal maps to BMP images
+rholo(1)                 - generate/view a RADIANCE holodeck
 rpict(1)                 - generate a RADIANCE picture
 rpiece(1)                - render pieces of a RADIANCE picture
 rvu(1)                   - generate RADIANCE images interactively
@@ -77,6 +78,8 @@ protate(1)               - rotate a RADIANCE picture
 ra_gif(1)                - convert RADIANCE picture to Compuserve GIF
 ra_pict(1)               - convert Radiance pictures to Macintosh PICT files
 ra_ppm(1)                - convert RADIANCE picture to/from a Poskanzer Portable Pixmap
+ra_t8(1)                 - convert RADIANCE picture to/from Targa 8-bit image file
+ra_t16(1)                - convert RADIANCE picture to/from Targa 16 or 24-bit image file
 rad2mgf(1)               - convert RADIANCE scene description to Materials and Geometry Format
 ranimove(1)              - render a RADIANCE animation with motion
 ttyimage(1)              - RADIANCE driver for dumb ASCII terminal
