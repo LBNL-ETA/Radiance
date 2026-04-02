@@ -1699,7 +1699,7 @@ main(int argc, char *argv[])
 userr:
 	if (a < argc && argv[a][0] == '-')
 		fprintf(stderr, "%s: unsupported/misplaced option '%s'\n", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-W][-bj frac] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
+	fprintf(stderr, "Usage: %s [-v][-bj frac] [rcontrib options] { sender.rad | view | - } receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	quit(1);
 }
