@@ -262,10 +262,8 @@ bool
 RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 				const char *prms, const char *binval, int bincnt)
 {
-	if (!modn | !outspec || !*modn | !*outspec) {
-		error(WARNING, "ignoring bad call to AddModifier()");
+	if (!modn | !outspec || !*modn | !*outspec)
 		return false;
-	}
 	if (*outspec == '!') {
 		error(USER, "command output not supported by RcontribSimulManager");
 		return false;

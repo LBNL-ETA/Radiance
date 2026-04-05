@@ -285,14 +285,16 @@ main(int argc, char *argv[])
 		case 'm':			/* modifier name */
 			check(2,"s");
 			if (!myRCmanager.AddModifier(argv[++i], curout, prms, binval, bincnt)) {
-				sprintf(errmsg, "bad settings for modifier '%s'", argv[i]);
+				sprintf(errmsg, "bad settings for modifier '%s'", argv[i],
+						!curout ? " (missing output spec)" : "");
 				error(USER, errmsg);
 			}
 			break;
 		case 'M':			/* file of modifier names */
 			check(2,"s");
 			if (!myRCmanager.AddModFile(argv[++i], curout, prms, binval, bincnt)) {
-				sprintf(errmsg, "bad settings for modifier file '%s'", argv[i]);
+				sprintf(errmsg, "bad settings for modifier file '%s'%s", argv[i],
+						!curout ? " (missing output spec)" : "");
 				error(USER, errmsg);
 			}
 			break;
