@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: rcode2bmp.pl,v 2.6 2024/10/03 18:45:27 greg Exp $
+# RCSid $Id$
 #
 # Convert one or more rtpict outputs into BMP for convenient viewing
 #
@@ -38,7 +38,7 @@ while ($#ARGV >= 0) {
 	my $format = `getinfo < '$ARGV[0]' | sed -n 's/^FORMAT= *//p'`;
 	chomp $format;
 	die "Cannot get format from $ARGV[0]\n" if ( $? || ! $format );
-	my ($dest) = ("$ARGV[0]" =~ /^([^.]+)/);
+	(my $dest = "$ARGV[0]") =~ s/\.[^.]+$//;
 	$dest .= ".bmp";
 	my $cmd="";
 	if ("$format" =~ /^32-bit_rle_(rgb|xyz)e *$/ || "$format" =~ /^Radiance_spectra *$/) {
