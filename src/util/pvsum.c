@@ -42,18 +42,12 @@ int	row0, rowN;			/* rows for current pass */
 int
 hasFormat(const char *s)
 {
-restart:
-	if (s) s = strchr(s, '%');
-	if (!s) return(0);
-	if (s[1] == '%') {		/* "%%" ? */
-		s += 2;
-		goto restart;
-	}
-	while (*++s) {
-		if (strchr("diouxX", *s))
+	while ((s = strchr(s, '%')) != NULL) {
+		if (strchr("diouxX", *++s))
 			return(1);	/* integer format */
-		if (strchr("%fFeEgGaAcsb", *s))
+		if (strchr("fFeEgGaAcsb", *s++))
 			break;		/* non-integer format */
+		/* "%%" or unknown, keep looking */
 	}
 	return(0);
 }
