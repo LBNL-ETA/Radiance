@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id$";
 #include "platform.h"
 #include "random.h"
 #include "rmatrix.h"
+#include <ctype.h>
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/mman.h>
 #include <sys/wait.h>
@@ -43,7 +44,9 @@ int
 hasFormat(const char *s)
 {
 	while ((s = strchr(s, '%')) != NULL) {
-		if (strchr("diouxX", *++s))
+		while (isdigit(*++s))
+			;
+		if (strchr("diouxX", *s))
 			return(1);	/* integer format */
 		if (strchr("fFeEgGaAcsb", *s++))
 			break;		/* non-integer format */
