@@ -46,10 +46,10 @@ hasFormat(const char *s)
 	while ((s = strchr(s, '%')) != NULL) {
 		while (isdigit(*++s))
 			;
-		if (strchr("diouxX", *s))
-			return(1);	/* integer format */
-		if (strchr("fFeEgGaAcsb", *s++))
+		if (strchr("fFeEgGaAcsb", *s))
 			break;		/* non-integer format */
+		if (strchr("diouxX", *s++))
+			return(1);	/* integer format */
 		/* "%%" or unknown, keep looking */
 	}
 	return(0);
