@@ -25,12 +25,6 @@ extern "C" {
 #define	DTdouble	6
 #define DTend		7
 
-#ifdef _WIN32
-#define cm_free_u(cm)	_aligned_free(cm)
-#else
-#define cm_free_u(cm)	free(cm)
-#endif
-
 /* Defined in cmconst.c */
 extern const char	stdin_name[];
 extern const char	*cm_fmt_id[];
@@ -50,15 +44,6 @@ typedef struct {
 
 /* Allocate a color coefficient matrix */
 extern CMATRIX	*cm_alloc(int nrows, int ncols);
-#ifdef INTEL_DCTOPT
-extern CMATRIX* cm_alloc_u(int rows, int cols);
-extern CMATRIX* cm_resize_aligned(CMATRIX* cm, int nrows);
-extern CMATRIX* cm_load_u(const char* inspec, int nrows, int ncols, int dtype);
-extern CMATRIX* cm_column_u(const CMATRIX* cm, int c);
-extern CMATRIX* cm_get_batch(const CMATRIX* src, int start_col, int num_cols);
-extern CMATRIX* cm_multiply_avx2(const CMATRIX* cm1, const CMATRIX* cm2);
-extern CMATRIX* cm_multiply_smart(const CMATRIX* basis, const CMATRIX* cv_batch);
-#endif /* INTEL_DCTOPT */
 
 /* Resize color coefficient matrix */
 extern CMATRIX	*cm_resize(CMATRIX *cm, int nrows);
