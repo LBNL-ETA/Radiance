@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.9 2025/01/02 02:59:15 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -661,7 +661,8 @@ oputW(				/* print coefficient */
 {
 	SCOLOR	contr;
 				/* shadow ray not on source? */
-	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
+	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro &&
+			scolor_mean(r->rcol) <= FTINY)
 		scolorblack(contr);
 	else
 		raycontrib(contr, r, PRIMARY);
