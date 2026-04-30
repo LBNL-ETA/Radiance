@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.19 2023/12/18 20:19:48 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -19,27 +19,25 @@ int  reverse = 0;
 AMBVAL  av;
 
 
-static void
+void
 lookamb(			/* load & convert ambient values from a file */
 	FILE  *fp
 )
 {
 	FVECT	norm, uvec;
-	COLOR	avcol;
 
 	while (readambval(&av, fp)) {
 		decodedir(norm, av.ndir);
 		decodedir(uvec, av.udir);
-		scolor2rgb(avcol, av.val, AMB_CNDX[3], AMB_WLPART);
 		if (dataonly) {
 			printf("%f\t%f\t%f\t", av.pos[0], av.pos[1], av.pos[2]);
 			printf("%f\t%f\t%f\t", norm[0], norm[1], norm[2]);
 			printf("%f\t%f\t%f\t", uvec[0], uvec[1], uvec[2]);
 			printf("%d\t%f\t%f\t%f\t", av.lvl, av.weight,
 					av.rad[0], av.rad[1]);
-			printf("%e\t%e\t%e\t", colval(avcol,RED),
-						colval(avcol,GRN),
-						colval(avcol,BLU));
+			printf("%e\t%e\t%e\t", colval(av.val,RED),
+						colval(av.val,GRN),
+						colval(av.val,BLU));
 			printf("%f\t%f\t", av.gpos[0], av.gpos[1]);
 			printf("%f\t%f\t", av.gdir[0], av.gdir[1]);
 			printf("%u\n", av.corral);
@@ -52,8 +50,8 @@ lookamb(			/* load & convert ambient values from a file */
 					uvec[0], uvec[1], uvec[2]);
 			printf("Lvl,Wt,UVrad:\t%d\t\t%f\t%f\t%f\n", av.lvl,
 					av.weight, av.rad[0], av.rad[1]);
-			printf("Value:\t\t%e\t%e\t%e\n", colval(avcol,RED),
-					colval(avcol,GRN), colval(avcol,BLU));
+			printf("Value:\t\t%e\t%e\t%e\n", colval(av.val,RED),
+					colval(av.val,GRN), colval(av.val,BLU));
 			printf("Pos.Grad:\t%f\t%f\n", av.gpos[0], av.gpos[1]);
 			printf("Dir.Grad:\t%f\t%f\n", av.gdir[0], av.gdir[1]);
 			printf("Corral:\t\t%8X\n\n", av.corral);
@@ -64,7 +62,7 @@ lookamb(			/* load & convert ambient values from a file */
 }
 
 
-static void
+void
 writamb(			/* write binary ambient values to stdout */
 	FILE  *fp
 )
