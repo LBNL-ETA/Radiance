@@ -68,7 +68,6 @@ writamb(			/* write binary ambient values to stdout */
 )
 {
 	FVECT	norm;
-	COLOR	avcol;
 
 	for ( ; ; ) {
 		if (!dataonly)
@@ -96,9 +95,8 @@ writamb(			/* write binary ambient values to stdout */
 		if (!dataonly)
 			fscanf(fp, "%*s");
 		if (fscanf(fp, "%f %f %f",
-				&avcol[RED], &avcol[GRN], &avcol[BLU]) != 3)
+				&av.val[RED], &av.val[GRN], &av.val[BLU]) != 3)
 			return;
-		setscolor(av.val, avcol[RED], avcol[GRN], avcol[BLU]);
 		if (!dataonly)
 			fscanf(fp, "%*s");
 		if (fscanf(fp, "%f %f", &av.gpos[0], &av.gpos[1]) != 2)
