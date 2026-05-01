@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.11 2022/02/15 04:08:26 greg Exp $
+# RCSid $Id$
 #
 # Visualize ambient positions and gradients
 #
@@ -98,10 +98,10 @@ pgeval polygon pgellipse${recno}
 0
 0
 12
-	${   px1   } ${   py1   } ${   pz1   }
-	${   px2   } ${   py2   } ${   pz2   }
-	${   px3   } ${   py3   } ${   pz3   }
-	${   px4   } ${   py4   } ${   pz4   }
+	${     px1     } ${     py1     } ${     pz1     }
+	${     px2     } ${     py2     } ${     pz2     }
+	${     px3     } ${     py3     } ${     pz3     }
+	${     px4     } ${     py4     } ${     pz4     }
 ';
 $posgradfmt .= '
 void glow tipglow
