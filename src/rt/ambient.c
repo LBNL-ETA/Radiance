@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.132 2025/06/20 03:43:17 greg Exp $";
+static const char	RCSid[] = "$Id$";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -262,7 +262,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 	if (rdepth >= ambounce)
 		goto dumbamb;
 						/* check ambient list */
-	if (ambincl != -1 && r->ro != NULL &&
+	if ((ambincl >= 0) & (r->ro != NULL) &&
 			ambincl != inset(ambset, r->ro->omod))
 		goto dumbamb;
 
@@ -519,7 +519,7 @@ makeambient(		/* make a new ambient value for storage */
 	i = doambient(acol, r, amb.weight*sgn,
 			uvw, amb.rad, amb.gpos, amb.gdir, &amb.corral);
 	scalescolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
-	if (i <= 0 || amb.rad[0] <= FTINY)	/* no Hessian or zero radius */
+	if ((i <= 0) | (amb.rad[0] <= FTINY))	/* no Hessian or zero radius */
 		return(i);
 	uvw[2][0] = sgn*r->ron[0];		/* orient unperturbed normal */
 	uvw[2][1] = sgn*r->ron[1];
