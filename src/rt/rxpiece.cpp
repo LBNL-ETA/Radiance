@@ -588,7 +588,9 @@ nexttile(int ti[2])
 			tlist[2*tlen+1] = ti[1];
 			tlen++;
 		}
-				// shuffle order w/ Fisher-Yates
+		ourpID = getpid();	// save time on system calls
+		srandom((long)ourpID);	// give us a new start
+					// shuffle order w/ Fisher-Yates
 		for (int i = 0; i < tlen-1; i++) {
 			const int	ix = irandom(tlen-i) + i;
 			ti[0] = tlist[2*i];
@@ -598,7 +600,6 @@ nexttile(int ti[2])
 			tlist[2*ix] = ti[0];
 			tlist[2*ix+1] = ti[1];
 		}
-		ourpID = getpid();	// save time on system calls
 	}
 	while (tnext < tlen) {		// find first available
 		ti[0] = tlist[2*tnext];
