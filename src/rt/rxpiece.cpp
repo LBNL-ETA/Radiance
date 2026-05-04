@@ -556,18 +556,15 @@ children_finished()
 static bool
 nexttile(int ti[2])
 {
-	static pid_t	ourpID = 0;
 	static short *	tlist = NULL;
-	static int	tlen = 0;
-	static int	tnext = 0;
+	static pid_t	ourpID;
+	static int	tlen, tnext;
 
 	if (gotALRM) {			// pre-empting new work?
-		if (tlist) {
-			sprintf(errmsg, "process %d got alarm, exiting", ourpID);
-			CHECK(tnext<tlen, WARNING, errmsg);
-			free(tlist); tlist = NULL;
-		}
-		return false;
+		if (!tlist) return false;
+		sprintf(errmsg, "process %d got alarm, exiting", ourpID);
+		error(WARNING, errmsg);
+		tnext = tlen;
 	}
 	if (!tlist) {			// initialize random tile list
 		ABitMap2	todoMap(tileGrid[0], tileGrid[1]);
@@ -600,6 +597,7 @@ nexttile(int ti[2])
 			tlist[2*ix] = ti[0];
 			tlist[2*ix+1] = ti[1];
 		}
+		tnext = 0;
 	}
 	while (tnext < tlen) {		// find first available
 		ti[0] = tlist[2*tnext];
