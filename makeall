@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.32 2024/12/03 01:11:43 greg Exp $
+# RCSid $Id$
 # 
 # Make all the Radiance programs
 #
@@ -121,7 +121,7 @@ echo -n "Choice? "
 set arch="$<"
 switch ("$arch")
 case 1:			# Linux
-	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
+	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -mavx2 -mfma -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
 	set opt="-O2"
 	set arch=IBMPC
 	set compat="strnstr.o strlcpy.o"

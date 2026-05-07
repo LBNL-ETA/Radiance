@@ -1,9 +1,9 @@
-# RCSid $Id: CMakeLists.txt,v 1.53 2025/07/24 01:24:01 greg Exp $
+# RCSid $Id$
 
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/util/Version.c")
 create_version_file("${VERSION_FILE}")
 
-add_executable(dctimestep dctimestep.c cmbsdf.c cmconst.c cmatrix.c)
+add_executable(dctimestep dctimestep.c cmbsdf.c cmconst.c cmatrix.c tinycthread.c threadpool.c cmmap.c cmatrixavx2.c)
 target_link_libraries(dctimestep rtrad)
 
 add_executable(findglare findglare.c glareval.c glaresrc.c setscan.c)
