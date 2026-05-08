@@ -1,3 +1,4 @@
+/* RCSid $Id$ */
 
 
 #ifndef MY_THREADPOOL_H

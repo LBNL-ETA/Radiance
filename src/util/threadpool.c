@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id$";
+#endif
 #include "tinycthread.h"
 #include <stdlib.h>
 #include "threadpool.h"

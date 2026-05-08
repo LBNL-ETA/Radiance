@@ -30,9 +30,9 @@ CMATRIX* cm_alloc_u(int rows, int cols) {
 #ifdef  _WIN32
 	CMATRIX* m = (CMATRIX*)_aligned_malloc((total_size + 31) & ~31, 32);
 #else
-	CMATRIX* m = NULL;
-	void	*mp;
-	if (posix_memalign(&mp, 32, (total_size + 31) & ~31) == 0) m = mp;
+	CMATRIX* m;
+	if (posix_memalign((void **)&m, 32, (total_size + 31) & ~31) < 0)
+		m = NULL;
 #endif //  _WIN32
 	if (m) {
 		m->nrows = rows;
