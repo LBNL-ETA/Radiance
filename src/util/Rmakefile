@@ -117,11 +117,25 @@ glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrtrad -lGLU -lGL \
 -lX11 -lXext $(MLIB)
 
-dctimestep:	dctimestep.o cmbsdf.o cmconst.o cmatrix.o \
-tinycthread.o threadpool.o cmmap.o cmatrixavx2.o
-	$(CC) $(CFLAGS) -o dctimestep dctimestep.o cmbsdf.o \
-tinycthread.o threadpool.o cmmap.o cmatrixavx2.o \
-cmconst.o cmatrix.o -lrtrad $(MLIB)
+OBJS = dctimestep.o cmbsdf.o cmconst.o cmatrix.o tinycthread.o threadpool.o cmmap.o cmatrixalign.o
+UNAME_M := $(shell uname -m)
+X86_FAMILY := x86_64 amd64 AMD64 i386 i486 i586 i686 x86 X86
+ifneq (,$(filter $(UNAME_M),$(X86_FAMILY)))
+    AVX2_OBJ = mmavx2.o
+    CFLAGS += -DHAS_AVX2_COMPILED
+    $(info [Build] x86 architecture detected ($(UNAME_M)). Enabling AVX2 compilation for $(AVX2_OBJ).)
+else
+    AVX2_OBJ = 
+    $(info [Build] Non-x86 architecture detected ($(UNAME_M)). Skipping AVX2 module.)
+endif
+
+dctimestep: $(OBJS) $(AVX2_OBJ)
+	$(CC) $(CFLAGS) -o dctimestep $(OBJS) $(AVX2_OBJ) -lrtrad $(MLIB)
+
+$(AVX2_OBJ): mmavx2.c
+	$(CC) $(CFLAGS) -mavx2 -mfma -c mmavx2.c -o $@
+	
+
 
 rttree_reduce:	rttree_reduce.o
 	$(CC) $(CFLAGS) -o rttree_reduce rttree_reduce.o -lrtrad $(MLIB)

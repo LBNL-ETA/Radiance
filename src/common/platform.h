@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.19 2025/06/07 05:09:45 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -46,10 +46,10 @@
   #define mktemp _mktemp
   #define fpurge(s)
 
-  #undef strcasecmp
+  #if !defined(strcasecmp) && !defined(__MINGW32__)
   #define strcasecmp _stricmp
-  #undef strncasecmp
   #define strncasecmp _strnicmp
+  #endif
   #undef strdup
   #define strdup _strdup
 

@@ -12,7 +12,6 @@ static const char RCSid[] = "$Id$";
 #include "standard.h"
 #include "cmatrix.h"
 #include "platform.h"
-#include "paths.h"
 #include "resolu.h"
 
 /* Allocate a color coefficient matrix */

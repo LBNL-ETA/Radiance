@@ -7,31 +7,23 @@ static const char RCSid[] = "$Id$";
  *	G. Ward
  */
 #if defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
 #include <psapi.h>
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <sys/resource.h>
 #endif
 #include <ctype.h>
-#include <stdlib.h>
 #include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"
 #include "resolu.h"
-#if defined(__AVX2__)
-#include <immintrin.h>
-#endif
-#include <stdio.h>
-#include <string.h>
+
 #include <math.h>
 #include <stdint.h>
 #include "color.h"
 #include "cmmap.h"
-#include "cmatrixavx2.h"
+#include "cmatrixalign.h"
 #include "threadpool.h"
 
 int MAX_CHUNK_SIZE;

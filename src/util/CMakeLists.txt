@@ -2,8 +2,52 @@
 
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/util/Version.c")
 create_version_file("${VERSION_FILE}")
+include(CheckCCompilerFlag)
+set(COMMON_SRCS 
+    threadpool.c
+    tinycthread.c
+    cmmap.c 
+    cmconst.c 
+    cmbsdf.c 
+    cmatrix.c 
+    cmatrixalign.c
+    dctimestep.c 
+)
 
-add_executable(dctimestep dctimestep.c cmbsdf.c cmconst.c cmatrix.c tinycthread.c threadpool.c cmmap.c cmatrixavx2.c)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86|x86|X86)$")
+    set(TARGET_IS_X86 TRUE)
+else()
+    set(TARGET_IS_X86 FALSE)
+endif()
+
+if(TARGET_IS_X86)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        check_c_compiler_flag("-mavx2" COMPILER_SUPPORTS_AVX2)
+        check_c_compiler_flag("-mfma" COMPILER_SUPPORTS_FMA)
+        
+        if(COMPILER_SUPPORTS_AVX2 AND COMPILER_SUPPORTS_FMA)
+            set(AVX2_SRCS mmavx2.c)
+            set_source_files_properties(${AVX2_SRCS} PROPERTIES COMPILE_FLAGS "-mavx2 -mfma")
+            
+            list(APPEND COMMON_SRCS ${AVX2_SRCS})
+            add_compile_definitions(HAS_AVX2_COMPILED)
+            message(STATUS "AVX2/FMA support enabled for mmavx2.c")
+        endif()
+    elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+        check_c_compiler_flag("/arch:AVX2" COMPILER_SUPPORTS_AVX2)
+        if(COMPILER_SUPPORTS_AVX2)
+            set(AVX2_SRCS mmavx2.c)
+            set_source_files_properties(${AVX2_SRCS} PROPERTIES COMPILE_FLAGS "/arch:AVX2")
+            list(APPEND COMMON_SRCS ${AVX2_SRCS})
+            add_compile_definitions(HAS_AVX2_COMPILED)
+            message(STATUS "MSVC AVX2 support enabled for mmavx2.c")
+        endif()
+    endif()
+else()
+    message(STATUS "Non-x86 architecture detected (${CMAKE_SYSTEM_PROCESSOR}). Skipping AVX2 module.")
+endif()
+
+add_executable(dctimestep ${COMMON_SRCS})
 target_link_libraries(dctimestep rtrad)
 
 add_executable(findglare findglare.c glareval.c glaresrc.c setscan.c)

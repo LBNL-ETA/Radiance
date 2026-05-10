@@ -10,7 +10,6 @@ static const char RCSid[] = "$Id$";
 */
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
 #include <psapi.h>
 #elif defined(__APPLE__)
 #define NULL ((void*)0)
@@ -19,31 +18,20 @@ static const char RCSid[] = "$Id$";
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#include <fcntl.h>
-#include <unistd.h>
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-//#define NULL ((void*)0)
+/* #define NULL ((void*)0) */
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 #include "platform.h"
 #include "resolu.h"
 #include "color.h"
 #include "cmmap.h"
 #include "standard.h"
 #include "cmatrix.h"
-#include "cmatrixavx2.h"
-#include <string.h>
+#include "cmatrixalign.h"
 #include "threadpool.h"
 #include <stdint.h>
-
-#if defined(__AVX2__)
-#include <immintrin.h>
-#endif
 
 typedef struct {
 	int file_index;
@@ -452,8 +440,6 @@ int decode_hdr_line_planar_f(NativeHandle handle, int64_t** index_table, int c, 
 
 int decode_hdr_line_planar(unsigned char** src, unsigned char* channels[4], int width) {
 	unsigned char* p = *src;
-
-
 	if (p[0] == 2 && p[1] == 2 && !(p[2] & 128)) {
 		p += 4;
 		for (int i = 0; i < 4; i++) {
@@ -501,49 +487,6 @@ CMATRIX* obtain_scanline_matrix(NativeHandle* handles, int64_t** index_table, in
 
 			if (decode_hdr_line_planar_f(handles[c], index_table, c, absolute_y, channels, w) == 0) {
 				int x = 0;
-
-#if defined(__AVX2__)
-				for (; x <= w - 8; x += 8) {
-					__m128i r_8 = _mm_loadl_epi64((__m128i const*) & channels[0][x]);
-					__m128i g_8 = _mm_loadl_epi64((__m128i const*) & channels[1][x]);
-					__m128i b_8 = _mm_loadl_epi64((__m128i const*) & channels[2][x]);
-					__m128i e_8 = _mm_loadl_epi64((__m128i const*) & channels[3][x]);
-
-					__m256i r_32 = _mm256_cvtepu8_epi32(r_8);
-					__m256i g_32 = _mm256_cvtepu8_epi32(g_8);
-					__m256i b_32 = _mm256_cvtepu8_epi32(b_8);
-					__m256i e_32 = _mm256_cvtepu8_epi32(e_8);
-
-					__m256 r_f = _mm256_cvtepi32_ps(r_32);
-					__m256 g_f = _mm256_cvtepi32_ps(g_32);
-					__m256 b_f = _mm256_cvtepi32_ps(b_32);
-
-					__m256 exp_f = _mm256_i32gather_ps(exponent_table, e_32, 4);
-
-					r_f = _mm256_mul_ps(r_f, exp_f);
-					g_f = _mm256_mul_ps(g_f, exp_f);
-					b_f = _mm256_mul_ps(b_f, exp_f);
-
-					__m256i zero_mask = _mm256_cmpeq_epi32(e_32, _mm256_setzero_si256());
-					__m256 zero_mask_ps = _mm256_castsi256_ps(zero_mask);
-
-					r_f = _mm256_andnot_ps(zero_mask_ps, r_f);
-					g_f = _mm256_andnot_ps(zero_mask_ps, g_f);
-					b_f = _mm256_andnot_ps(zero_mask_ps, b_f);
-
-					float R_arr[8], G_arr[8], B_arr[8];
-					_mm256_storeu_ps(R_arr, r_f);
-					_mm256_storeu_ps(G_arr, g_f);
-					_mm256_storeu_ps(B_arr, b_f);
-
-					for (int i = 0; i < 8; i++) {
-						COLORV* p = &line_buffer[(x + i) * num_hdrs * 3 + c * 3];
-						p[0] = R_arr[i];
-						p[1] = G_arr[i];
-						p[2] = B_arr[i];
-					}
-				}
-#endif
 				for (; x < w; x++) {
 					unsigned char e = channels[3][x];
 					if (e > 0) {
@@ -557,7 +500,6 @@ CMATRIX* obtain_scanline_matrix(NativeHandle* handles, int64_t** index_table, in
 			}
 		}
 
-
 		memcpy(&hdr_matrix->cmem[y * w * num_hdrs * 3], line_buffer, w * num_hdrs * 3 * sizeof(COLORV));
 	}
 
@@ -565,7 +507,6 @@ CMATRIX* obtain_scanline_matrix(NativeHandle* handles, int64_t** index_table, in
 	free(planar_mem);
 	return hdr_matrix;
 }
-
 
 
 unsigned long long get_available_memory() {
