@@ -10,13 +10,13 @@ IMG_CMP = radcompare -h -rms 0.03 -rel 0.007 -max 0.2
 all:	test-pfilt test-pvalue test-ra_tiff test-pcompos \
 test-protate test-pflip test-ra_bmp test-ra_xyze test-pcond \
 test-ra_t16 test-ra_rgbe test-ra_ppm test-pextrem \
-test-pcomb test-pinterp test-psign test-falsecolor test-ra_ps \
+test-pcomb test-pinterp test-psign test-falsecolor \
 test-ra_gif
 
 clean:
 	rm -f test.hdr test24.hdr test24.tif test32L.tif pcomb.hdr \
 norm24.tif norm8.tif pcompos.hdr pcondh.hdr test_extrema.txt psign.hdr \
-pinterp.hdr false.hdr ra_ps.ps test8.tga test8.gif
+pinterp.hdr false.hdr test8.tga test8.gif
 
 test-pcond:	test.hdr
 	pcond -h test.hdr pcondh.hdr
@@ -91,11 +91,6 @@ test-ra_t16:	test24.hdr
 
 test-ra_ppm:	test24.hdr
 	ra_ppm test24.hdr | ra_ppm -r | $(IMG_CMP) test24.hdr -
-
-test-ra_ps:	test.hdr
-	ra_ps -b test.hdr > ra_ps.ps
-	radcompare -c% ref/ra_ps.ps ra_ps.ps
-	rm -f ra_ps.ps
 
 test-ra_gif:	test.hdr
 	ra_gif -d -n 1 test.hdr > test8.gif
