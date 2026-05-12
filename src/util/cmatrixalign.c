@@ -18,38 +18,41 @@ static const char RCSid[] = "$Id$";
 #include <ctype.h>
 #include <stdbool.h>
 #include "cmatrixalign.h"
-#ifdef _WIN32
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#define ARCH_X86
+	#ifdef _WIN32
     #include <intrin.h>
-	static inline void get_cpuid(int leaf, int subleaf, unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx) {
-        int cpuInfo[4];
-        __cpuidex(cpuInfo, leaf, subleaf);
-        *eax = cpuInfo[0];
-        *ebx = cpuInfo[1];
-        *ecx = cpuInfo[2];
-        *edx = cpuInfo[3];
-    }
-    
-    static inline unsigned long long get_xcr0(void) {
-        return _xgetbv(0);
-    }
-
-
-#else
-    #include <cpuid.h>
-    
-    static inline void get_cpuid(int leaf, int subleaf, unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx) {
-        __cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
-    }
-    
-    static inline unsigned long long get_xcr0(void) {
-        unsigned int eax, edx;
-        __asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
-        return ((unsigned long long)edx << 32) | eax;
+		static inline void get_cpuid(int leaf, int subleaf, unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx) {
+			int cpuInfo[4];
+			__cpuidex(cpuInfo, leaf, subleaf);
+			*eax = cpuInfo[0];
+			*ebx = cpuInfo[1];
+			*ecx = cpuInfo[2];
+			*edx = cpuInfo[3];
+		}
+		
+		static inline unsigned long long get_xcr0(void) {
+			return _xgetbv(0);
     }
 
+
+	#else
+		#include <cpuid.h>
+		
+		static inline void get_cpuid(int leaf, int subleaf, unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx) {
+			__cpuid_count(leaf, subleaf, *eax, *ebx, *ecx, *edx);
+		}
+		
+		static inline unsigned long long get_xcr0(void) {
+			unsigned int eax, edx;
+			__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));
+			return ((unsigned long long)edx << 32) | eax;
+		}
+
+	#endif
 #endif
-
 int cpu_supports_avx2_fma(void) {
+#ifdef ARCH_X86
     unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
 
     // get Leaf 1
@@ -73,9 +76,12 @@ int cpu_supports_avx2_fma(void) {
     // Make sure that the operating system has enabled the context save mechanism for SSE (bit 1) and AVX (bit 2) (1 | 2 = 3, that is, decimal 6).
     unsigned long long xcr0 = get_xcr0();
     if ((xcr0 & 6) != 6) return 0;
-
     return 1;
+#else
+	return 0;
+#endif
 }
+
 
 CMATRIX* cm_alloc_u(int rows, int cols) {
 	size_t total_elements = (size_t)rows * cols;
@@ -502,9 +508,11 @@ CMATRIX* cm_multiply_smart(const CMATRIX* basis, const CMATRIX* cv_batch) {
 	}
 	CMATRIX* compact_res = NULL;
 	if(cpu_supports_avx2_fma()) {
+		//fprintf(stderr,"%s\n","AVX2 is supported");
 		compact_res = cm_multiply_avx2(basis, compact_cv);
 	}
 	else {
+		//fprintf(stderr,"%s\n","AVX2 is not supported");
 		compact_res = cm_multiply_sd(basis, compact_cv);
 	}
 	cm_free_u(compact_cv);
