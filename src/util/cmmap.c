@@ -9,9 +9,11 @@ static const char RCSid[] = "$Id$";
 * Yongqing
 */
 
+#include "platform.h"
 #if defined(_WIN32) || defined(_WIN64)
 #include <psapi.h>
 #elif defined(__APPLE__)
+#undef NULL
 #define NULL ((void*)0)
 #include <mach/mach.h>
 #include <mach/mach_host.h>
@@ -21,9 +23,7 @@ static const char RCSid[] = "$Id$";
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
-/* #define NULL ((void*)0) */
 #endif
-#include "platform.h"
 #include "resolu.h"
 #include "color.h"
 #include "cmmap.h"

@@ -6,6 +6,7 @@ static const char RCSid[] = "$Id$";
  *
  *	G. Ward
  */
+#include "platform.h"
 #if defined(_WIN32) || defined(_WIN64)
 #include <psapi.h>
 #else
@@ -14,7 +15,6 @@ static const char RCSid[] = "$Id$";
 #include <sys/resource.h>
 #endif
 #include <ctype.h>
-#include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"
 #include "resolu.h"
