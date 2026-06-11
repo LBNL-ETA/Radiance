@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id$";
 #define  MAXITER	10		/* maximum # specular ray attempts */
 #endif
 					/* estimate of Fresnel function */
-#define  FRESNE(ci)	(exp(-5.85*(ci)) - 0.00202943064)
+#define  FRESNE(ci)	(exp(-5.85*(ci)) - 0.00287989916)
 #define  FRESTHRESH	0.017999	/* minimum specularity for approx. */
 
 
