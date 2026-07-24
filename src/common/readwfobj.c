@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readwfobj.c,v 2.10 2023/02/07 20:28:16 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  readobj.c
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: readwfobj.c,v 2.10 2023/02/07 20:28:16 greg Ex
 #include <ctype.h>
 #include "objutil.h"
 
-#define MAXARG		512	/* maximum # arguments in a statement */
+#define MAXARG		8192	/* maximum # arguments in a statement */
 
 static int	lineno;		/* current line number */
 
@@ -24,9 +24,9 @@ static int	lineno;		/* current line number */
 static int
 get_stmt(char *av[MAXARG], FILE *fp)
 {
-	static char	sbuf[MAXARG*16];
-	register char	*cp;
-	register int	i;
+	static char	sbuf[MAXARG*32];
+	char	*cp;
+	int	i;
 
 	do {
 		if (fgetline(cp=sbuf, sizeof(sbuf), fp) == NULL)
@@ -48,8 +48,10 @@ get_stmt(char *av[MAXARG], FILE *fp)
 				break;
 			}
 			av[i++] = cp;
-			while (*++cp && !isspace(*cp))
-				;
+			do
+				if ((*cp == '"') | (*cp == '\''))
+					*cp = '^';
+			while (*++cp && !isspace(*cp));
 		}
 		av[i] = NULL;
 		lineno++;

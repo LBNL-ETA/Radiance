@@ -42,7 +42,7 @@ typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
 #define CHUNKSIZ	1024	/* vertex allocation chunk size */
 
-#define MAXARG		512	/* maximum # arguments in a statement */
+#define MAXARG		8192	/* maximum # arguments in a statement */
 
 				/* qualifiers */
 #define Q_MTL		0
@@ -317,7 +317,7 @@ getstmt(				/* read the next statement from fp */
 	FILE	*fp
 )
 {
-	static char	sbuf[MAXARG*16];
+	static char	sbuf[MAXARG*32];
 	char	*cp;
 	int	i;
 
@@ -340,8 +340,10 @@ getstmt(				/* read the next statement from fp */
 				break;
 			}
 			av[i++] = cp;
-			while (*++cp && !isspace(*cp))
-				;
+			do
+				if ((*cp == '"') | (*cp == '\''))
+					*cp = '^';
+			while (*++cp && !isspace(*cp));
 		}
 		av[i] = NULL;
 		lineno++;
