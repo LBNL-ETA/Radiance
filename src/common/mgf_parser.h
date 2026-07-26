@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgf_parser.h,v 3.1 2011/02/18 00:40:25 greg Exp $ */
+/* RCSid: $Id$ */
 /*
  * Header file for MGF interpreter
  */
@@ -108,7 +108,7 @@ extern char	*mg_err[MG_NERRS];	/* list of error messages */
  * returns 0 when the end of file has been reached.
  */
 
-#define MG_MAXLINE	4096		/* maximum input line length */
+#define MG_MAXLINE	64000		/* maximum input line length */
 #define MG_MAXARGC	(MG_MAXLINE/4)	/* maximum argument count */
 
 typedef struct mg_fctxt {

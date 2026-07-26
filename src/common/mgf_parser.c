@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf_parser.c,v 3.2 2020/03/12 17:22:33 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Parse an MGF file, converting or discarding unsupported entities
@@ -82,7 +82,7 @@ void
 mg_init(void)			/* initialize alternate entity handlers */
 {
 	unsigned long	ineed = 0, uneed = 0;
-	register int	i;
+	int	i;
 					/* pick up slack */
 	if (mg_ehand[MG_E_IES] == NULL)
 		mg_ehand[MG_E_IES] = e_ies;
@@ -185,7 +185,7 @@ mg_entity(			/* get entity number from its name */
 )
 {
 	static LUTAB	ent_tab = LU_SINIT(NULL,NULL);	/* lookup table */
-	register char	*cp;
+	char	*cp;
 
 	if (!ent_tab.tsiz) {		/* initialize hash table */
 		if (!lu_init(&ent_tab, MG_NENTITIES))
@@ -203,7 +203,7 @@ mg_entity(			/* get entity number from its name */
 
 int
 mg_handle(		/* pass entity to appropriate handler */
-	register int	en,
+	int	en,
 	int	ac,
 	char	**av
 )
@@ -225,12 +225,12 @@ mg_handle(		/* pass entity to appropriate handler */
 
 int
 mg_open(			/* open new input file */
-	register MG_FCTXT	*ctx,
+	MG_FCTXT	*ctx,
 	char	*fn
 )
 {
 	static int	nfids;
-	register char	*cp;
+	char	*cp;
 
 	ctx->fid = ++nfids;
 	ctx->lineno = 0;
@@ -260,7 +260,7 @@ mg_open(			/* open new input file */
 void
 mg_close(void)			/* close input file */
 {
-	register MG_FCTXT	*ctx = mg_file;
+	MG_FCTXT	*ctx = mg_file;
 
 	mg_file = ctx->prev;		/* restore enclosing context */
 	if (ctx->fp != stdin)		/* close file if it's a file */
@@ -270,7 +270,7 @@ mg_close(void)			/* close input file */
 
 void
 mg_fgetpos(			/* get current position in input file */
-	register MG_FPOS	*pos
+	MG_FPOS	*pos
 )
 {
 	pos->fid = mg_file->fid;
@@ -281,7 +281,7 @@ mg_fgetpos(			/* get current position in input file */
 
 int
 mg_fgoto(			/* reposition input file pointer */
-	register MG_FPOS	*pos
+	MG_FPOS	*pos
 )
 {
 	if (pos->fid != mg_file->fid)
@@ -300,7 +300,7 @@ mg_fgoto(			/* reposition input file pointer */
 int
 mg_read(void)			/* read next line from file */
 {
-	register int	len = 0;
+	int	len = 0;
 
 	do {
 		if (fgets(mg_file->inpline+len,
@@ -319,9 +319,9 @@ mg_read(void)			/* read next line from file */
 int
 mg_parse(void)			/* parse current input line */
 {
-	char	abuf[MG_MAXLINE];
-	char	*argv[MG_MAXARGC];
-	register char	*cp, *cp2, **ap;
+	static char	abuf[MG_MAXLINE];
+	char		*argv[MG_MAXARGC];
+	char		*cp, *cp2, **ap;
 					/* copy line, removing escape chars */
 	cp = abuf; cp2 = mg_file->inpline;
 	while ((*cp++ = *cp2++))
@@ -354,7 +354,7 @@ mg_load(			/* load an MGF file */
 {
 	MG_FCTXT	cntxt;
 	int	rval;
-	register int	nbr;
+	int	nbr;
 
 	if ((rval = mg_open(&cntxt, fn)) != MG_OK) {
 		fprintf(stderr, "%s: %s\n", fn, mg_err[rval]);
@@ -424,14 +424,14 @@ e_include(		/* include file */
 	char	*xfarg[MG_MAXARGC];
 	MG_FCTXT	ictx;
 	XF_SPEC	*xf_orig = xf_context;
-	register int	rv;
+	int	rv;
 
 	if (ac < 2)
 		return(MG_EARGC);
 	if ((rv = mg_open(&ictx, av[1])) != MG_OK)
 		return(rv);
 	if (ac > 2) {
-		register int	i;
+		int	i;
 
 		xfarg[0] = mg_ename[MG_E_XF];
 		for (i = 1; i < ac-1; i++)
@@ -477,7 +477,7 @@ e_faceh(			/* replace face+holes with single contour */
 {
 	char	*newav[MG_MAXARGC];
 	int	lastp = 0;
-	register int	i, j;
+	int	i, j;
 
 	newav[0] = mg_ename[MG_E_FACE];
 	for (i = 1; i < ac; i++)
@@ -509,7 +509,7 @@ make_axes(		/* compute u and v given w (normalized) */
 	FVECT	w
 )
 {
-	register int	i;
+	int	i;
 
 	v[0] = v[1] = v[2] = 0.;
 	for (i = 0; i < 3; i++)
@@ -533,8 +533,8 @@ e_sph(			/* expand a sphere into cones */
 	static char	*v2ent[4] = {mg_ename[MG_E_VERTEX],"_sv2","="};
 	static char	*p2ent[5] = {mg_ename[MG_E_POINT],p2x,p2y,p2z};
 	static char	*conent[6] = {mg_ename[MG_E_CONE],"_sv1",r1,"_sv2",r2};
-	register C_VERTEX	*cv;
-	register int	i;
+	C_VERTEX	*cv;
+	int	i;
 	int	rval;
 	double	rad;
 	double	theta;
@@ -586,8 +586,8 @@ e_torus(			/* expand a torus into cones */
 	static char	*v2ent[5] = {mg_ename[MG_E_VERTEX],"_tv2","="};
 	static char	*p2ent[5] = {mg_ename[MG_E_POINT],p2[0],p2[1],p2[2]};
 	static char	*conent[6] = {mg_ename[MG_E_CONE],"_tv1",r1,"_tv2",r2};
-	register C_VERTEX	*cv;
-	register int	i, j;
+	C_VERTEX	*cv;
+	int	i, j;
 	int	rval;
 	int	sgn;
 	double	minrad, maxrad, avgrad;
@@ -701,8 +701,8 @@ e_ring(			/* turn a ring into polygons */
 	static char	*v4ent[4] = {mg_ename[MG_E_VERTEX],"_rv4","="};
 	static char	*p4ent[5] = {mg_ename[MG_E_POINT],p4[0],p4[1],p4[2]};
 	static char	*fent[6] = {mg_ename[MG_E_FACE],"_rv1","_rv2","_rv3","_rv4"};
-	register C_VERTEX	*cv;
-	register int	i, j;
+	C_VERTEX	*cv;
+	int	i, j;
 	FVECT	u, v;
 	double	minrad, maxrad;
 	int	rv;
@@ -802,8 +802,8 @@ e_cone(			/* turn a cone into polygons */
 	static char	*n4ent[5] = {mg_ename[MG_E_NORMAL],n4[0],n4[1],n4[2]};
 	static char	*fent[6] = {mg_ename[MG_E_FACE],"_cv1","_cv2","_cv3","_cv4"};
 	char	*v1n;
-	register C_VERTEX	*cv1, *cv2;
-	register int	i, j;
+	C_VERTEX	*cv1, *cv2;
+	int	i, j;
 	FVECT	u, v, w;
 	double	rad1, rad2;
 	int	sgn;
@@ -970,10 +970,10 @@ e_prism(			/* turn a prism into polygons */
 	double	length;
 	int	hasnorm;
 	FVECT	v1, v2, v3, norm;
-	register C_VERTEX	*cv;
+	C_VERTEX	*cv;
 	C_VERTEX	*cv0;
 	int	rv;
-	register int	i, j;
+	int	i, j;
 						/* check arguments */
 	if (ac < 5)
 		return(MG_EARGC);
@@ -1082,7 +1082,7 @@ put_cspec(void)			/* put out current color spectrum */
 	char	wl[2][6], vbuf[C_CNSS][24];
 	char	*newav[C_CNSS+4];
 	double	sf;
-	register int	i;
+	int	i;
 
 	if (mg_ehand[MG_E_CSPEC] != c_hcolor) {
 		sprintf(wl[0], "%d", C_CMINWL);
