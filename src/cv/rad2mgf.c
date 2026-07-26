@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.31 2025/04/23 01:57:04 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -38,7 +38,7 @@ char	VKFMT[] = "%+16.9e %+16.9e %+16.9e";
 
 #define mkvkey(k,v)	sprintf(k, VKFMT, (v)[0], (v)[1], (v)[2])
 
-#define NVERTS		256
+#define NVERTS		16000
 
 long	vclock;		/* incremented at each vertex request */
 
@@ -402,7 +402,7 @@ getvertid(		/* get/set vertex ID for this point */
 	FVECT	vp
 )
 {
-	static char	vkey[VKLEN];
+	char	vkey[VKLEN];
 	LUENT	*lp;
 	int	i, vndx;
 
@@ -479,9 +479,10 @@ o_face(		/* print out a polygon */
 	FUNARGS	*fa
 )
 {
-	char	entbuf[2048], *linestart;
-	char	*cp;
-	int	i;
+	static char	entbuf[128000];
+	char		*linestart;
+	char		*cp;
+	int		i;
 
 	if ((fa->nfargs < 9) | (fa->nfargs % 3))
 		return(-1);
@@ -491,6 +492,8 @@ o_face(		/* print out a polygon */
 	*cp++ = 'f';
 	for (i = 0; i < fa->nfargs; i += 3) {
 		*cp++ = ' ';
+		if (cp - entbuf >= sizeof(entbuf)-16)
+			return(-1);
 		if (cp - linestart > 72) {
 			*cp++ = '\\'; *cp++ = '\n';
 			linestart = cp;
