@@ -2926,3 +2926,8 @@ TW fixed hang in new rcontrib multi-processing code for Windows.
 Updated dctimestep with Yongqing Zhao's parallel and optimized
 version.  New -N and -m options for #processes and GBytes of
 memory, respectively.
+
+Turned oconv "set overflow" error into a warning, meaning we
+allow small imperfections (holes) to appear in a model rather
+than failing altogether to create the octree.  I decided this
+was preferable in the case of really intractable CAD output.

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: oconv.1,v 1.8 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id$"
 .TH OCONV 1 8/15/95 RADIANCE
 .SH NAME
 oconv - create an octree from a RADIANCE scene description
@@ -129,19 +129,6 @@ However, the following internal errors should be mentioned:
 .IP "Too many scene files"
 Reduce the number of scene files by combining them or using calls
 to xform(1) within files to create a hierarchy.
-.IP "Set overflow in addobject (id)"
-This error occurs when too many surfaces are close together in a
-scene.
-Either too many surfaces are lying right on top of each other,
-or the bounding cube is inflated from an oversized object
-or an improper
-.I \-b
-specification.
-If hundreds of triangles come together at a common vertex, it may
-not be possible to create an octree from the object.
-This happens most often when inane CAD systems create spheres using
-a polar tessellation.
-Chances are, the surface "id" is near one of those causing the problem.
 .IP "Hash table overflow in fullnode"
 This error is caused by too many surfaces.
 If it is possible to create an octree for the scene at all,
@@ -167,6 +154,11 @@ The freeze option avoids these problems.
 or
 .I rad(1)
 can be used to automate octree creation and maintenance.
+.PP
+The infamous "set overflow" error has been changed to a warning,
+which allows imperfect octrees to be built with small holes
+where too many polygons or other surfaces are crowded together
+into a small space.
 .SH "SEE ALSO"
 getbbox(1), getinfo(1), make(1), obj2mesh(1), rad(1),
 rpict(1), rvu(1), rtrace(1), xform(1)

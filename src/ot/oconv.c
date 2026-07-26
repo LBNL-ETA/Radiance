@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.25 2025/06/07 05:09:46 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -268,14 +268,13 @@ add2full(			/* add object to full node */
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;
 
-	if (inc==O_IN || oset[0] < objlim || cukid.cusize <
-			(oset[0] < MAXSET ? mincusize : mincusize/256.0)) {
-						/* add to set */
+	if (inc==O_IN || oset[0] < objlim || cukid.cusize < mincusize) {
 		if (oset[0] >= MAXSET) {
-			sprintf(errmsg, "set overflow in addobject (%s)",
+			sprintf(errmsg, "set overflow in add2full (%s)",
 					objptr(obj)->oname);
-			error(INTERNAL, errmsg);
-		}
+			error(WARNING, errmsg);
+			return;			/* XXX leaves a tiny hole */
+		}				/* else add to set */
 		insertelem(oset, obj);
 		cu->cutree = fullnode(oset);
 		return;
