@@ -700,12 +700,12 @@ badopt:			fprintf(stderr, "%s: bad option: %s\n", argv[0], argv[a]);
 	}
 #else
 	if ((nprocs > 1) & !out_spec) {
-		fprintf(stderr, "%s: multi-processing result cannot go to stdout\n",
+		fprintf(stderr, "%s: warning - switching to -N 1 for stdout\n",
 				argv[0]);
 		nprocs = 1;
 	}
-	if ((nprocs > 1)  & iswapped && (in_type==DTfloat) | (in_type==DTdouble)) {
-		fprintf(stderr, "%s: multi-processing unsupported on swapped input\n",
+	if (nprocs > 1 && iswapped && (in_type==DTfloat) | (in_type==DTdouble)) {
+		fprintf(stderr, "%s: warning - switching to -N 1 for swapped input\n",
 				argv[0]);
 		nprocs = 1;
 	}
