@@ -350,7 +350,7 @@ l_source_corr(char *nm)		/* photometry correction */
 		    "bad call to %s() -- illegal constant in .cal file?", nm);
 		error(USER, errmsg);
 	}
-	if (nrargs > 1)		/* apply scaling adjustment if any */
+	if (nrargs >= 1)	/* apply scaling adjustment if any */
 		adj_val *= rarg(1);
 	if (adj_val <= 0)	/* check for non-positive value */
 		return(0.0);

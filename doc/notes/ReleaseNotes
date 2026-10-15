@@ -2931,3 +2931,7 @@ Turned oconv "set overflow" error into a warning, meaning we
 allow small imperfections (holes) to appear in a model rather
 than failing altogether to create the octree.  I decided this
 was preferable in the case of really intractable CAD output.
+
+Fixed bug in source.cal optimization, where correction factor
+was not being applied for some light sources.  Thanks to Dimuu666
+for finding this error.
