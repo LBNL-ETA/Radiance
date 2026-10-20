@@ -2935,3 +2935,7 @@ was preferable in the case of really intractable CAD output.
 Fixed bug in source.cal optimization, where correction factor
 was not being applied for some light sources.  Thanks to Dimuu666
 for finding this error.
+
+Nathaniel Jones pointed out bug in rcontrib check for -cs setting,
+which must appear before any -m settings.  This wasn't being
+checked for no reset after -m setting.

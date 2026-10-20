@@ -92,7 +92,7 @@ MODCONT *
 addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 {
 	static int	lastNCS = 0;
-	LUENT		*lep = lu_find(&modconttab,modn);
+	LUENT		*lep;
 	MODCONT		*mp;
 	EPNODE		*ebinv;
 	int		i;
@@ -102,6 +102,9 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 	else if (NCSAMP != lastNCS)
 		error(INTERNAL,
 		"number of spectral samples must be set before first modifier");
+	if (modn == NULL)
+		return(NULL);		/* just checking NCSAMP */
+	lep = lu_find(&modconttab,modn);
 	if (lep->data != NULL) {
 		sprintf(errmsg, "duplicate modifier '%s'", modn);
 		error(USER, errmsg);

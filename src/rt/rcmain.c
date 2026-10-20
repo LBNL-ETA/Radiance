@@ -320,6 +320,7 @@ main(int argc, char *argv[])
 	}
 	if (nmods <= 0)
 		error(USER, "missing required modifier argument");
+	addmodifier(NULL,NULL,NULL,NULL,0);
 					/* override some option settings */
 	override_options();
 					/* set/check spectral sampling */

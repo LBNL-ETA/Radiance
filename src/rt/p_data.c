@@ -235,7 +235,8 @@ p_spectrum(			/* simple constant spectrum */
 		free(sinp);
 		m->os = (void *)scval;
 	}
-	smultscolor(r->pcol, scval);
+	if (r != NULL)		/* in case we're being called by load_os() */
+		smultscolor(r->pcol, scval);
 	return(0);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.20 2025/06/20 23:48:28 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -80,6 +80,9 @@ load_os(			/* load associated data for object */
 		return(1);
 	case PAT_SPECFUNC:	/* spectral function */
 		getfunc(op, 1, 0, 0);
+		return(1);
+	case PAT_SPECTRUM:	/* inline spectrum */
+		p_spectrum(op, NULL);
 		return(1);
 	case PAT_SPECFILE:	/* spectrum file */
 		if (op->oargs.nsargs < 1)
@@ -187,8 +190,11 @@ cow_memshare(void)		/* set up copy-on-write memory sharing */
 {
 	if (shm_boundary != NULL)
 		return;			/* assume we're good */
-
+#if defined(_WIN32) || defined(_WIN64)
+	error(WARNING, "no shared memory support under Windows");
+#else
 	preload_objs();			/* preload auxiliary data */
+#endif
 					/* set shared memory boundary */
 	shm_boundary = (char *)malloc(16);
 	strcpy(shm_boundary, "SHM_BOUNDARY");
