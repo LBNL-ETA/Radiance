@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.3 2025/05/23 19:42:48 greg Exp $
+# RCSid $Id$
 #
 # Unit tests for tools built in src/cv
 #
@@ -18,7 +18,7 @@ test-checkBSDF:	../renders/blinds20c.xml ../renders/sawtooth.xml
 	rm -f checkBSDFout.txt
 
 test-obj2rad:	rounded_box.obj
-	obj2rad rounded_box.obj > rounded_box_o2r.rad
+	obj2rad -f rounded_box.obj > rounded_box_o2r.rad
 	radcompare -c# ref/rounded_box_o2r.rad rounded_box_o2r.rad
 	rm -f rounded_box_o2r.rad
 
