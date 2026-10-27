@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id$";
 #include "instance.h"
 #include "mesh.h"
 #include "data.h"
+#include "rtotypes.h"
 #include "func.h"
 #include "bsdf.h"
 
