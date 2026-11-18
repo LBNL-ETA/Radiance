@@ -2939,3 +2939,6 @@ for finding this error.
 Nathaniel Jones pointed out bug in rcontrib check for -cs setting,
 which must appear before any -m settings.  This wasn't being
 checked for no reset after -m setting.
+
+(The above changes were included in official LBNL patch
+release 6.0.3)
