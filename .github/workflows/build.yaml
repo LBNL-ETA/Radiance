@@ -95,7 +95,7 @@ jobs:
 
   build_OSX:
     name: "Build for OSX"
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 20
 
     steps:
@@ -151,6 +151,64 @@ jobs:
         with:
           name: Radiance_OSX_both
           path: Radiance_OSX_both.zip
+
+  build_OSX_arm64:
+    name: "Build for OSX arm64"
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Install XQuartz
+        run: |
+          wget https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.8.5/XQuartz-2.8.5.pkg
+          sudo installer -package XQuartz-2.8.5.pkg -target /
+
+      - name: Compile
+        env:
+          CMAKE_OSX_ARCHITECTURES: x86_64
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_PABOPTO_UTILS=ON -DCMAKE_BUILD_TYPE=Release ..
+          make -j8
+
+      - name: Run CPack
+        run: |
+          cd build
+          sudo cpack -G ZIP .
+          echo "=============================="
+
+      - name: Build pkg installer
+        run: |
+          cd ./build/_CPack_Packages/Darwin/ZIP/
+          sudo cp -r ./radiance*/usr/local/radiance .
+          ls
+          sudo pkgbuild --identifier radiance.pkg --root "radiance" --install-location "/usr/local/radiance" radiance_Darwin.pkg
+          sudo cp -r radiance_Darwin.pkg ../../../../Radiance_OSX.pkg
+          du -h -d=0 *
+
+      - name: Zip Build Artifact and list files
+        run: |
+          mkdir OSXBuild
+          sudo cp Radiance_OSX.pkg ./OSXBuild/Radiance_OSX_arm64.pkg
+
+          sudo mv ./build/_CPack_Packages/Darwin/ZIP/radiance-*-Darwin/usr/local/radiance ./radiance
+          sudo zip -r Radiance_OSX.zip ./radiance
+          sudo cp ./Radiance_OSX.zip ./OSXBuild/Radiance_OSX_arm64.zip
+
+          sudo zip -r Radiance_OSX_arm64_both.zip ./OSXBuild
+          ls -R
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Radiance_OSX_arm64_both
+          path: Radiance_OSX_arm64_both.zip
 
   build_Linux:
     name: "Build for Linux"
@@ -461,7 +519,7 @@ jobs:
   Test_OSX_1:
     needs: [build_OSX]
     name: "Test for OSX 1"
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -564,7 +622,7 @@ jobs:
   Test_OSX_2:
     needs: [build_OSX]
     name: "Test for OSX 2"
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -617,7 +675,7 @@ jobs:
   Test_OSX_3:
     needs: [build_OSX]
     name: "Test for OSX 3"
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
@@ -670,7 +728,7 @@ jobs:
   Test_OSX_4:
     needs: [build_OSX]
     name: "Test for OSX 4"
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
 
     steps:
