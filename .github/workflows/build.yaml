@@ -1048,6 +1048,7 @@ jobs:
         run: |
           unzip Radiance_Windows_both/Radiance_Windows_both.zip
           unzip Radiance_OSX_both/Radiance_OSX_both.zip
+          unzip Radiance_OSX_arm64_both/Radiance_OSX_arm64_both.zip
 
       - name: Get Git log
         id: get_release_note
@@ -1150,6 +1151,26 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: OSXBuild/Radiance_OSX.zip
           asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX.zip
+          asset_content_type: application/zip
+
+      - name: Release Asset Radiance_OSX_arm64 pkg
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: OSXBuild/Radiance_OSX_arm64.pkg
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX_arm64.pkg
+          asset_content_type: application/pkg
+
+      - name: Release Asset Radiance_OSX_arm64 zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: OSXBuild/Radiance_OSX_arm64.zip
+          asset_name: Radiance_${{steps.get_release_name.outputs.RELEASE_TAG}}_OSX_arm64.zip
           asset_content_type: application/zip
 
       - name: Release Asset Radiance_Auxiliary
