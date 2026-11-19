@@ -154,7 +154,7 @@ jobs:
 
   build_OSX_arm64:
     name: "Build for OSX arm64"
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
 
     steps:
