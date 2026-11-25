@@ -19,5 +19,6 @@ hilbert.h
 hilbert.c
 disk2square.c
 rtio.h
+urand.c
 words.c
 testBSDF.c

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.14 2022/04/21 15:22:30 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -7,7 +7,7 @@ static const char	RCSid[] = "$Id: urand.c,v 2.14 2022/04/21 15:22:30 greg Exp $"
 
 #include "copyright.h"
 
-#include  "rterror.h"
+#include  <stdio.h>
 #include  "random.h"
 
 #undef initurand
@@ -57,8 +57,8 @@ initurand(			/* initialize urand() for size entries */
 	urmask = (1<<order) - 1;
 	urperm = (unsigned short *)malloc((urmask+1)*sizeof(unsigned short));
 	if (urperm == NULL) {
-		eputs("out of memory in initurand\n");
-		quit(1);
+		fputs("initurand(): Out of memory\n", stderr);
+		exit(1);
 	}
 	urperm[0] = 0;
 	for (n = 1, offset = 1; n <= order; n++, offset <<= 1)
@@ -71,7 +71,6 @@ initurand(			/* initialize urand() for size entries */
 		}
 	return(urmask+1);
 }
-
 
 int
 ilhash(				/* hash a set of integer values */
